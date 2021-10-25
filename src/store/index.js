@@ -783,7 +783,7 @@ export const store = new Vuex.Store({
         let collections = [];
         for (let jobid in state.tc_userTasks.list) {
           state.bookCollectionsAll.forEach(c => {
-            if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
+            if (c.books && typeof c.books[state.tc_userTasks.list[jobid].bookid] !== 'undefined') {
               if ((state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) || state.tc_userTasks.list[jobid].completed_tasks > 0) {
                 let exists = collections.find(_c => _c._id === c._id);
                 if (!exists) {

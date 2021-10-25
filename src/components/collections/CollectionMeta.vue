@@ -16,7 +16,7 @@
             Title
           </td>
           <td>
-            <input v-model="collection.title" v-on:change="update('title', $event)" />
+            <input v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" />
           </td>
         </tr>
         <tr>
@@ -24,7 +24,7 @@
             Subtitle
           </td>
           <td>
-            <input v-model="collection.subtitle" v-on:change="update('subtitle', $event)" />
+            <input v-model="collection.subtitle" v-on:change="update('subtitle', $event)" :disabled="!allowCollectionsEdit" />
           </td>
         </tr>
         <tr class="author">
@@ -36,6 +36,7 @@
               <div class="author-row" v-if="collection.author && collection.author.length === 0">
                 <input v-model="collection.author[0]" 
                   v-on:change="update('author', $event)" 
+                  :disabled="!allowCollectionsEdit"
                   >
                 <div class="dropdown" v-if="collection.author && collection.author.length === 0">
                   <div v-on:click="toggleShowUnknownAuthor()" 
@@ -43,26 +44,26 @@
                     <i class="fa fa-angle-down" ></i>
                   </div>
                   <div class="dropdown-content" 
-                    v-if="showUnknownAuthor" 
+                    v-if="showUnknownAuthor && allowCollectionsEdit" 
                     v-on:click="setUnknownAuthor()" >Unknown</div>
                 </div>
               </div>
               <template v-for="(author, i) in collection.author" >
                 <div class="author-row">
-                  <input v-model='collection.author[i]' v-on:change="update('author', $event); ">
+                  <input v-model='collection.author[i]' v-on:change="update('author', $event); " :disabled="!allowCollectionsEdit">
                   <div class="dropdown" v-if=" i == 0">
                     <div v-on:click="toggleShowUnknownAuthor()" class="dropdown-button">
                       <i class="fa fa-angle-down" ></i>
                     </div>
-                    <div class="dropdown-content" v-if="showUnknownAuthor" 
+                    <div class="dropdown-content" v-if="showUnknownAuthor && allowCollectionsEdit" 
                       v-on:click="setUnknownAuthor()" >Unknown</div>
                   </div>
                   <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="[{'disabled': i == 0 && collection.author.length == 1}, 'remove-author']">
-                    <i class="fa fa-minus-circle"></i>
+                    <i class="fa fa-minus-circle" v-if="allowCollectionsEdit"></i>
                   </button>
                 </div>
               </template>
-              <button v-on:click="addAuthor" class="add-author">
+              <button v-on:click="addAuthor" class="add-author" v-if="allowCollectionsEdit">
                 <i class="fa fa-plus-circle"></i>
               </button>
             </div>
@@ -74,7 +75,8 @@
           </td>
           <td>
             <select class="form-control" v-model="collection.language" 
-              v-on:change="update('language', $event)">
+              v-on:change="update('language', $event)"
+              :disabled="!allowCollectionsEdit" >
               <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
             </select>
           </td>
@@ -83,7 +85,7 @@
     </fieldset>
     <fieldset>
       <legend>URL slug</legend>
-      <input v-model="collection.slug" class="collection-slug" />
+      <input v-model="collection.slug" class="collection-slug" :disabled="!allowCollectionsEdit" />
     </fieldset>
     <fieldset>
       <table class="properties">
@@ -92,7 +94,7 @@
             Category
           </td>
           <td>
-            <select  class="form-control" v-model="collection.category" v-on:change="update('category', $event)">
+            <select  class="form-control" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
               <template v-for="(data, index) in bookCategories">
                 <optgroup :label="data.group">
                   <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
@@ -106,7 +108,7 @@
             Difficulty
           </td>
           <td>
-            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="update('difficulty', $event)" />
+            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="update('difficulty', $event)" :disabled="!allowCollectionsEdit" />
           </td>
         </tr>
         <tr>
@@ -114,7 +116,7 @@
             Translator
           </td>
           <td>
-            <input v-model="collection.translator" v-on:change="update('translator', $event)" />
+            <input v-model="collection.translator" v-on:change="update('translator', $event)" :disabled="!allowCollectionsEdit" />
           </td>
         </tr>
         <tr>
@@ -122,7 +124,7 @@
             Weight
           </td>
           <td>
-            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="update('weight', $event)" />
+            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="update('weight', $event)" :disabled="!allowCollectionsEdit" />
           </td>
         </tr>
       </table>
@@ -132,7 +134,7 @@
         <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
         <div v-else class="coverimg-wrap"></div>
       </div>
-      <button class="btn btn-primary edit-coverimg" v-on:click="changeCoverModal()">
+      <button class="btn btn-primary edit-coverimg" v-on:click="changeCoverModal()" v-if="allowCollectionsEdit">
         <i class="fa fa-pencil" ></i>
       </button>
     </fieldset>
@@ -141,27 +143,6 @@
         <textarea v-model="collection.description" class="collection-description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
     </fieldset>
     <div class="collection-meta col-sm-12">
-      <div class="col-sm-12" v-if="allowCollectionsEdit">
-        <div class="col-sm-6">
-          <button class="btn btn-default" v-on:click="linkBookModal = true">
-            <i class="fa fa-plus"></i>&nbsp;Add to collection
-          </button>
-        </div>
-        <div class="col-sm-6">
-          <button class="btn btn-danger" v-on:click="onRemoveMessage = true">
-            Remove collection
-          </button>
-        </div>
-      </div>
-
-      <linkBook v-if="linkBookModal"
-        @close_modal="linkBookModal = false"
-        :languages="languages"></linkBook>
-      <modal v-model="onRemoveMessage" effect="fade" title="" ok-text="Remove" cancel-text="Cancel" @ok="remove()">
-        <p>
-          Remove {{collection.title}} Collection <template v-if="collection.books && collection.books.length">and unlink {{collection.books.length}} Books</template>?
-        </p>
-      </modal>
       <CollectionCoverModal ref="collectionCoverModal" @closed="resetCollectionImage"></CollectionCoverModal>
     </div>
   </div>
@@ -171,18 +152,14 @@
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
   import {mapActions, mapGetters} from 'vuex';
-  import LinkBook from './LinkBook';
   import api_config from '../../mixins/api_config';
   import { Languages }      from "../../mixins/lang_config.js"
-  import {modal} from 'vue-strap';
   import CollectionCoverModal from './CollectionCoverModal';
   export default {
       name: 'CollectionMeta',
       data() {
         return {
           'collection': {},
-          linkBookModal: false,
-          onRemoveMessage: false,
           showCollectionCoverModal: false,
           collectionImage: '',
           showUnknownAuthor: false,
@@ -190,8 +167,6 @@
         }
       },
       components: {
-        'LinkBook': LinkBook,
-        'modal': modal,
         'CollectionCoverModal': CollectionCoverModal
       },
       mounted() {
@@ -208,7 +183,8 @@
           this.resetCollectionImage();
         },
         update(key, event) {
-          this.liveUpdate(key, event.target.value)
+          let value = key === 'author' ? this.currentCollection.author : event.target.value;
+          this.liveUpdate(key, value);
         },
         change(field) {
           this.liveUpdate(field, this.collection[field]);
@@ -224,20 +200,6 @@
               this.collection[field] = value;
             });
         },
-        remove() {
-          return this.removeCollection()
-            .then((response) => {
-              this.onRemoveMessage = false;
-              if (response.status===200) {
-                this.$emit('collectionRemoved');
-                this.$router.replace({ path: '/collections' });
-              } else {
-
-              }
-            }).catch((err) => {
-              this.onRemoveMessage = false;
-            });
-        },
         publish() {
           let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
           let api = this.$store.state.auth.getHttp();
@@ -249,6 +211,9 @@
           });
         },
         changeCoverModal() {
+          if (!this.allowCollectionsEdit) {
+            return false;
+          }
           this.$refs.collectionCoverModal.show();
         },
         resetCollectionImage() {
@@ -279,7 +244,7 @@
           this.collection.author[0] = 'Unknown';
           this.liveUpdate('author', this.collection.author);
         },
-        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection', 'removeCollection'])
+        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection'])
       },
       computed: {
         collectionBooksLength: {
@@ -293,10 +258,7 @@
           }
         },
         languages() {
-          console.log('languages', Languages);
-          //return Object.entries(Languages)
           return Languages;
-
         },
 
         ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection', 'bookCategories'])
