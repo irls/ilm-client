@@ -1444,7 +1444,8 @@ export default {
         'applyTasksQueue',
         'saveBlockAudio',
         'updateStoreFlag',
-        'changeBlocksVoicework'
+        'changeBlocksVoicework',
+        'loadBookTocSections'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -2146,6 +2147,7 @@ export default {
             }
           } else if (is_type_changed) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
+            this.loadBookTocSections([]);
           }
 
           /*this.blockO.status = Object.assign(this.blockO.status, {

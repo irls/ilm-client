@@ -241,7 +241,11 @@ export const store = new Vuex.Store({
     updateAudiobookProgress: false,
     coupletSeparator: '',
     selectedBlocks: [],
-    updatingNumeration: false
+    updatingNumeration: false,
+    bookTocSections: [],
+    bookTocSectionsTimer: null,
+    bookTocSectionsXHR: null,
+    tocSectionBook: {}
   },
 
   getters: {
@@ -527,6 +531,22 @@ export const store = new Vuex.Store({
     },
     updatingNumeration: state => {
       return state.updatingNumeration;
+    },
+    bookTocSections: state => {
+      return state.bookTocSections;
+    },
+    currentBookTocCombined: state => {
+      let currentBookTocCombined = [];
+      state.currentBookToc.data.forEach(toc => {
+        let section = state.bookTocSections.find(s => {
+          return s.startBlockid === toc.blockid;
+        });
+        currentBookTocCombined.push(Object.assign(toc, {section: section ? section : {}}));
+      });
+      return currentBookTocCombined;
+    },
+    tocSectionBook: state => {
+      return state.tocSectionBook;
     }
   },
 
@@ -1163,6 +1183,14 @@ export const store = new Vuex.Store({
         }
       }
       state.selectedBlocks = blockList;
+    },
+    
+    set_book_toc_sections(state, sections) {
+      state.bookTocSections = sections;
+    },
+    
+    set_toc_section_book(state, tocSectionBook) {
+      state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
     }
   },
 
@@ -1643,6 +1671,7 @@ export const store = new Vuex.Store({
         //state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
         dispatch('unfreeze', 'loadBookToc');
+        dispatch('loadBookTocSections', []);
         return response;
       })
       .catch(err => {
@@ -4119,6 +4148,94 @@ export const store = new Vuex.Store({
         }
         return resolve();
       });
+    },
+    
+    loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
+      if (state.adminOrLibrarian) {
+        return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
+          .then(data => {
+            //console.log(data);
+            commit('set_book_toc_sections', data.data.sections);
+            commit('set_toc_section_book', data.data.book);
+            if (!this.bookTocSectionsTimer) {
+              this.bookTocSectionsTimer = setInterval(() => {
+                if (!state.bookTocSectionsXHR) {
+                  dispatch('loadBookTocSections', [])
+                    .then(() => {})
+                    .catch(err => {});
+                }
+              }, 30000);
+            }
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
+    },
+    
+    updateBookTocSection({state, dispatch}, [id, update]) {
+      if (state.adminOrLibrarian) {
+        state.bookTocSectionsXHR = axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update);
+        return state.bookTocSectionsXHR.then(updated => {
+            state.bookTocSectionsXHR = null;
+            return dispatch('loadBookTocSections', []);
+          })
+          .catch(err => {
+            state.bookTocSectionsXHR = null;
+            return Promise.reject(err);
+          });
+      }
+    },
+    
+    createBookTocSection({state, dispatch}, data) {
+      if (state.adminOrLibrarian) {
+        return axios.post(`${state.API_URL}toc_section`, data)
+          .then(created => {
+            return dispatch('loadBookTocSections', []);
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
+    },
+    
+    removeTocSection({state, dispatch}, id) {
+      state.bookTocSectionsXHR = axios.delete(`${state.API_URL}toc_section/${encodeURIComponent(id)}`);
+      return state.bookTocSectionsXHR.then((response) => {
+          state.bookTocSectionsXHR = null;
+          return dispatch('loadBookTocSections', []);
+        })
+        .catch(err => {
+          state.bookTocSectionsXHR = null;
+          return Promise.reject(err);
+        });
+    },
+    
+    exportTocSection({state, dispatch}, id) {
+      state.bookTocSectionsXHR = axios.post(`${state.API_URL}toc_section/${encodeURIComponent(id)}/export`);
+      return state.bookTocSectionsXHR.then(response => {
+          state.bookTocSectionsXHR = null;
+          return Promise.resolve();
+        })
+        .catch(err => {
+          state.bookTocSectionsXHR = null;
+          return Promise.reject(err);
+        });
+    },
+    
+    exportTocSectionBook({state, dispatch}) {
+      if (state.currentBookid) {
+        state.tocSectionBook.isBuilding = true;
+        state.bookTocSectionsXHR = axios.post(`${state.API_URL}toc_section/book/${state.currentBookid}/export`);
+        return state.bookTocSectionsXHR.then(response => {
+          state.bookTocSectionsXHR = null;
+          return Promise.resolve();
+        })
+        .catch(err => {
+          state.bookTocSectionsXHR = null;
+          return Promise.reject(err);
+        });
+      }
     }
   }
 })
