@@ -182,20 +182,7 @@ export const store = new Vuex.Store({
     },
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB(),
-    bookCategories: [
-      {
-        group: 'Reader',
-        categories: [
-          'Children', 'History', 'Ideas', 'Science', 'Novels', 'Verse'
-        ]
-      },
-      {
-        group: 'Ocean',
-        categories: [
-          'Bahá’í', 'Buddhist', 'Christian', 'Confucian', 'Hindu', 'Islam', 'Judaism', 'Jainism ', 'Sikh', 'Tao', 'Zoroastrian'
-        ]
-      }
-    ],
+    bookCategories: [],
     // bookDifficulties: [
     //   '1',
     //   '2',
@@ -1316,6 +1303,7 @@ export const store = new Vuex.Store({
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
               commit('set_couplet_separator', config.couplet_separator);
             })
+          dispatch('getBookCategories');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -4236,6 +4224,16 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
       }
+    },
+    
+    getBookCategories({state}) {
+      return axios.get(state.API_URL + 'books/categories').then(categories => {
+        state.bookCategories = categories.data
+        return Promise.resolve(state.bookCategories)
+      })
+      .catch(error => {
+        return Promise.reject({})
+      })
     }
   }
 })
