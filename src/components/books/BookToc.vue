@@ -34,7 +34,7 @@
         </div>
         <div class="toc-button">
           <template v-if="sectionsMode && adminOrLibrarian">
-            <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath" v-on:click="checkOnAction(null, $event)">
+            <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)">
               <i class="fa fa-download"></i>
               Download
             </a>
@@ -91,7 +91,7 @@
                         <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
                       </template>
                     </div>
-                    <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath">
+                    <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
                       <i class="fa fa-download" title="Download"></i>
                     </a>
                     <a class="-option -download -hidden" v-else>
