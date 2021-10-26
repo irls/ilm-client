@@ -522,6 +522,15 @@ export const store = new Vuex.Store({
     },
     updatingNumeration: state => {
       return state.updatingNumeration;
+    },
+    currentBookCollection: state => {
+      if (Array.isArray(state.bookCollections) && state.currentBookMeta && state.currentBookMeta.collection_id) {
+        let collection = state.bookCollections.find(c => {
+          return c._id === state.currentBookMeta.collection_id;
+        });
+        return collection ? collection : {};
+      }
+      return {};
     }
   },
 

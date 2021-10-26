@@ -76,7 +76,7 @@
           <td>
             <select class="form-control" v-model="collection.language" 
               v-on:change="update('language', $event)"
-              :disabled="!allowCollectionsEdit" >
+              :disabled="!allowCollectionsEdit || collectionBooksLength > 0" >
               <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
             </select>
           </td>
@@ -108,7 +108,7 @@
             Difficulty
           </td>
           <td>
-            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="update('difficulty', $event)" :disabled="!allowCollectionsEdit" />
+            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="update('difficulty', $event)" :disabled="!allowCollectionsEdit" class="number-text-input" />
           </td>
         </tr>
         <tr>
@@ -124,7 +124,7 @@
             Weight
           </td>
           <td>
-            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="update('weight', $event)" :disabled="!allowCollectionsEdit" />
+            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="update('weight', $event)" :disabled="!allowCollectionsEdit" class="number-text-input" />
           </td>
         </tr>
       </table>
@@ -249,7 +249,10 @@
       computed: {
         collectionBooksLength: {
           get() {
-            return this.collection.books ? this.collection.books.length : 0;
+            if (this.currentCollection.books instanceof Object) {
+              return Object.keys(this.currentCollection.books).length;
+            }
+            return 0;
           }
         },
         hasTitleWarning: {
@@ -407,5 +410,10 @@
   }
   .collection-description {
     width: 100%;
+  }
+  .number-text-input::-webkit-outer-spin-button,
+  .number-text-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 </style>
