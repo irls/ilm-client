@@ -89,7 +89,7 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="joinWithNext()">
                         <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                         Join with next block</li>
                       <li v-else class="disabled">
@@ -1444,16 +1444,17 @@ export default {
         'applyTasksQueue',
         'saveBlockAudio',
         'updateStoreFlag',
-        'changeBlocksVoicework'
+        'changeBlocksVoicework',
+        'loadBookTocSections'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
       getClassValue(elType,  elKey) {
         let objValues = {};
-        if (elType == 'type'){ 
+        if (elType == 'type'){
             objValues = BlockTypesAlias.type.values
-        } else if (elType == 'title'){ 
+        } else if (elType == 'title'){
             objValues = BlockTypesAlias.title.style.values
         } else if (elType == 'header') {
              objValues = BlockTypesAlias.header.level.values
@@ -2146,6 +2147,7 @@ export default {
             }
           } else if (is_type_changed) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
+            this.loadBookTocSections([]);
           }
 
           /*this.blockO.status = Object.assign(this.blockO.status, {
@@ -3484,7 +3486,7 @@ Save text changes and realign the Block?`,
               this.block.content = this.$refs.blocks[0].clearBlockContent();
             }
             this.$forceUpdate();
-          } 
+          }
 
           if (type === 'type' && event && event.target) {
             this.block.type = event.target.value;
@@ -4788,9 +4790,9 @@ Save text changes and realign the Block?`,
       margin-top: 5px;
       margin-bottom: 10px;
 
-      .content-wrap-footn {
-        font-size: 13pt;
-      }
+      //.content-wrap-footn {
+      //  font-size: 13pt;
+      //}
 
       .-num {
         padding-right: 5px;
@@ -4810,14 +4812,46 @@ Save text changes and realign the Block?`,
     }
 }
 
-.-lang-fa, .-lang-ar {
-    .table-body {
-        &.footnote  {
-           .content-wrap-footn {
-             font-size: 15pt;
-           }
-        }
-    }
+
+//book lang common
+//Specificity 1
+//lang priority 4
+.content-wrap-footn {
+  font-size: 13pt;
+}
+
+//book lang arabic or farsi
+//Specificity 2
+//lang priority 3
+.-lang-fa .content-wrap-footn, .-lang-ar .content-wrap-footn {
+  font-size: 15pt;
+}
+
+//block lang common
+//Specificity 3
+//lang priority 2
+.table-cell .-content.content-wrap-footn{
+  font-size: 13pt;
+}
+
+//block lang arabic or farsi
+//Specificity 3
+//lang priority 2
+.table-cell .-langblock-ar.content-wrap-footn, .table-cell .-langblock-fa.content-wrap-footn {
+  font-size: 15pt;
+}
+//footnote lang common
+//Specificity 4
+//lang priority 1
+.table-cell .content-wrap-footn.table-cell.-text{
+  font-size: 13pt;
+}
+
+//footnote lang arabic or farsi
+//Specificity 4
+//lang priority 1
+.table-cell .content-wrap-footn.-langftn-ar.-text, .table-cell .content-wrap-footn.-lang-fa.-text{
+  font-size: 15pt;
 }
 
 

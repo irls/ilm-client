@@ -135,6 +135,7 @@
 <script>
 import Vue from 'vue'
 import api_config from '../../mixins/api_config.js'
+import time_methods from '../../mixins/time_methods'
 import {dateFormat} from '../../filters';
 import v_modal from 'vue-js-modal';
 import dropzone from 'vue2-dropzone';
@@ -187,7 +188,7 @@ export default {
   components: {
     Vue, dropzone
   },
-  mixins: [api_config],
+  mixins: [api_config, time_methods],
   props: {
     'book': {
       type: Object,
@@ -528,31 +529,6 @@ export default {
         el.innerText = '';
       }
       return;
-    },
-    
-    convertTime(dt, time = false) {
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-      var date = new Date(dt);
-      var toutc = date.toUTCString();
-      var locdate = new Date(toutc + " UTC");
-
-      var year = locdate.getFullYear(),
-      month = locdate.getMonth() + 1, // months are zero indexed
-      day = locdate.getDate().toString(),
-      hour = locdate.getHours().toString(),
-      minute = locdate.getMinutes().toString(),
-      second = locdate.getSeconds(),
-      hourFormatted = hour < 10 ? `0${hour}` : hour, // hour returned in 24 hour format
-      minuteFormatted = minute < 10 ? "0" + minute : minute
-
-      //console.log(toutc, locdate);
-      let result = (day.length > 1 ? day : `0${day}`) + " " + monthNames[month - 1] + " " + year ;
-      if (time) {
-        result += " " + hourFormatted + ":" + minuteFormatted;
-      }
-      return result;
-
     },
     getParsedReport() {
       if (this.audiobook.report) {
