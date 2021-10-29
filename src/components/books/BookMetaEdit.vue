@@ -841,7 +841,7 @@ export default {
     
     currentBookCategory: {
       get() {
-        if (this.currentBookCollection.category) {
+        if (typeof this.currentBookCollection.category !== 'undefined') {
           return this.currentBookCollection.category;
         }
         return this.currentBook.category;
@@ -856,7 +856,7 @@ export default {
         if (!this.allowMetadataEdit) {
           return true;
         }
-        if (this.currentBookCollection.category) {
+        if (typeof this.currentBookCollection.category !== 'undefined') {
           return true;
         }
         return false;
@@ -2100,7 +2100,6 @@ export default {
         });
         debouncedFunction(key,event);
       }
-      console.log('HERE', this.validationErrors);
 
     },
 

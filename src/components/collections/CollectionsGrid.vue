@@ -132,24 +132,6 @@
           get() {
             let collections = this.bookCollections;
             collections.forEach(c => {
-
-              let books = [];
-              c.bookids.forEach(b => {
-                let book = this.allBooks.find(_b => {
-                  return _b.bookid === b;
-                });
-                if (book) {
-                  if (book.importStatus == 'staging' && book.blocksCount <= 2){
-                    if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-                      book.importStatus = 'staging_empty'
-                    } else if (!book.publishLog.updateTime){
-                      book.importStatus = 'staging_empty'
-                    }
-                  }
-                  books.push(book);
-                }
-              });
-              c.books_list = books;
               c.book_match = false;
             });
             for (var field in this.collectionsFilter) {

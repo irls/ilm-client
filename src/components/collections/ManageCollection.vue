@@ -52,7 +52,7 @@
           let booksLength = this.collectionBooksLength;
           this.$root.$emit('show-modal', {
             title: '',
-            text: `Remove ${this.currentCollection.title} Collection${booksLength ? ' and unlink ' + booksLength + ' Books?' : ''}?`,
+            text: `Remove ${this.currentCollection.title} Collection${booksLength ? ' and unlink ' + booksLength + ' Books' : ''}?`,
             buttons: [
               {
                 title: 'Cancel',

@@ -709,7 +709,8 @@ export const store = new Vuex.Store({
     },
 
     SET_BOOKLIST (state, books) {
-      state.books_meta = books
+      state.books_meta = books;
+      this.commit('PREPARE_BOOK_COLLECTIONS');
     },
 
     RESET_LOGIN_STATE (state) {
@@ -806,10 +807,22 @@ export const store = new Vuex.Store({
       }
       state.bookCollections.forEach((c, idx) => {
         let pages = 0;
+        let books = [];
         c.bookids.forEach(b => {
           let book = state.books_meta.find(_b => _b.bookid === b);
           if (book) {
             pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
+            if (book.importStatus == 'staging' && book.blocksCount <= 2){
+              if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+                book.importStatus = 'staging_empty'
+              } else if (!book.publishLog.updateTime){
+                book.importStatus = 'staging_empty'
+              }
+            }
+            if (!book.weight) {
+              book.weight = 1;
+            }
+            books.push(book);
           }
         });
 
@@ -817,6 +830,16 @@ export const store = new Vuex.Store({
         if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
           c.coverimgURL = process.env.ILM_API + c.coverimgURL;
         }
+        books = books.sort((a, b) => {
+          if (a.weight > b.weight) {
+            return -1;
+          } else if (b.weight > a.weight) {
+            return 1;
+          } else {
+            return a.title > b.title ? -1 : 1;
+          }
+        });
+        c.books_list = books;
         state.bookCollections[idx] = c;
       });
       if (state.currentCollectionId && !state.currentCollection._id) {
@@ -3257,7 +3280,7 @@ export const store = new Vuex.Store({
         })
     },
 
-    updateBookCollection({state}, collectionId = null) {
+    updateBookCollection({state, commit}, collectionId = null) {
       if (!state.currentBookMeta.bookid) {
         return Promise.reject({error: 'book not selected'});
       }
@@ -3271,8 +3294,10 @@ export const store = new Vuex.Store({
                 return b.bookid === state.currentBookMeta.bookid;
               });
               if (typeof index !== 'undefined') {
-                state.books_meta.splice(index, 1);
+                //state.books_meta.splice(index, 1);
                 //commit('SET_BOOKLIST', list);
+                state.books_meta[index].collection_id = collectionId;
+                commit('PREPARE_BOOK_COLLECTIONS');
               }
             } else {
 
@@ -3286,8 +3311,15 @@ export const store = new Vuex.Store({
         let api_url = state.API_URL + 'collection/' + collection_id + '/unlink_books';
         return axios.post(api_url, {books_ids: [state.currentBookMeta.bookid]}, {})
           .then((response) => {
-          if (response.status===200) {
+          if (response.status === 200) {
             state.currentBookMeta.collection_id = null;
+            let collectionIndex = state.bookCollections.findIndex(c => {
+              return c._id === collection_id;
+            });
+            if (collectionIndex !== -1) {
+              state.bookCollections[collectionIndex].bookids = response.data.bookids;
+              commit('PREPARE_BOOK_COLLECTIONS');
+            }
           } else {
 
           }
@@ -4182,6 +4214,12 @@ export const store = new Vuex.Store({
             Object.keys(data).forEach(k => {
               state.currentCollection[k] = data[k];
             });
+            if (response.data.hasOwnProperty('slug')) {
+              state.currentCollection['slug'] = response.data.slug;
+            }
+            if (response.data.hasOwnProperty('slug_status')) {
+              state.currentCollection['slug_status'] = response.data.slug_status;
+            }
             commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve();
@@ -4209,7 +4247,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    linkBooksToCollection({state, dispatch}, bookids) {
+    linkBooksToCollection({state, dispatch, commit}, bookids) {
       if (!state.currentCollection._id) {
         return Promise.reject(new Error('No collection selected'))
       }
@@ -4220,6 +4258,17 @@ export const store = new Vuex.Store({
         .then((response) => {
           return dispatch('getCollections')
           .then(() => {
+            bookids.forEach(bookid => {
+              let index = state.books_meta.findIndex(b => {
+                return b.bookid === bookid;
+              });
+              if (typeof index !== 'undefined') {
+                //state.books_meta.splice(index, 1);
+                //commit('SET_BOOKLIST', list);
+                state.books_meta[index].collection_id = state.currentCollection._id;
+              }
+            });
+            commit('PREPARE_BOOK_COLLECTIONS');
             return Promise.resolve(response);
           });
         })
@@ -4234,7 +4283,9 @@ export const store = new Vuex.Store({
       }
       return axios.put(`${state.API_URL}collection/${state.currentCollection._id}/coverimg`, imgData)
         .then((response) => {
-          
+          if (response.data) {
+            state.currentCollection.coverimgURL = process.env.ILM_API + response.data.coverimgURL;
+          }
         })
         .catch(err => {
           

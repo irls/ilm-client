@@ -19,6 +19,14 @@
             <input v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" />
           </td>
         </tr>
+        <tr v-if="collection.language !== 'en'">
+          <td>
+            Title EN
+          </td>
+          <td>
+            <input v-model="collection.title_en" v-on:change="update('title_en', $event)" :disabled="!allowCollectionsEdit" />
+          </td>
+        </tr>
         <tr>
           <td>
             Subtitle
@@ -69,6 +77,30 @@
             </div>
           </td>
         </tr>
+        <tr class="author" v-if="collection.language !== 'en'">
+          <td>
+            Author EN
+          </td>
+          <td>
+            <div class="authors">
+              <div class="author-row">
+                <input v-model="collection.author_en" 
+                  v-on:change="update('author_en', $event)" 
+                  :disabled="!allowCollectionsEdit"
+                  >
+                <div class="dropdown">
+                  <div v-on:click="toggleShowUnknownAuthorEn()" 
+                    class="dropdown-button" >
+                    <i class="fa fa-angle-down" ></i>
+                  </div>
+                  <div class="dropdown-content" 
+                    v-if="showUnknownAuthorEn && allowCollectionsEdit" 
+                    v-on:click="setUnknownAuthorEn()" >Unknown</div>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
         <tr>
           <td>
             Language
@@ -85,7 +117,7 @@
     </fieldset>
     <fieldset>
       <legend>URL slug</legend>
-      <input v-model="collection.slug" class="collection-slug" :disabled="!allowCollectionsEdit" />
+      <input v-model="collection.slug" :class="['collection-slug', {'-is-manual': collection.slug_status === 0}]" :disabled="!allowCollectionsEdit" v-on:change="update('slug', $event)" />
     </fieldset>
     <fieldset>
       <table class="properties">
@@ -108,7 +140,8 @@
             Difficulty
           </td>
           <td>
-            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="update('difficulty', $event)" :disabled="!allowCollectionsEdit" class="number-text-input" />
+            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="updateDifficulty($event)" :disabled="!allowCollectionsEdit" :class="['number-text-input', {'-has-error': validationErrors['difficulty'] !== ''}]" v-on:keypress="validateNumberInput('difficulty', $event)" />
+            <span class="validation-error" v-if="validationErrors['difficulty']">{{ validationErrors['difficulty'] }}</span>
           </td>
         </tr>
         <tr>
@@ -124,7 +157,8 @@
             Weight
           </td>
           <td>
-            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="update('weight', $event)" :disabled="!allowCollectionsEdit" class="number-text-input" />
+            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="updateWeight($event)" :disabled="!allowCollectionsEdit" :class="['number-text-input', {'-has-error': validationErrors['weight'] !== ''}]" v-on:keypress="validateNumberInput('weight', $event)" />
+            <span class="validation-error" v-if="validationErrors['weight']">{{validationErrors['weight']}}</span>
           </td>
         </tr>
       </table>
@@ -164,6 +198,12 @@
           collectionImage: '',
           showUnknownAuthor: false,
           showUnknownAuthorEn: false,
+          difficultyRange: [1, 14.99],
+          weightRange: [1, 10.99],
+          validationErrors: {
+            difficulty: '',
+            weight: ''
+          }
         }
       },
       components: {
@@ -198,6 +238,8 @@
           return this.updateCollection(update)
             .then(() => {
               this.collection[field] = value;
+              this.collection.slug =this.currentCollection.slug;
+              this.collection.slug_status = this.currentCollection.slug_status;
             });
         },
         publish() {
@@ -229,6 +271,13 @@
             this.showUnknownAuthor = setValue ? true : false;
           }
         },
+        toggleShowUnknownAuthorEn(setValue = null) {
+          if (setValue === null) {
+            this.showUnknownAuthorEn = !this.showUnknownAuthorEn;
+          } else {
+            this.showUnknownAuthorEn = setValue ? true : false;
+          }
+        },
         addAuthor() {
           this.collection.author.push('');
           this.liveUpdate('author', this.collection.author);
@@ -243,6 +292,40 @@
           this.toggleShowUnknownAuthor(false);
           this.collection.author[0] = 'Unknown';
           this.liveUpdate('author', this.collection.author);
+        },
+        setUnknownAuthorEn() {
+          this.toggleShowUnknownAuthorEn(false);
+          this.collection.author_en = 'Unknown';
+          this.liveUpdate('author_en', this.collection.author_en);
+        },
+        updateDifficulty($event) {
+          let val = $event.target.value;
+          if (val && (val < this.difficultyRange[0] || val > this.difficultyRange[1])) {
+            this.validationErrors['difficulty'] = 'Allowed range ' + this.difficultyRange[0] + ' - ' + this.difficultyRange[1];
+            return false;
+          }
+          return this.update('difficulty', $event);
+        },
+        updateWeight(event) {
+          let val = event.target.value;
+          if (val && (val < this.weightRange[0] || val > this.weightRange[1])) {
+            this.validationErrors['weight'] = 'Allowed range ' + this.weightRange[0] + ' - ' + this.weightRange[1];
+            return false;
+          }
+          return this.update('weight', event);
+        },
+        validateNumberInput(field, event) {
+          console.log(event.keyCode);
+          event.target.classList.remove('-has-error');
+          this.validationErrors[field] = '';
+          if ([101, 45].includes(event.keyCode)) {// keys: 'e', '-'
+            event.preventDefault();
+            return false;
+          }
+          if ([46, 44].includes(event.keyCode) && !event.target.value) {// keys: '.', ','
+            event.preventDefault();
+            return false;
+          }
         },
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection'])
       },
@@ -386,6 +469,10 @@
   table tr input {font-size: 1em; width: 100%}
   .collection-slug {
     width: 100%;
+    color: #9999;
+    &.-is-manual {
+      color: #000000;
+    }
   }
   .coverimg {
     padding:0; margin: 5px; margin-right: 8px;
@@ -415,5 +502,18 @@
   .number-text-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+  }
+  table.properties {
+    input {
+      &.-has-error {
+        border-color: red;
+        outline-color: red;
+      }
+    }
+    span.validation-error {
+      width: 100% !important;
+      color: red;
+      float: left !important;
+    }
   }
 </style>

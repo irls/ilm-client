@@ -221,6 +221,9 @@
             if (this.$route.params.hasOwnProperty('bookid')) {
               this.bookMetaVisible = this.metaVisible;
               this.collectionMetaVisible = false;
+            } else {
+              this.collectionMetaVisible = this.metaVisible;
+              this.bookMetaVisible = false;
             }
             this.currentBook = Object.assign({}, val);
           }

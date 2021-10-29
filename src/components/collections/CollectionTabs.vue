@@ -1,7 +1,7 @@
 <template>
   <vue-tabs ref="collectiontabs" class="meta-edit-tabs">
     <vue-tab title="Manage collection" id="manageCollection">
-      <ManageCollection></ManageCollection>
+      <ManageCollection @collectionRemoved="$emit('collectionRemoved')"></ManageCollection>
     </vue-tab>
     <vue-tab title="Meta" id="collectionMeta">
       <CollectionMeta></CollectionMeta>
