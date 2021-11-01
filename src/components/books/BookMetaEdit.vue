@@ -163,7 +163,7 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="change('category')" :key="currentBookid" :disabled="categoryEditDisabled">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
@@ -736,7 +736,8 @@ export default {
       adminOrLibrarian: 'adminOrLibrarian',
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
-      aligningBlocks: 'aligningBlocks'
+      aligningBlocks: 'aligningBlocks',
+      currentBookCollection: 'currentBookCollection'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -836,6 +837,30 @@ export default {
           }
         }
         return '';
+      }
+    },
+    
+    currentBookCategory: {
+      get() {
+        if (typeof this.currentBookCollection.category !== 'undefined') {
+          return this.currentBookCollection.category;
+        }
+        return this.currentBook.category;
+      },
+      set(value) {
+        this.currentBook.category = value;
+      }
+    },
+    
+    categoryEditDisabled: {
+      get() {
+        if (!this.allowMetadataEdit) {
+          return true;
+        }
+        if (typeof this.currentBookCollection.category !== 'undefined') {
+          return true;
+        }
+        return false;
       }
     }
   },
@@ -2052,7 +2077,6 @@ export default {
         });
         debouncedFunction(key,event);
       }
-      console.log('HERE', this.validationErrors);
 
     },
 

@@ -108,6 +108,7 @@ export default new Router({
       component: Settings
     },
     {
+      name: 'Collections',
       path: '/collections',
       component: Books,
       props: {listing: 'collections'},

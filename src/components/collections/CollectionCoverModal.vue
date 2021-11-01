@@ -20,7 +20,7 @@
             <div class="col-md-12">
 
               <div class="col-sm-4">
-                <img :src="uploadImage" class="preview-upload" v-show="uploadImage.length>0" />
+                <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
               <div class="col-sm-8">
@@ -66,10 +66,11 @@
       methods: {
         show() {
           this.uploadImage = '';
-          this.uploadURL = '';
+          this.uploadURL = this.currentCollection.coverimgURL ? this.currentCollection.coverimgURL : '';
           this.$modal.show('import-collection-cover');
         },
         close() {
+          this.$emit('closed');
           this.$modal.hide('import-collection-cover')
         },
         modalOpened() {
@@ -91,76 +92,35 @@
 
         createImage (file) {
           // console.log('*** Creating new image', file)
+          this.uploadImage = file;
           var reader = new FileReader();
-          var vm = this;
-          reader.onload = e => { vm.uploadImage = e.target.result };
+          
+          reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
         save() {
-          if (this.uploadImage) {
-            this.uploadNewImageData(this.uploadImage);
-          } else if (this.uploadURL) {
-            this.uploadNewImageUrl();
-          }
-        },
-        uploadNewImageData (urlData) {
-          if (urlData.length < 1) {
+          if (!this.uploadImage && !this.uploadURL) {
             return;
           }
           
-          let collection_id = this.currentCollection._id;
-          let ilm_library_files = this.$store.state.filesRemoteDB;
-
-          return ilm_library_files.get(collection_id)
-            .then(doc => {
-              // cut out mime type part
-              let mime = urlData.substring(urlData.indexOf(':') + 1, urlData.indexOf(';'));
-              // cut out data part
-              urlData = urlData.substring(urlData.indexOf(',') + 1);
-
-              doc._attachments = (doc._attachments || {});
-              doc._attachments.coverimg = {content_type: mime, data: urlData};
-
-              return ilm_library_files.put(doc)
-                .then((doc)=>{
-                  this.close();
-                  //return this.reloadCollection();
-                  this.updateCollectionVersion({minor: true});
-                })
-                .catch(err => console.log(err));
-            }).catch(err => {
-              if (err.name === 'not_found') {
-                return ilm_library_files.put({_id: collection_id, type: 'collection'})
-                  .then(doc => {
-                    return this.uploadNewImageData(urlData);
-                  });
-              } else {
-                console.log('Oops, we should not ever be here... ', err);
-              }
-            })
+          let formData = new FormData();
+          if (this.uploadImage) {
+            formData.append('coverimg', this.uploadImage, 'coverimg');
+          }
+          formData.append('coverimgURL', this.uploadURL);
+          
+          return this.updateCollectionCoverimg(formData)
+            .then(response => {
+              this.close();
+            });
         },
-        uploadNewImageUrl() {
-          var vm = this
-          return new Promise((resolve, reject) => {
-            var image = new Image()
-            image.crossOrigin = 'anonymous'
-            image.onload = function () {
-              var canvas = document.createElement('canvas')
-              canvas.width = this.naturalWidth // or 'width' if you want a special/scaled size
-              canvas.height = this.naturalHeight // or 'height' if you want a special/scaled size
-              canvas.getContext('2d').drawImage(this, 0, 0)
-              resolve(vm.uploadNewImageData(canvas.toDataURL('image/png')))
-            }
-            image.src = vm.uploadURL;
-          })
-        },
-        ...mapActions(['reloadCollection', 'updateCollectionVersion'])
+        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
         ...mapGetters(['currentCollection'])
       },
       watch: {
-        uploadImage: {
+        /*uploadImage: {
           handler(val) {
             if (val) {
               this.uploadURL = '';
@@ -175,7 +135,7 @@
               this.uploadImage = '';
             }
           }
-        }
+        }*/
       }
   }
 </script>
@@ -194,6 +154,9 @@
     .preview-upload {
       max-width: 200px;
       height: 250px;
+    }
+    .tab-pane {
+      display: block;
     }
   }
 </style>

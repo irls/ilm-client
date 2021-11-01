@@ -13,7 +13,7 @@
       <div class="collection-title" :class="['collection-row', {'selected': currentCollection._id == collection._id}]" v-on:click="rowClick(collection, $event)">
         <span slot="header" class="collection-title" @click.prevent.self>
           <i class="fa fa-book"></i>&nbsp;
-          {{collection.title + ' ' + collection.books.length + ' Books, ' + collection.pages + ' pages'}}
+          {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
       <Grid id='books_grid'
@@ -73,7 +73,7 @@
           if (this.currentCollection._id) {
             return this.currentCollection._id === collection._id;
           }
-          return collection.book_match || collection.books.indexOf(this.currentBookMeta.bookid) !== -1;
+          return collection.book_match || collection.bookids.indexOf(this.currentBookMeta.bookid) !== -1;
         },
         moveBook(collection, data) {
           if (this.allowCollectionsEdit &&
@@ -132,24 +132,6 @@
           get() {
             let collections = this.bookCollections;
             collections.forEach(c => {
-
-              let books = [];
-              c.books.forEach(b => {
-                let book = this.allBooks.find(_b => {
-                  return _b.bookid === b;
-                });
-                if (book) {
-                  if (book.importStatus == 'staging' && book.blocksCount <= 2){
-                    if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-                      book.importStatus = 'staging_empty'
-                    } else if (!book.publishLog.updateTime){
-                      book.importStatus = 'staging_empty'
-                    }
-                  }
-                  books.push(book);
-                }
-              });
-              c.books_list = books;
               c.book_match = false;
             });
             for (var field in this.collectionsFilter) {
