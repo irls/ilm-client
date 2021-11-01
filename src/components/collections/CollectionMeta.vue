@@ -164,6 +164,7 @@
       </table>
     </fieldset>
     <fieldset>
+      <legend>Collection Cover</legend>
       <div class="coverimg" v-on:click="changeCoverModal()">
         <img height="80" v-if="collectionImage" v-bind:src="collectionImage" />
         <div v-else class="coverimg-wrap"></div>

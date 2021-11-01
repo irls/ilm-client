@@ -3280,7 +3280,7 @@ export const store = new Vuex.Store({
         })
     },
 
-    updateBookCollection({state, commit}, collectionId = null) {
+    updateBookCollection({state, commit, dispatch}, collectionId = null) {
       if (!state.currentBookMeta.bookid) {
         return Promise.reject({error: 'book not selected'});
       }
@@ -3289,16 +3289,26 @@ export const store = new Vuex.Store({
         return axios.post(api_url, {books_ids: [state.currentBookMeta.bookid]}, {})
           .then((response) => {
             if (response.status===200) {
-              state.currentBookMeta.collection_id = collectionId;
-              let index = state.books_meta.findIndex(b => {
-                return b.bookid === state.currentBookMeta.bookid;
-              });
-              if (typeof index !== 'undefined') {
-                //state.books_meta.splice(index, 1);
-                //commit('SET_BOOKLIST', list);
-                state.books_meta[index].collection_id = collectionId;
-                commit('PREPARE_BOOK_COLLECTIONS');
-              }
+              return dispatch('getCollection', collectionId)
+                .then(collection => {
+                  state.currentBookMeta.collection_id = collectionId;
+                  let index = state.books_meta.findIndex(b => {
+                    return b.bookid === state.currentBookMeta.bookid;
+                  });
+                  if (typeof index !== 'undefined') {
+                    //state.books_meta.splice(index, 1);
+                    //commit('SET_BOOKLIST', list);
+                    state.books_meta[index].collection_id = collectionId;
+                  }
+                  index = state.bookCollections.findIndex(c => {
+                    return c._id === collectionId;
+                  });
+                  if (!index !== -1) {
+                    state.bookCollections[index] = collection;
+                  }
+                  commit('PREPARE_BOOK_COLLECTIONS');
+                  return Promise.resolve(response);
+                });
             } else {
 
             }
@@ -4289,6 +4299,16 @@ export const store = new Vuex.Store({
         })
         .catch(err => {
           
+        });
+    },
+    
+    getCollection({state}, _id) {
+      return axios.get(`${state.API_URL}collection/${_id}`)
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
         });
     }
   }
