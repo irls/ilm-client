@@ -175,7 +175,11 @@
     </fieldset>
     <fieldset>
       <legend>Description</legend>
-        <textarea v-model="collection.description" class="collection-description" v-on:change="update('description', $event)" :disabled="!allowCollectionsEdit"></textarea>
+      <resizable-textarea @valueChanged="descriptionValueChanged"
+        :initValue="collection.description"
+        ref="collectionDescription"
+        :disabled="!allowCollectionsEdit">
+      </resizable-textarea>
     </fieldset>
     <div class="collection-meta col-sm-12">
       <CollectionCoverModal ref="collectionCoverModal" @closed="resetCollectionImage"></CollectionCoverModal>
@@ -190,6 +194,8 @@
   import api_config from '../../mixins/api_config';
   import { Languages }      from "../../mixins/lang_config.js"
   import CollectionCoverModal from './CollectionCoverModal';
+  import Vue from 'vue';
+  import ResizableTextarea from '../generic/ResizableTextarea';
   export default {
       name: 'CollectionMeta',
       data() {
@@ -208,7 +214,8 @@
         }
       },
       components: {
-        'CollectionCoverModal': CollectionCoverModal
+        'CollectionCoverModal': CollectionCoverModal,
+        'resizable-textarea': ResizableTextarea
       },
       mounted() {
         this.init();
@@ -222,6 +229,7 @@
             this.collection = {};
           }
           this.resetCollectionImage();
+          this.$refs.collectionDescription.setValue(this.collection.description);
         },
         update(key, event) {
           let value = key === 'author' ? this.currentCollection.author : event.target.value;
@@ -316,7 +324,7 @@
           return this.update('weight', event);
         },
         validateNumberInput(field, event) {
-          console.log(event.keyCode);
+          //console.log(event.keyCode);
           event.target.classList.remove('-has-error');
           this.validationErrors[field] = '';
           if ([101, 45].includes(event.keyCode)) {// keys: 'e', '-'
@@ -327,6 +335,9 @@
             event.preventDefault();
             return false;
           }
+        },
+        descriptionValueChanged(event) {
+          return this.update('description', event);
         },
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection'])
       },
@@ -435,8 +446,10 @@
         .authors {
           display: table;
           width: 100%;
+          border-collapse: unset;
+          border-spacing: 0;
           .dropdown {
-            padding: 0px 2px;
+            padding: 0px 0px 0px 5px;
             width: 10%;
           }
           .author-row {
