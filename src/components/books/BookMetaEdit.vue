@@ -572,6 +572,7 @@ import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
+import number_methods from "../../mixins/number_methods.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
@@ -864,7 +865,7 @@ export default {
     }
   },
 
-  mixins: [task_controls, api_config, access],
+  mixins: [task_controls, api_config, access, number_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
@@ -2092,6 +2093,7 @@ export default {
 
         let debouncedFunction = _.debounce((key,event)=>{
           let val = typeof event === 'string' ? event : event.target.value;
+          val = this.parseFloatToFixed(val, 2);
           this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
 
         },  debounceTime, {

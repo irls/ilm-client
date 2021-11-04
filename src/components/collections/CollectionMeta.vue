@@ -140,7 +140,12 @@
             Difficulty
           </td>
           <td>
-            <input type="number" min="1" max="14.99" step="0.01" v-model="collection.difficulty" v-on:change="updateDifficulty($event)" :disabled="!allowCollectionsEdit" :class="['number-text-input', {'-has-error': validationErrors['difficulty'] !== ''}]" v-on:keypress="validateNumberInput('difficulty', $event)" />
+            <input 
+              v-model="collection.difficulty" 
+              v-on:change="updateDifficulty($event)" 
+              :disabled="!allowCollectionsEdit" 
+              :class="['number-text-input', {'-has-error': validationErrors['difficulty'] !== ''}]" 
+              v-on:keydown="validateNumberInput('difficulty', $event)"  />
             <span class="validation-error" v-if="validationErrors['difficulty']">{{ validationErrors['difficulty'] }}</span>
           </td>
         </tr>
@@ -157,7 +162,12 @@
             Weight
           </td>
           <td>
-            <input type="number" min="1" max="10.99" step="0.01" v-model="collection.weight" v-on:change="updateWeight($event)" :disabled="!allowCollectionsEdit" :class="['number-text-input', {'-has-error': validationErrors['weight'] !== ''}]" v-on:keypress="validateNumberInput('weight', $event)" />
+            <input 
+              v-model="collection.weight" 
+              v-on:change="updateWeight($event)" 
+              :disabled="!allowCollectionsEdit" 
+              :class="['number-text-input', {'-has-error': validationErrors['weight'] !== ''}]" 
+              v-on:keydown="validateNumberInput('weight', $event)" />
             <span class="validation-error" v-if="validationErrors['weight']">{{validationErrors['weight']}}</span>
           </td>
         </tr>
@@ -192,6 +202,7 @@
   import PouchDB from 'pouchdb';
   import {mapActions, mapGetters} from 'vuex';
   import api_config from '../../mixins/api_config';
+  import number_methods from '../../mixins/number_methods';
   import { Languages }      from "../../mixins/lang_config.js"
   import CollectionCoverModal from './CollectionCoverModal';
   import Vue from 'vue';
@@ -220,7 +231,7 @@
       mounted() {
         this.init();
       },
-      mixins: [api_config],
+      mixins: [api_config, number_methods],
       methods: {
         init() {
           if (this.currentCollection) {
@@ -309,32 +320,37 @@
         },
         updateDifficulty($event) {
           let val = $event.target.value;
-          if (val && (val < this.difficultyRange[0] || val > this.difficultyRange[1])) {
+          if (val && (!/^\d{1,2}([\.\,]\d{1,2})?$/.test(val) || val < this.difficultyRange[0] || val > this.difficultyRange[1])) {
             this.validationErrors['difficulty'] = 'Allowed range ' + this.difficultyRange[0] + ' - ' + this.difficultyRange[1];
             return false;
           }
-          return this.update('difficulty', $event);
+          val = this.parseFloatToFixed(val, 2);
+          return this.liveUpdate('difficulty', val);
         },
         updateWeight(event) {
           let val = event.target.value;
-          if (val && (val < this.weightRange[0] || val > this.weightRange[1])) {
-            this.validationErrors['weight'] = 'Allowed range ' + this.weightRange[0] + ' - ' + this.weightRange[1];
+          let errorMessage = 'Allowed range ' + this.weightRange[0] + ' - ' + this.weightRange[1];
+          if (val && (!/^\d{1,2}([\.\,]\d{1,2})?$/.test(val) || val < this.weightRange[0] || val > this.weightRange[1])) {
+            this.validationErrors['weight'] = errorMessage;
             return false;
           }
-          return this.update('weight', event);
+          val = this.parseFloatToFixed(val, 2);
+          this.collection.weight = val;
+          return this.liveUpdate('weight', val);
         },
         validateNumberInput(field, event) {
           //console.log(event.keyCode);
+          //on:paste pastedData = e.clipboardData.getData('text')
           event.target.classList.remove('-has-error');
           this.validationErrors[field] = '';
-          if ([101, 45].includes(event.keyCode)) {// keys: 'e', '-'
+          /*if ([101, 45].includes(event.keyCode)) {// keys: 'e', '-'
             event.preventDefault();
             return false;
           }
           if ([46, 44].includes(event.keyCode) && !event.target.value) {// keys: '.', ','
             event.preventDefault();
             return false;
-          }
+          }*/
         },
         descriptionValueChanged(event) {
           return this.update('description', event);
