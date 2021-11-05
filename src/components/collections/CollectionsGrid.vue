@@ -18,7 +18,7 @@
       </div>
       <Grid id='books_grid'
           v-if="isOpenPanel(collection)"
-          :data="collection.books_list"
+          :data="currentCollection.books_list"
           :columns="headers"
           :rowsPerPage="100"
           @clickRow="selectBook"
