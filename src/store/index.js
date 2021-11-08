@@ -6,6 +6,7 @@ import PouchDB from 'pouchdb'
 import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
+import { Collection } from './collection'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -678,16 +679,20 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENT_COLLECTION (state, _id) {
+      let currentCollection = null;
       if (_id) {
         let collection = state.bookCollections.find(c => {
           return c._id === _id;
         });
         if (collection) {
-          state.currentCollection = collection;
+          currentCollection = collection;
         }
-      } else {
-        state.currentCollection = {};
       }
+      if (!(currentCollection instanceof Collection)) {
+        currentCollection = new Collection({});
+      }
+      state.currentCollection = currentCollection;
+      state.currentCollection.sortBooks();
       state.currentCollectionId = _id;
     },
 
@@ -837,21 +842,13 @@ export const store = new Vuex.Store({
         if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
           c.coverimgURL = process.env.ILM_API + c.coverimgURL;
         }
-        books = books.sort((a, b) => {
-          if (a.weight > b.weight) {
-            return -1;
-          } else if (b.weight > a.weight) {
-            return 1;
-          } else {
-            return a.title > b.title ? -1 : 1;
-          }
-        });
         c.books_list = books;
-        state.bookCollections[idx] = c;
+        state.bookCollections[idx] = new Collection(c);
+        //state.bookCollections[idx].sortBooks();
       });
-      if (state.currentCollectionId && !state.currentCollection._id) {
+      //if (state.currentCollectionId && !state.currentCollection._id) {
         this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
-      }
+      //}
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
       state.allowPublishCurrentBook = allow;
@@ -1844,6 +1841,9 @@ export const store = new Vuex.Store({
               commit('SET_CURRENTBOOK_META', response.data);
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+              if (state.currentBookMeta.collection_id && state.currentCollection) {
+                state.currentCollection.updateBook(state.currentBookMeta);
+              }
             }
 
             return Promise.resolve(response.data);
