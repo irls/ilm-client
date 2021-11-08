@@ -51,7 +51,7 @@
     padding: 0;
     margin: 0;
     border: none;
-    min-height: 180px;
+    min-height: 20px;
     resize: vertical;
     outline: 0;
   }

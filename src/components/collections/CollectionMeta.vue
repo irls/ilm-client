@@ -375,7 +375,7 @@
           return Languages;
         },
 
-        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection', 'bookCategories'])
+        ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection', 'bookCategories', 'currentCollectionId'])
       },
       watch: {
         'currentCollection': {
@@ -384,7 +384,16 @@
             this.init();
           },
           deep: true
-        }
+        }/*,
+        'currentCollection._id': {
+          handler() {
+            if (this.$refs.collectionDescription) {
+              Vue.nextTick(() => {
+                this.$refs.collectionDescription.initSize();
+              });
+            }
+          }
+        }*/
       }
   }
 </script>
