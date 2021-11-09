@@ -2834,10 +2834,10 @@ Save text changes and realign the Block?`,
         });
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
         let data = {};
-        if (this.block.language) {
-          data.language = this.block.language;
-        } else if (this.meta.language) {
+        if (this.meta.language) {
           data.language = this.meta.language;
+        } else if (this.block.language) {
+          data.language = this.block.language;
         }
         this.block.addFootnote(pos, data);
         this.$forceUpdate();
@@ -3855,7 +3855,7 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        
+
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             this.voiceworkUpdating = false;
@@ -4703,7 +4703,7 @@ Save text changes and realign the Block?`,
       'block.content': {
         handler(val, oldval) {
           if (!oldval) {
-            
+
           }
         },
         deep: true
