@@ -1,5 +1,8 @@
 
 
+const weightRange = [1, 10.99];
+const difficultyRange = [1, 14.99];
+
 class Collection {
   constructor(data) {
     this._id = data._id || '';
@@ -26,20 +29,25 @@ class Collection {
     this.slug_status = data.hasOwnProperty('slug_status') ? data.slug_status : 1;// 1 - auto, 0 - manual
     this.books_list = data.books_list || [];
     this.pages = data.pages || 0;
+    
+    this.validationErrors = {
+      difficulty: '',
+      weight: ''
+    };
   }
   
   sortBooks() {
     //console.log('SORTING', this._id, this.books_list.length);
-    this.books_list.forEach(b => {
+    /*this.books_list.forEach(b => {
       if (!b.weight) {
         b.weight = 1;
       }
       if (!b.difficulty) {
         b.difficulty = 1;
       }
-    })
+    })*/
     this.books_list = this.books_list.sort((a, b) => {
-      return 1 * b.weight - 1 * a.weight || 1 * b.difficulty - 1 * a.difficulty || a.title.localeCompare(b.title);
+      return 1 * (b.weight || 1) - 1 * (a.weight || 1) || 1 * (b.difficulty || 1) - 1 * (a.difficulty || 1) || a.title.localeCompare(b.title);
       let weightDiff = 1 * a.weight - 1 * b.weight;
       if (weightDiff) {
         return -1;
@@ -62,6 +70,27 @@ class Collection {
       }
     }
   }
+  
+  setValidateWeight(value) {
+    let errorMessage = 'Allowed range ' + weightRange[0] + ' - ' + weightRange[1];
+    this.weight = value;
+    if (value && (!/^\d{1,2}([\.\,]\d{1,2})?$/.test(value) || value < weightRange[0] || value > weightRange[1])) {
+      this.validationErrors['weight'] = errorMessage;
+      return false;
+    }
+    return true;
+  }
+  
+  setValidateDifficulty(value) {
+    this.difficulty = value;
+    if (!value || !/^\d{1,2}([\.\,]\d{1,2})?$/.test(value) || value < difficultyRange[0] || value > difficultyRange[1]) {
+      this.validationErrors['difficulty'] = 'Allowed range ' + difficultyRange[0] + ' - ' + difficultyRange[1];
+      return false;
+    }
+    return true;
+  }
+  
+  
 }
 
 export { Collection }

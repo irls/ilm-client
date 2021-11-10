@@ -144,9 +144,9 @@
               v-model="collection.difficulty" 
               v-on:change="updateDifficulty($event)" 
               :disabled="!allowCollectionsEdit" 
-              :class="['number-text-input', {'-has-error': validationErrors['difficulty'] !== ''}]" 
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['difficulty'] !== ''}]" 
               v-on:keydown="validateNumberInput('difficulty', $event)"  />
-            <span class="validation-error" v-if="validationErrors['difficulty']">{{ validationErrors['difficulty'] }}</span>
+            <span class="validation-error" v-if="currentCollection.validationErrors['difficulty']">{{ currentCollection.validationErrors['difficulty'] }}</span>
           </td>
         </tr>
         <tr>
@@ -166,9 +166,9 @@
               v-model="collection.weight" 
               v-on:change="updateWeight($event)" 
               :disabled="!allowCollectionsEdit" 
-              :class="['number-text-input', {'-has-error': validationErrors['weight'] !== ''}]" 
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['weight'] !== ''}]" 
               v-on:keydown="validateNumberInput('weight', $event)" />
-            <span class="validation-error" v-if="validationErrors['weight']">{{validationErrors['weight']}}</span>
+            <span class="validation-error" v-if="currentCollection.validationErrors['weight']">{{currentCollection.validationErrors['weight']}}</span>
           </td>
         </tr>
       </table>
@@ -320,8 +320,7 @@
         },
         updateDifficulty($event) {
           let val = $event.target.value;
-          if (val && (!/^\d{1,2}([\.\,]\d{1,2})?$/.test(val) || val < this.difficultyRange[0] || val > this.difficultyRange[1])) {
-            this.validationErrors['difficulty'] = 'Allowed range ' + this.difficultyRange[0] + ' - ' + this.difficultyRange[1];
+          if (!this.currentCollection.setValidateDifficulty(val)) {
             return false;
           }
           val = this.parseFloatToFixed(val, 2);
@@ -329,9 +328,7 @@
         },
         updateWeight(event) {
           let val = event.target.value;
-          let errorMessage = 'Allowed range ' + this.weightRange[0] + ' - ' + this.weightRange[1];
-          if (val && (!/^\d{1,2}([\.\,]\d{1,2})?$/.test(val) || val < this.weightRange[0] || val > this.weightRange[1])) {
-            this.validationErrors['weight'] = errorMessage;
+          if (!this.currentCollection.setValidateWeight(val)) {
             return false;
           }
           val = this.parseFloatToFixed(val, 2);
@@ -342,7 +339,7 @@
           //console.log(event.keyCode);
           //on:paste pastedData = e.clipboardData.getData('text')
           event.target.classList.remove('-has-error');
-          this.validationErrors[field] = '';
+          this.currentCollection.validationErrors[field] = '';
           /*if ([101, 45].includes(event.keyCode)) {// keys: 'e', '-'
             event.preventDefault();
             return false;
