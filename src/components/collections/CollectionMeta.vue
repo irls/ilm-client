@@ -338,8 +338,10 @@
         validateNumberInput(field, event) {
           //console.log(event.keyCode);
           //on:paste pastedData = e.clipboardData.getData('text')
-          event.target.classList.remove('-has-error');
-          this.currentCollection.validationErrors[field] = '';
+          if (event && ![9, 13, 27].includes(event.keyCode)) {// tab, enter, esc
+            event.target.classList.remove('-has-error');
+            this.currentCollection.validationErrors[field] = '';
+          }
           /*if ([101, 45].includes(event.keyCode)) {// keys: 'e', '-'
             event.preventDefault();
             return false;
