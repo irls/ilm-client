@@ -4335,7 +4335,9 @@ export const store = new Vuex.Store({
         .then((response) => {
           if (response && response.data) {
             //commit('SET_CURRENT_COLLECTION', response.data);
-            Object.keys(data).forEach(k => {
+            Object.keys(data).filter(k => {
+              return !state.currentCollection.validationErrors[k];
+            }).forEach(k => {
               state.currentCollection[k] = data[k];
             });
             if (response.data.hasOwnProperty('slug')) {
@@ -4344,7 +4346,7 @@ export const store = new Vuex.Store({
             if (response.data.hasOwnProperty('slug_status')) {
               state.currentCollection['slug_status'] = response.data.slug_status;
             }
-            commit('PREPARE_BOOK_COLLECTIONS');
+            //commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve();
         })
