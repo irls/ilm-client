@@ -116,6 +116,19 @@
       },
       mounted() {
         this.updateBooksList();
+        if (this.$route && this.$route.params && this.$route.params.bookid) {
+          let hasBook = this.selectedBooks.findIndex(b => {
+            return b.bookid === this.$route.params.bookid;
+          });
+          if (hasBook === -1) {
+            let book = this.allBooks.find(b => {
+              return b.bookid === this.$route.params.bookid;
+            });
+            if (book) {
+              this.selectBook(book);
+            }
+          }
+        }
       },
       computed: {
         ...mapGetters([

@@ -117,7 +117,7 @@
     </fieldset>
     <fieldset>
       <legend>URL slug</legend>
-      <input v-model="collection.slug" :class="['collection-slug', {'-is-manual': collection.slug_status === 0}]" :disabled="!allowCollectionsEdit" v-on:change="update('slug', $event)" />
+      <input v-model="collection.slug" :class="['collection-slug', {'-is-manual': collection.slug_status === 0}]" :disabled="!allowCollectionsEdit" v-on:change="update('slug', $event)" :title="collection.slug" />
     </fieldset>
     <fieldset>
       <table class="properties">
