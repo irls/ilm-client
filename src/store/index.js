@@ -824,9 +824,6 @@ export const store = new Vuex.Store({
                 book.importStatus = 'staging_empty'
               }
             }
-            if (!book.weight) {
-              book.weight = 1;
-            }
             books.push(book);
           }
         });
