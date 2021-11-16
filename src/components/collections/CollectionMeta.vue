@@ -507,9 +507,9 @@
   table tr input {font-size: 1em; width: 100%}
   .collection-slug {
     width: 100%;
-    color: #9999;
+    color: #999;
     &.-is-manual {
-      color: #000000;
+      color: #000;
     }
   }
   .coverimg {
@@ -544,7 +544,7 @@
   table.properties {
     input {
       &.-has-error {
-        border-color: red;
+        border: 2px solid red;
         outline-color: red;
       }
     }
