@@ -3,33 +3,39 @@
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
-      <div class="content-background">
-      <div v-for="(viewObj, listIdx) in getListObjs"
-        :class="['row content-scroll-item back']"
-        :key = "viewObj.blockRid"
-        :id="'v-'+ viewObj.blockId"
-        :data-rid="viewObj.blockRid">
 
-        <div class='col'>
-        <BookBlockPreview
-          ref="viewBlocks"
-          :blockRid = "viewObj.blockRid"
-          :blockId = "viewObj.blockId"
-          :blockO = "parlistO.get(viewObj.blockRid)"
-          :block = "parlist.get(viewObj.blockId)"
-          :mode = "mode"
-        ></BookBlockPreview>
+      <SvelteBookPreviewInVue
+        :class="['content-background']"
+        :parlists="{parlistO, parlist}"
+      ></SvelteBookPreviewInVue>
+
+      <!--<div class="content-background" v-bind:style="{'display': 'none' }">
+        <div v-for="(viewObj, listIdx) in getListObjs"
+          :class="['row content-scroll-item back']"
+          :key = "viewObj.blockRid"
+          :id="'v-'+ viewObj.blockId"
+          :data-rid="viewObj.blockRid">
+
+          <div class='col'>
+          <BookBlockPreview
+            ref="viewBlocks"
+            :blockRid = "viewObj.blockRid"
+            :blockId = "viewObj.blockId"
+            :blockO = "parlistO.get(viewObj.blockRid)"
+            :block = "parlist.get(viewObj.blockId)"
+            :mode = "mode"
+          ></BookBlockPreview>
+          </div>
+
+
         </div>
-        <!--<div class='col'>-->
 
       </div>
-      <!--<div class="row"-->
-      </div>
-      <!--<div class="content-background">-->
+      <div class="content-background">-->
   </div>
   <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px', 'display': 'none' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
@@ -98,20 +104,22 @@ import vueSlider from 'vue-slider-component';
 import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
 
+import SvelteBookPreview from "./previews/BookPreview.svelte";
+import toVue from "svelte-adapter/vue";
+
 const initialTopOffset = 84;
 
 export default {
   data () {
     return {
       page: 0,
-      //parlist: new Map(),
-      //autoload: true,
       recorder: false,
       recorderStream: null,
       blockOrderChanged: false,
-      //isAllLoaded: false,
+
       selectionStart: {},
       selectionEnd: {},
+
       parCounter: { pref: 0, prefCnt: 0, curr: 1 },
       blocksListQuery: false,
       blockReindexProcess: false,
@@ -238,7 +246,8 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider
+      BookBlockView, BookBlockPreview, vueSlider,
+      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
   },
   methods: {
     ...mapActions([
@@ -292,10 +301,12 @@ export default {
           this.freeze('loadBookMeta');
           return this.loadBook(this.$route.params.bookid)
           .then((meta)=>{
-            //console.log('loadBook then meta', meta);
             this.unfreeze('loadBookMeta');
             let startBlock = this.$route.params.block || false;
             let taskType = this.$route.params.task_type || false;
+            return Promise.resolve(meta);
+            //console.log('loadBook then meta', meta);
+            /*
 
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
@@ -308,7 +319,7 @@ export default {
               this.isNeedDown = rIdsArray[rIdsArray.length-1];
               this.$router.replace({name: this.$route.name, params: {}});
               return Promise.resolve(answer);
-            })
+            })*/
           }).catch((err)=>{
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
@@ -1855,30 +1866,26 @@ export default {
 
       this.$router.push({name: this.$route.name, params: {}});
       this.loadBookMeta() // also handle route params
-      .then((initBlocks)=>{
-        if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
+      .then((meta)=>{
+        if (meta && this.meta._id) {
           this.tc_loadBookTask(this.meta._id)
           .then(()=>{
-            this.loadPreparedBookDown(this.parlistO.idsArray(), 10).then(()=>{
-              this.startId = this.parlistO.idsArray()[0];
-              this.loadBookBlocks({bookId: this.meta._id})
-              .then((res)=>{
-                this.parlistO.updateLookupsList(this.meta._id, res);
-                if (res.blocks && res.blocks.length > 0) {
-                  res.blocks.forEach((el, idx, arr)=>{
-                    if (!this.parlist.has(el._id)) {
-                      let newBlock = new BookBlock(el);
-                      this.$store.commit('set_storeList', newBlock);
-                      if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
-                    }
-                    //this.parlistO.setLoaded(el._id);
-                  });
-                  this.$store.commit('set_taskBlockMap');
-                }
-                this.loadBookToc({bookId: this.meta._id, isWait: true});
-                this.loadBookTocSections([]);
-                //this.lazyLoad();
-              });
+            this.loadBookBlocks({bookId: this.meta._id})
+            .then((res)=>{
+              this.parlistO.updateLookupsList(this.meta._id, res);
+              if (res.blocks && res.blocks.length > 0) {
+                res.blocks.forEach((el, idx, arr)=>{
+                  if (!this.parlist.has(el._id)) {
+                    let newBlock = new BookBlock(el);
+                    this.$store.commit('set_storeList', newBlock);
+                  }
+                  //this.parlistO.setLoaded(el._id);
+                });
+                this.$store.commit('set_taskBlockMap');
+              }
+              this.loadBookToc({bookId: this.meta._id, isWait: true});
+              this.loadBookTocSections([]);
+              //this.lazyLoad();
             });
           });
         }
@@ -2537,42 +2544,33 @@ export default {
       };
       this.checkMode();
       this.loadBookMeta() // also handle route params
-      .then((initBlocks)=>{
+      .then((meta)=>{
         this.getProcessQueue();
-        if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
+        if (meta && this.meta._id) {
           this.tc_loadBookTask()
           .then(()=>{
-            this.loadPreparedBookDown(this.parlistO.idsArray())
-            .then(()=>{
-              this.loadBookBlocks({bookId: this.meta._id})
-              .then((res)=>{
-                this.parlistO.updateLookupsList(this.meta._id, res);
-                //console.log('res.blocks', res.blocks[0]);
-                if (res.blocks && res.blocks.length > 0) {
-                  res.blocks.forEach((el, idx, arr)=>{
-                    if (!this.parlist.has(el._id)) {
-                      let newBlock = new BookBlock(el);
-                      this.$store.commit('set_storeList', newBlock);
-                      if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
-                    }
-                    //this.parlistO.setLoaded(el._id);
-                  });
-                  this.$store.commit('set_taskBlockMap');
-                  //this.parlistO.refresh();
-                  if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
-                    Vue.nextTick(() => {
-                      this.handleScroll();
-                      this.scrollToBlock(initBlocks.blocks[0].blockid);
-                    })
+            this.loadBookBlocks({bookId: this.meta._id})
+            .then((res)=>{
+              this.parlistO.updateLookupsList(this.meta._id, res);
+              //console.log('res.blocks', res.blocks[0]);
+              if (res.blocks && res.blocks.length > 0) {
+                res.blocks.forEach((el, idx, arr)=>{
+                  if (!this.parlist.has(el._id)) {
+                    let newBlock = new BookBlock(el);
+                    this.$store.commit('set_storeList', newBlock);
                   }
-                }
-
-                //this.lazyLoad();
-              });
+                });
+                this.$store.commit('set_taskBlockMap');
+                /*if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
+                  Vue.nextTick(() => {
+                    this.handleScroll();
+                    this.scrollToBlock(initBlocks.blocks[0].blockid);
+                  })
+                }*/
+              }
             });
           });
         } else {
-
           if (this.$route.params.hasOwnProperty('block')) {
             this.scrollToBlock(this.$route.params.block);
             this.$router.replace({name: this.$route.name, params: {}});
@@ -2878,7 +2876,7 @@ export default {
       width: 100%;
 
       &.back {
-        margin-right: -50%;
+        /*margin-right: -50%;*/
       }
       &.front {
         position: relative;
