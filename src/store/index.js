@@ -832,9 +832,6 @@ export const store = new Vuex.Store({
                 book.importStatus = 'staging_empty'
               }
             }
-            if (!book.weight) {
-              book.weight = 1;
-            }
             books.push(book);
           }
         });
@@ -3305,11 +3302,26 @@ export const store = new Vuex.Store({
       }
       if (collectionId) {
         let api_url = state.API_URL + 'collection/' + collectionId + '/link_books';
+        let oldCollectionId = state.currentBookMeta.collection_id;
         return axios.post(api_url, {books_ids: [state.currentBookMeta.bookid]}, {})
           .then((response) => {
             if (response.status===200) {
-              return dispatch('getCollection', collectionId)
-                .then(collection => {
+              let getOldCollection = new Promise((resolve, reject) => {
+                if (oldCollectionId) {
+                  return dispatch('getCollection', oldCollectionId)
+                    .then(oldCollection => {
+                      return resolve(oldCollection);
+                    });
+                } else {
+                  return resolve({});
+                }
+              });
+              return Promise.all([
+                dispatch('getCollection', collectionId),
+                getOldCollection
+              ])
+                .then(prepared => {
+                  let [collection, oldCollection] = prepared;
                   state.currentBookMeta.collection_id = collectionId;
                   let index = state.books_meta.findIndex(b => {
                     return b.bookid === state.currentBookMeta.bookid;
@@ -3319,12 +3331,16 @@ export const store = new Vuex.Store({
                     //commit('SET_BOOKLIST', list);
                     state.books_meta[index].collection_id = collectionId;
                   }
-                  index = state.bookCollections.findIndex(c => {
-                    return c._id === collectionId;
+                  [collection, oldCollection].forEach(coll => {
+                    if (coll._id) {
+                      index = state.bookCollections.findIndex(c => {
+                        return c._id === coll._id;
+                      });
+                      if (!index !== -1) {
+                        state.bookCollections[index] = coll;
+                      }
+                    }
                   });
-                  if (!index !== -1) {
-                    state.bookCollections[index] = collection;
-                  }
                   commit('PREPARE_BOOK_COLLECTIONS');
                   return Promise.resolve(response);
                 });
