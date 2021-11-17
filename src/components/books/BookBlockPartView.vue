@@ -3504,8 +3504,9 @@ Save text changes and realign the Block?`,
                 return false;
               }
             }
+          } else {
+            return false;
           }
-          
         }
         return true;
       },
