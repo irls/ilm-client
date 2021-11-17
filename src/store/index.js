@@ -2155,6 +2155,7 @@ export const store = new Vuex.Store({
               oldBlock.footnotes = response.data.footnotes;
               oldBlock.status = response.data.status;
               oldBlock.type = response.data.type;
+              oldBlock.language = response.data.language;
               oldBlock.classes = response.data.classes;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();

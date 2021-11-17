@@ -1972,14 +1972,24 @@ export default {
           if (this.isIllustrationChanged) {
             return this.uploadIllustration();
           } else if (this.isChanged) {
-            return this.assembleBlock({
+            const updBlock = {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
               blockid: this.block.blockid,
               type: this.block.type,
-              flags: this.block.flags || []
-            });
+              flags: this.block.flags || [],
+            }
+            if (this.changes && Array.isArray(this.changes)) {
+              this.changes.forEach(c => {
+                switch(c) {
+                  case 'language': {
+                    updBlock.language = this.block.language || null
+                  }
+                }
+              })
+            }
+            return this.assembleBlock(updBlock);
           }
         } else {
           if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
@@ -3909,7 +3919,7 @@ Save text changes and realign the Block?`,
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
       selectLangSubmit(ev){
-        console.log(`selectLangSubmit: `, ev.target.value);
+        //console.log(`selectLangSubmit: `, ev.target.value);
         this.block.language = ev.target.value;
         this.setChanged(true, 'language');
         this.$refs.blockMenu.close();
