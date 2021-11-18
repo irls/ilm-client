@@ -3777,7 +3777,11 @@ Save text changes and realign the Block?`,
 
         let formData = new FormData();
         formData.append('illustration', image, image.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
+        formData.append('block', JSON.stringify({
+          description: this.$refs.blocks[0].$refs.blockDescription.innerHTML,
+          flags: this.block.flags || [],
+          language: this.block.language || null
+        }));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
