@@ -300,7 +300,23 @@ export default {
         if (tc && tc.section) {
           if (this.validateSlug(slug)) {
             if (tc.section.slug !== slug) {
-              return this.updateSection({slug: slug, manualSlug: slug ? true : false, buildModified: tc.section.zipPath ? true : false});
+              return this.updateSection({slug: slug, manualSlug: slug ? true : false, buildModified: tc.section.zipPath ? true : false})
+                .then(() => {
+                  return Promise.resolve();
+                })
+                .catch(err => {
+                  let slugError = err ? err.message : '';
+                  if (err && err.response && err.response.data) {
+                    switch (err.response.data) {
+                      case 'slug_not_unique':
+                        slugError = 'Section name is not unique';
+                        break;
+                    }
+                  }
+                  if (slugError) {
+                    this.validationErrors.slug = slugError;
+                  }
+                });
             }
             this.sectionEditMode(null);
           } else {
@@ -546,10 +562,10 @@ export default {
             }
             .edit-section-slug {
               &.-has-error {
-                border-color: red;
+                border: 2px solid red;
                 outline-color: red;
                 &:focus {
-                  border-color: red;
+                  border: 2px solid red;
                   outline-color: red;
                 }
               }
