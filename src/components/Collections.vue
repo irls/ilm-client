@@ -117,8 +117,10 @@
             //this.$router.replace({ path: '/collections/' + this.currentCollection._id })
           //}
           if (this.currentCollection._id !== id) {
-            this.loadCollection(id);
-            this.$router.replace({ path: '/collections/' + id });
+            this.loadCollection(id)
+              .then(() => {
+                this.$router.replace({ path: '/collections/' + id });
+              });
           }
         },
         selectBook(id, collection_id) {
