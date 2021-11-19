@@ -1875,7 +1875,26 @@ export const store = new Vuex.Store({
         commit('SET_CURRENT_COLLECTION', {});
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
       }*/
-      commit('SET_CURRENT_COLLECTION', id);
+      if (id) {
+        return dispatch('getCollection', id)
+          .then(collection => {
+            let cIndex = state.bookCollectionsAll.findIndex(c => {
+              return c._id === id;
+            });
+            if (cIndex !== -1) {
+              state.bookCollectionsAll[cIndex] = collection;
+            }
+            commit('PREPARE_BOOK_COLLECTIONS');
+            commit('SET_CURRENT_COLLECTION', id);
+            return Promise.resolve();
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      } else {
+        commit('SET_CURRENT_COLLECTION', id);
+        return Promise.resolve();
+      }
     },
 
     reloadCollection({state, commit, dispatch}) {
