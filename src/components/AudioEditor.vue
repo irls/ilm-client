@@ -134,8 +134,11 @@
   var {TimeScale} = require('../store/audio/AudioTimeScale.js');
 
   import _Playout from 'waveform-playlist/lib/Playout';
+  import Track from 'waveform-playlist/lib/Track';
   import { renderTrack } from '../store/audio/AudioTrackRender.js';
+  import { trackLoad } from '../store/audio/TrackLoad.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
+  const SILENCE_VALUE = 0.005;
   Vue.use(v_modal, { dialog: true });
 
   export default {
@@ -201,6 +204,9 @@
         }
       },
       mounted() {
+        Track.prototype.calculatePeaks = () => {
+          console.log('CALCULATE PEAKS HERE')
+        }
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
         this.$root.$on('for-audioeditor:load-silent', this.setAudioSilent);
@@ -437,6 +443,8 @@
 
               return timeScale.render();
             }
+            
+            //this.audiosourceEditor.load = trackLoad;
 //             var _this15 = this.audiosourceEditor;
 //             this.audiosourceEditor.drawRequest = function (){
 //               console.log('drawRequest', blockId);
@@ -480,6 +488,7 @@
             }
           ])
           .then(() => {
+            console.log(window.performance.memory);
             if (reloadBlockAudio) {
               if (this.pausedAt) {
                 this.audiosourceEditor.pausedAt = this.pausedAt;
@@ -1108,6 +1117,7 @@
 
           let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
 
+          silence.fill(SILENCE_VALUE);
           this.insertRangeAction(time, silence, this.silenceLength);
           //this.audiosourceEditor.draw(this.audiosourceEditor.render());
           //this.audiosourceEditor.drawRequest();
@@ -1478,6 +1488,8 @@
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
               let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              
+              silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
 
