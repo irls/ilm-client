@@ -40,7 +40,7 @@
 <script>
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
-  import {mapGetters} from 'vuex';
+  import {mapGetters, mapActions} from 'vuex';
   import { Languages }      from "../../mixins/lang_config.js"
   import Vue from 'vue';
   export default {
@@ -76,21 +76,14 @@
         this.$store.commit('SET_COLLECTIONS_FILTER', filter);
       },
       addCollection() {
-        var dbPath = superlogin.getDbUrl('ilm_collections')
-        var db = new PouchDB(dbPath)
-        return db.post({
-          books: [],
-          state: 'unpublished',
-          title: '',
-          language: 'en',
-          description: ''
-        }).then(doc => {
-          let self = this;
-          Vue.nextTick(() => {
-            self.$emit('collectionAdded', doc.id)
-          });
-        }).catch(err => {
-        })
+        return this.createCollection({})
+          .then(doc => {
+            Vue.nextTick(() => {
+              this.$emit('collectionAdded', doc._id);
+            });
+          }).catch(err => {
+            
+          })
       },
       toggleMetaVisible() {
         //this.metaVisible = !this.metaVisible;
@@ -98,7 +91,8 @@
       },
       displayBook() {
         this.$router.push('/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid + '/display');
-      }
+      },
+      ...mapActions(['createCollection'])
     },
     computed: {
       languages() {

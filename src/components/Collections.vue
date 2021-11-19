@@ -29,8 +29,8 @@
     </div>
 
     <div class='metaedit' v-if='metaVisible'>
-      <CollectionMeta v-if="collectionMetaVisible"
-        @collectionRemoved="collectionRemoved"></CollectionMeta>
+      <CollectionTabs v-if="collectionMetaVisible"
+        @collectionRemoved="collectionRemoved"></CollectionTabs>
       <BookMetaEdit v-if="bookMetaVisible"
         :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
     </div>
@@ -45,7 +45,7 @@
   import BookEditToolbar from './books/BookEditToolbar';
   import CollectionsToolbar from './collections/CollectionsToolbar';
   import CollectionsGrid from './collections/CollectionsGrid';
-  import CollectionMeta from './collections/CollectionMeta';
+  import CollectionTabs from './collections/CollectionTabs';
   import BookMetaEdit from './books/BookMetaEdit';
   import { mapGetters, mapActions } from 'vuex';
   import AudioEditor from './AudioEditor';
@@ -62,7 +62,7 @@
         BookEditToolbar: BookEditToolbar,
         CollectionsToolbar: CollectionsToolbar,
         CollectionsGrid: CollectionsGrid,
-        CollectionMeta: CollectionMeta,
+        CollectionTabs: CollectionTabs,
         BookMetaEdit: BookMetaEdit,
         AudioEditor: AudioEditor,
         BookEdit: BookEdit
@@ -95,7 +95,7 @@
           //if (current) {
           //this.loadCollection(false);
           if (this.currentCollection._id !== id) {
-            this.$store.commit('SET_CURRENT_COLLECTION', {});
+            this.$store.commit('SET_CURRENT_COLLECTION', false);
             this.selectCollection(id);
             this.collectionMetaVisible = true;
             this.scrollToRow(id);
@@ -117,8 +117,10 @@
             //this.$router.replace({ path: '/collections/' + this.currentCollection._id })
           //}
           if (this.currentCollection._id !== id) {
-            this.loadCollection(id);
-            this.$router.replace({ path: '/collections/' + id });
+            this.loadCollection(id)
+              .then(() => {
+                this.$router.replace({ path: '/collections/' + id });
+              });
           }
         },
         selectBook(id, collection_id) {
@@ -201,7 +203,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters'
+          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
         ])
       },
       watch: {
@@ -221,8 +223,18 @@
             if (this.$route.params.hasOwnProperty('bookid')) {
               this.bookMetaVisible = this.metaVisible;
               this.collectionMetaVisible = false;
+            } else {
+              this.collectionMetaVisible = this.metaVisible;
+              this.bookMetaVisible = false;
             }
             this.currentBook = Object.assign({}, val);
+          }
+        },
+        'currentCollectionId': {
+          handler(val, oldVal) {
+            if (oldVal && !val) {
+              this.$router.replace({name: 'CollectionsList'});
+            }
           }
         }
       }

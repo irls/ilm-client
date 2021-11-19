@@ -6,6 +6,7 @@ import PouchDB from 'pouchdb'
 import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
+import { Collection } from './collection'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -23,7 +24,6 @@ const ILM_CONTENT = 'ilm_content';
 const ILM_CONTENT_META = 'ilm_content_meta';
 const ILM_CONTENT_FILES = 'ilm_library_files';
 const ILM_TASKS = 'ilm_tasks';
-const ILM_COLLECTIONS = 'ilm_collections';
 const ILM_LIBRARIES = 'ilm_libraries';
 const POUCH_CFG = {
     ajax: {
@@ -90,12 +90,10 @@ export const store = new Vuex.Store({
     metaDB: false,
     metaDBcomplete: false,
     tasksDB: false,
-    collectionsDB: false,
     librariesDB: false,
 
     metaRemoteDB: false,
     tasksRemoteDB: false,
-    collectionsRemoteDB: false,
     librariesRemoteDB: false,
 
     books_meta: [],
@@ -123,7 +121,6 @@ export const store = new Vuex.Store({
     bookCollections: [],
     collectionsFilter: {title: '', language: '', jobStatus: 'active'},
     currentCollection: {},
-    currentCollectionFiles: { coverimg: false },
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
     libraries: [],
@@ -314,7 +311,6 @@ export const store = new Vuex.Store({
     allowCollectionsEdit: state => state.isAdmin || state.isLibrarian,
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
-    currentCollectionFiles: state => state.currentCollectionFiles,
     currentCollectionId: state => state.currentCollectionId,
     collectionsFilter: state => state.collectionsFilter,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
@@ -534,6 +530,15 @@ export const store = new Vuex.Store({
     },
     tocSectionBook: state => {
       return state.tocSectionBook;
+    },
+    currentBookCollection: state => {
+      if (Array.isArray(state.bookCollections) && state.currentBookMeta && state.currentBookMeta.collection_id) {
+        let collection = state.bookCollections.find(c => {
+          return c._id === state.currentBookMeta.collection_id;
+        });
+        return collection ? collection : {};
+      }
+      return {};
     }
   },
 
@@ -673,18 +678,22 @@ export const store = new Vuex.Store({
       } else state.currentBookFiles[fileObj.fileName] = false;
     },
 
-    SET_CURRENT_COLLECTION (state, collection) {
-      state.currentCollection = collection;
-      state.currentCollectionId = collection._id ? collection._id : false;
-    },
-
-    SET_CURRENTCOLLECTION_FILES (state, fileObj) {
-      if (fileObj && fileObj.fileBlob) {
-        let url = URL.createObjectURL(fileObj.fileBlob);
-        state.currentCollectionFiles[fileObj.fileName] = url;
-      } else {
-        state.currentCollectionFiles[fileObj.fileName] = false;
+    SET_CURRENT_COLLECTION (state, _id) {
+      let currentCollection = null;
+      if (_id) {
+        let collection = state.bookCollections.find(c => {
+          return c._id === _id;
+        });
+        if (collection) {
+          currentCollection = collection;
+        }
       }
+      if (!(currentCollection instanceof Collection)) {
+        currentCollection = new Collection({});
+      }
+      state.currentCollection = currentCollection;
+      state.currentCollection.sortBooks();
+      state.currentCollectionId = _id;
     },
 
     SET_COLLECTIONS_FILTER (state, filter) {
@@ -712,7 +721,8 @@ export const store = new Vuex.Store({
     },
 
     SET_BOOKLIST (state, books) {
-      state.books_meta = books
+      state.books_meta = books;
+      this.commit('PREPARE_BOOK_COLLECTIONS');
     },
 
     RESET_LOGIN_STATE (state) {
@@ -788,13 +798,14 @@ export const store = new Vuex.Store({
       this.commit('set_taskBlockMap');
     },
     PREPARE_BOOK_COLLECTIONS(state) {
+      state.bookCollections = [];
       if (state.isAdmin || state.isLibrarian) {
         state.bookCollections = state.bookCollectionsAll;
       } else if (state.tc_userTasks) {
         let collections = [];
         for (let jobid in state.tc_userTasks.list) {
           state.bookCollectionsAll.forEach(c => {
-            if (c.books && c.books.indexOf(state.tc_userTasks.list[jobid].bookid) !== -1) {
+            if (c.books && typeof c.books[state.tc_userTasks.list[jobid].bookid] !== 'undefined') {
               if ((state.tc_userTasks.list[jobid].tasks && state.tc_userTasks.list[jobid].tasks.length > 0) || state.tc_userTasks.list[jobid].completed_tasks > 0) {
                 let exists = collections.find(_c => _c._id === c._id);
                 if (!exists) {
@@ -806,17 +817,35 @@ export const store = new Vuex.Store({
         }
         state.bookCollections = collections;
       }
-      state.bookCollections.forEach(c => {
+      state.bookCollections.forEach((c, idx) => {
         let pages = 0;
-        c.books.forEach(b => {
-          let book = state.books_meta.find(_b => _b._id === b);
+        let books = [];
+        c.bookids.forEach(b => {
+          let book = state.books_meta.find(_b => _b.bookid === b);
           if (book) {
             pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
+            if (book.importStatus == 'staging' && book.blocksCount <= 2){
+              if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+                book.importStatus = 'staging_empty'
+              } else if (!book.publishLog.updateTime){
+                book.importStatus = 'staging_empty'
+              }
+            }
+            books.push(book);
           }
         });
 
         c.pages = pages;
+        if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
+          c.coverimgURL = process.env.ILM_API + c.coverimgURL;
+        }
+        c.books_list = books;
+        state.bookCollections[idx] = new Collection(c);
+        //state.bookCollections[idx].sortBooks();
       });
+      //if (state.currentCollectionId && !state.currentCollection._id) {
+        this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
+      //}
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
       state.allowPublishCurrentBook = allow;
@@ -1214,24 +1243,13 @@ export const store = new Vuex.Store({
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
-        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
         //commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         //commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
-        commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
+        //commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         //commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
-        commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
-
-        state.collectionsDB.replicate.from(state.collectionsRemoteDB)
-        .on('complete', (info) => {
-          dispatch('updateCollectionsList');
-          state.collectionsDB.sync(state.collectionsRemoteDB, {live: true, retry: true})
-          .on('change', (change) => {
-            dispatch('updateCollectionsList');
-          })
-        });
 
         state.librariesDB.replicate.from(state.librariesRemoteDB)
           .on('complete', () => {
@@ -1304,6 +1322,44 @@ export const store = new Vuex.Store({
               commit('set_couplet_separator', config.couplet_separator);
             })
           dispatch('getBookCategories');
+          dispatch('getCollections');
+          state.liveDB.startWatch('collection', 'collection', {}, (data) => {
+            //console.log(data);
+            if (data.action) {
+              switch (data.action) {
+                case 'change':
+                  if (data.collection) {
+                    let collection = state.bookCollectionsAll.find(c => {
+                      return c.id === data.collection.id;
+                    });
+                    if (collection) {
+                      state.bookCollectionsAll[state.bookCollectionsAll.indexOf(collection)] = data.collection;
+                      commit('PREPARE_BOOK_COLLECTIONS');
+                    }
+                  }
+                  break;
+                case 'create':
+                  if (data.collection && data.collection._id !== state.currentCollectionId) {
+                    dispatch('getCollections');
+                  }
+                  break;
+                case 'delete':
+                  if (data.collection) {
+                    let collection = state.bookCollectionsAll.find(c => {
+                      return c._id === data.collection._id;
+                    });
+                    if (collection) {
+                      if (data.collection._id === state.currentCollectionId) {
+                        commit('SET_CURRENT_COLLECTION', false);
+                      }
+                      state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(collection), 1);
+                      commit('PREPARE_BOOK_COLLECTIONS');
+                    }
+                  }
+                  break;
+              }
+            }
+          });
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -1314,14 +1370,12 @@ export const store = new Vuex.Store({
         commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
-        commit('set_localDB', { dbProp: 'collectionsDB', dbName: 'collectionsDB' });
         commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
         state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
 
         if (state.metaDB) state.metaDB.destroy()
         //if (state.contentDB) state.contentDB.destroy()
         //if (state.tasksDB) state.tasksDB.destroy()
-        if (state.collectionsDB) state.collectionsDB.destroy()
         if (state.librariesDB) state.librariesDB.destroy()
 
         console.log('destroyDB');
@@ -1341,6 +1395,7 @@ export const store = new Vuex.Store({
       state.liveDB.stopWatch('metaV');
       state.liveDB.stopWatch('job');
       state.liveDB.stopWatch('blockV');
+      state.liveDB.stopWatch('collection');
     },
     // logout event
     disconnectDB ({ state, commit }) {
@@ -1350,7 +1405,6 @@ export const store = new Vuex.Store({
           //if (state.metaDB) state.metaDB.destroy()
           //if (state.contentDB) state.contentDB.destroy()
           //if (state.tasksDB) state.tasksDB.destroy()
-          if (state.collectionsDB) state.collectionsDB.destroy()
           if (state.librariesDB) state.librariesDB.destroy()
           commit('RESET_LOGIN_STATE');
       //}, 500)
@@ -1362,16 +1416,6 @@ export const store = new Vuex.Store({
           commit('SET_BOOKLIST', answer.data.books)
           //dispatch('tc_loadBookTask')
           return Promise.resolve();
-        })
-    },
-
-    updateCollectionsList({state, commit, dispatch}) {
-      let connection = state.collectionsDB.hoodieApi()
-      connection.findAll()
-        .then(collections => {
-          state.bookCollectionsAll = collections
-          commit('PREPARE_BOOK_COLLECTIONS');
-          dispatch('reloadCollection');
         })
     },
 
@@ -1794,6 +1838,9 @@ export const store = new Vuex.Store({
               commit('SET_CURRENTBOOK_META', response.data);
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+              if (state.currentBookMeta.collection_id && state.currentCollection) {
+                state.currentCollection.updateBook(state.currentBookMeta);
+              }
             }
 
             return Promise.resolve(response.data);
@@ -1807,45 +1854,57 @@ export const store = new Vuex.Store({
     },
 
     loadCollection({commit, state, dispatch}, id) {
-      if (id) {
-        state.currentCollectionId = id;
-        state.collectionsDB.get(id).then(collection => {
+      /*if (id) {
+        let collection = state.bookCollections.find(c => {
+          return c._id === id;
+        });
+        if (collection) {
+          state.currentCollectionId = id;
           commit('SET_CURRENT_COLLECTION', collection);
-          dispatch('allowCollectionPublish');
-          state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
-          .then(fileBlob => {
-            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-          }).catch((err)=>{
-            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
-          })
-        }).catch((err)=>{
-
-        })
+        } else {
+          return axios.get(`${state.API_URL}/collection/${id}`)
+            .then(response => {
+              if (response && response.data) {
+                state.currentCollectionId = id;
+                commit('SET_CURRENT_COLLECTION', response.data);
+              }
+            })
+        }
       } else {
         commit('SET_CURRENT_COLLECTION', {});
         commit('SET_ALLOW_COLLECTION_PUBLISH', false);
+      }*/
+      if (id) {
+        return dispatch('getCollection', id)
+          .then(collection => {
+            let cIndex = state.bookCollectionsAll.findIndex(c => {
+              return c._id === id;
+            });
+            if (cIndex !== -1) {
+              state.bookCollectionsAll[cIndex] = collection;
+            }
+            commit('PREPARE_BOOK_COLLECTIONS');
+            commit('SET_CURRENT_COLLECTION', id);
+            return Promise.resolve();
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      } else {
+        commit('SET_CURRENT_COLLECTION', id);
+        return Promise.resolve();
       }
     },
 
     reloadCollection({state, commit, dispatch}) {
       if (state.currentCollectionId) {
-        state.collectionsDB.get(state.currentCollectionId).then(collection => {
-          commit('SET_CURRENT_COLLECTION', collection);
+          commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
           dispatch('allowCollectionPublish');
-          state.filesRemoteDB.getAttachment(state.currentCollectionId, 'coverimg')
-          .then(fileBlob => {
-            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: fileBlob});
-          }).catch((err)=>{
-            commit('SET_CURRENTCOLLECTION_FILES', {fileName: 'coverimg', fileBlob: false});
-          })
-        }).catch((err)=>{
-          console.log(err);
-        })
       }
     },
 
     updateCollectionVersion({state, dispatch}, update) {
-      let id = update.id || state.currentCollection._id;
+      /*let id = update.id || state.currentCollection._id;
       if (id) {
         state.collectionsRemoteDB.get(state.currentCollection._id)
           .then(collection => {
@@ -1872,7 +1931,7 @@ export const store = new Vuex.Store({
             }
 
           });
-      }
+      }*/
     },
 
     allowCollectionPublish({state, commit}) {
@@ -1880,7 +1939,7 @@ export const store = new Vuex.Store({
       if (allow_by_role && state.currentCollection && state.currentCollection.books && state.currentCollection.books.length > 0 && state.books_meta) {
         let allow = typeof state.currentCollection.version === 'undefined' || state.currentCollection.version !== state.currentCollection.publishedVersion;
         if (allow) {
-          state.currentCollection.books.forEach(b => {
+          state.currentCollection.bookids.forEach(b => {
             if (allow) {
               let _b = state.books_meta.find(__b => __b._id === b);
               if (_b) {
@@ -3254,23 +3313,54 @@ export const store = new Vuex.Store({
         })
     },
 
-    updateBookCollection({state}, collectionId = null) {
+    updateBookCollection({state, commit, dispatch}, collectionId = null) {
       if (!state.currentBookMeta.bookid) {
         return Promise.reject({error: 'book not selected'});
       }
       if (collectionId) {
         let api_url = state.API_URL + 'collection/' + collectionId + '/link_books';
+        let oldCollectionId = state.currentBookMeta.collection_id;
         return axios.post(api_url, {books_ids: [state.currentBookMeta.bookid]}, {})
           .then((response) => {
             if (response.status===200) {
-              state.currentBookMeta.collection_id = collectionId;
-              let index = state.books_meta.findIndex(b => {
-                return b.bookid === state.currentBookMeta.bookid;
+              let getOldCollection = new Promise((resolve, reject) => {
+                if (oldCollectionId) {
+                  return dispatch('getCollection', oldCollectionId)
+                    .then(oldCollection => {
+                      return resolve(oldCollection);
+                    });
+                } else {
+                  return resolve({});
+                }
               });
-              if (typeof index !== 'undefined') {
-                state.books_meta.splice(index, 1);
-                //commit('SET_BOOKLIST', list);
-              }
+              return Promise.all([
+                dispatch('getCollection', collectionId),
+                getOldCollection
+              ])
+                .then(prepared => {
+                  let [collection, oldCollection] = prepared;
+                  state.currentBookMeta.collection_id = collectionId;
+                  let index = state.books_meta.findIndex(b => {
+                    return b.bookid === state.currentBookMeta.bookid;
+                  });
+                  if (typeof index !== 'undefined') {
+                    //state.books_meta.splice(index, 1);
+                    //commit('SET_BOOKLIST', list);
+                    state.books_meta[index].collection_id = collectionId;
+                  }
+                  [collection, oldCollection].forEach(coll => {
+                    if (coll._id) {
+                      index = state.bookCollections.findIndex(c => {
+                        return c._id === coll._id;
+                      });
+                      if (!index !== -1) {
+                        state.bookCollections[index] = coll;
+                      }
+                    }
+                  });
+                  commit('PREPARE_BOOK_COLLECTIONS');
+                  return Promise.resolve(response);
+                });
             } else {
 
             }
@@ -3283,8 +3373,15 @@ export const store = new Vuex.Store({
         let api_url = state.API_URL + 'collection/' + collection_id + '/unlink_books';
         return axios.post(api_url, {books_ids: [state.currentBookMeta.bookid]}, {})
           .then((response) => {
-          if (response.status===200) {
+          if (response.status === 200) {
             state.currentBookMeta.collection_id = null;
+            let collectionIndex = state.bookCollections.findIndex(c => {
+              return c._id === collection_id;
+            });
+            if (collectionIndex !== -1) {
+              state.bookCollections[collectionIndex].bookids = response.data.bookids;
+              commit('PREPARE_BOOK_COLLECTIONS');
+            }
           } else {
 
           }
@@ -4234,6 +4331,136 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject({})
       })
+    },
+    getCollections({state, commit, dispatch}) {
+      return axios.get(`${state.API_URL}collection`)
+        .then(response => {
+          if (response && response.data) {
+            state.bookCollectionsAll = response.data;
+            commit('PREPARE_BOOK_COLLECTIONS');
+            dispatch('reloadCollection');
+            return Promise.resolve();
+          }
+        })
+        .catch(err => {
+          
+        });
+    },
+    
+    createCollection({state, dispatch}, data) {
+      return axios.post(`${state.API_URL}collection`, data)
+        .then(response => {
+          if (response && response.data) {
+            return dispatch('getCollections')
+              .then(() => {
+                return Promise.resolve(response.data);
+              });
+          }
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    updateCollection({state, commit}, data) {
+      if (!state.currentCollection._id) {
+        return Promise.reject(new Error('No collection selected'));
+      }
+      return axios.put(`${state.API_URL}collection/${state.currentCollection._id}`, data)
+        .then((response) => {
+          if (response && response.data) {
+            //commit('SET_CURRENT_COLLECTION', response.data);
+            Object.keys(data).filter(k => {
+              return !state.currentCollection.validationErrors[k];
+            }).forEach(k => {
+              state.currentCollection[k] = data[k];
+            });
+            if (response.data.hasOwnProperty('slug')) {
+              state.currentCollection['slug'] = response.data.slug;
+            }
+            if (response.data.hasOwnProperty('slug_status')) {
+              state.currentCollection['slug_status'] = response.data.slug_status;
+            }
+            //commit('PREPARE_BOOK_COLLECTIONS');
+          }
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    removeCollection({state, commit}) {
+      if (!state.currentCollection._id) {
+        return Promise.reject(new Error('No collection selected'))
+      }
+      return axios.delete(`${state.API_URL}collection/${state.currentCollection._id}`)
+        .then((response) => {
+          let c = state.bookCollectionsAll.find(_c => {
+            return _c.id === state.currentCollection.id;
+          });
+          if (c) {
+            state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(c), 1);
+            commit('PREPARE_BOOK_COLLECTIONS');
+          }
+          return Promise.resolve(response);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    linkBooksToCollection({state, dispatch, commit}, bookids) {
+      if (!state.currentCollection._id) {
+        return Promise.reject(new Error('No collection selected'))
+      }
+      return axios.post(`${state.API_URL}collection/${state.currentCollection._id}/link_books`, 
+        {
+          books_ids: bookids
+        })
+        .then((response) => {
+          return dispatch('getCollections')
+          .then(() => {
+            bookids.forEach(bookid => {
+              let index = state.books_meta.findIndex(b => {
+                return b.bookid === bookid;
+              });
+              if (typeof index !== 'undefined') {
+                //state.books_meta.splice(index, 1);
+                //commit('SET_BOOKLIST', list);
+                state.books_meta[index].collection_id = state.currentCollection._id;
+              }
+            });
+            commit('PREPARE_BOOK_COLLECTIONS');
+            return Promise.resolve(response);
+          });
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    updateCollectionCoverimg({state}, imgData) {
+      if (!state.currentCollection._id) {
+        return Promise.reject(new Error('No collection selected'))
+      }
+      return axios.put(`${state.API_URL}collection/${state.currentCollection._id}/coverimg`, imgData)
+        .then((response) => {
+          if (response.data) {
+            state.currentCollection.coverimgURL = process.env.ILM_API + response.data.coverimgURL;
+          }
+        })
+        .catch(err => {
+          
+        });
+    },
+    
+    getCollection({state}, _id) {
+      return axios.get(`${state.API_URL}collection/${_id}`)
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
