@@ -137,6 +137,7 @@
   import Track from 'waveform-playlist/lib/Track';
   import { renderTrack } from '../store/audio/AudioTrackRender.js';
   import { trackLoad } from '../store/audio/TrackLoad.js';
+  import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
   Vue.use(v_modal, { dialog: true });
@@ -204,9 +205,7 @@
         }
       },
       mounted() {
-        Track.prototype.calculatePeaks = () => {
-          console.log('CALCULATE PEAKS HERE')
-        }
+        Track.prototype.calculatePeaks = calculateTrackPeaks;
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
         this.$root.$on('for-audioeditor:load-silent', this.setAudioSilent);
