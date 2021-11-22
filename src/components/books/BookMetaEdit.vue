@@ -867,11 +867,9 @@ export default {
   },
 
   mixins: [task_controls, api_config, access, time_methods, number_methods],
-  mixins: [task_controls, api_config, access, number_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
-    //this.loadAudiobook(true)
 
     this.getAudioBook({bookid: this.currentBookid})
       .then(() => {
