@@ -205,7 +205,9 @@
         }
       },
       mounted() {
-        Track.prototype.calculatePeaks = calculateTrackPeaks;
+        Track.prototype.calculatePeaks = function(samplesPerPixel, sampleRate) {
+          calculateTrackPeaks.call(this, samplesPerPixel, sampleRate, SILENCE_VALUE);
+        }
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
         this.$root.$on('for-audioeditor:load-silent', this.setAudioSilent);
@@ -487,7 +489,6 @@
             }
           ])
           .then(() => {
-            console.log(window.performance.memory);
             if (reloadBlockAudio) {
               if (this.pausedAt) {
                 this.audiosourceEditor.pausedAt = this.pausedAt;
