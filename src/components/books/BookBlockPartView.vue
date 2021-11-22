@@ -3449,6 +3449,22 @@ Save text changes and realign the Block?`,
         return false;
       },
       setSplitPoint() {
+        if (!this.isCursorInPinned()) {
+          this.$root.$emit('show-modal', {
+            title: 'Unpinned word',
+            text: `You may only split by pinned words`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+          return false;
+        }
         let el = document.createElement('i');
         el.classList.add('pin');
         this.range.insertNode(el);
@@ -3465,6 +3481,36 @@ Save text changes and realign the Block?`,
           this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/(<\/w><w[^>]*?>)(<i class="pin"><\/i>)/img, '$2$1');
           //console.log(this.$refs.blockContent.innerHTML);
         }
+      },
+      isCursorInPinned() {
+        if (!this.blockPart.audiosrc || this.blockPart.audiosrc.length === 0) {
+          return true;
+        }
+        let wContainer = this.range.startContainer;
+        while (wContainer.nodeName !== 'W' && wContainer.nodeName !== 'DIV') {
+          wContainer = wContainer.parentElement;
+        }
+        if (wContainer && wContainer.nodeName === 'W') {
+          if (wContainer.dataset && wContainer.dataset.map && wContainer.dataset.map.length > 0) {
+            let points = wContainer.dataset.map.split(',');
+            if (Array.isArray(points) && points.length === 2) {
+              let checkPoint = null;
+              if (this.range.startOffset === 0) {
+                checkPoint = parseInt(points[0]);
+              } else {
+                checkPoint = parseInt(points[0]) + parseInt(points[1]);
+              }
+              if (!this.blockPart.manual_boundaries.includes(checkPoint)) {
+                return false;
+              }
+            }
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+        return true;
       },
       handlePinClick(e) {
         if (this.$refs.splitPinCntx && e.target) {
