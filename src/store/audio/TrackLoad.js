@@ -17,7 +17,7 @@ var trackLoad = function(trackList) {
         audioBuffer.copyFromChannel(new_list, i);
         new_list.forEach((n, ni) => {
           if (n === 0) {
-            //new_list[ni] = 0.005;
+            new_list[ni] = 0.005;
             ++changed;
           }
         });
