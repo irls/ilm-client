@@ -163,7 +163,7 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="change('category')" :key="currentBookid" :disabled="categoryEditDisabled">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
@@ -573,6 +573,7 @@ import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
 import time_methods from '../../mixins/time_methods.js'
+import number_methods from "../../mixins/number_methods.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
@@ -736,7 +737,8 @@ export default {
       adminOrLibrarian: 'adminOrLibrarian',
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
-      aligningBlocks: 'aligningBlocks'
+      aligningBlocks: 'aligningBlocks',
+      currentBookCollection: 'currentBookCollection'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -837,14 +839,37 @@ export default {
         }
         return '';
       }
+    },
+    
+    currentBookCategory: {
+      get() {
+        if (typeof this.currentBookCollection.category !== 'undefined') {
+          return this.currentBookCollection.category;
+        }
+        return this.currentBook.category;
+      },
+      set(value) {
+        this.currentBook.category = value;
+      }
+    },
+    
+    categoryEditDisabled: {
+      get() {
+        if (!this.allowMetadataEdit) {
+          return true;
+        }
+        if (typeof this.currentBookCollection.category !== 'undefined') {
+          return true;
+        }
+        return false;
+      }
     }
   },
 
-  mixins: [task_controls, api_config, access, time_methods],
+  mixins: [task_controls, api_config, access, time_methods, number_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
-    //this.loadAudiobook(true)
 
     this.getAudioBook({bookid: this.currentBookid})
       .then(() => {
@@ -2044,6 +2069,7 @@ export default {
 
         let debouncedFunction = _.debounce((key,event)=>{
           let val = typeof event === 'string' ? event : event.target.value;
+          val = this.parseFloatToFixed(val, 2);
           this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
 
         },  debounceTime, {
@@ -2052,7 +2078,6 @@ export default {
         });
         debouncedFunction(key,event);
       }
-      console.log('HERE', this.validationErrors);
 
     },
 

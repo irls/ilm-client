@@ -22,7 +22,7 @@ export default {
   },
 
   computed: {
-      ...mapGetters(['isLoggedIn']),
+      ...mapGetters(['isLoggedIn', 'currentCollectionId']),
   },
 
   watch: {
@@ -36,7 +36,9 @@ export default {
         this.loadBook(false);
       }
       if (this.$route.params.hasOwnProperty('collectionid')) {
-        this.loadCollection(this.$route.params.collectionid);
+        if (this.$route.params.collectionid !== this.currentCollectionId) {
+          this.loadCollection(this.$route.params.collectionid);
+        }
       } else {
         this.loadCollection(false);
       }
