@@ -156,7 +156,7 @@
       height: 250px;
     }
     .tab-pane {
-      display: block;
+      display: block !important;
     }
   }
 </style>
