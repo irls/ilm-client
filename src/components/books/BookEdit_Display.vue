@@ -253,7 +253,7 @@ export default {
 
     getAllBlocks(metaId, startBlock) {
       //console.log('getAllBlocks', metaId, startBlock);
-      return this.loadBookBlocks({bookId: metaId})
+      return this.$store.dispatch('loadBookBlocks', {bookId: metaId})
       .then((res)=>{
         this.parlistO.setLookupsList(metaId, res);
         if (res.blocks && res.blocks.length > 0) {

@@ -135,11 +135,7 @@ export default {
       scrollBarBlockHeight: 150,
       scrollBarBlockTimer: null,
 
-      lazyLoaderDir: 'up',
-      isNeedUp: true,
-      isNeedDown: true,
       scrollToId: null
-
     }
   },
   props: ['mode'],
@@ -251,7 +247,7 @@ export default {
   },
   methods: {
     ...mapActions([
-    'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
+    'loadPartOfBookBlocks',
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
@@ -297,121 +293,25 @@ export default {
       let checkMeta = this.parlistO.meta || {};
       checkMeta = checkMeta.bookid || false;
       if (this.$route.params.hasOwnProperty('bookid')) {
+        console.log(`loadBookMeta.checkMeta:`, checkMeta, this.$route.params.bookid);
         if (!checkMeta || checkMeta!==this.$route.params.bookid || this.$route.params.task_type) {
           this.freeze('loadBookMeta');
-          return this.loadBook(this.$route.params.bookid)
+          return this.$store.dispatch('loadBook', this.$route.params.bookid)
           .then((meta)=>{
             this.unfreeze('loadBookMeta');
-            let startBlock = this.$route.params.block || false;
-            let taskType = this.$route.params.task_type || false;
-            return Promise.resolve(meta);
-            //console.log('loadBook then meta', meta);
-            /*
+            //let startBlock = this.$route.params.block || false;
+            //let taskType = this.$route.params.task_type || false;
 
-            return this.loadPartOfBookBlocks({
-              bookId: this.$route.params.bookid,
-              block: startBlock,
-              taskType: taskType
-            }).then((answer)=>{
-              this.parlistO.setLookupsList(this.meta._id, answer);
-              let rIdsArray = this.parlistO.rIdsArray();
-              this.isNeedUp = rIdsArray[0];
-              this.isNeedDown = rIdsArray[rIdsArray.length-1];
-              this.$router.replace({name: this.$route.name, params: {}});
-              return Promise.resolve(answer);
-            })*/
+            return Promise.resolve({meta, isNew: true});
           }).catch((err)=>{
             this.unfreeze('loadBookMeta');
             return Promise.reject(err);
           });
         } else {
-          this.handleScroll(true);
-          return Promise.resolve({ blocks:[] }); // already loaded
+          //this.handleScroll(true);
+          return Promise.resolve({meta: this.parlistO.meta, isNew: false}); // already loaded
         }
       } else return Promise.reject('No bookid');
-    },
-
-    lazyLoad(firstId = false, lastId = false)
-    {
-      //console.log('lazyLoad', this.isNeedUp, this.isNeedDown, this.lazyLoaderDir);
-      //console.log('parlist', Array.from(this.parlist.keys()));
-      //console.log('lazyLoaderDir1', firstId, lastId);
-
-      this.isNeedUp = firstId || this.isNeedUp;
-      this.isNeedDown = lastId || this.isNeedDown;
-
-      //console.log('lazyLoad', this.isNeedUp, this.isNeedDown, this.lazyLoaderDir);
-
-      if (!this.isBlocked && (this.isNeedUp || this.isNeedDown)) {
-        switch(this.lazyLoaderDir) {
-          case 'down' : {
-            this.isNeedDown = this.parlistO.getNextIds(this.isNeedDown, 100);
-            //console.log('this.isNeedDown', this.isNeedDown);
-            if (this.isNeedDown.length > 0)
-            {
-              this.getBlocks(this.isNeedDown)
-              .then((rows)=>{
-                if (rows && rows.length > 0) {
-                  rows.forEach((el, idx, arr)=>{
-                    if (!this.parlist.has(el._id)) {
-                      let newBlock = new BookBlock(el);
-                      this.$store.commit('set_storeList', newBlock);
-                    }
-                    //this.parlistO.setLoaded(el._id);
-                  });
-                  //this.refreshPreviewTmpl(this.isNeedDown);
-                  if (this.isNeedUp) this.lazyLoaderDir = 'up';
-                  if (Array.isArray(this.isNeedDown)) this.isNeedDown = this.isNeedDown.pop();
-                  //else this.isNeedDown = false;
-                  //Vue.nextTick(()=>{
-                    //this.lazyLoad();
-                  //})
-                }
-              });
-            } else {
-              this.isNeedDown = false;
-              if (this.isNeedUp) this.lazyLoaderDir = 'up';
-              //Vue.nextTick(()=>{
-                //this.lazyLoad();
-              //})
-            }
-
-          } break;
-          case 'up' : {
-            this.isNeedUp = this.parlistO.getPrevIds(this.isNeedUp, 100);
-            //console.log('this.isNeedUp', this.isNeedUp);
-            if (this.isNeedUp.length > 0)
-            {
-              this.getBlocks(this.isNeedUp)
-              .then((rows)=>{
-                if (rows && rows.length > 0) {
-                  rows.forEach((el, idx, arr)=>{
-                    if (!this.parlist.has(el._id)) {
-                      let newBlock = new BookBlock(el);
-                      this.$store.commit('set_storeList', newBlock);
-                    }
-                    //this.parlistO.setLoaded(el._id);
-                  });
-                  //this.refreshPreviewTmpl(this.isNeedUp);
-                  if (this.isNeedUp) this.lazyLoaderDir = 'down';
-                  if (Array.isArray(this.isNeedUp)) this.isNeedUp = this.isNeedUp[0];
-                  //Vue.nextTick(()=>{
-                    //this.lazyLoad();
-                  //})
-                }
-              });
-            } else {
-              this.isNeedUp = false;
-              if (this.isNeedDown) this.lazyLoaderDir = 'down';
-              //Vue.nextTick(()=>{
-                //this.lazyLoad();
-              //})
-            }
-          } break;
-        };
-
-        //this.lazyLoad();
-      };
     },
 
     loadPreparedBookDown(idsArray) { // mostly first page load
@@ -456,9 +356,7 @@ export default {
           if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
             this.startId = routeBlockId;
             this.screenTop = initialTopOffset;
-            //this.lazyLoad();
             return Promise.resolve(routeBlockId);
-            //this.lazyLoad(false, lastId);
           }
 
           this.freeze('loadBookDown');
@@ -470,7 +368,6 @@ export default {
             this.unfreeze('loadBookDown');
             //this.startId = blockId;
             this.scrollToBlock(blockId);
-            //this.lazyLoad();
             return Promise.resolve(blockId);
           }).catch(err=>{
             console.log('loadBookDown->getBloksUntil Error:', err);
@@ -487,7 +384,6 @@ export default {
           }
           this.unfreeze('loadBookDown');
           let lastId = res.length ? res[res.length-1]._id : false;
-          this.lazyLoad(false, lastId);
           return Promise.resolve(res);
         }).catch(err=>{
           this.unfreeze('loadBookDown'); return err;
@@ -567,7 +463,6 @@ export default {
                     this.$store.commit('set_storeList', newBlock);
                   });
                   let lastId = result.rows[result.rows.length-1]._id;
-                  this.lazyLoad(result.blockId || this.meta.startBlock_id, lastId);
                   return resolve(result.blockId);
                 }
                 else {
@@ -575,7 +470,6 @@ export default {
                   this.getBlocks(result.blockId)
                   .then((res)=>{
                     let lastId = res.length ? res[res.length-1]._id : false;
-                    this.lazyLoad(this.startId || this.meta.startBlock_id, lastId);
                     return resolve(result.blockId);
                   }).catch(err=>{
                     return reject(err);
@@ -1870,7 +1764,7 @@ export default {
         if (meta && this.meta._id) {
           this.tc_loadBookTask(this.meta._id)
           .then(()=>{
-            this.loadBookBlocks({bookId: this.meta._id})
+            this.$store.dispatch('loadBookBlocks', {bookId: this.meta._id})
             .then((res)=>{
               this.parlistO.updateLookupsList(this.meta._id, res);
               if (res.blocks && res.blocks.length > 0) {
@@ -1885,7 +1779,6 @@ export default {
               }
               this.loadBookToc({bookId: this.meta._id, isWait: true});
               this.loadBookTocSections([]);
-              //this.lazyLoad();
             });
           });
         }
@@ -2522,6 +2415,15 @@ export default {
           //this.audioEditorEventsOff();
         }));
       },
+
+      processOpenedBook() {
+        return this.tc_loadBookTask()
+        .then(()=>{
+          this.checkMode();
+          this.$store.commit('set_taskBlockMap');
+          return this.getProcessQueue();
+        })
+      }
   },
   events: {
       currentEditingBlock_id : function (key) {
@@ -2538,48 +2440,41 @@ export default {
   },
   mounted: function() {
       //this.onScrollBookDown();
-      //console.log('book mounted', this.meta._id);
+      console.log('book mounted', this.meta._id);
       window.onresize = () => {
         this.correctEditWrapper();
       };
-      this.checkMode();
-      this.loadBookMeta() // also handle route params
-      .then((meta)=>{
-        this.getProcessQueue();
-        if (meta && this.meta._id) {
-          this.tc_loadBookTask()
-          .then(()=>{
-            this.loadBookBlocks({bookId: this.meta._id})
-            .then((res)=>{
-              this.parlistO.updateLookupsList(this.meta._id, res);
-              //console.log('res.blocks', res.blocks[0]);
-              if (res.blocks && res.blocks.length > 0) {
-                res.blocks.forEach((el, idx, arr)=>{
-                  if (!this.parlist.has(el._id)) {
-                    let newBlock = new BookBlock(el);
-                    this.$store.commit('set_storeList', newBlock);
-                  }
-                });
-                this.$store.commit('set_taskBlockMap');
-                /*if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
-                  Vue.nextTick(() => {
-                    this.handleScroll();
-                    this.scrollToBlock(initBlocks.blocks[0].blockid);
-                  })
-                }*/
-              }
-            });
-          });
-        } else {
+
+      return this.loadBookMeta() // also handle route params
+      .then((metaResp)=>{
+        console.log(`loadBookMeta.metaResp: `, metaResp);
+        if (metaResp.isNew) { //fresh load
+          return this.$store.dispatch('loadBookBlocks', {bookId: this.meta._id})
+          .then((blocksResp)=>{
+          console.log(`loadBookBlocks.blocksResp: `, blocksResp);
+            this.parlistO.updateLookupsList(this.meta._id, blocksResp);
+            if (blocksResp.blocks && blocksResp.blocks.length > 0) {
+              blocksResp.blocks.forEach((block, idx, arr)=>{
+                if (!this.parlist.has(block._id)) {
+                  const newBlock = new BookBlock(block);
+                  this.$store.commit('set_storeList', newBlock);
+                }
+              });
+            }
+            return this.processOpenedBook();
+          })
+        } else { //already loaded
+
           if (this.$route.params.hasOwnProperty('block')) {
             this.scrollToBlock(this.$route.params.block);
             this.$router.replace({name: this.$route.name, params: {}});
-            //this.updateVisibleBlocks();
           } else {
             this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
           }
+
+          return this.processOpenedBook();
         }
-      });
+      })
 
       window.addEventListener('keydown', this.eventKeyDown);
 
@@ -2615,8 +2510,6 @@ export default {
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});
-    this.isNeedUp = false;
-    this.isNeedDown = false;
     //console.log('BookEdit beforeDestroy');
     this.$root.$emit('for-audioeditor:force-close');
 
