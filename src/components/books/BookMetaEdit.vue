@@ -236,12 +236,20 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' v-on:change="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
+            <resizable-textarea @valueChanged="update('description_short', $event)"
+              :initValue="currentBook.description_short"
+              ref="descriptionShort"
+              :disabled="!allowMetadataEdit">
+            </resizable-textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' v-on:change="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
+            <resizable-textarea @valueChanged="update('description', $event)"
+              :initValue="currentBook.description"
+              ref="descriptionLong"
+              :disabled="!allowMetadataEdit">
+            </resizable-textarea>
           </fieldset>
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
@@ -583,6 +591,7 @@ import SplitPreview from './details/SplitPreview';
 import BlockStyleLabels from './details/BlockStyleLabels';
 import CompleteAudioExport from './details/CompleteAudioExport';
 import PauseBeforeBlock from './details/PauseBeforeBlock';
+import ResizableTextarea from '../generic/ResizableTextarea';
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -608,7 +617,8 @@ export default {
     SplitPreview,
     BlockStyleLabels,
     CompleteAudioExport,
-    PauseBeforeBlock
+    PauseBeforeBlock,
+    'resizable-textarea': ResizableTextarea
   },
 
   data () {
@@ -888,12 +898,14 @@ export default {
       this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
       if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
         Vue.nextTick(() => {
-          this.$refs.descriptionShort.initSize();
+          this.$refs.descriptionShort.setValue(this.currentBook.description_short);
+          //this.$refs.descriptionShort.initSize();
         });
       }
       if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
         Vue.nextTick(() => {
-          this.$refs.descriptionLong.initSize();
+          this.$refs.descriptionLong.setValue(this.currentBook.description);
+          //this.$refs.descriptionLong.initSize();
         });
       }
       if (this.activeTabIndex === this.TAB_STYLE_INDEX) {
@@ -1128,6 +1140,12 @@ export default {
         .then(() => {
 
         });*/
+      if (this.$refs.descriptionShort && this.currentBook) {
+        this.$refs.descriptionShort.setValue(this.currentBook.description_short);
+      }
+      if (this.$refs.descriptionLong && this.currentBook) {
+        this.$refs.descriptionLong.setValue(this.currentBook.description);
+      }
     },
     /*
     //close unknown author if clicked outside
@@ -1231,18 +1249,16 @@ export default {
       if(!disable)
         disable = false;
 
-      console.log('here', debounceTime, disable);
-
 
       if(key =='difficulty'){
 
-          let validationErrors = '';
+        let validationErrors = '';
 
-          let re = /^\d+(\.\d+)*$/i;
+        let re = /^\d{1,2}(\.\d{1,2})?$/i;
 
-          if ( !this.currentBook.difficulty.match(re) ){
-            validationErrors = 'Allowed range 1 - 14.99';
-          }
+        if ( !this.currentBook.difficulty.match(re) ){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
 
         if ( parseFloat(this.currentBook.difficulty) > 14.99 ){
           validationErrors = 'Allowed range 1 - 14.99';
@@ -1331,8 +1347,6 @@ export default {
 
       return this.updateBookMeta(update)
       .then((response)=>{
-        console.log('response', response);
-        console.log('event', event);
         if(event)
           event.target.disabled  = false ;
 
@@ -2045,14 +2059,15 @@ export default {
       const maxValue = 10.99;
       const minValue = 1.00;
       let error = '';
+      let failFormat = !/^\d{1,2}(\.\d{1,2})?$/.test(value);
       if (Number(value) == value && value % 1 !== 0) {
-        if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
+        if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2 || failFormat) {
           //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
           error = 'Allowed range ' + minValue + ' - ' + maxValue ;
         }
       } else {
-        if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
+        if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue) || failFormat)) {
           //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
           error = 'Allowed range ' + minValue + ' - ' + maxValue ;
@@ -2069,8 +2084,8 @@ export default {
 
         let debouncedFunction = _.debounce((key,event)=>{
           let val = typeof event === 'string' ? event : event.target.value;
-          val = this.parseFloatToFixed(val, 2);
-          this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+          val = val ? this.parseFloatToFixed(val, 2) : null;
+          this.liveUpdate(key, val, event)
 
         },  debounceTime, {
           'leading': false,
@@ -2133,32 +2148,6 @@ export default {
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
   }
 }
-
-
-Vue.component('resizable-textarea', {
-  methods: {
-    resizeTextarea (event) {
-      event.target.style.height = 'auto'
-      event.target.style.height = (event.target.scrollHeight) + 'px'
-    },
-    initSize() {
-      this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;')
-    }
-  },
-  mounted () {
-    this.$nextTick(() => {
-      this.initSize();
-    })
-
-    this.$el.addEventListener('input', this.resizeTextarea)
-  },
-  beforeDestroy () {
-    this.$el.removeEventListener('input', this.resizeTextarea)
-  },
-  render () {
-    return this.$slots.default[0]
-  },
-});
 
 
 Vue.filter('prettyBytes', function (num) {
@@ -2295,7 +2284,7 @@ Vue.filter('prettyBytes', function (num) {
   .edit-button {
     float: right;  cursor: pointer; margin-top: -5px;
   }
-
+  
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;
