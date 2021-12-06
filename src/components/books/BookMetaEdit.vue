@@ -870,7 +870,6 @@ export default {
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
-    //this.loadAudiobook(true)
 
     this.getAudioBook({bookid: this.currentBookid})
       .then(() => {

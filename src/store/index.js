@@ -818,11 +818,12 @@ export const store = new Vuex.Store({
         }
         state.bookCollections = collections;
       }
+      let booksList = this.getters.allBooks;
       state.bookCollections.forEach((c, idx) => {
         let pages = 0;
         let books = [];
         c.bookids.forEach(b => {
-          let book = state.books_meta.find(_b => _b.bookid === b);
+          let book = booksList.find(_b => _b.bookid === b);
           if (book) {
             pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
             if (book.importStatus == 'staging' && book.blocksCount <= 2){
@@ -1839,9 +1840,9 @@ export const store = new Vuex.Store({
               commit('SET_CURRENTBOOK_META', response.data);
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
-              if (state.currentBookMeta.collection_id && state.currentCollection) {
-                state.currentCollection.updateBook(state.currentBookMeta);
-              }
+            }
+            if (state.currentBookMeta.collection_id && state.currentCollection) {
+              state.currentCollection.updateBook(response.data);
             }
 
             return Promise.resolve(response.data);
@@ -4237,7 +4238,7 @@ export const store = new Vuex.Store({
         return resolve();
       });
     },
-
+    
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
