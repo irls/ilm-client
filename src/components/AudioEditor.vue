@@ -136,7 +136,6 @@
   import _Playout from 'waveform-playlist/lib/Playout';
   import Track from 'waveform-playlist/lib/Track';
   import { renderTrack } from '../store/audio/AudioTrackRender.js';
-  import { trackLoad } from '../store/audio/TrackLoad.js';
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
