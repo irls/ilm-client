@@ -1,8 +1,8 @@
 <template>
   <div class='bookeditor'>
-  <button id="save2" @click="savecontent" class=" button save fa fa-floppy-o"></button>  
+  <button id="save2" @click="savecontent" class=" button save fa fa-floppy-o"></button>
     <pre v-text="HTMLcontent" contenteditable="true" id="contentHTML"></pre>
-    
+
   </div>
 </template>
 
@@ -11,11 +11,11 @@ import Vue from 'vue'
 import access from "../../mixins/access.js"
 import PouchDB from 'pouchdb'
 import pretty from'pretty';
-import cheerio from 'cheerio';
+//import cheerio from 'cheerio';
 
- export default { 
+ export default {
   name: 'BookEditHtml',
-  data() { 
+  data() {
     return {
       componentState: 'start',
       HTMLcontent: "<b>No Content!</b>"
@@ -29,19 +29,19 @@ import cheerio from 'cheerio';
       let vm = this
       let data = this.html2json(document.getElementById('contentHTML').outerHTML)
       let book = this.$store.state.currentBook
-      book.content = data    
+      book.content = data
       try {
         let db = this.libraryDB()
         db.get(book._id).then(function(doc){
-          book._rev = doc._rev 
+          book._rev = doc._rev
           db.put(book).then(book => {
             db.get(book.id).then(newbook => {
               vm.$store.state.currentBook = JSON.parse(JSON.stringify(newbook))
             })
           }).catch(err => console.log(err))
         })
-      }         
-      catch(e) { 
+      }
+      catch(e) {
         alert('An error has occurred: '+e.message)
       }
     },
@@ -50,18 +50,18 @@ import cheerio from 'cheerio';
     html2json: function(t){
       let data = []
      // let t = document.getElementById('contentHTML').outerHTML;
-      t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      let c = cheerio.load(t)
-      c('#book').find("div").each(function(i, el){
-        let item = {}
-        item.id = c(el).attr('id')
-        if(c(this).data('parnum')){ 
-          item.parnum = c(this).data('parnum')
-        }
-        item.content = c(this).text()
-        item.classes = c(this).attr('class').split(' ')
-        data.push(item)
-      }); 
+//       t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+//       let c = cheerio.load(t)
+//       c('#book').find("div").each(function(i, el){
+//         let item = {}
+//         item.id = c(el).attr('id')
+//         if(c(this).data('parnum')){
+//           item.parnum = c(this).data('parnum')
+//         }
+//         item.content = c(this).text()
+//         item.classes = c(this).attr('class').split(' ')
+//         data.push(item)
+//       });
       return data
     },
 
@@ -90,8 +90,8 @@ import cheerio from 'cheerio';
 
    mounted: function() {
     this.HTMLcontent = this.json2html(this.$store.getters.currentBook)
-   }  
-  
+   }
+
  }
 </script>
 
