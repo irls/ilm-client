@@ -76,7 +76,7 @@
             mandatoryFields.push('Author EN (author English translation)');
         }
 
-        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+        if(!this.currentBookCategory || defaultCategory.includes(this.currentBookCategory)){
             canPublish = false;
             mandatoryFields.push('Category');
         }
@@ -235,7 +235,15 @@
         },
         cache: false
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList'])
+      currentBookCategory: {
+        get() {
+          if (typeof this.currentBookCollection.category !== 'undefined') {
+            return this.currentBookCollection.category;
+          }
+          return this.currentBookMeta.category;
+        }
+      },
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'currentBookCollection'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
