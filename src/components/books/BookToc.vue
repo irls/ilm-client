@@ -314,6 +314,7 @@ export default {
                     }
                   }
                   if (slugError) {
+                    this.sectionEditMode(tc.section);
                     this.validationErrors.slug = slugError;
                   }
                 });
