@@ -1150,13 +1150,13 @@
         return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
       },
       splitRecalc(force = false, state) {
-        console.log('splitRecalc')
+        //console.log('splitRecalc')
 
         let parentHeight;
         let parentBottomPadding;
 
         parentHeight = parseInt($(document).height());
-        console.log(`parentHeight:${parentHeight}`);
+        //console.log(`parentHeight:${parentHeight}`);
         if(state || $('.waveform-playlist:visible').length ){
           if( $('.annotations-boxes').length ){
             parentBottomPadding = 435;
@@ -1168,12 +1168,12 @@
         }
 
         parentHeight -=parentBottomPadding
-        console.log(`parentHeight:${parentHeight}`);
+        //console.log(`parentHeight:${parentHeight}`);
 
         // The additional scroll is appear
         parentHeight -=15;
 
-        console.log(`parentHeight:${parentHeight}`);
+        //console.log(`parentHeight:${parentHeight}`);
         let height = parentHeight / 100 * 70 - 5;
 
         let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
