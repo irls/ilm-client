@@ -6,7 +6,12 @@
 
       <SvelteBookPreviewInVue
         :class="['content-background']"
-        :parlists="{parlistO, parlist}"
+        style="height: 100%"
+        :parlistO="parlistO"
+        :blocks="parlistArray"
+        :lang="meta.language"
+        :startId="startId"
+        :hotkeyScrollTo="hotkeyScrollTo"
       ></SvelteBookPreviewInVue>
 
       <!--<div class="content-background" v-bind:style="{'display': 'none' }">
@@ -35,7 +40,7 @@
   </div>
   <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px', 'display': 'none' }"
+  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
@@ -125,6 +130,8 @@ export default {
       blockReindexProcess: false,
 
       startId: false,
+      isBookMounted: false,
+      hotkeyScrollTo: false,
       fntCounter: 0,
       onScrollEv: false,
 
@@ -238,7 +245,12 @@ export default {
 //             keyup: ()=>{console.log('enter+keyup')}
 //           }
         }
-      }
+      },
+      parlistArray: { cache: false,
+        get: function () {
+          return this.$store.state.storeListUpdateCounter && Array.from(this.$store.state.storeList.values());
+        }
+      },
   },
   mixins: [access, taskControls, api_config],
   components: {
@@ -289,106 +301,60 @@ export default {
       //console.timeEnd('refreshPreviewTmpl');
     },
 
-    loadBookMeta() {
-      let checkMeta = this.parlistO.meta || {};
-      checkMeta = checkMeta.bookid || false;
+    loadBookMounted() {
       if (this.$route.params.hasOwnProperty('bookid')) {
-        console.log(`loadBookMeta.checkMeta:`, checkMeta, this.$route.params.bookid);
-        if (!checkMeta || checkMeta!==this.$route.params.bookid || this.$route.params.task_type) {
-          this.freeze('loadBookMeta');
-          return this.$store.dispatch('loadBook', this.$route.params.bookid)
+        let checkMeta = this.parlistO.meta || {};
+        checkMeta = checkMeta.bookid || false;
+        const bookid = this.$route.params.bookid;
+        console.log(`loadBookMounted.checkMeta:`, checkMeta, bookid);
+        if (!checkMeta || checkMeta !== bookid || !this.parlist.values().next().value || this.$route.params.task_type) {
+          console.log('loadBookMounted', 'load');
+          this.freeze('loadBookMounted');
+          this.$store.commit('clear_storeList');
+          this.$store.commit('clear_storeListO');
+          return this.$store.dispatch('loadBook', bookid)
           .then((meta)=>{
-            this.unfreeze('loadBookMeta');
-            //let startBlock = this.$route.params.block || false;
-            //let taskType = this.$route.params.task_type || false;
+            this.unfreeze('loadBookMounted');
+            const startBlock = this.$route.params.block || false;
+            const taskType = this.$route.params.task_type || false;
+            this.startId = startBlock;
 
-            return Promise.resolve({meta, isNew: true});
+            return this.$store.dispatch('loadPartOfBookBlocks', {
+              bookId: this.$route.params.bookid,
+              block: startBlock,
+              taskType: taskType,
+              onPage: 1
+            }).then((answer)=>{
+              if (this.startId == false) {
+                this.startId = answer.blocks[0].blockid;
+              }
+              return this.getAllBlocks(answer.meta.bookid, this.startId)
+              .then((result)=>{
+                this.isBookMounted = true;
+                return Promise.resolve(meta);
+              });
+            })
           }).catch((err)=>{
-            this.unfreeze('loadBookMeta');
+            this.unfreeze('loadBookMounted');
             return Promise.reject(err);
           });
         } else {
-          //this.handleScroll(true);
-          return Promise.resolve({meta: this.parlistO.meta, isNew: false}); // already loaded
+          console.log('loadBookMounted', 'pre');
+          if (this.$route.params.hasOwnProperty('block')) {
+            if (this.$route.params.block=='unresolved') {
+              this.startId = this.$route.params.block || false;
+            } else {
+              this.startId = this.$route.params.block;
+            }
+            this.scrollToBlock(this.$route.params.block);
+            this.$router.replace({name: this.$route.name, params: {}});
+          } else {
+            this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
+          }
+          this.isBookMounted = true;
+          return Promise.resolve(this.parlistO.meta); // already loaded
         }
       } else return Promise.reject('No bookid');
-    },
-
-    loadPreparedBookDown(idsArray) { // mostly first page load
-
-      let startId = idsArray[0] || this.meta.startBlock_id;
-      this.freeze('loadBook');
-      return this.loopPreparedBlocksChain({ids: idsArray})
-      .then((result)=>{
-        if (result.rows && result.rows.length > 0) {
-          //console.log('loadPreparedBookDown result', result.rows);
-          result.rows.forEach((el, idx, arr)=>{
-            if (!this.parlist.has(el.blockid)) {
-              let newBlock = new BookBlock(el);
-              this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el.blockid);
-            }
-          });
-          if (this.startId === false) {
-            this.startId = startId; // first load
-            this.parlistO.setStartId(startId);
-            this.parlistO.setFirstVisibleId(startId);
-          }
-          this.unfreeze('loadBook');
-          result.blockId = result.rows[result.rows.length-1].blockid;
-          return Promise.resolve(result);
-        } else {
-          this.unfreeze('loadBook');
-          return Promise.reject();
-        }
-      }).catch(err=>{
-        this.unfreeze('loadBook'); return err;
-      });
-    },
-
-    loadBookDown(checkRoute = false, startId = false, onPage = 10) {
-
-      //this.freeze('loadBookDown');
-
-      if (checkRoute && this.$route.params.hasOwnProperty('block') && this.$route.params.block) {
-          let routeBlockId = this.$route.params.block;
-
-          if (routeBlockId !== 'unresolved' && this.parlist.has(routeBlockId)) {
-            this.startId = routeBlockId;
-            this.screenTop = initialTopOffset;
-            return Promise.resolve(routeBlockId);
-          }
-
-          this.freeze('loadBookDown');
-          return this.getBloksUntil(routeBlockId, this.$route.params.task_type)
-          .then(blockId=>{
-            if (routeBlockId == 'unresolved') {
-              this.$router.push({name: this.$route.name, params:  {}});
-            }
-            this.unfreeze('loadBookDown');
-            //this.startId = blockId;
-            this.scrollToBlock(blockId);
-            return Promise.resolve(blockId);
-          }).catch(err=>{
-            console.log('loadBookDown->getBloksUntil Error:', err);
-            this.unfreeze('loadBookDown'); return err;
-          });
-
-      } else {
-        startId = startId || this.meta.startBlock_id;
-        this.freeze('loadBookDown');
-        return this.getBlocks(startId, onPage)
-        .then(res=>{
-          if (this.startId === false) {
-            this.startId = startId; // first load
-          }
-          this.unfreeze('loadBookDown');
-          let lastId = res.length ? res[res.length-1]._id : false;
-          return Promise.resolve(res);
-        }).catch(err=>{
-          this.unfreeze('loadBookDown'); return err;
-        });
-      }
     },
 
     getBloksUntil (startId, task_type = null)
@@ -1754,35 +1720,15 @@ export default {
     bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
-      this.screenTop = initialTopOffset;
+      //this.screenTop = initialTopOffset;
       this.startId = false;
-      this.refreshTmpl();
+      //this.refreshTmpl();
 
       this.$router.push({name: this.$route.name, params: {}});
-      this.loadBookMeta() // also handle route params
-      .then((meta)=>{
-        if (meta && this.meta._id) {
-          this.tc_loadBookTask(this.meta._id)
-          .then(()=>{
-            this.$store.dispatch('loadBookBlocks', {bookId: this.meta._id})
-            .then((res)=>{
-              this.parlistO.updateLookupsList(this.meta._id, res);
-              if (res.blocks && res.blocks.length > 0) {
-                res.blocks.forEach((el, idx, arr)=>{
-                  if (!this.parlist.has(el._id)) {
-                    let newBlock = new BookBlock(el);
-                    this.$store.commit('set_storeList', newBlock);
-                  }
-                  //this.parlistO.setLoaded(el._id);
-                });
-                this.$store.commit('set_taskBlockMap');
-              }
-              this.loadBookToc({bookId: this.meta._id, isWait: true});
-              this.loadBookTocSections([]);
-            });
-          });
-        }
-      });
+      this.loadBookMounted() // also handle route params
+      .then((metaResp)=>{
+        this.processOpenedBook();
+      })
     },
 
     bookBlocksUpdates(data) {
@@ -2416,11 +2362,31 @@ export default {
         }));
       },
 
+      getAllBlocks(metaId, startBlock) {
+        //console.log('getAllBlocks', metaId, startBlock);
+        return this.$store.dispatch('loadBookBlocks', {bookId: metaId})
+        .then((res)=>{
+          this.parlistO.setLookupsList(metaId, res);
+          if (res.blocks && res.blocks.length > 0) {
+            res.blocks.forEach((el, idx, arr)=>{
+              if (!this.parlist.has(el._id)) {
+                this.$store.commit('set_storeList', new BookBlock(el));
+              } else {
+                //this.parlistO.setLoaded(el.rid);
+              }
+            });
+          }
+          return res;
+        });
+      },
+
       processOpenedBook() {
         return this.tc_loadBookTask()
         .then(()=>{
           this.checkMode();
           this.$store.commit('set_taskBlockMap');
+          this.$store.dispatch('loadBookToc', {bookId: this.meta._id, isWait: true});
+          this.$store.dispatch('loadBookTocSections', []);
           return this.getProcessQueue();
         })
       }
@@ -2445,35 +2411,10 @@ export default {
         this.correctEditWrapper();
       };
 
-      return this.loadBookMeta() // also handle route params
+      this.loadBookMounted() // also handle route params
       .then((metaResp)=>{
-        console.log(`loadBookMeta.metaResp: `, metaResp);
-        if (metaResp.isNew) { //fresh load
-          return this.$store.dispatch('loadBookBlocks', {bookId: this.meta._id})
-          .then((blocksResp)=>{
-          console.log(`loadBookBlocks.blocksResp: `, blocksResp);
-            this.parlistO.updateLookupsList(this.meta._id, blocksResp);
-            if (blocksResp.blocks && blocksResp.blocks.length > 0) {
-              blocksResp.blocks.forEach((block, idx, arr)=>{
-                if (!this.parlist.has(block._id)) {
-                  const newBlock = new BookBlock(block);
-                  this.$store.commit('set_storeList', newBlock);
-                }
-              });
-            }
-            return this.processOpenedBook();
-          })
-        } else { //already loaded
-
-          if (this.$route.params.hasOwnProperty('block')) {
-            this.scrollToBlock(this.$route.params.block);
-            this.$router.replace({name: this.$route.name, params: {}});
-          } else {
-            this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
-          }
-
-          return this.processOpenedBook();
-        }
+        console.log(`loadBookMounted.metaResp: `, metaResp);
+        this.processOpenedBook();
       })
 
       window.addEventListener('keydown', this.eventKeyDown);
