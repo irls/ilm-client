@@ -1979,6 +1979,7 @@ export default {
               blockid: this.block.blockid,
               type: this.block.type,
               flags: this.block.flags || [],
+              bookid: this.block.bookid,
             }
             if (this.changes && Array.isArray(this.changes)) {
               this.changes.forEach(c => {
