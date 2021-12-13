@@ -9,6 +9,7 @@
     multiple
     :placeholder="'Editor Languages'"
     :disabled="isDisabled"
+    :class="['user-languages-select ' + classList]"
   ></v-select>
 </template>
 <script>
@@ -35,7 +36,8 @@ export default {
 
   props: [
     'selected',
-    'isDisabled'
+    'isDisabled',
+    'inModal'
   ],
   
   computed: {
@@ -49,6 +51,14 @@ export default {
           langs.push({code: code, name: this.lang_list[code]});
         }
         return langs;
+      }
+    },
+    classList: {
+      get() {
+        if (this.inModal) {
+          return '-in-modal';
+        }
+        return '';
       }
     }
   },
@@ -68,3 +78,37 @@ export default {
 
 }
 </script>
+<style lang="less">
+  .user-languages-select {
+    &.-in-modal {
+      .dropdown-menu {
+        height: auto;
+        /*max-height: 70vh;*/
+        overflow-y: auto;
+        overflow-x: hidden;
+        /*top: -150px;*/
+        /*height: auto;*/
+        left: 340px;
+        top: -277px;
+      }
+      &.open {
+        .dropdown-toggle {
+          &:after {
+            content: ' ';
+            position: absolute;
+            right: 10px;
+            top: 42%;
+            margin: -1px 0 0;
+            border-left: 4px dashed;
+            /*border-top: 4px solid;*/
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+          }
+        }
+      }
+    }
+    .dropdown-toggle {
+      max-width: 312px;
+    }
+  }
+</style>

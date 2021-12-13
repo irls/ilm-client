@@ -9,6 +9,7 @@
     multiple
     :placeholder="'Select Roles'"
     :disabled="isDisabled"
+    :class="['user-roles-select ' + classList]"
   ></v-select>
 </template>
 
@@ -35,7 +36,8 @@ export default {
 
   props: [
     'selected',
-    'isDisabled'
+    'isDisabled',
+    'inModal'
   ],
 
 
@@ -50,7 +52,51 @@ export default {
 
   mounted () {
     this.selectedValue = this.selected
+  },
+  
+  computed: {
+    classList: {
+      get() {
+        if (this.inModal) {
+          return '-in-modal';
+        }
+        return '';
+      }
+    }
   }
 
 }
 </script>
+<style lang="less">
+  .user-roles-select {
+    &.-in-modal {
+      .dropdown-menu {
+        height: auto;
+        /*max-height: 70vh;*/
+        overflow-y: auto;
+        overflow-x: hidden;
+        /*height: auto;*/
+        left: 340px;
+        top: -12px;
+      }
+      &.open {
+        .dropdown-toggle {
+          &:after {
+            content: ' ';
+            position: absolute;
+            right: 10px;
+            top: 42%;
+            margin: -1px 0 0;
+            border-left: 4px dashed;
+            /*border-top: 4px solid;*/
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+          }
+        }
+      }
+    }
+    .dropdown-toggle {
+      max-width: 312px;
+    }
+  }
+</style>
