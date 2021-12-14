@@ -104,11 +104,11 @@
         </table>
       </div>
     </div>
-    <modal v-model="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="finishTextCleanup()">
+    <modal :show.sync="showSharePrivateBookModal" effect="fade" ok-text="Complete" cancel-text="Close" title="" @ok="finishTextCleanup()">
       <div v-html="sharePrivateBookMessage"></div>
     </modal>
 
-    <modal v-model="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
+    <modal :show.sync="showAudioMasteringModal" effect="fade" ok-text="Complete" cancel-text="Cancel" @ok="finishAudioMastering()">
       <p>Complete mastering?</p>
     </modal>
   </div>
