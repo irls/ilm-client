@@ -3337,12 +3337,23 @@ Save text changes and realign the Block?`,
               }
             }
             if (checkRange.startOffset === 0 && /^[\s]*$/.test(checkRange.toString())) {// click at the beginning of the block
-              if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling)) {
+              if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling) && !container.previousElementSibling) {
                 return false;
               }
             }
             if (!isMac && this.range.startOffset < this.range.endOffset) {// do not display menu for range
               return false;
+            }
+            // Do not allow split point inside superscript or subscript
+            let checkParentSup = container.parentElement;
+            while (checkParentSup && checkParentSup.nodeName !== 'DIV') {
+              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB') {
+                return false;
+              }
+              if (checkParentSup.nextElementSibling && ['SUP', 'SUB'].includes(checkParentSup.nextElementSibling.nodeName)) {
+                return false;
+              }
+              checkParentSup = checkParentSup.parentElement;
             }
             let skipLengthCheck = false;
             if (this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV') {// && (container.parentElement.nextSibling || (container.parentElement.parentElement && container.parentElement.parentElement.nodeName !== 'DIV' && this.$refs.blockContent.lastChild !== container.parentElement.parentElement));// means click at the end of <w></w> tag, and this tag is not last in container DIV
@@ -3486,9 +3497,21 @@ Save text changes and realign the Block?`,
         if (!this.blockPart.audiosrc || this.blockPart.audiosrc.length === 0) {
           return true;
         }
-        let wContainer = this.range.startContainer;
+        let container = this.range.startContainer;
+        let wContainer = container;
         while (wContainer.nodeName !== 'W' && wContainer.nodeName !== 'DIV') {
           wContainer = wContainer.parentElement;
+        }
+        if (wContainer && wContainer.nodeName === 'DIV') {
+          // Check for structure:
+          // <pinned word><superscript or subscript> <cursor position><following word>
+          if (container.nodeValue.trim() === '') {
+            if (container.previousElementSibling && ['SUP', 'SUB'].includes(container.previousElementSibling.nodeName)) {
+              if (container.previousElementSibling.previousElementSibling && container.previousElementSibling.previousElementSibling.nodeName === 'W') {
+                wContainer = container.previousElementSibling.previousElementSibling;
+              }
+            }
+          }
         }
         if (wContainer && wContainer.nodeName === 'W') {
           if (wContainer.dataset && wContainer.dataset.map && wContainer.dataset.map.length > 0) {
