@@ -353,6 +353,12 @@ class BookBlock {
     this.sync_changes = init.sync_changes || [];// changes from synschronization
     this.audio_quality = init.audio_quality || '';
     this.wordsRange = init.wordsRange || {};
+    if (this.type === 'title' && !this.classes.hasOwnProperty('style')) {
+      this.classes.style = '';
+    }
+    if (this.type === 'header' && !this.classes.hasOwnProperty('level')) {
+      this.classes.level = 'h2';
+    }
   }
 
   clean() {
@@ -1060,6 +1066,9 @@ class BookBlock {
     //if (this.tc_getBlockTask(block.blockid, 'narrate')) {
       //return true;
     //}
+    if (this.status && this.status.assignee === 'narrator') {
+      return true;
+    }
     let user_id = Vue.prototype.user_id;
     let flags = Array.isArray(this.flags) ? this.flags.filter(flag => {
       return Array.isArray(flag.parts) && !flag.isNew ? flag.parts.find(p => {
@@ -1071,6 +1080,10 @@ class BookBlock {
       return false;
     }
     return true;
+  }
+  
+  setIsSaving(value = true) {
+    this.isSaving = value;
   }
 }
 

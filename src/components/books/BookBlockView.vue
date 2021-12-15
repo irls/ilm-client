@@ -89,7 +89,7 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="joinWithNext()">
                         <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                         Join with next block</li>
                       <li v-else class="disabled">
@@ -126,12 +126,13 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
-                      @input="setNumVal" v-model="blockO.secnum"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly || updatingNumeration ? 'disabled' : false" v-if="block.type=='header'"
+                      v-on:change="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
-                      @input="setNumVal" v-model="blockO.parnum"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly || updatingNumeration ? 'disabled' : false" v-if="block.type=='par'"
+                      v-on:change="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
+                    <div class="circle-preloader" v-if="updatingNumeration"></div>
 
                   </div>
                   <!--<div v-else class="parnum-row"></div>-->
@@ -256,6 +257,7 @@
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               :splitPointAdded="splitPointAdded"
+              :splitPointRemoved="splitPointRemoved"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -639,7 +641,8 @@ export default {
       player: false,
       range: false,
       editorDescr: false,
-      editorFootn: false,
+      editorFootnLtr: false,
+      editorFootnRtl: false,
       flagsSel: false,
       flagEl: 'f',
       quoteEl: 'qq',
@@ -1126,7 +1129,8 @@ export default {
           currentBookCounters: 'currentBookCounters',
           audioTasksQueue: 'audioTasksQueue',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
-          blockLockedSimultaneous: 'blockLockedSimultaneous'
+          blockLockedSimultaneous: 'blockLockedSimultaneous',
+          updatingNumeration: 'updatingNumeration'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1303,13 +1307,6 @@ export default {
         });
       }
 
-      if (this.block.type == 'title' && !this.block.classes.hasOwnProperty('style')){
-        this.block.classes.style = '';
-      }
-      if (this.block.type == 'header' && !this.block.classes.hasOwnProperty('level')){
-        this.block.classes.level = 'h2';
-      }
-
 
       this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
@@ -1443,21 +1440,21 @@ export default {
         'checkError',
         'getBookAlign',
         'updateBlockPart',
-        'recountVoicedBlocks',
         'addAudioTask',
         'applyTasksQueue',
         'saveBlockAudio',
         'updateStoreFlag',
-        'changeBlocksVoicework'
+        'changeBlocksVoicework',
+        'loadBookTocSections'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
       getClassValue(elType,  elKey) {
         let objValues = {};
-        if (elType == 'type'){ 
+        if (elType == 'type'){
             objValues = BlockTypesAlias.type.values
-        } else if (elType == 'title'){ 
+        } else if (elType == 'title'){
             objValues = BlockTypesAlias.title.style.values
         } else if (elType == 'header') {
              objValues = BlockTypesAlias.header.level.values
@@ -1593,8 +1590,11 @@ export default {
           this.editorDescr.destroy();
           //this.editorDescr = false;
         }
-        if (this.editorFootn) {
-          this.editorFootn.destroy();
+        if (this.editorFootnLtr) {
+          this.editorFootnLtr.destroy();
+        }
+        if (this.editorFootnRtl) {
+          this.editorFootnRtl.destroy();
         }
         if (destroyPart) {
           this.$refs.blocks.forEach(blk => {
@@ -1612,31 +1612,31 @@ export default {
         if (this.editingLocked) {
           return false;
         }
-        if ((!this.editorFootn || force === true) && this.block.needsText()) {
-          let extensions = {};
-          let toolbar = {buttons: []};
-          if (this.allowEditing) {
-            extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview(),
-                'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
-              };
-            toolbar = {
-                buttons: [
-                  'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
-                  'unorderedlist',
-                  'quoteButton', 'suggestButton'
-                ]
-              };
-          }
+        if ((!this.editorFootnLtr || !this.editorFootnRtl || force === true) && this.block.needsText()) {
           if(!this.proofreadModeReadOnly) {
             let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
-              return ['ar', 'fa'].indexOf(f.language) !== -1;
+              return ['ar', 'fa'].indexOf(this.getFtnLang(f.language)) !== -1;
             }) : false;
             if (footnote) {
-              this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
+              let extensions = {};
+              let toolbar = {buttons: []};
+              if (this.allowEditing) {
+                extensions = {
+                    'quoteButton': new QuoteButton(),
+                    'quotePreview': new QuotePreview(),
+                    'suggestButton': new SuggestButton(),
+                    'suggestPreview': new SuggestPreview()
+                  };
+                toolbar = {
+                    buttons: [
+                      'bold', 'italic', 'underline',
+                      'superscript', 'subscript',
+                      'unorderedlist',
+                      'quoteButton', 'suggestButton'
+                    ]
+                  };
+              }
+              this.editorFootnRtl = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
                   quotesList: this.authors,
@@ -1652,10 +1652,28 @@ export default {
 
           if(!this.proofreadModeReadOnly) {
             let footnote = Array.isArray(this.block.footnotes) ? this.block.footnotes.find(f => {
-              return ['ar', 'fa'].indexOf(f.language) === -1;
+              return ['ar', 'fa'].indexOf(this.getFtnLang(f.language)) === -1;
             }) : false;
             if (footnote) {
-              this.editorFootn = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
+              let extensions = {};
+              let toolbar = {buttons: []};
+              if (this.allowEditing) {
+                extensions = {
+                    'quoteButton': new QuoteButton(),
+                    'quotePreview': new QuotePreview(),
+                    'suggestButton': new SuggestButton(),
+                    'suggestPreview': new SuggestPreview()
+                  };
+                toolbar = {
+                    buttons: [
+                      'bold', 'italic', 'underline',
+                      'superscript', 'subscript',
+                      'unorderedlist',
+                      'quoteButton', 'suggestButton'
+                    ]
+                  };
+              }
+              this.editorFootnLtr = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
                   quotesList: this.authors,
@@ -1669,7 +1687,14 @@ export default {
             }
           }
 
-        } else if (this.editorFootn) this.editorFootn.setup();
+        } else {
+          if (this.editorFootnLtr) {
+            this.editorFootnLtr.setup();
+          }
+          if (this.editorFootnRtl) {
+            this.editorFootnRtl.setup();
+          }
+        }
       },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
@@ -2083,6 +2108,7 @@ export default {
         let is_content_changed = this.hasChange('content');
         let is_type_changed = this.hasChange('type');
         this.block.isSaving = true;
+        this.storeListById(this.block.blockid).setIsSaving(true);
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
@@ -2091,12 +2117,14 @@ export default {
           if (realign) {
             this.getBookAlign()
               .then(() => {
+                //this.storeListById(this.block.blockid).setIsSaving(false);
                 this.block.isSaving = false;
                 if (this.isLocked && this.isAudioEditing) {
                   this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                 }
               });
           } else {
+            //this.storeListById(this.block.blockid).setIsSaving(false);
             this.block.isSaving = false;
           }
           if (this.isCompleted) {
@@ -2119,6 +2147,7 @@ export default {
             }
           } else if (is_type_changed) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
+            this.loadBookTocSections([]);
           }
 
           /*this.blockO.status = Object.assign(this.blockO.status, {
@@ -2160,16 +2189,23 @@ export default {
         update.blockid = this.block.blockid;
         update.bookid = this.block.bookid;
         this.block.isSaving = true;
+        this.storeListById(this.block.blockid).isSaving = true;// this.block can be different with the one in store, e.g. after style update
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
         }
         let isSplitting = this.hasChange('split_point');
         return this.putBlockPart(update, realign)
           .then(() => {
+            if (this._isDestroyed) {
+              //this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
+              this.$root.$emit(`block-state-refresh-${this.block.blockid}`);
+              this.$root.$emit(`saved-block:${this.block.blockid}`);
+            }
             if (realign) {
               this.getBookAlign()
                 .then(() => {
                   this.block.isSaving = false;
+                  this.storeListById(this.block.blockid).isSaving = false;
                   if (this.isLocked && this.isAudioEditing) {
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
@@ -3170,7 +3206,7 @@ Save text changes and realign the Block?`,
               //console.log(self.recordStartCounter);
               $('#narrateStartCountdown strong').html(self.recordStartCounter);
             }
-          }, 1000);
+          }, 710);
         });
       },
       stopRecording(partIdx, reRecordPosition, start_next = false) {
@@ -3450,7 +3486,7 @@ Save text changes and realign the Block?`,
               this.block.content = this.$refs.blocks[0].clearBlockContent();
             }
             this.$forceUpdate();
-          } 
+          }
 
           if (type === 'type' && event && event.target) {
             this.block.type = event.target.value;
@@ -4239,6 +4275,12 @@ Save text changes and realign the Block?`,
       splitPointAdded() {
         this.pushChange('split_point');
       },
+      splitPointRemoved() {
+        let splitPoints = this.$refs.blocks[0].$refs.blockContent.querySelectorAll('i.pin');
+        if (splitPoints.length === 0) {
+          this.unsetChange('split_point');
+        }
+      },
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
           let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
@@ -4469,7 +4511,6 @@ Save text changes and realign the Block?`,
                 });
               }
             });
-            this.recountVoicedBlocks();
           }
           this.block.setChanged(val);
           this.recountApprovedInRange();
@@ -4638,8 +4679,8 @@ Save text changes and realign the Block?`,
             if (recollect) {
               this.$root.$emit('from-block-edit:set-style');
             }
+            this.block.sync_changes = [];
           }
-          this.block.sync_changes = [];
         },
         deep: true
       },
@@ -4658,6 +4699,14 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
+      },
+      'block.content': {
+        handler(val, oldval) {
+          if (!oldval) {
+            
+          }
+        },
+        deep: true
       }
 
   }
@@ -4741,9 +4790,9 @@ Save text changes and realign the Block?`,
       margin-top: 5px;
       margin-bottom: 10px;
 
-      .table-row {
-
-      }
+      //.content-wrap-footn {
+      //  font-size: 13pt;
+      //}
 
       .-num {
         padding-right: 5px;
@@ -4762,6 +4811,49 @@ Save text changes and realign the Block?`,
       }
     }
 }
+
+
+//book lang common
+//Specificity 1
+//lang priority 4
+.content-wrap-footn {
+  font-size: 13pt;
+}
+
+//book lang arabic or farsi
+//Specificity 2
+//lang priority 3
+.-lang-fa .content-wrap-footn, .-lang-ar .content-wrap-footn {
+  font-size: 15pt;
+}
+
+//block lang common
+//Specificity 3
+//lang priority 2
+.table-cell .-content.content-wrap-footn{
+  font-size: 13pt;
+}
+
+//block lang arabic or farsi
+//Specificity 3
+//lang priority 2
+.table-cell .-langblock-ar.content-wrap-footn, .table-cell .-langblock-fa.content-wrap-footn {
+  font-size: 15pt;
+}
+//footnote lang common
+//Specificity 4
+//lang priority 1
+.table-cell .content-wrap-footn.table-cell.-text{
+  font-size: 13pt;
+}
+
+//footnote lang arabic or farsi
+//Specificity 4
+//lang priority 1
+.table-cell .content-wrap-footn.-langftn-ar.-text, .table-cell .content-wrap-footn.-lang-fa.-text{
+  font-size: 15pt;
+}
+
 
 .table-cell {
     display: table-cell;

@@ -167,7 +167,7 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.category' @change="change('category')" :key="currentBookid" :disabled="!allowMetadataEdit">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="change('category')" :key="currentBookid" :disabled="categoryEditDisabled">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
@@ -272,7 +272,7 @@
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
                 <vue-tab title="Book" :id="'global-styles-switcher'">
-                  <fieldset class="block-style-fieldset">
+                  <fieldset class="block-style-fieldset global-style">
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
@@ -300,7 +300,7 @@
                   </div>
                   </fieldset>
 
-                  <fieldset class="block-style-fieldset">
+                  <fieldset class="block-style-fieldset automatic-numeration">
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
@@ -326,6 +326,25 @@
                       <i v-else class="fa fa-circle-o"></i>
                       Off</label>
                   </div>
+                  </fieldset>
+                  <fieldset class="block-style-fieldset trim-silence-config">
+                    <legend>Trim silence</legend>
+                    <div>
+                      <label class="style-label"
+                        @click="setTrimSilenceConfig('audio_tts_narration')">
+                        <i v-if="trimSilenceConfigCalculated === 'audio_tts_narration'" class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        Audio file, Narration, TTS
+                      </label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        @click="setTrimSilenceConfig('tts_narration')">
+                        <i v-if="trimSilenceConfigCalculated === 'tts_narration'" class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        Narration, TTS
+                      </label>
+                    </div>
                   </fieldset>
 
                 </vue-tab>
@@ -557,6 +576,8 @@ import task_controls from '../../mixins/task_controls.js'
 import api_config from '../../mixins/api_config.js'
 import access from '../../mixins/access.js'
 import { Languages } from "../../mixins/lang_config.js"
+import time_methods from '../../mixins/time_methods.js'
+import number_methods from "../../mixins/number_methods.js"
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
@@ -726,6 +747,7 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
       hashTagsSuggestions: 'hashTagsSuggestions',
+      currentBookCollection: 'currentBookCollection'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -827,14 +849,49 @@ export default {
         }
         return types;
       }
+    },
+    trimSilenceConfigCalculated: {
+      get() {
+        if (this.currentBookMeta && this.currentBookMeta.trim_silence_config) {
+          if (this.currentBookMeta.trim_silence_config.audio_file && this.currentBookMeta.trim_silence_config.tts && this.currentBookMeta.trim_silence_config.narration) {
+            return 'audio_tts_narration';
+          } else if (this.currentBookMeta.trim_silence_config.tts && this.currentBookMeta.trim_silence_config.narration && !this.currentBookMeta.trim_silence_config.audio_file) {
+            return 'tts_narration';
+          }
+        }
+        return '';
+      }
+    },
+    
+    currentBookCategory: {
+      get() {
+        if (typeof this.currentBookCollection.category !== 'undefined') {
+          return this.currentBookCollection.category;
+        }
+        return this.currentBook.category;
+      },
+      set(value) {
+        this.currentBook.category = value;
+      }
+    },
+    
+    categoryEditDisabled: {
+      get() {
+        if (!this.allowMetadataEdit) {
+          return true;
+        }
+        if (typeof this.currentBookCollection.category !== 'undefined') {
+          return true;
+        }
+        return false;
+      }
     }
   },
 
-  mixins: [task_controls, api_config, access],
+  mixins: [task_controls, api_config, access, time_methods, number_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
-    //this.loadAudiobook(true)
 
     this.getAudioBook({bookid: this.currentBookid})
       .then(() => {
@@ -1988,30 +2045,6 @@ export default {
 
       }
     },
-    convertTime(dt, time = false) {
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-      var date = new Date(dt);
-      var toutc = date.toUTCString();
-      var locdate = new Date(toutc + " UTC");
-
-      var year = locdate.getFullYear(),
-      month = locdate.getMonth() + 1, // months are zero indexed
-      day = locdate.getDate(),
-      hour = locdate.getHours(),
-      minute = locdate.getMinutes(),
-      second = locdate.getSeconds(),
-      hourFormatted = hour < 10 ? `0${hour}` : hour, // hour returned in 24 hour format
-      minuteFormatted = minute < 10 ? "0" + minute : minute
-
-      //console.log(toutc, locdate);
-      let result = day + " " + monthNames[month - 1] + " " + year ;
-      if (time) {
-        result += " " + hourFormatted + ":" + minuteFormatted;
-      }
-      return result;
-
-    },
     finishPublished() {
       this.finishPublishedProcess = true;
       return axios.post(this.API_URL + 'task/' + this.currentBook._id + '/finish_published')
@@ -2075,6 +2108,7 @@ export default {
 
         let debouncedFunction = _.debounce((key,event)=>{
           let val = typeof event === 'string' ? event : event.target.value;
+          val = this.parseFloatToFixed(val, 2);
           this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
 
         },  debounceTime, {
@@ -2083,7 +2117,6 @@ export default {
         });
         debouncedFunction(key,event);
       }
-      console.log('HERE', this.validationErrors);
 
     },
 
@@ -2125,6 +2158,16 @@ export default {
         return (this.styleTabs.has(blockType));
       }
       return this.pausesBeforeProps.has(blockType);
+    },
+    setTrimSilenceConfig(val, ev) {
+      switch (val) {
+        case 'audio_tts_narration':
+          return this.liveUpdate('trim_silence_config', {audio_file: true, tts: true, narration: true}, ev);
+          break;
+        case 'tts_narration':
+          return this.liveUpdate('trim_silence_config', {audio_file: false, tts: true, narration: true}, ev);
+          break;
+      }
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
@@ -2499,6 +2542,15 @@ Vue.filter('prettyBytes', function (num) {
             width: auto;
           }
         }
+      }
+      &.global-style {
+        width: 22%;
+      }
+      &.automatic-numeration {
+        width: 22%;
+      }
+      &.trim-silence-config {
+        width: 50%;
       }
     }
 

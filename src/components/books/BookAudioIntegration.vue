@@ -32,7 +32,7 @@
             </dropdown>
             <div class="upload-audio left-divider">
               <button id="show-modal" type="button" @click="uploadAudio" class="btn btn-default btn_audio_upload btn-small" >
-                
+
               </button>
             </div>
             <div class="delete-audio">
@@ -46,8 +46,8 @@
           </div>
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
-            <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
+            <draggable :options="{disabled : renaming}" v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
+              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())"   :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-renaming': (renaming && (renaming.id == audiofile.id && !audiofile.duplicate))}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
                 <template v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                   <template v-if="audiofile.status == 'processing' && (audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                     <div class="audiofile-info">
@@ -74,14 +74,17 @@
                         <i class="fa fa-pause-circle-o" v-on:click="pause()" v-if="playing === audiofile.id && paused !== audiofile.id"></i>
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
-                      <div class="audiofile-name">
+                      <div class="audiofile-name" v-on:dblclick="renameAudiofile(audiofile.id)">
                         <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" /><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
-                        <span v-if="renaming !== audiofile.id && !audiofile.duplicate"
+                        <span v-if="!renaming || (renaming.id !== audiofile.id && !audiofile.duplicate)"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
-                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" v-on:dblclick="renaming = audiofile.id"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
-                        <input id="rename-input" type="text" v-model="audiofile.title" 
+                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" ><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                        <input id="rename-input" type="text" v-model="audiofile.title" autocomplete="off"
                              class="audiofile-name-edit"
-                             @focusout="saveAudiobook()"
+                               @blur="renameAudiofileStop()"
+                               @keyup.enter="renameAudiofileStop()"
+                               @change="saveAudiobook()"
+
                              v-else-if="!audiofile.hasOwnProperty('duplicate') || audiofile.duplicate == false" />
                       </div>
                       <div class="audiofile-player-controls">
@@ -230,7 +233,9 @@
         aad_sort: '',
         aad_filter: 'all',
         filterFilename: '',
-        highlightDuplicateId: ''
+        highlightDuplicateId: '',
+        split : false,
+        audioEditorIsOpeed : false
       }
     },
     mixins: [task_controls, api_config, access],
@@ -247,12 +252,34 @@
         linkEndpoints: false
       });*/
 
+      this.$root.$on('from-audioeditor:lock', function(blockId, audiofileId) {
+        this.audioEditorIsOpeed = true;
+
+        // var initSplitDebounce = _.debounce(function () {
+        //   self.splitRecalc(true,false)
+        // }, 1000);
+        // initSplitDebounce();
+
+      })
       var self = this;
 
       this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
         if (audiofileId && self.playing === audiofileId) {
           self.playing = false;
+          // this.audioEditorIsOpeed = false;
+          // self.initSplit(true,false);
+        }else{
+          // this.audioEditorIsOpeed = true;
+          // self.initSplit(true, true);
         }
+
+
+        var initSplitDebounce = _.debounce(function () {
+          self.splitRecalc(true)
+        }, 1000);
+        // initSplitDebounce
+        initSplitDebounce();
+
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
         if (self.audiobook && self.audiobook.importFiles) {
@@ -295,7 +322,18 @@
           }
         }
       });
+      this.$root.$on('from-audioeditor:content-loaded', (id) => {
+        var initSplitDebounce = _.debounce(function () {
+          self.splitRecalc(true,false)
+        }, 500);
+        initSplitDebounce();
+      });
+
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
+        // var initSplitDebounce = _.debounce(function () {
+        //   self.splitRecalc(true,false)
+        // }, 1000);
+        // initSplitDebounce();
         this.audioOpening = false;
         if (self.audiobook && self.audiobook.importFiles) {
           let record = this.audiobook.importFiles.find(f => f.id === id);
@@ -337,7 +375,7 @@
       })
       .catch(err=>err);
       this._setCatalogueSize();
-      window.addEventListener('resize', this._setCatalogueSize, true);
+      window.addEventListener('resize', this.splitRecalc, true);
       this.$root.$on('cancel-align', this.cancelAlign)
       this.$root.$on('start-align', () => {
         this.alignProcess = true;
@@ -361,7 +399,49 @@
         this.$emit('uploadAudio')
       },
       renameAudiofile(id) {
-        this.renaming = id;
+        this.renaming = {
+          id:id,
+          titleOrigin: this.audiobook.importFiles.find(aif => aif.id == id).title
+        };
+      },
+
+      audiobookValidate(value) {
+
+        // linux
+        // https://stackoverflow.com/questions/1976007/what-characters-are-forbidden-in-windows-and-linux-directory-names#:~:text=Under%20Linux%20and%20other%20Unix,path%20name%2C%20separating%20directory%20components.
+        // windows
+        // https://stackoverflow.com/questions/1976007/what-characters-are-forbidden-in-windows-and-linux-directory-names#:~:text=Under%20Linux%20and%20other%20Unix,path%20name%2C%20separating%20directory%20components.
+        // https://stackoverflow.com/questions/265769/maximum-filename-length-in-ntfs-windows-xp-and-windows-vista
+
+        let result = true;
+        // Empty or only spaces
+        result = value.replace(/\s+/g,'').length>0;
+
+        // // linux characters
+        // result = result && value.match(/[@\/]/,'') === null;
+        //
+        // // windows characters
+        // result = result && value.match(/[<>:"\/\\\|\?\*]/,'') === null;
+        //
+        // // windows Filenames cannot end in a dot.
+        // result = result && value.match(/(.?)*\.+/,'') === null;
+        //
+        // // windows Filenames cannot end in a space.
+        // result = result && value.match(/(.?)*\s+/,'') === null;
+        //
+        // // macOS characters
+        // result = result && value.match(/[:/]/,'') === null;
+        //
+        // // non ascii characters
+        // result = result && value.match(/[^ -~]+/,'') === null;
+        //
+        // // length
+        // result = result && value.length<=245;
+
+        return result;
+      },
+      renameAudiofileStop() {
+        this.renaming = false;
       },
       saveAudiobook(reorder = [], removeFiles = [], done = [], sortDirection = '') {
         if (removeFiles) {
@@ -387,11 +467,17 @@
         formData.append('sortDirection', sortDirection);
         let rename = [];
         if (this.renaming) {
-          let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming);
+          let renaming = this.audiobook.importFiles.find(aif => aif.id == this.renaming.id);
+          if(!this.audiobookValidate(renaming.title)){
+            renaming.title = this.renaming.titleOrigin;
+            this.renameAudiofileStop();
+            // this.renaming = false;
+            return
+          }
           if (renaming) {
             rename.push({
                 id: renaming.id,
-                title: renaming.title
+                title: renaming.title,
               });
           }
         }
@@ -406,7 +492,7 @@
           rename.push(d);
         });
         formData.append('rename', JSON.stringify(rename));
-        this.renaming = false;
+        this.renameAudiofileStop();
         let api = this.$store.state.auth.getHttp()
         let self = this;
         return api.post(api_url, formData, {}).then(function(response){
@@ -443,6 +529,7 @@
         }
         if (!this.audioOpening && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
           if (!this.renaming) {
+            this.initSplit(true, true);
             this.audioOpening = id;
           }
         } else if (!event.shiftKey && !event.ctrlKey && !event.metaKey) {
@@ -1041,9 +1128,9 @@
           this.saveAudiobook([], [], doneUpdates);
         }
       },
-      _setCatalogueSize() {
-        let file_catalogue_height = $(document).height() - 500;
-        $('.file-catalogue-files').css('max-height', file_catalogue_height + 'px');
+      _setCatalogueSize( ) {
+        let file_catalogue_height = $(document).height();
+        $('.file-catalogue-files').css('max-height', `${file_catalogue_height}px`);
       },
 
       clearErrors() {
@@ -1056,18 +1143,79 @@
             console.log(err)
           })
       },
+      inViewport($el) {
+        var elH = $el.outerHeight(),
+          H   = $(window).height(),
+          r   = $el[0].getBoundingClientRect(), t=r.top, b=r.bottom;
+        return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
+      },
+      splitRecalc(force = false, state) {
+        console.log('splitRecalc')
 
-      initSplit() {
-        if (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0) {
+        let parentHeight;
+        let parentBottomPadding;
+
+        parentHeight = parseInt($(document).height());
+        console.log(`parentHeight:${parentHeight}`);
+        if(state || $('.waveform-playlist:visible').length ){
+          if( $('.annotations-boxes').length ){
+            parentBottomPadding = 435;
+          }else{
+            parentBottomPadding = 410;
+          }
+        }else{
+          parentBottomPadding = 240;
+        }
+
+        parentHeight -=parentBottomPadding
+        console.log(`parentHeight:${parentHeight}`);
+
+        // The additional scroll is appear
+        parentHeight -=15;
+
+        console.log(`parentHeight:${parentHeight}`);
+        let height = parentHeight / 100 * 70 - 5;
+
+        let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
+        $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+
+      },
+      initSplit(force = false, state) {
+        console.log('initSplit')
+        // if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
+        if (force || (this.isActive === true && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
+          let parentBottomPadding = false;
           let minSize = false;
           let maxSize = false;
-          let split = Split(['#file-catalogue', '#audio-import-errors'], {
+          if(this.split){
+            this.split.destroy();
+          }
+          let self = this;
+          this.split = Split(['#file-catalogue', '#audio-import-errors'], {
             direction: 'vertical',
+            gutterSize: 0,
             //minSize: [80, 80],
             sizes: [70, 30],
             elementStyle: (dimension, size, gutterSize) => {
+
+              console.log(`elementStyle`);
+
               let resizeWrapper = true;
+              parentHeight = parseInt($(document).height());
+              console.log(`parentHeight:${parentHeight}`);
+              if(state || $('.waveform-playlist:visible').length ){
+                if( $('.annotations-boxes').length ){
+                  parentBottomPadding = 435;
+                }else{
+                  parentBottomPadding = 410;
+                }
+              }else{
+                parentBottomPadding = 240;
+              }
+              parentHeight -=parentBottomPadding
+              console.log(`parentHeight:${parentHeight}`);
+
               if (!parentHeight) {
                 parentHeight = parseInt($('#file-catalogue').parent().css('height'));
                 resizeWrapper = false;
@@ -1078,10 +1226,41 @@
                 }
               }
               //console.log(dimension, size, gutterSize)
+              console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
+              console.log(`size:${size}`);
+              console.log(`gutterSize:${gutterSize}`);
+
+              // The additional scroll is appear
+              parentHeight -=15;
+              console.log(`parentHeight:${parentHeight}`);
+
               let height = parentHeight / 100 * size - gutterSize;
+
+
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
-              if (resizeWrapper) {
-                $('.file-catalogue-files-wrapper').css('height', parseInt($('#file-catalogue').css('height')) - parseInt($('.file-catalogue-buttons').css('height')) + 'px')
+              if (resizeWrapper || force) {
+                let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
+                console.log(`parentHeight:${parentHeight}`);
+                console.log(`wrapper:${wrapper}`);
+
+                $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+                // height = this.inViewport($('.file-catalogue-files-wrapper'));
+                // console.log(`parentHeight inViewport:${parentHeight}`);
+                //
+                //
+                // setTimeout( () => {
+                //   // debugger;
+                //   if(!state && !self.playing){
+                //     height -= 80
+                //   }else{
+                //     height -= 65
+                //   }
+                //   height = this.inViewport($('.file-catalogue-files-wrapper'));
+                //   console.log(`parentHeight inViewport:${parentHeight}`);
+                //   $('.file-catalogue-files-wrapper').css('height', height + 'px')
+                // }, 5000);
+                // // _.debounce( ,500);
+
               }
               if (height < minSize && resizeWrapper) {
                 height = minSize;
@@ -1089,8 +1268,10 @@
               if (height > maxSize && resizeWrapper) {
                 height = maxSize;
               }
+              console.log(`height:${height}`);
               return {'height': height + 'px'};
             }
+
           });
           //console.log(split)
         }
@@ -1113,12 +1294,12 @@
           return false;
         }
       },
-      
+
       capitalizeFirst(text) {
         return _.upperFirst(text);
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -1303,6 +1484,7 @@
       },
       'renaming': {
         handler(val) {
+          this.setAudioRenamingStatus(val);
           if (val !== false) {
             var i = setInterval(() => {
               if ($('#rename-input').length > 0) {
@@ -1312,13 +1494,30 @@
             }, 100)
           }
         }
+      },
+      "currentBookid": {
+        handler(val) {
+          this.selections = [];
+          this.playing = false;
+          this.renaming = false;
+          this.audioOpening = false;
+        }
       }
     }
   }
 </script>
 <style lang="less">
+
+.panel-group.audio-integration-accordion .panel-body{
+  padding-bottom: 0px;
+}
   .btn-small {
     font-size: 12px;
+  }
+  .file-catalogue {
+    .file-catalogue-buttons {
+      padding-bottom: 10px;
+    }
   }
   .file-catalogue {
     .file-catalogue-buttons {
@@ -1375,6 +1574,8 @@
         span {
           display: inline-block;
           padding: 0px 2px;
+          display: inline-block;
+          width: 100%;
         }
         .audiofile-info {
           display: inline-block;
@@ -1701,4 +1902,18 @@
     background-position: center;
     width: 43px;
   }
+
+  .audiofile.-renaming .audiofile-options,.audiofile.-renaming .audiofile-player-controls{
+    display: none !important;
+  }
+
+  .audiofile.-renaming .audiofile-name{
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .audiofile.-renaming #rename-input{
+    width: 90% !important;
+  }
+
+
 </style>

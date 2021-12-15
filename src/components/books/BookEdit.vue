@@ -252,7 +252,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections']),
 
     test(ev) {
         console.log('test', ev);
@@ -1092,6 +1092,7 @@ export default {
           .then(() => {
             if (['header', 'title'].indexOf(block.type) !== -1) {
               this.loadBookToc({isWait: true, bookId: block.bookid});
+              this.loadBookTocSections([]);
             }
           });
 
@@ -1881,6 +1882,7 @@ export default {
                   this.$store.commit('set_taskBlockMap');
                 }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
+                this.loadBookTocSections([]);
                 //this.lazyLoad();
               });
             });
@@ -1922,10 +1924,12 @@ export default {
     saveBlockAudioChanges(realign = false, preparedData = false) {
       let blk = this.audioTasksQueueBlock();
       if (blk) {
+        let blkPartIdx = this.audioTasksQueue.block.partIdx;
+        let isSplitted = blk.getIsSplittedBlock();
         //console.log(`saveBlockAudioChanges: `, this.audioTasksQueueBlock)
         //console.log(blk.isChanged);
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-        if (blk.getIsSplittedBlock()) {
+        if (isSplitted) {
           blk.parts[this.audioTasksQueue.block.partIdx].isSaving = true;
         } else {
           blk.isSaving = true;
@@ -1936,16 +1940,14 @@ export default {
           })
           .then(response => {
             this.$root.$emit('for-audioeditor:flush');
-            let block = this.audioTasksQueueBlock();
-            let isSplitted = block.getIsSplittedBlock();
-            let refContainer = this._getRefContainer(block);
+            let refContainer = this._getRefContainer(blk);
             if (isSplitted) {
-              block.parts[this.audioTasksQueue.block.partIdx].isSaving = false;
+              blk.parts[blkPartIdx].isSaving = false;
               if (!realign) {
-                block.isSaving = false;
+                blk.isSaving = false;
               }
             } else {
-              block.isSaving = false;
+              blk.isSaving = false;
             }
             //this.$store.commit('set_storeList', block);
             if (refContainer) {
@@ -1953,6 +1955,10 @@ export default {
               refContainer.reloadBlockPart();
               refContainer.isAudioChanged = false;
               refContainer.$parent.$forceUpdate();
+            }
+            let block = this.audioTasksQueueBlock();
+            if (block.blockid !== blk.blockid) {
+              return Promise.resolve(true);
             }
             if (realign) {
               this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
@@ -2428,7 +2434,7 @@ export default {
         let audioQueueBlock = this.audioTasksQueue.block;
         let isBlockPart = audioQueueBlock.partIdx !== null && block.getIsSplittedBlock();
         let refContainer = this.$refs.blocks.find(b => {// Vue component BookBlockView, contains current edited block, may be absent after scroll
-          return b.block.blockid === audioQueueBlock.blockId;
+          return b.block.blockid === block.blockid;
         });
         if (refContainer && refContainer.$refs && refContainer.$refs.blocks) {
           refContainer = isBlockPart ? refContainer.$refs.blocks.find(b => {
@@ -2439,73 +2445,81 @@ export default {
         }
         return refContainer;
       },
-      evFromAudioeditorClosed(blockId) {
-        let block = this.audioTasksQueueBlock();// block from storeList
-        let queueBlock = Object.assign({}, this.audioTasksQueue.block);// queue block info
-        let part = this.audioTasksQueueBlockOrPart();
-        if (!block) {
-          return;
+      evFromAudioeditorClosed(event) {
+        if (!event || !(event instanceof Object) || !event.waitUntil) {
+          let promise = Promise.resolve();
+          event = {};
+          event.waitUntil = p => promise = p
         }
-        let refContainer = this._getRefContainer(block);
-        if (refContainer) {
-          refContainer.audStop();
-        }
-        //this.clearAudioTasks(false);
-        if (part.isAudioChanged) {
-          let checks = 0;
-          let waitStopRunning = new Promise((resolve, reject) => {// if there is running queue request then wait for it to finish
-            let waitInterval = setInterval(() => {
-              ++checks;
-              if (this.audioTasksQueue.running === null || checks >= 20) {
-                clearInterval(waitInterval);
-                return resolve();
-              }
-            }, 1000);
-          });
-          if (refContainer) {
-            if (block.getIsSplittedBlock()) {
-              refContainer.isUpdating = true;
-            } else {
-              refContainer.$parent.isUpdating = true;
-            }
+        event.waitUntil(new Promise((resolve, reject) => {
+          let block = this.audioTasksQueueBlock();// block from storeList
+          let queueBlock = Object.assign({}, this.audioTasksQueue.block);// queue block info
+          let part = this.audioTasksQueueBlockOrPart();
+          if (!block) {
+            return;
           }
-          return waitStopRunning
-            .then(() => {
-              this.discardAudioEdit(false)
-                .then(() => {
-                  /*this.isAudioChanged = false;
-                  this.isChanged = false;
-                  this.unsetChange('audio');
-                  this.unsetChange('content');
-                  this.unsetChange('manual_boundaries');
+          let refContainer = this._getRefContainer(block);
+          if (refContainer) {
+            refContainer.audStop();
+          }
+          //this.clearAudioTasks(false);
+          if (part.isAudioChanged) {
+            let checks = 0;
+            let waitStopRunning = new Promise((resolve, reject) => {// if there is running queue request then wait for it to finish
+              let waitInterval = setInterval(() => {
+                ++checks;
+                if (this.audioTasksQueue.running === null || checks >= 20) {
+                  clearInterval(waitInterval);
+                  return resolve();
+                }
+              }, 1000);
+            });
+            if (refContainer) {
+              if (block.getIsSplittedBlock()) {
+                refContainer.isUpdating = true;
+              } else {
+                refContainer.$parent.isUpdating = true;
+              }
+            }
+            return waitStopRunning
+              .then(() => {
+                return this.discardAudioEdit(false)
+                  .then(() => {
+                    /*this.isAudioChanged = false;
+                    this.isChanged = false;
+                    this.unsetChange('audio');
+                    this.unsetChange('content');
+                    this.unsetChange('manual_boundaries');
 
-                  this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
-                  this.isUpdating = false;*/
-                  part.isAudioChanged = false;
-                  if (refContainer) {
-                    if (block.getIsSplittedBlock()) {
-                      refContainer.isUpdating = false;
-                      refContainer.isAudioChanged = false;
-                    } else {
-                      refContainer.$parent.isUpdating = false;
-                      refContainer.$parent.isAudioChanged = false;
+                    this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                    this.isUpdating = false;*/
+                    part.isAudioChanged = false;
+                    if (refContainer) {
+                      if (block.getIsSplittedBlock()) {
+                        refContainer.isUpdating = false;
+                        refContainer.isAudioChanged = false;
+                      } else {
+                        refContainer.$parent.isUpdating = false;
+                        refContainer.$parent.isAudioChanged = false;
+                      }
                     }
-                  }
-                  if (queueBlock.blockId === this.audioTasksQueue.block.blockId && queueBlock.partIdx === this.audioTasksQueue.block.partIdx) {
-                    this.clearAudioTasks(false);
-                  }
+                    if (queueBlock.blockId === this.audioTasksQueue.block.blockId && queueBlock.partIdx === this.audioTasksQueue.block.partIdx) {
+                      this.clearAudioTasks(false);
+                    }
+                    return resolve();
+                  });
                 });
-              });
-        } else {
-          this.clearAudioTasks(false);
-        }
-        //$('nav.fixed-bottom').addClass('hidden');
+          } else {
+            this.clearAudioTasks(false);
+            return resolve();
+          }
+          //$('nav.fixed-bottom').addClass('hidden');
 
-        //this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
-        //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
-        //this.check_id = null;
-        //this.audioEditorEventsOff();
-
+          //this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
+          //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
+          //this.check_id = null;
+          //this.audioEditorEventsOff();
+        }));
       },
   },
   events: {
@@ -3232,6 +3246,17 @@ div.merge-subblocks {
    -webkit-mask-image: url(/static/merge-blocks.svg);
    mask-image: url(/static/merge-blocks.svg);
    cursor: pointer;
+}
+.circle-preloader {
+  background: url(/static/preloader-snake-transparent-tiny.gif);
+  display: inline-block;
+  width: 19px;
+  height: 19px;
+  background-size: 19px;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: absolute;
+  left: 0px;
 }
 
 </style>
