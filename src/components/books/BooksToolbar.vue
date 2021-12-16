@@ -13,7 +13,9 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-  <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
+  <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter by Author or Title"></input> &nbsp;
+
+  <input type="text" @keyup="booksFilterTagChange" class="form-control" placeholder="Filter by Project tag"></input> &nbsp;
 
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
@@ -83,6 +85,9 @@ export default {
   methods: {
     booksFilterChange (el) {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {filter: el.target.value})
+    },
+    booksFilterTagChange (el) {
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {projectTag: el.target.value})
     },
     booksLanguageChange (el) {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {language: el.target.value})
@@ -161,7 +166,7 @@ img.bookstack {
   opacity: .75
 }
 
-input {width: 8em}
+input {width: 12em}
 
 .form-control {display: inline}
 
