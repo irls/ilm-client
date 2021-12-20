@@ -294,6 +294,9 @@
             return false;//component was destroyed;
           }
           let mode = bookAudiofile.id ? 'file' : 'block';
+          if (mode === 'file') {
+            this.setEditingLocked(false);
+          }
           let closingId = this.audiofileId;
           if (bookAudiofile.id) {
             this.audiofileId = bookAudiofile.id;
