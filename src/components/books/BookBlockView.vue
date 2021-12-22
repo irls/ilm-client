@@ -384,12 +384,15 @@
                     <template v-if="allowEditing || proofreadModeReadOnly">
                       <template v-if="allowVoiceworkChange">
                         <label>
+                          <span class="hidden">{{footnote.voicework}}</span>
                           <i class="fa fa-volume-off"></i>
                           <select  :disabled="(!allowEditing && proofreadModeReadOnly) || editingLocked ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
-                        <label><i class="fa fa-language" aria-hidden="true"></i>
+                        <label>
+                          <span class="hidden">{{footnote.language}}</span>
+                          <i class="fa fa-language" aria-hidden="true"></i>
                         <select :disabled="!allowEditing ||  proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
                           <option v-if="!footnLanguages.hasOwnProperty(footnote.language)" :value="footnote.language">{{ footnote.language }}</option>
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
@@ -2909,6 +2912,12 @@ Save text changes and realign the Block?`,
         this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
         if (field === 'voicework') {
           this.block.setAudiosrcFootnote(pos, '');
+        }
+        // ILM-4404 In MacOS properties are not set from first time
+        if (field && ev && ev.target && typeof ev.target.value !== 'undefined') {
+          if (this.block.footnotes[pos] && this.block.footnotes[pos].hasOwnProperty(field)) {
+            this.block.footnotes[pos][field] = ev.target.value;
+          }
         }
       },
 
