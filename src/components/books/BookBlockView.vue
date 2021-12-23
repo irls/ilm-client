@@ -1978,7 +1978,8 @@ export default {
               content: this.block.content,
               blockid: this.block.blockid,
               type: this.block.type,
-              flags: this.block.flags || []
+              flags: this.block.flags || [],
+              bookid: this.block.bookid
             });
           }
         } else {
@@ -3764,7 +3765,7 @@ Save text changes and realign the Block?`,
 
         let formData = new FormData();
         formData.append('illustration', image, image.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
+        formData.append('block', JSON.stringify({description: this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 

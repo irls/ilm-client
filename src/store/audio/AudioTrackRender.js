@@ -9,17 +9,17 @@ var renderTrack = function(data) {
     const playbackX = secondsToPixels(
       data.playbackSeconds,
       data.resolution,
-      data.sampleRate,
+      data.sampleRate
     );
     const startX = secondsToPixels(
       this.startTime,
       data.resolution,
-      data.sampleRate,
+      data.sampleRate
     );
     const endX = secondsToPixels(
       this.endTime,
       data.resolution,
-      data.sampleRate,
+      data.sampleRate
     );
     let progressWidth = 0;
     const numChan = this.peaks.data.length;
@@ -34,7 +34,7 @@ var renderTrack = function(data) {
     }
 
     const waveformChildren = [
-      h('div.cursor', {
+      h("div.cursor", {
         attributes: {
           style: `position: absolute; width: 1px; margin: 0; padding: 0; top: 0; left: ${playbackX}px; bottom: 0; z-index: 5;`,
         },
@@ -43,7 +43,7 @@ var renderTrack = function(data) {
 
     const channels = Object.keys(this.peaks.data).map((channelNum) => {
       const channelChildren = [
-        h('div.channel-progress', {
+        h("div.channel-progress", {
           attributes: {
             style: `position: absolute; width: ${progressWidth}px; height: ${data.height}px; z-index: 2;`,
           },
@@ -60,7 +60,7 @@ var renderTrack = function(data) {
           : data.colors.waveOutlineColor;
 
         channelChildren.push(
-          h('canvas', {
+          h("canvas", {
             attributes: {
               width: currentWidth * scale,
               height: data.height * scale,
@@ -72,9 +72,9 @@ var renderTrack = function(data) {
               this.peaks.bits,
               canvasColor,
               scale,
-              data.height,
+              data.height
             ),
-          }),
+          })
         );
 
         totalWidth -= currentWidth;
@@ -87,19 +87,19 @@ var renderTrack = function(data) {
         const fadeWidth = secondsToPixels(
           fadeIn.end - fadeIn.start,
           data.resolution,
-          data.sampleRate,
+          data.sampleRate
         );
 
         channelChildren.push(
           h(
-            'div.wp-fade.wp-fadein',
+            "div.wp-fade.wp-fadein",
             {
               attributes: {
                 style: `position: absolute; height: ${data.height}px; width: ${fadeWidth}px; top: 0; left: 0; z-index: 4;`,
               },
             },
             [
-              h('canvas', {
+              h("canvas", {
                 attributes: {
                   width: fadeWidth,
                   height: data.height,
@@ -108,11 +108,11 @@ var renderTrack = function(data) {
                   fadeIn.type,
                   fadeIn.shape,
                   fadeIn.end - fadeIn.start,
-                  data.resolution,
+                  data.resolution
                 ),
               }),
-            ],
-          ),
+            ]
+          )
         );
       }
 
@@ -121,19 +121,19 @@ var renderTrack = function(data) {
         const fadeWidth = secondsToPixels(
           fadeOut.end - fadeOut.start,
           data.resolution,
-          data.sampleRate,
+          data.sampleRate
         );
 
         channelChildren.push(
           h(
-            'div.wp-fade.wp-fadeout',
+            "div.wp-fade.wp-fadeout",
             {
               attributes: {
                 style: `position: absolute; height: ${data.height}px; width: ${fadeWidth}px; top: 0; right: 0; z-index: 4;`,
               },
             },
             [
-              h('canvas', {
+              h("canvas", {
                 attributes: {
                   width: fadeWidth,
                   height: data.height,
@@ -142,11 +142,11 @@ var renderTrack = function(data) {
                   fadeOut.type,
                   fadeOut.shape,
                   fadeOut.end - fadeOut.start,
-                  data.resolution,
+                  data.resolution
                 ),
               }),
-            ],
-          ),
+            ]
+          )
         );
       }
 
@@ -159,7 +159,7 @@ var renderTrack = function(data) {
             }px; left: ${startX}px; position: absolute; margin: 0; padding: 0; z-index: 1;`,
           },
         },
-        channelChildren,
+        channelChildren
       );
     });
 
@@ -171,33 +171,33 @@ var renderTrack = function(data) {
       const cStartX = secondsToPixels(
         data.timeSelection.start,
         data.resolution,
-        data.sampleRate,
+        data.sampleRate
       );
       const cEndX = secondsToPixels(
         data.timeSelection.end,
         data.resolution,
-        data.sampleRate,
+        data.sampleRate
       );
-      const cWidth = (cEndX - cStartX) + 1;
-      const cClassName = cWidth > 1 ? '.segment' : '.point';
+      const cWidth = cEndX - cStartX + 1;
+      const cClassName = cWidth > 1 ? ".segment" : ".point";
 
       waveformChildren.push(
         h(`div.selection${cClassName}`, {
           attributes: {
             style: `position: absolute; width: ${cWidth}px; bottom: 0; top: 0; left: ${cStartX}px; z-index: 4;`,
           },
-        }),
+        })
       );
     }
 
     const waveform = h(
-      'div.waveform',
+      "div.waveform",
       {
         attributes: {
           style: `height: ${numChan * data.height}px; position: relative;`,
         },
       },
-      waveformChildren,
+      waveformChildren
     );
 
     const channelChildren = [];
@@ -210,9 +210,9 @@ var renderTrack = function(data) {
 
     channelChildren.push(waveform);
 
-    const audibleClass = data.shouldPlay ? '' : '.silent';
+    const audibleClass = data.shouldPlay ? "" : ".silent";
     const customClass =
-      this.customClass === undefined ? '' : `.${this.customClass}`;
+      this.customClass === undefined ? "" : `.${this.customClass}`;
 
     return h(
       `div.channel-wrapper${audibleClass}${customClass}`,
@@ -223,7 +223,7 @@ var renderTrack = function(data) {
           }px;`,
         },
       },
-      channelChildren,
+      channelChildren
     );
 };
 

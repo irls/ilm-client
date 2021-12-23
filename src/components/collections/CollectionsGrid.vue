@@ -18,7 +18,7 @@
       </div>
       <Grid id='books_grid'
           v-if="isOpenPanel(collection)"
-          :data="currentCollection.books_list"
+          :data="collection.books_list"
           :columns="headers"
           :rowsPerPage="100"
           @clickRow="selectBook"
@@ -40,6 +40,7 @@
   import Vue from 'vue';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
+  import lodash from 'lodash'
 
   export default {
       name: 'CollectionsGrid',
@@ -143,7 +144,7 @@
         ]),
         collectionsPage: {
           get() {
-            let collections = this.bookCollections;
+            let collections = lodash.cloneDeep(this.bookCollections);
             collections.forEach(c => {
               c.book_match = false;
             });
