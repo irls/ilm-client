@@ -248,7 +248,12 @@ export default {
       },
       parlistArray: { cache: false,
         get: function () {
-          return this.$store.state.storeListUpdateCounter && Array.from(this.$store.state.storeList.values());
+          let idsArray = this.$store.state.storeListUpdateCounter && this.$store.state.storeListO.idsArray();
+          idsArray = Array.isArray(idsArray) ? idsArray : [];
+          return idsArray.map((bId)=>{
+            return this.$store.state.storeList.get(bId) || {};
+          })
+          //return this.$store.state.storeListUpdateCounter && Array.from(this.$store.state.storeList.values());
         }
       },
   },
@@ -2707,7 +2712,7 @@ export default {
 
     .container-block {
       /*padding-top: 15px;*/
-      width: 100%;
+      width: 50%;
 
       &.back {
         /*margin-right: -50%;*/
@@ -2715,7 +2720,7 @@ export default {
       &.front {
         position: relative;
         top: 0px;
-        margin-left: -50%;
+        /*margin-left: -50%;*/
 
         .content-background {
           background: white;

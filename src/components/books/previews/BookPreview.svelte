@@ -1,22 +1,22 @@
 <template>
 
-{#each blocks as block, bIdx (block._id)}
+<!--{#each blocks as block, bIdx (block._id)}
   <p>#{bIdx} {block._id} {JSON.stringify(block)}
   <div class="row content-scroll-item back">
-    <div class='col'>11</div>
+    <div class='col'>=====================================================</div>
   </div>
-{/each}
-<!--{#if blocks.length > 0}
+{/each}-->
+{#if blocks.length > 0}
 <VirtualList items={blocks} let:item
-bind:start={startBlockIdx} bind:end={endBlockIdx}
-bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-bind:startReached={startReached} bind:endReached={endReached} >
-<div class='card'>
-{JSON.stringify(item)}<br/>
-</div>
+  bind:start={startBlockIdx} bind:end={endBlockIdx}
+  bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
+  bind:startReached={startReached} bind:endReached={endReached} >
+  <div class='card'>
+    #{item._id} {JSON.stringify(item)}<br/>
+  </div>
 </VirtualList>
 {:else}<div class="content-process-run preloader-loading"></div>
-{/if}-->
+{/if}
 
 </template>
 
@@ -31,6 +31,7 @@ export let startId;
 export let hotkeyScrollTo;
 
 //let blocks = parlistO.listObjs;
+//let blocksVuew = [];
 let bookId = parlistO.meta.bookid || false;
 let loadedBookId = '';
 let startBlockIdx = 0;
@@ -54,13 +55,16 @@ async function hotkeyScrolledTo(hotkeyScrollTo) {
 }
 
 beforeUpdate(/*async */() => {
-  console.log('beforeUpdate', 'blocks.length:', blocks.length, 'bookId:', bookId, 'loadedBookId:', loadedBookId, 'prevBlocksLength', prevBlocksLength);
+
+  //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'bookId:', bookId, 'loadedBookId:', loadedBookId);
   if (startId && false) console.log('startId', startId);
-  if (blocks.length > prevBlocksLength) {
-    console.log(`blocks.length > prevBlocksLength: `);
-    blocks = [...blocks];
-  }
-  prevBlocksLength = blocks.length;
+//   if (blocks.length > prevBlocksLength) {
+//       blocksVuew = blocks;
+//       //blocksVuew = blocksVuew;
+//   } else {
+//       blocksVuew = blocks;
+//   }
+//   prevBlocksLength = blocks.length;
 //   if (bookId && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== bookId)) {
 //     //fntCounter = 0; uncomment for through numeration
 //     loadedBookId = bookId;
