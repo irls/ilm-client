@@ -6,15 +6,17 @@
 
       <SvelteBookPreviewInVue
         :class="['content-background']"
-        style="height: 100%"
         :parlistO="parlistO"
         :blocks="parlistArray"
         :lang="meta.language"
+        :mode = "mode"
         :startId="startId"
         :hotkeyScrollTo="hotkeyScrollTo"
       ></SvelteBookPreviewInVue>
 
-      <!--<div class="content-background" v-bind:style="{'display': 'none' }">
+      <!--
+      style="height: 100%"
+      <div class="content-background" v-bind:style="{'display': 'none' }">
         <div v-for="(viewObj, listIdx) in getListObjs"
           :class="['row content-scroll-item back']"
           :key = "viewObj.blockRid"
@@ -2712,7 +2714,7 @@ export default {
 
     .container-block {
       /*padding-top: 15px;*/
-      width: 50%;
+      width: 49%;
 
       &.back {
         /*margin-right: -50%;*/
@@ -2821,7 +2823,7 @@ export default {
   }
 
   .preview-container {
-    height: 100px;
+    height: 110px;
   }
 
   .table-row .illustration-block img {
@@ -3009,7 +3011,7 @@ export default {
     }
     .table-row-flex.controls-top {
       .par-ctrl.-par-num {
-        label.par-num {
+        label.par-num, span.par-num {
           font-size: 24px;
           font-style: inherit;
           font-weight: bold;

@@ -7,14 +7,28 @@
   </div>
 {/each}-->
 {#if blocks.length > 0}
-<VirtualList items={blocks} let:item
+  {#each blocks as block, bIdx (block._id)}
+    <BlockPreview
+      blockRid="{block._rid}"
+      block="{blockView(block)}"
+      lang="{lang}"
+      mode="{mode}"
+      isCompleted="{isCompleted(block)}"
+    />
+  {/each}
+<!--<VirtualList items={blocks} let:item
   bind:start={startBlockIdx} bind:end={endBlockIdx}
   bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
   bind:startReached={startReached} bind:endReached={endReached} >
   <div class='card'>
-    #{item._id} {JSON.stringify(item)}<br/>
+    <BlockPreview
+      blockRid="{item._rid}"
+      block="{blockView(item)}"
+      blockListObj="{item}"
+      lang="{lang}"
+    />
   </div>
-</VirtualList>
+</VirtualList>-->
 {:else}<div class="content-process-run preloader-loading"></div>
 {/if}
 
@@ -23,15 +37,15 @@
 <script>
 import { beforeUpdate, createEventDispatcher, tick } from 'svelte';//onMount,tick
 import VirtualList from '../../generic/VirtualList.svelte';
+import BlockPreview from './BlockPreview.svelte';
 
 export let parlistO = {};
 export let blocks = [];
 export let lang = 'en';
+export let mode = 'edit';
 export let startId;
 export let hotkeyScrollTo;
 
-//let blocks = parlistO.listObjs;
-//let blocksVuew = [];
 let bookId = parlistO.meta.bookid || false;
 let loadedBookId = '';
 let startBlockIdx = 0;
@@ -44,7 +58,6 @@ let startIdIdx = 0;
 let fntCounter = 0;
 let prevBlocksLength = 0;
 
-//$: prepareBlockPreview()
 $: hotkeyScrolledTo(hotkeyScrollTo);
 async function hotkeyScrolledTo(hotkeyScrollTo) {
   if (hotkeyScrollTo !== false) {
@@ -85,18 +98,26 @@ beforeUpdate(/*async */() => {
 });
 
 const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
+const timestamp = (new Date()).toJSON();
 
 const blockFull = (blockRid) => {
   return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : null;
 }
 
-const blockView = (blockRid) => {
-  const block = blockFull(blockRid);
-  const blockO = parlistO.getBlockByRid(blockRid);
+const blockView = (block) => {
   if (block) {
-    let viewObj = { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang };
+    let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang });
+
+    viewObj.viewIllustration = block.illustration ? process.env.ILM_API + block.illustration + '?' + timestamp : false;
+
+    //console.log(`blockView.viewObj: `, viewObj);
     return viewObj;
   } else return { footnotes: [], language: lang };
+}
+
+const isCompleted = (block) => {
+  //return block ? this.tc_isCompleted(block) : true;
+  return false;
 }
 
 </script>

@@ -5201,7 +5201,7 @@ Save text changes and realign the Block?`,
         &.-par-num {
           width: 180px;
 
-          label.par-num {
+          label.par-num, span.par-num {
             padding-left: 12px;
             position: relative;
             top: 2px;
