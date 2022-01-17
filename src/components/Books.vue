@@ -36,11 +36,11 @@
 
     <v-dialog :clickToClose="false"/>
     <modals-container/>
-    <alert v-model="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
+    <alert v-show="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{errorAlert}}</p>
     </alert>
-    <alert v-model="hasAlert" placement="top" :duration="5000" type="info" width="400px">
+    <alert v-show="hasAlert" placement="top" :duration="5000" type="info" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{messageAlert}}</p>
     </alert>

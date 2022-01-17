@@ -532,13 +532,13 @@
       </div>
     </div>
 
-    <book-edit-cover-modal
+    <!--<book-edit-cover-modal
       :show="bookEditCoverModalActive"
       @closed="bookEditCoverModalActive = false"
       :img="currentBook"
-    ></book-edit-cover-modal>
+    ></book-edit-cover-modal>-->
 
-    <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
+    <modal :show.sync="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
       </div>
@@ -568,7 +568,7 @@ import { mapGetters, mapActions } from 'vuex'
 import { BlockTypes, BlockTypesAlias } from '../../store/bookBlock'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
-import BookEditCoverModal from './BookEditCoverModal'
+//import BookEditCoverModal from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
 import AudioImport from '../audio/AudioImport'
 import BookToc from './BookToc'
@@ -602,7 +602,7 @@ export default {
 
   components: {
     BookDownload,
-    BookEditCoverModal,
+    //BookEditCoverModal,
     AudioImport,
     BookToc,
     BookAudioIntegration,
@@ -817,7 +817,7 @@ export default {
     },
     allowMetadataEdit: {
       get() {
-        //do not allow to edit metadata while book is in Publish Queue:      
+        //do not allow to edit metadata while book is in Publish Queue:
         if (this.currentBookMeta.isInTheQueueOfPublication === true || this.currentBookMeta.isIntheProcessOfPublication === true)
             return false;
 
@@ -850,7 +850,7 @@ export default {
         return '';
       }
     },
-    
+
     currentBookCategory: {
       get() {
         if (typeof this.currentBookCollection.category !== 'undefined') {
@@ -862,7 +862,7 @@ export default {
         this.currentBook.category = value;
       }
     },
-    
+
     categoryEditDisabled: {
       get() {
         if (!this.allowMetadataEdit) {
@@ -1688,7 +1688,7 @@ export default {
       if (lang != 'en'){
         result.lang = lang;
       }
-      
+
       if (this.bookMode !== 'narrate') {
 
         this.styleTabs = result;
@@ -2001,9 +2001,9 @@ export default {
     prepareStyleTabLabel(title) {
       if (this.styleTabLabels.hasOwnProperty(title)) {
         let caption = this.styleTabLabels[title];
-        return caption; 
+        return caption;
       }
-      return title; 
+      return title;
     },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {

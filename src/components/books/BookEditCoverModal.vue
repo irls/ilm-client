@@ -42,7 +42,7 @@
 
                  <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
-                
+
                 <p v-if="errorCoverFileType" ><span class="alert alert-warning">Please select image file for cover</span></p>
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
@@ -112,17 +112,19 @@
 <script>
 
 import { modal } from 'vue-strap'
-import { Carousel3d, Slide } from 'vue-carousel-3d'
+//import { Carousel3d, Slide } from 'vue-carousel-3d'
 import modalMixin from './../../mixins/modal'
 import api_config from './../../mixins/api_config'
 import BOOKCOVERS from '../../../static/bookcovers.json'
 // import Canvas2Image from 'canvas2image'
-import html2canvas from 'html2canvas'
+//import html2canvas from 'html2canvas'
 import axios from 'axios'
 import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 
 import { mapGetters, mapActions }    from 'vuex'
+
+const html2canvas = {};
 
 // const quillOptions = {
 //   modules: {
@@ -147,8 +149,8 @@ export default {
 
   components: {
     modal,
-    Carousel3d,
-    Slide
+//     Carousel3d,
+//     Slide
   },
 
   // props: {
@@ -295,7 +297,7 @@ export default {
       let formData = new FormData();
       formData.append('coverimg', this.uploadFile, 'coverimg');
       formData.append('coverimgURL', this.uploadImage);
-      
+
       var config = {
         onUploadProgress: (progressEvent) => {
           var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
