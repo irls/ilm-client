@@ -45,6 +45,7 @@ export let lang = 'en';
 export let mode = 'edit';
 export let startId;
 export let hotkeyScrollTo;
+export let currentJobInfo;
 
 let bookId = parlistO.meta.bookid || false;
 let loadedBookId = '';
@@ -109,6 +110,8 @@ const blockView = (block) => {
     let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang });
 
     viewObj.viewIllustration = block.illustration ? process.env.ILM_API + block.illustration + '?' + timestamp : false;
+
+    viewObj.isSplittedBlock = (block.voicework === 'narration' && !currentJobInfo.text_cleanup && Array.isArray(block.parts) && block.parts.length > 1 && !(currentJobInfo.mastering || currentJobInfo.mastering_complete));
 
     //console.log(`blockView.viewObj: `, viewObj);
     return viewObj;

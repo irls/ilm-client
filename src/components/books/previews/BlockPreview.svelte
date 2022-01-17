@@ -1,7 +1,7 @@
 <template>
-<!--{blockRid}->{block.type}->{block._id}-->
+<!--{blockRid}->{block.type}->{block._id}->{block.isSplittedBlock}-->
 {#if block && block._id}
-  <div id="{block._id}" data-rid="{blockRid}" class="row content-scroll-item back">
+  <div id="preview-{block._id}" data-rid="{blockRid}" class="row content-scroll-item back">
     <div class='col'>
       <div blockid="{block._id}">
         <div class="block-preview">
@@ -16,7 +16,7 @@
             <div class="-content-block table-cell" class:completed="{isCompleted}">
               <div class="table-body -content -langblock-{getBlockLang()}">
                 <div class="table-row-flex controls-top">
-                  <div class="par-ctrl -par-num"><span class="par-num has-num">{getParnum()}</span></div>
+                  <div class="par-ctrl -par-num">{#if getParnum()}<span class="par-num has-num">{getParnum()}</span>{/if}</div>
                 </div>
                 <!--<div class="table-row-flex controls-top">-->
 
@@ -30,7 +30,13 @@
                     <div class="table-cell" class:completed="{isCompleted}">
                       <div class="table-body -content">
                         {#if mode !== 'narrate'}
-                          <div class="table-row-flex controls-top"></div>
+                          <div class="table-row-flex controls-top">
+                            <div class="par-ctrl -par-num">
+                              {#if block.isSplittedBlock}
+                                <span>{getSubParnum(blockPartIdx)}</span>
+                              {/if}
+                            </div>
+                          </div>
                         {/if}
                         <div class="table-row ilm-block">
                           {#if mode === 'narrate'}
@@ -95,7 +101,7 @@
                 </div>
                 <!--<div class="block-preview">-->
                 <div class="table-body">
-                  {#if isSplittedBlock()}
+                  {#if block.isSplittedBlock}
                     <div class="table-row controls-bottom">
                       <div class="controls-bottom-wrapper">
                         <div class="-left">
@@ -222,12 +228,13 @@
 <!--<div class="clearfix"></div>-->
 </template>
 <script>
-
+  import { beforeUpdate } from 'svelte';
   //import { fade } from 'svelte/transition';
 
   export let block;
   export let blockRid = '';
   export let mode = 'edit';
+  export let lang = 'en';
   export let isCompleted = false;
 
   let footNotes = {};
@@ -238,6 +245,10 @@
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
   }*/
   //let rand = getRandomInt(0, 200);
+
+  beforeUpdate(/*async */() => {
+    //console.log(`beforeUpdate.blockid: `, block._id, getParnum());
+  });
 
   const imgPropsDefault = {
     width: 200,
@@ -269,18 +280,11 @@
     return (mode !== 'narrate' && block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
   }
 
-  const isSplittedBlock = () => {
-//     if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup && Array.isArray(this.block.parts) && this.block.parts.length > 1 && !(this.currentJobInfo.mastering || this.currentJobInfo.mastering_complete)) {
-//       return true;
-//     }
-    return false;
-  }
-
   const blockParts = () => {
     if (!block) {
       return [{}];
     }
-    if (isSplittedBlock()) {
+    if (block.isSplittedBlock) {
       return block.parts;
     } else {
       return [
@@ -311,11 +315,6 @@
     }
   }
 
-  const getClass = () => {
-    //return this.block.getClass(mode);
-    return '';
-  }
-
   const allowEditing = () => {
     //return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
     return true;
@@ -330,14 +329,25 @@
   }
 
   const getParnum = () => {
-  console.log(`getParnum: `, block.type, block.secnum, block.parnum, block.isNumber, block.isHidden);
-    if (block.type == 'header' && block.isNumber && !block.isHidden) {
+    //console.log(`getParnum: block.type:${block.type} block.secnum:${block.secnum} block.parnum: ${block.parnum}`);
+    if (block.type == 'header'/* && block.isNumber && !block.isHidden*/) {
       return block.secnum;
     }
-    else if (block.type == 'par' && block.isNumber && !block.isHidden) {
+    else if (block.type == 'par'/* && block.isNumber && !block.isHidden*/) {
       return block.parnum;
     }
-    else return '8.8';
+    else return false;
+  }
+
+  const getSubParnum = (blockPartIdx) => {
+    //console.log(`getSubParnum: block.type:${block.type} block.secnum:${block.secnum} block.parnum: ${block.parnum}`);
+    if (mode === 'narrate') {
+      if (!block.parnum) {
+        return '';
+      }
+      return isSplittedBlock ? `${block.parnum}_${blockPartIdx+1}` : block.parnum;
+    }
+    return (block.parnum ? `${block.parnum}_` : '') + (blockPartIdx+1);
   }
 
 </script>

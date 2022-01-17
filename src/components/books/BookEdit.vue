@@ -12,6 +12,7 @@
         :mode = "mode"
         :startId="startId"
         :hotkeyScrollTo="hotkeyScrollTo"
+        :currentJobInfo="currentJobInfo"
       ></SvelteBookPreviewInVue>
 
       <!--
@@ -1573,10 +1574,10 @@ export default {
     }, 100),
 
     handleScroll(force = false) {
-      if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
-        return false;
-      }
-      //console.log('handleScroll', (new Date()).toJSON());
+//       if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
+//         return false;
+//       }
+      console.log('handleScroll', (new Date()).toJSON());
       let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
       this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
       if (!this.onScrollEv) {
@@ -1589,7 +1590,8 @@ export default {
         let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
         this.scrollToId = null;
         for (var i = startFrom; i < this.parlistO.listObjs.length; i++) {
-          let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
+          let blockRef = document.getElementById('preview-')
+          //this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
             if (!firstVisible) {
