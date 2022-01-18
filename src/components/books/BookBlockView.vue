@@ -552,8 +552,8 @@
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <tabs ref="htmlContentTabs">
-          <tab :header="parnumCompNotHidden || '0'">
+        <TabView ref="htmlContentTabs">
+          <TabPanel :header="parnumCompNotHidden || '0'">
             <div class="modal-title-wrapper">
               <h4>Block ID:&nbsp;{{shortBlockid}}; &nbsp;&nbsp;&nbsp;wordsRange:&nbsp;{{wordsRange}};</h4>
               <h4>
@@ -571,20 +571,20 @@
               :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
             />
             <div class="block-html-header">&lt;/div&gt;</div>
-          </tab>
+          </TabPanel>
           <template v-if="block.getIsSplittedBlock()">
-            <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
+            <TabPanel v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
               <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
               <codemirror
                 :ref="'block-part-' + blockPartIdx + '-html'"
                 :options="getCodeMirrorOptions(blockPartIdx)"
                 :class="[{'-disabled': !adminOrLibrarian}]"
               />
-            </tab>
+            </TabPanel>
           </template>
           <!-- <highlightjs language="html" :code="block.content" /> -->
           <!-- <pre v-highlightjs="block.content"><code class="html agate" style="agate"></code></pre> -->
-        </tabs>
+        </TabView>
       </div>
       <div class="modal-footer">
         <textarea class="copy-block-html-content" ref="copy-block-html-content"></textarea>
@@ -620,9 +620,11 @@ import access             from '../../mixins/access.js';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
-import { tabs, tab } from 'vue-strap';
+//import { tabs, tab } from 'vue-strap';
 import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
 //import hljs from 'highlight.js';
 //import VueHighlightJS from 'vue-highlightjs';
 import { codemirror } from 'vue-codemirror';
@@ -707,8 +709,10 @@ export default {
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
       BookBlockPartView: BookBlockPartView,
-      'tabs': tabs,// vue-strap
-      'tab': tab,// vue-strap,
+      //'tabs': tabs,// vue-strap
+      //'tab': tab,// vue-strap,
+      'TabView': TabView,
+      'TabPanel': TabPanel,
       //'highlightjs': highlightjs
       //'highlightjs': hljs
       //'VueHighlightJS': VueHighlightJS
@@ -3855,7 +3859,7 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        
+
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             this.voiceworkUpdating = false;
@@ -3987,22 +3991,22 @@ Save text changes and realign the Block?`,
             }
           });
         }
-        $(`#${this.block.blockid} .nav-tabs`).scrollingTabs({
+        $(`#${this.block.blockid} .p-tabview-nav`).scrollingTabs({
         })
         .on('ready.scrtabs', () => {
           if (!this.block.getIsSplittedBlock()) {
             $(`#${this.block.blockid} .scrtabs-tab-container`).hide();
           }
 
-          $(`#${this.block.blockid} .nav-tabs li a`).click((e) => {// , .nav-tabs a
+          $(`#${this.block.blockid} .p-tabview-nav li a`).click((e) => {// , .p-tabview-nav a
             e.preventDefault();
             //console.log('HERE prevent');
             //console.log(this.$refs.htmlContentTabs);
-            let index = $(`#${this.block.blockid} .nav-tabs`).find('a').index(e.target);
-            //console.log($('.nav-tabs').find('a').index(e.target))
+            let index = $(`#${this.block.blockid} .p-tabview-nav`).find('a').index(e.target);
+            //console.log($('.p-tabview-nav').find('a').index(e.target))
             //this.$refs.htmlContentTabs.index = index;
             this.$refs.htmlContentTabs.select(this.$refs.htmlContentTabs.$children[index]);
-            $(`#${this.block.blockid} .nav-tabs li`).removeClass('active');
+            $(`#${this.block.blockid} .p-tabview-nav li`).removeClass('active');
             $(e.target).parent().addClass('active');
             if (index === 0) {
               $(`#${this.block.blockid} .copy-block-html`).show();
@@ -4703,7 +4707,7 @@ Save text changes and realign the Block?`,
       'block.content': {
         handler(val, oldval) {
           if (!oldval) {
-            
+
           }
         },
         deep: true

@@ -63,10 +63,13 @@ import task_controls from '../mixins/task_controls.js'
 import BookReimport from './books/BookReimport'
 import Vue from 'vue';
 import {alert} from 'vue-strap';
+import PrimeVue from 'primevue/config';
+
 var modal = require('vue-js-modal');
 
 Vue.use(modal, {dialog: true, dynamic: true});
-Vue.use(Clipboard)
+Vue.use(Clipboard);
+Vue.use(PrimeVue);
 
 
 export default {
