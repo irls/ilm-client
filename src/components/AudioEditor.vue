@@ -1582,7 +1582,11 @@
                 this.$root.$emit('from-audioeditor:closed', event);
                 this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
                 promise.then(() => {
-                  this.load(...this.pendingLoad);
+                  let load = this.pendingLoad;
+                  this.pendingLoad = null;
+                  this._setDefaults();
+                  this.setProcessRun(false);
+                  this.load(...load);
                 });
               } else {
                 this.close();
@@ -1618,8 +1622,12 @@
           this.isPaused = false;
           this.origFilePositions = {};
           //this.hideModal('onExitMessage');
-          if (this.plEventEmitter) {
-            this.plEventEmitter.emit('clear');
+          if (this.pendingLoad) {
+            this.setProcessRun(true, 'loading');
+          } else {
+            if (this.plEventEmitter) {
+              this.plEventEmitter.emit('clear');
+            }
           }
         },
         showModal(name) {
