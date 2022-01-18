@@ -557,7 +557,7 @@
             <div class="modal-title-wrapper">
               <h4>Block ID:&nbsp;{{shortBlockid}}; &nbsp;&nbsp;&nbsp;wordsRange:&nbsp;{{wordsRange}};</h4>
               <h4 v-if="block.audiosrc">
-                Download: <a v-if="audioUrl" :href="audioUrl">flac</a>&nbsp;&nbsp;<a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">m4a</a>
+                Download: <a v-if="audioUrl" :href="audioUrl" target="_blank">flac</a>&nbsp;&nbsp;<a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">m4a</a>
               </h4>
             </div>
             <div class="block-content-update-pending">
