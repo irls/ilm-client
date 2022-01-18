@@ -559,8 +559,8 @@
           <TabPanel :header="parnumCompNotHidden || '0'">
             <div class="modal-title-wrapper">
               <h4>Block ID:&nbsp;{{shortBlockid}}; &nbsp;&nbsp;&nbsp;wordsRange:&nbsp;{{wordsRange}};</h4>
-              <h4>
-                <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Audio URL</a>
+              <h4 v-if="block.audiosrc">
+                Download: <a v-if="audioUrl" :href="audioUrl" target="_blank">flac</a>&nbsp;&nbsp;<a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">m4a</a>
               </h4>
             </div>
             <div class="block-content-update-pending">
@@ -1100,6 +1100,16 @@ export default {
           }
           let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
           return `${this.API_URL}audio_download/${this.block.bookid}/${this.block.blockid}/${format}`;
+        }
+      },
+      audioUrl: {
+        cache: false,
+        get() {
+          let audio = this.block.getAudiosrc('flac', false);
+          if (!audio) {
+            return false;
+          }
+          return `${this.API_URL}audio_download/${this.block.bookid}/${this.block.blockid}/flac`;
         }
       },
       shortBlockid: {
