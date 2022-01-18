@@ -1,7 +1,7 @@
 <template>
   <modal
     id="taskAddModal"
-    :value="show"
+    :show="show"
     effect="fade"
     :backdrop="false"
     @closed="closed">
@@ -9,9 +9,9 @@
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title">Add Job</h4>
       <alert
-        :value="bookUploadCommonError != false"
+        :show="bookUploadCommonError !== false"
         placement="top"
-        duration="3000"
+        :duration="3000"
         type="danger"
         width="400px">
         <span class="icon-info-circled alert-icon-float-left"></span>
@@ -443,7 +443,7 @@ textarea.job-descr {
   .modal-footer .non-modal-form {
     width: 85%;
   }
-  
+
   .has-error {
     border: 1px solid red;
   }
