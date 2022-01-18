@@ -30,6 +30,8 @@
     "peaks.js": "^0.10.1",
     "pouchdb": "^7.2.2",
     "pouchdb-hoodie-api": "^2.0.0",
+    "primeicons": "^5.0.0",
+    "primevue": "^2.8.0",
     "readalong": "git+ssh://git@github.com/irls/readalong.git",
     "recordrtc": "^5.4.2",
     "socket.io-client": "^2.2.0",
