@@ -437,12 +437,12 @@
                   </fieldset>
                   <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
                     <legend>{{styleCaption(blockType, 'toc')}}</legend>
-                    <ul class="no-bullets">
+                    <ul  class="no-bullets">
                       <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
                         <block-style-labels
                           :blockType="blockType"
                           :styleArr="[sVal]"
-                          :styleKey="'table of contents'+'.'+styleKey"
+                          :styleKey="'table of contents.isInToc'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
                           @selectStyleEv="selectStyle"
@@ -457,7 +457,7 @@
                         <block-style-labels
                           :blockType="blockType"
                           :styleArr="[sVal]"
-                          :styleKey="'table of contents'+'.'+styleKey"
+                          :styleKey="'table of contents.tocLevel'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
                           @selectStyleEv="selectStyle"
@@ -465,9 +465,6 @@
                       </li>
                     </ul>
                   </fieldset>
-
-
-
                   <fieldset class="block-style-fieldset block-num-fieldset"
                   v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
                     <legend>Numeration</legend>

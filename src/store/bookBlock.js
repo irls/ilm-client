@@ -75,7 +75,7 @@ let BlockTypes = {
 
   header: {
     //type: ['', 'subhead'],
-    level: [/*'', */'h2', 'h3', 'h4'],
+    level: [/*'', */'h1', 'h2', 'h3', 'h4'],
     align: ['', 'left', 'center', 'right', 'justify'],
     'table of contents': {
       isInToc: ['on', 'off'],
@@ -226,6 +226,7 @@ let BlockTypesAlias = {
     level: {
       title: 'type',
       values: {
+        h1: 'section header',
         h2: 'chapter header',
         h3: 'subheader',
         h4: 'sub subheader'
