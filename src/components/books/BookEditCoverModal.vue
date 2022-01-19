@@ -1,6 +1,6 @@
 <template>
  <!-- <transition name="modal"> -->
-  <modal id="bookEditCoverModal" :value="show" effect="fade" @closed="closed" @opened="opened">
+  <modal id="bookEditCoverModal" :show="show" effect="fade" @closed="closed" @opened="opened">
 
     <div slot="modal-header" class="modal-header">
       <div class="header-title">
@@ -74,11 +74,11 @@
                 <!-- <div ref="quillContainerTitle" id="quillContainerTitle"></div> -->
               </div>
               <div class="book-list bookCoverCarouselWrap">
-                <carousel-3d :display="7" :width="90" :height="115.5">
+                <!--<carousel-3d :display="7" :width="90" :height="115.5">
                   <slide v-for="(bc, index) in bookcovers" :key="index" :index="index">
                     <img :src="bc.src" @click="selectBookCover(index)">
                   </slide>
-                </carousel-3d>
+                </carousel-3d>-->
                 <span class="addBookCoverBtnWrap">
                   <i class="fa fa-plus"></i><i class="fa fa-folder-open-o"></i>
                   <input type="file" @change="addBookCover"/>
