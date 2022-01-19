@@ -7,7 +7,10 @@ var baseWebpackConfig = require('./webpack.base.conf')
 var CopyWebpackPlugin = require('copy-webpack-plugin')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var UglifyJsPlugin    = require('uglifyjs-webpack-plugin');
 //var OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
+
+//process.traceDeprecation = true;
 
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
@@ -41,9 +44,9 @@ var webpackConfig = merge(baseWebpackConfig, {
     new webpack.DefinePlugin({
       'process.env': env
     }),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
+    new UglifyJsPlugin({
+      uglifyOptions: {
+        warnings: false,
       },
       sourceMap: true
     }),

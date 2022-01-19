@@ -1,5 +1,5 @@
 <template>
-  <div>
+<div>
   <div class="user-modal-container active">
     <div class="user-modal">
 
@@ -25,11 +25,11 @@
       </div>
     </div>
   </div>
-  <alert v-show="hasPasswordResetError" placement="top" duration="" type="danger" width="400px">
+  <alert v-show="hasPasswordResetError" placement="top" :duration="0" type="danger" width="400px">
     <span class="icon-info-circled alert-icon-float-left"></span>
     <p>{{passwordResetError}}</p>
   </alert>
-  <alert v-show="hasPasswordResetSuccess" placement="top" duration="" type="success" width="400px">
+  <alert v-show="hasPasswordResetSuccess" placement="top" :duration="0" type="success" width="400px">
     <span class="icon-info-circled alert-icon-float-left"></span>
     <p>{{passwordResetSuccess}}</p>
   </alert>

@@ -85,7 +85,7 @@
         <i class="fa fa-comment-o fa-lg" @click='clickEvent(b)'></i>
       </div>
 </template>
-<modal v-model="showRejectContentModal" effect="fade" ok-text="Reject" cancel-text="Cancel" title="Reject block content" @ok="rejectBlockContent()">
+<modal :show.sync="showRejectContentModal" effect="fade" ok-text="Reject" cancel-text="Cancel" title="Reject block content" @ok="rejectBlockContent()">
   <textarea v-model="rejectBlockContentMessage" class="reject-block-message"></textarea>
 </modal>
 
