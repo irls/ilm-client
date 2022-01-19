@@ -532,11 +532,11 @@
       </div>
     </div>
 
-    <!--<book-edit-cover-modal
+    <book-edit-cover-modal
       :show="bookEditCoverModalActive"
       @closed="bookEditCoverModalActive = false"
       :img="currentBook"
-    ></book-edit-cover-modal>-->
+    ></book-edit-cover-modal>
 
     <modal :show.sync="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
@@ -568,7 +568,7 @@ import { mapGetters, mapActions } from 'vuex'
 import { BlockTypes, BlockTypesAlias } from '../../store/bookBlock'
 import superlogin from 'superlogin-client'
 import BookDownload from './BookDownload'
-//import BookEditCoverModal from './BookEditCoverModal'
+import BookEditCoverModal from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
 import AudioImport from '../audio/AudioImport'
 import BookToc from './BookToc'
@@ -602,7 +602,7 @@ export default {
 
   components: {
     BookDownload,
-    //BookEditCoverModal,
+    BookEditCoverModal,
     AudioImport,
     BookToc,
     BookAudioIntegration,
@@ -2284,7 +2284,7 @@ Vue.filter('prettyBytes', function (num) {
   .edit-button {
     float: right;  cursor: pointer; margin-top: -5px;
   }
-  
+
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;
