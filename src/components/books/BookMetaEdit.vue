@@ -388,9 +388,10 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                  
+                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
                     <legend>{{styleCaption('header', 'level')}}</legend>
-                    <ul>
+                    <ul class="no-bullets">
                       <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
                         <block-style-labels
                           :blockType="blockType"
@@ -403,7 +404,7 @@
                       </li>
                     </ul>
                   </fieldset>
-                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset" >
                     <legend>{{styleCaption(blockType, 'style')}}</legend>
                     <ul>
                       <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
@@ -418,14 +419,45 @@
                       </li>
                     </ul>
                   </fieldset>
-                  <fieldset v-if="(blockType === 'header' || blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+
+                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']">
+                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']"  class="no-bullets">
                       <li v-for="(sVal, sIdx) in styleObj">
                         <block-style-labels
                           :blockType="blockType"
                           :styleArr="[sVal]"
                           :styleKey="'table of contents'+'.'+styleKey"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
+                  </fieldset>
+                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                    <legend>{{styleCaption(blockType, 'toc')}}</legend>
+                    <ul  class="no-bullets">
+                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'table of contents.isInToc'"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
+                  </fieldset>
+                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                    <legend>{{styleCaption(blockType, 'toc level')}}</legend>
+                    <ul class="no-bullets">
+                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].tocLevel">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'table of contents.tocLevel'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
                           @selectStyleEv="selectStyle"
@@ -1760,6 +1792,9 @@ export default {
               if (pBlock && blockType == 'header') { // ILM-2533
                 if (styleKey == 'level')
                   switch(styleVal) {
+                    case 'h1' : {
+                      pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc1'};
+                    } break;
                     case 'h2' : {
                       pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc2'};
                     } break;
@@ -2675,6 +2710,11 @@ Vue.filter('prettyBytes', function (num) {
       display: none;
     }
   }
+}
+ul.no-bullets {
+  list-style-type: none;
+  padding: 0; 
+  margin: 0; 
 }
 
 </style>

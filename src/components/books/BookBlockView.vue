@@ -3509,10 +3509,9 @@ Save text changes and realign the Block?`,
             this.pushChange('classes');
           }
           if (event.target.value == 'header'){
-            this.block.classes.level = 'h2';
+            this.block.classes.level = 'h1';
             this.pushChange('classes');
           }
-
           if (event.target.className !== 'block-class-select')
             this.$root.$emit('from-block-edit:set-style');
 
