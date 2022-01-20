@@ -358,7 +358,7 @@ class BookBlock {
       this.classes.style = '';
     }
     if (this.type === 'header' && !this.classes.hasOwnProperty('level')) {
-      this.classes.level = 'h2';
+      this.classes.level = 'h1';
     }
   }
 

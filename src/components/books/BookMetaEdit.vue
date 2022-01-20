@@ -1792,6 +1792,9 @@ export default {
               if (pBlock && blockType == 'header') { // ILM-2533
                 if (styleKey == 'level')
                   switch(styleVal) {
+                    case 'h1' : {
+                      pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc1'};
+                    } break;
                     case 'h2' : {
                       pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc2'};
                     } break;
