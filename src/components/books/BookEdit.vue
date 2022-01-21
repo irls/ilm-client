@@ -2696,7 +2696,7 @@ export default {
 
     .container-block {
       /*padding-top: 15px;*/
-      width: 99%;
+      width: 100%;
 
       &.back {
         margin-right: -50%;
