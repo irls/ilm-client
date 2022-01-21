@@ -1569,16 +1569,13 @@ export default {
 
     smoothHandleScroll: _.debounce(function (ev) {
       ev.stopPropagation();
-      //console.log('smoothHandleScroll', ev);
       this.handleScroll();
     }, 100),
 
     handleScroll(force = false) {
-//       if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
-//         return false;
-//       }
-      console.log('handleScroll', (new Date()).toJSON());
-      let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
+      //console.log('handleScroll', (new Date()).toJSON());
+      const contSWRef = this.$refs.contentScrollWrapRef;
+      const scrolledBottom = contSWRef.offsetHeight + contSWRef.scrollTop >= contSWRef.scrollHeight;
       this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
       if (!this.onScrollEv) {
         let firstVisible = false;
@@ -1589,35 +1586,21 @@ export default {
         //let loadCount = 5;
         let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
         this.scrollToId = null;
-        for (var i = startFrom; i < this.parlistO.listObjs.length; i++) {
-          let blockRef = document.getElementById('preview-')
-          //this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
-          let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
+
+        for (var i = startFrom; i < this.parlistArray.length; i++) {
+          const blockO = this.parlistO.get(this.parlistArray[i]._rid);
+          const blockRef = document.getElementById('v-' + blockO.blockid);
+          const visible = this.checkVisible(blockRef, viewHeight);
           if (visible) {
+            console.log(`visible: `, 'v-' + blockO.blockid);
             if (!firstVisible) {
-              firstVisible = blockRef.blockO;
-              this.parlistO.setFirstVisibleId(blockRef.blockId);
+              firstVisible = blockO;
+              this.parlistO.setFirstVisibleId(blockO.blockid);
             }
-            lastVisible =  blockRef.blockO;
-            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
-              if (fixJump === 'false') fixJump = 'true';
-              this.parlistO.setLoaded(blockRef.blockRid);
-              blockRef.$forceUpdate();
-            } else {
-              if (fixJump === 'true') fixJump = blockRef.blockO;
-              if (this.parlistO.get(blockRef.blockRid).loaded === false) {
-                this.parlistO.getBlockByRid(blockRef.blockRid).loaded = 'loading';
-                loadIdsArray.push(blockRef.blockId);
-              }
-            }
-          /*} else if (firstVisible && loadCount > 0) {
-            if (this.parlistO.get(blockRef.blockRid).loaded !== true && this.parlist.has(blockRef.blockId)) {
-              loadCount--;
-              this.parlistO.setLoaded(blockRef.blockRid);
-              blockRef.$forceUpdate();
-            }*/
+            lastVisible = blockO;
           } else if (firstVisible) break;
         }
+
         //if (scrolledBottom) {
           //this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
         //}
@@ -1654,30 +1637,27 @@ export default {
 //           });
 //         }
      } else this.onScrollEv = false;
-      this.parlistO.idsViewArray().forEach(l => {
-        let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
-        if (this.parlistO.has(l.blockRid) && this.parlist.has(l.blockId)) {
-          this.parlistO.setLoaded(l.blockRid);
-          if (blockRef) {
-            blockRef.$forceUpdate();
-          }
-        }
-      });
+//       this.parlistO.idsViewArray().forEach(l => {
+//         let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
+//         if (this.parlistO.has(l.blockRid) && this.parlist.has(l.blockId)) {
+//           this.parlistO.setLoaded(l.blockRid);
+//           if (blockRef) {
+//             blockRef.$forceUpdate();
+//           }
+//         }
+//       });
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
+      console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
       if (firstVisible !== false) {
-        //if (firstVisible.rid == this.parlistO.getFirstRid()) return;
-        //if (lastVisible.rid == this.parlistO.getLastRid()) return;
 
         let checkUpp = !this.parlistO.isInViewArray(firstVisible.in);
         let checkDown = !this.parlistO.isInViewArray(lastVisible.out);
 
+        console.log(`checkUpp || checkDown || force: `, checkUpp , checkDown , force);
         if (checkUpp || checkDown || force) {
           this.startId = firstVisible.blockid;
-//           let prevId = this.parlistO.getPrevIds(firstVisible.rid, 2);
-//           if (prevId.length < 1) prevId = [firstVisible.blockid];
-//           prevId = prevId.pop();
           if (this.parlistO.setStartId(firstVisible.blockid)) {
             let firstDomBlock = document.getElementById('v-'+firstVisible.blockid);
             if (firstDomBlock) Vue.nextTick(()=>{
@@ -2716,15 +2696,15 @@ export default {
 
     .container-block {
       /*padding-top: 15px;*/
-      width: 49%;
+      width: 99%;
 
       &.back {
-        /*margin-right: -50%;*/
+        margin-right: -50%;
       }
       &.front {
         position: relative;
         top: 0px;
-        /*margin-left: -50%;*/
+        margin-left: -50%;
 
         .content-background {
           background: white;

@@ -1,7 +1,7 @@
 <template>
 <!--{blockRid}->{block.type}->{block._id}->{block.isSplittedBlock}-->
 {#if block && block._id}
-  <div id="preview-{block._id}" data-rid="{blockRid}" class="row content-scroll-item back">
+  <div id="v-{block._id}" data-rid="{blockRid}" class="row content-scroll-item back">
     <div class='col'>
       <div blockid="{block._id}">
         <div class="block-preview">
@@ -168,6 +168,8 @@
 
         </div>
         <!--<div class="block-preview">-->
+        <div class="ilm-block flag-popup-container"></div>
+        <!--<div class="ilm-block flag-popup-container">-->
       </div>
     </div>
   </div>
