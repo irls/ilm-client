@@ -1,7 +1,7 @@
 <template>
   <div>
-    <accordion :one-at-atime="true" ref="accordionAudio" class="audio-integration-accordion">
-      <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
+    <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion">
+      <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
           <div class="file-catalogue-buttons" v-if="allowEditing">
             <div class="" v-if="allowEditing">
@@ -107,8 +107,8 @@
             </div>
           </div>
         </div>
-      </panel>
-      <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
+      </AccordionTab>
+      <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
         <div class="tts-volume-label">Volume:</div>
         <vue-slider ref="slider" v-model="pre_volume" :min="0.1" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
         <table class="table table-striped table-bordered table-voices">
@@ -168,18 +168,20 @@
         <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
           <span class="red">Select audio</span>
         </div>-->
-        <div class="pull-right align-process-start">
-          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
+        <div class="clearfix align-process-start">
+          <button class="btn btn-default pull-right" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
           <span v-else class="align-preloader -big"></span>
-          <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
+          <button v-if="hasLocks('align')" class="cancel-align pull-right" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
-      </panel>
-    </accordion>
+      </AccordionTab>
+    </Accordion>
     <div id="player"></div>
   </div>
 </template>
 <script>
-  import {accordion, panel, dropdown} from 'vue-strap'
+  import {/*accordion, panel, */dropdown} from 'vue-strap'
+  import Accordion from 'primevue/accordion';
+  import AccordionTab from 'primevue/accordiontab';
   import task_controls from '../../mixins/task_controls.js'
   import api_config from '../../mixins/api_config.js'
   import Vue from 'vue'
@@ -200,8 +202,10 @@
 
     },
     components: {
-      accordion,
-      panel,
+//       accordion,
+//       panel,
+      Accordion,
+      AccordionTab,
       dropdown,
       vueSlider,
       'select-tts-voice':SelectTTSVoice,
@@ -383,16 +387,6 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       })
-      $('body').on('click', '.audio-integration-accordion .panel', () => {
-        this.activeTabIndex = null;
-        if (this.$refs.accordionAudio && this.$refs.accordionAudio.$children) {
-          this.$refs.accordionAudio.$children.forEach((ch, i) => {
-            if (ch.open === true) {
-              this.activeTabIndex = i;
-            }
-          });
-        }
-      });
     },
     methods: {
       uploadAudio() {
@@ -1508,7 +1502,7 @@
 </script>
 <style lang="less">
 
-.panel-group.audio-integration-accordion .panel-body{
+.panel-group.audio-integration-accordion .p-accordion-content{
   padding-bottom: 0px;
 }
   .btn-small {
@@ -1740,6 +1734,7 @@
   }
   .table.table-voices {
     margin-top: 10px;
+    margin-bottom: 10px;
     thead {
       tr {
 
@@ -1764,7 +1759,7 @@
     }
   }
   .panel-audio-catalogue {
-      .panel-body {
+      .p-accordion-content {
         padding-left: 9px;
         padding-right: 9px;
         .all-audio-dropdown {
@@ -1913,6 +1908,10 @@
   }
   .audiofile.-renaming #rename-input{
     width: 90% !important;
+  }
+
+  .align-process-start {
+    width: 100%;
   }
 
 
