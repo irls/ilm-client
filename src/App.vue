@@ -95,4 +95,15 @@ export default {
     padding-bottom: 0px;
   }
 
+
+  #app {
+    /*primeVue components fixes*/
+    .p-component {
+      font-size: 1.4rem;
+    }
+    .p-component .vue-codemirror * {
+      box-sizing: initial;
+    }
+  }
+
 </style>
