@@ -2696,15 +2696,15 @@ export default {
 
     .container-block {
       /*padding-top: 15px;*/
-      width: 100%;
+      width: 49%;
 
       &.back {
-        margin-right: -50%;
+        /*margin-right: -50%;*/
       }
       &.front {
         position: relative;
         top: 0px;
-        margin-left: -50%;
+        /*margin-left: -50%;*/
 
         .content-background {
           background: white;
