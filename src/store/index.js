@@ -4252,7 +4252,7 @@ export const store = new Vuex.Store({
         return resolve();
       });
     },
-    
+
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
@@ -4361,10 +4361,10 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
-          
+
         });
     },
-    
+
     createCollection({state, dispatch}, data) {
       return axios.post(`${state.API_URL}collection`, data)
         .then(response => {
@@ -4430,7 +4430,7 @@ export const store = new Vuex.Store({
       if (!state.currentCollection._id) {
         return Promise.reject(new Error('No collection selected'))
       }
-      return axios.post(`${state.API_URL}collection/${state.currentCollection._id}/link_books`, 
+      return axios.post(`${state.API_URL}collection/${state.currentCollection._id}/link_books`,
         {
           books_ids: bookids
         })
@@ -4455,7 +4455,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     updateCollectionCoverimg({state}, imgData) {
       if (!state.currentCollection._id) {
         return Promise.reject(new Error('No collection selected'))
@@ -4467,10 +4467,10 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
-          
+
         });
     },
-    
+
     getCollection({state}, _id) {
       return axios.get(`${state.API_URL}collection/${_id}`)
         .then(response => {

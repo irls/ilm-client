@@ -7,6 +7,8 @@ import VueResource from 'vue-resource'
 import * as directives from './directives'
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
+import ('primevue/resources/primevue.min.css');
+import ('primevue/resources/themes/fluent-light/theme.css');
 //import jQuery from 'jquery'
 //import 'expose-loader?jquery!jquery'
 
