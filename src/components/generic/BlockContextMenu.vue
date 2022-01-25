@@ -66,7 +66,7 @@
   }
 </script>
 
-<style lang='less' scoped>
+<style lang='less'>
 
 .click-menu{
     background: #FAFAFA;

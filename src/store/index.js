@@ -4462,6 +4462,99 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      let currentBlockO = state.storeListO.get(blockid);
+      let storeBlock = state.storeList.get(blockid);
+      storeBlock.isSaving = true;
+      update.mode = state.bookMode;
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
+        .then(response => {
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+          commit('set_storeList', new BookBlock(response.data));
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      update.mode = state.bookMode;
+      let currentBlockO = state.storeListO.get(blockid);
+      
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
+        .then(response => {
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+          let storeBlock = state.storeList.get(blockid);
+          let isBlockPart = typeof update.partIdx !== 'undefined';
+          if (isBlockPart && storeBlock.parts.length !== response.data.parts.length) {
+            storeBlock.parts.forEach((p, pIdx) => {
+              if (pIdx < update.partIdx && (p.isChanged || p.isAudioChanged)) {
+                response.data.parts[pIdx] = p;
+              } else if (pIdx > update.partIdx && (p.isChanged || p.isAudioChanged)) {
+                //response.data.parts[pIdx + isSplitting] = p;
+                response.data.parts[pIdx + update.partIdx] = Object.assign(response.data.parts[pIdx + update.partIdx], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
+              }
+            });
+          }
+          commit('set_storeList', new BookBlock(response.data));
+          state.storeListO.refresh();
+          return Promise.resolve();
+        })
+        .catch(err => {
+          console.log(err);
+          return Promise.reject(err);
+        });
+    },
+    
+    splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      let currentBlockO = state.storeListO.get(blockid);
+      let storeBlock = state.storeList.get(blockid);
+      storeBlock.isSaving = true;
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
+        partIdx: partIdx,
+        mode: state.bookMode
+      })
+        .then(response => {
+          
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+          commit('set_storeList', new BookBlock(response.data));
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    mergeAllBlockParts({state, commit}, [blockid]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
+        .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
