@@ -1,13 +1,7 @@
 <template>
 
-<!--{#each blocks as block, bIdx (block._id)}
-  <p>#{bIdx} {block._id} {JSON.stringify(block)}
-  <div class="row content-scroll-item back">
-    <div class='col'>=====================================================</div>
-  </div>
-{/each}-->
 {#if blocks.length > 0}
-  {#each blocks as block, bIdx (block._id)}
+<!--  {#each blocks as block, bIdx (block._id)}
     <BlockPreview
       blockRid="{block._rid}"
       block="{blockView(block)}"
@@ -15,7 +9,7 @@
       mode="{mode}"
       isCompleted="{isCompleted(block)}"
     />
-  {/each}
+  {/each}-->
 <!--<VirtualList items={blocks} let:item
   bind:start={startBlockIdx} bind:end={endBlockIdx}
   bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
@@ -24,11 +18,25 @@
     <BlockPreview
       blockRid="{item._rid}"
       block="{blockView(item)}"
-      blockListObj="{item}"
       lang="{lang}"
+      mode="{mode}"
+      isCompleted="{isCompleted(item)}"
     />
   </div>
 </VirtualList>-->
+
+    <VirtualScroll bind:this={virtualList} data={blocks}
+      key="_id" let:data on:scroll="{onVScroll}" keeps={20} >
+      <div slot="header" id="previewScrollHeader"></div>
+      <BlockPreview
+        blockRid="{data._rid}"
+        block="{blockView(data)}"
+        lang="{lang}"
+        mode="{mode}"
+        isCompleted="{isCompleted(data)}"
+      />
+    </VirtualScroll>
+
 {:else}<div class="content-process-run preloader-loading"></div>
 {/if}
 
@@ -36,7 +44,7 @@
 
 <script>
 import { beforeUpdate, createEventDispatcher, tick } from 'svelte';//onMount,tick
-import VirtualList from '../../generic/VirtualList.svelte';
+import VirtualScroll from '../../generic/svelte-virtual-scroll-list/VirtualScroll.svelte';
 import BlockPreview from './BlockPreview.svelte';
 
 export let parlistO = {};
@@ -44,8 +52,10 @@ export let blocks = [];
 export let lang = 'en';
 export let mode = 'edit';
 export let startId;
-export let hotkeyScrollTo;
+//export let hotkeyScrollTo;
 export let currentJobInfo;
+
+let virtualList;
 
 let bookId = parlistO.meta.bookid || false;
 let loadedBookId = '';
@@ -59,14 +69,14 @@ let startIdIdx = 0;
 let fntCounter = 0;
 let prevBlocksLength = 0;
 
-$: hotkeyScrolledTo(hotkeyScrollTo);
-async function hotkeyScrolledTo(hotkeyScrollTo) {
-  if (hotkeyScrollTo !== false) {
-    await tick();
-    vListScrollTo = hotkeyScrollTo;
-    //console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
-  }
-}
+// $: hotkeyScrolledTo(hotkeyScrollTo);
+// async function hotkeyScrolledTo(hotkeyScrollTo) {
+//   if (hotkeyScrollTo !== false) {
+//     await tick();
+//     vListScrollTo = hotkeyScrollTo;
+//     //console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
+//   }
+// }
 
 beforeUpdate(/*async */() => {
 
@@ -98,6 +108,13 @@ beforeUpdate(/*async */() => {
 //   }
 });
 
+const dispatch = createEventDispatcher();
+
+const onVScroll = (ev) => {
+  //console.log(`onVScroll: `, ev);
+  dispatch('onScroll', ev);
+}
+
 const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
 const timestamp = (new Date()).toJSON();
 
@@ -107,14 +124,15 @@ const blockFull = (blockRid) => {
 
 const blockView = (block) => {
   if (block) {
-    let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang });
+    //let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang });
 
-    viewObj.viewIllustration = block.illustration ? process.env.ILM_API + block.illustration + '?' + timestamp : false;
+    block.language = block.language || parlistO.meta.lang || lang;
+    block.viewIllustration = block.illustration ? process.env.ILM_API + block.illustration + '?' + timestamp : false;
 
-    viewObj.isSplittedBlock = (block.voicework === 'narration' && !currentJobInfo.text_cleanup && Array.isArray(block.parts) && block.parts.length > 1 && !(currentJobInfo.mastering || currentJobInfo.mastering_complete));
+    block.isSplittedBlock = (block.voicework === 'narration' && !currentJobInfo.text_cleanup && Array.isArray(block.parts) && block.parts.length > 1 && !(currentJobInfo.mastering || currentJobInfo.mastering_complete));
 
-    //console.log(`blockView.viewObj: `, viewObj);
-    return viewObj;
+    //console.log(`blockView.block: `, block);
+    return block;
   } else return { footnotes: [], language: lang };
 }
 

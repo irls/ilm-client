@@ -171,59 +171,11 @@
         <div class="ilm-block flag-popup-container"></div>
         <!--<div class="ilm-block flag-popup-container">-->
       </div>
+      <!--<div blockid=-->
     </div>
+    <!-- <div class='col'>-->
   </div>
-
-<!--  <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}" style="/*min-height:{block.illustration_height}px*/">
-  {#if block.type === 'illustration'}
-    {#await getImgProps(block.viewIllustration)}
-      <div class="bview-empty-image-wrapper">
-        <div class="bview-empty-image">No image</div>
-      </div>
-    {:then imgProps}
-      <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-           alt="{block.description}"
-           class="{block.getClass()}"
-           width="{imgProps.width}"
-           height="{imgProps.height}"
-           style="border:1px solid" />
-    {/await}
-    {#if block.description}
-      <div class="bview-image-descr-wrapper">
-        {@html block.description}
-      </div>
-    {/if}
-  {:else if block.type === 'hr'}
-    <hr class="{block.getClass()}"/>
-  {:else}
-    {#if block.viewParnum}
-      <div class="bview-parnum">{block.viewParnum}</div>
-    {/if}
-
-    <div id="display-{block.blockid}" lang="{block.language}"
-      class="bview-content part-0 {block.getClass ? block.getClass() : ''} hide-archive"
-      data-parnum="{block.viewParnum}"
-      data-type="{block.type}">
-      {@html block.content}
-    </div>
-
-    {#if block.footnotes && block.footnotes.length > 0}
-    <div class="footnotes">
-      {#each block.footnotes as footnote, footnoteIdx (footnote)}
-      <div class="{footnote.isShow ? '' : '-hidden'}">
-        <div class="-langftn-{footnote.language}">
-          <div class="-num">[fn{footnote.ftnIdx+1}]</div>
-          <div  class="-text">
-            {@html footnote.content}
-          </div>
-        </div>
-      </div>
-      {/each}
-    </div>
-    {/if}
-
-  {/if}
-  </div>-->
+  <!--<div id="v--->
 {:else}
   <div class="ilm-block ilm-display content-process-run preloader-loading"></div>
 {/if}

@@ -1,6 +1,6 @@
 <template>
 <div :class="['content-scroll-wrapper']"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
+  v-hotkey="keymap" ref="contentScrollWrapRef" ><!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
@@ -13,6 +13,7 @@
         :startId="startId"
         :hotkeyScrollTo="hotkeyScrollTo"
         :currentJobInfo="currentJobInfo"
+        @onScroll="handleScroll"
       ></SvelteBookPreviewInVue>
 
       <!--
@@ -43,7 +44,7 @@
   </div>
   <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+  <div id="editorFrontContainer" v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
@@ -1550,6 +1551,14 @@ export default {
       //this.refreshTmpl();
     },
 
+    initEditorPosition() {
+      const previewScrollHeader = document.getElementById('previewScrollHeader');
+      const editorFrontContainer = document.getElementById('editorFrontContainer');
+      console.log(`previewScrollHeader: `, previewScrollHeader);
+      console.log(`editorFrontContainer: `, editorFrontContainer);
+      previewScrollHeader.appendChild(editorFrontContainer);
+    },
+
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
@@ -1573,7 +1582,8 @@ export default {
     }, 100),
 
     handleScroll(force = false) {
-      //console.log('handleScroll', (new Date()).toJSON());
+      console.log('handleScroll', (new Date()).toJSON());
+      if (true) return;
       const contSWRef = this.$refs.contentScrollWrapRef;
       const scrolledBottom = contSWRef.offsetHeight + contSWRef.scrollTop >= contSWRef.scrollHeight;
       this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
@@ -1592,7 +1602,6 @@ export default {
           const blockRef = document.getElementById('v-' + blockO.blockid);
           const visible = this.checkVisible(blockRef, viewHeight);
           if (visible) {
-            console.log(`visible: `, 'v-' + blockO.blockid);
             if (!firstVisible) {
               firstVisible = blockO;
               this.parlistO.setFirstVisibleId(blockO.blockid);
@@ -1649,13 +1658,13 @@ export default {
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
-      console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
+      //console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
       if (firstVisible !== false) {
 
         let checkUpp = !this.parlistO.isInViewArray(firstVisible.in);
         let checkDown = !this.parlistO.isInViewArray(lastVisible.out);
 
-        console.log(`checkUpp || checkDown || force: `, checkUpp , checkDown , force);
+        //console.log(`checkUpp || checkDown || force: `, checkUpp , checkDown , force);
         if (checkUpp || checkDown || force) {
           this.startId = firstVisible.blockid;
           if (this.parlistO.setStartId(firstVisible.blockid)) {
@@ -2395,14 +2404,15 @@ export default {
   },
   mounted: function() {
       //this.onScrollBookDown();
-      console.log('book mounted', this.meta._id);
+      //console.log('book mounted', this.meta._id);
       window.onresize = () => {
         this.correctEditWrapper();
       };
 
       this.loadBookMounted() // also handle route params
       .then((metaResp)=>{
-        console.log(`loadBookMounted.metaResp: `, metaResp);
+        //console.log(`loadBookMounted.metaResp: `, metaResp);
+        this.initEditorPosition();
         this.processOpenedBook();
       })
 
@@ -2693,13 +2703,15 @@ export default {
       }
     }
 
-
     .container-block {
       /*padding-top: 15px;*/
       width: 49%;
 
       &.back {
         /*margin-right: -50%;*/
+        .content-background {
+          height: 100%;
+        }
       }
       &.front {
         position: relative;
@@ -2867,6 +2879,15 @@ export default {
   &.flag-popup-container {
     padding: 0px;
   }
+}
+
+#editorFrontContainer {
+
+}
+
+#previewScrollHeader {
+  position: relative;
+  z-index: 1;
 }
 
 .table-body {
