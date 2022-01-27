@@ -4462,6 +4462,18 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    loginAdminAs({state}, [user_id]) {
+      return axios.post(`${process.env.ILM_API}/auth/login_admin_as`, {
+        user_id: user_id
+      })
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
