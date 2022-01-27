@@ -576,12 +576,13 @@ import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
 import { modal, accordion, panel } from 'vue-strap'
-import task_controls from '../../mixins/task_controls.js'
-import api_config from '../../mixins/api_config.js'
-import access from '../../mixins/access.js'
-import { Languages } from "../../mixins/lang_config.js"
-import time_methods from '../../mixins/time_methods.js'
+import task_controls  from '../../mixins/task_controls.js'
+import api_config     from '../../mixins/api_config.js'
+import access         from '../../mixins/access.js'
+import { Languages }  from "../../mixins/lang_config.js"
+import time_methods   from '../../mixins/time_methods.js';
 import number_methods from "../../mixins/number_methods.js"
+import toc_methods    from '../../mixins/toc_methods.js';
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
@@ -876,7 +877,7 @@ export default {
     }
   },
 
-  mixins: [task_controls, api_config, access, time_methods, number_methods],
+  mixins: [task_controls, api_config, access, time_methods, number_methods, toc_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
@@ -1743,7 +1744,11 @@ export default {
 
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
-              if (pBlock && blockType == 'title') { // ILM-2533
+              if (pBlock) {
+                pBlock.classes = this.mixin_buildTOCStyle({blockType, styleKey, styleVal, classes: pBlock.classes}); // ILM-2533
+              }
+
+              /*if (pBlock && blockType == 'title') { // ILM-2533
                 if (styleKey == 'style') {
                   if (styleVal != '') {
                     pBlock.classes['table of contents'] = {isInToc: 'off'};
@@ -1783,7 +1788,7 @@ export default {
                     }
                   };
                 }
-              }
+              }*/
 
               if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
                 pBlock.parnum = false;
@@ -1821,7 +1826,7 @@ export default {
                 } else {
                   //pBlock.status = pBlock.status || {};
                   //pBlock.status.marked = false;
-                  console.log(styleKey, styleVal, pBlock.isChanged, pBlock.content);
+                  //console.log(styleKey, styleVal, pBlock.isChanged, pBlock.content);
                   let updateBody = {
                     blockid: pBlock.blockid,
                     bookid: pBlock.bookid,
@@ -2284,7 +2289,7 @@ Vue.filter('prettyBytes', function (num) {
   .edit-button {
     float: right;  cursor: pointer; margin-top: -5px;
   }
-  
+
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;

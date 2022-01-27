@@ -2642,7 +2642,7 @@ export default {
         this.$modal.hide(name + this.block._id);
       },
       setChanged(val, type = null, event = null) {
-        //console.log('setChanged', val);
+        console.log('BookBlockPartView.setChanged', val, type, event, this.block.classes);
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
