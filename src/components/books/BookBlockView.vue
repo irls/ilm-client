@@ -2940,8 +2940,11 @@ Save text changes and realign the Block?`,
           this.block.setAudiosrcFootnote(pos, '');
         }
         // ILM-4404 In MacOS properties are not set from first time
+        if (this.block.footnotes[pos] && !(this.block.footnotes[pos] instanceof FootNote)) {
+          this.block.footnotes[pos] = new FootNote(this.block.footnotes[pos]);
+        }
         if (field && ev && ev.target && typeof ev.target.value !== 'undefined') {
-          if (this.block.footnotes[pos] && this.block.footnotes[pos].hasOwnProperty(field)) {
+          if (this.block.footnotes[pos] && this.block.footnotes[pos].hasAttribute(field)) {
             this.block.footnotes[pos][field] = ev.target.value;
           }
         }
