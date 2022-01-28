@@ -141,19 +141,19 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)" class="block-type-select">
+                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event, 'type')" class="block-type-select">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ getClassValue('type', key) }}</option>
                     </select>
                   </label>
 
                     <label v-if="block.type === 'title'">
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event)" class="block-class-select">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event, 'style')" class="block-class-select">
                         <option v-for="(value, key) in blockTypes['title']['style']" :value="value">{{ getClassValue('title', value) }}</option>
                       </select>
                     </label>
 
                     <label v-if="block.type === 'header'">
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event)" class="block-class-select">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event, 'level')" class="block-class-select">
                         <option v-for="(value, key) in blockTypes['header']['level']" :value="value">{{ getClassValue('header', value) }}</option>
                       </select>
                     </label>
@@ -619,6 +619,7 @@ import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
+import toc_methods        from '../../mixins/toc_methods.js'
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
@@ -722,7 +723,7 @@ export default {
       'codemirror': codemirror
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
-  mixins: [taskControls, apiConfig, access],
+  mixins: [taskControls, apiConfig, access, toc_methods],
   computed: {
       isLocked: {
         get() {
@@ -3498,20 +3499,34 @@ Save text changes and realign the Block?`,
       hideModal(name) {
         this.$modal.hide(name + this.block._id);
       },
-      setChanged(val, type = null, event = null) {
-        //console.log('setChanged', val, type, event, this.block.classes);
+      setChanged(val, type = null, event = null, styleKey = null) {
+        //console.log('BookBlockView.setChanged', val, type, event.target.value, JSON.stringify(this.block.classes));
         this.isChanged = val;
         if (val && type && event && event.target) {
           this.pushChange(type);
+          let styleVal = event.target.value;
+          let blockType = this.block.type;
           if (event.target.value == 'title'){
             this.block.classes.style = '';
-            console.log('classes:', this.block.classes);
+            blockType = 'title';
             this.pushChange('classes');
           }
           if (event.target.value == 'header'){
             this.block.classes.level = 'h1';
+            styleVal = 'h1';
+            blockType = 'header';
             this.pushChange('classes');
           }
+
+          if (styleKey) {
+            this.block.classes = this.mixin_buildTOCStyle({
+              blockType: blockType,
+              styleKey: styleKey,
+              styleVal: styleVal,
+              classes: this.block.classes
+            })
+          }
+
           if (event.target.className !== 'block-class-select')
             this.$root.$emit('from-block-edit:set-style');
 

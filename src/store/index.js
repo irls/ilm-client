@@ -1815,7 +1815,7 @@ export const store = new Vuex.Store({
 
       let newMeta = Object.assign(state.currentBookMeta, update);
       commit('SET_CURRENTBOOK_META', newMeta);
-      console.log('update', update);
+      //console.log('update', update);
 
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
@@ -2371,7 +2371,7 @@ export const store = new Vuex.Store({
           'block': cleanBlock,
         })
           .then(response => {
-            console.log('putBlockPart', response);
+            //console.log('putBlockPart', response);
             if (response.data) {
               dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
             }
