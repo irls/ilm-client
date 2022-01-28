@@ -1588,11 +1588,11 @@ export default {
         if (update.status && update.status.marked === true) {
           update.status.marked = false;
         }
-
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
-        let is_content_changed = this.hasChange('content');
-        let is_type_changed = this.hasChange('type');
+        const is_content_changed = this.hasChange('content');
+        const is_type_changed = this.hasChange('type');
+        const is_level_changed = ['title', 'header'].indexOf(this.block.type) > -1 && (this.hasChange('level') || this.hasChange('style'));
         this.isSaving = true;
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
@@ -1624,7 +1624,7 @@ export default {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
               this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
             }
-          } else if (is_type_changed) {
+          } else if (is_type_changed || is_level_changed) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
           }
 
