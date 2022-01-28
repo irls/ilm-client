@@ -3716,6 +3716,9 @@ Join with next subblock?`;
           if (this.block.getIsSplittedBlock()) {
             update.partIdx = this.blockPartIdx;
           }
+          this.block.isSaving = true;
+          this.$parent.isSaving = true;
+          this.$parent.$forceUpdate();
           return this.splitBlockToSubblocks([this.block.blockid, update]);
         }
       },
