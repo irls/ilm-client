@@ -1102,12 +1102,19 @@ class FlagPart {
     this.creator_role = init.creator_role || null;
   }
 }
+  
+const allFootnoteAttributes = ["voicework", "wordsRange", "language", "content", "audiosrc", "audiosrc_ver"];
+  
 
 class FootNote {
   constructor(init) {
     this.content = init.content || '<p></p>';
     this.voicework = init.voicework || 'no_audio';
     this.language = init.language || '';
+  }
+  
+  hasAttribute(attribute) {
+    return allFootnoteAttributes.includes(attribute);
   }
 }
 
