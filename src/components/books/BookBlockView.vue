@@ -3482,8 +3482,8 @@ Save text changes and realign the Block?`,
             this.pushChange('classes');
           }
           if (event.target.value == 'header'){
-            this.block.classes.level = 'h2';
-            styleVal = 'h2';
+            this.block.classes.level = 'h1';
+            styleVal = 'h1';
             blockType = 'header';
             this.pushChange('classes');
           }

@@ -7,7 +7,8 @@ export default {
   methods: {
     mixin_buildTOCStyle({blockType, styleKey, styleVal, classes} = {}) {
       //console.log(`mixin_buildTOCStyle: `, blockType, styleKey, styleVal, JSON.stringify(classes));
-      const newClasses = { ...classes }; //clone
+      //const newClasses = { ...classes }; //clone
+      const newClasses = classes;
 
       if (blockType == 'title') { // ILM-2533
         if (newClasses.level) {
@@ -34,6 +35,9 @@ export default {
         if (styleKey == 'level') {
           newClasses.level = styleVal;
           switch(styleVal) {
+            case 'h1' : {
+              newClasses['table of contents'] = {isInToc: 'on', tocLevel: 'toc1'};
+            } break;
             case 'h2' : {
               newClasses['table of contents'] = {isInToc: 'on', tocLevel: 'toc2'};
             } break;
