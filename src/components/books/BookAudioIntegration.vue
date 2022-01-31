@@ -1193,11 +1193,11 @@
             sizes: [70, 30],
             elementStyle: (dimension, size, gutterSize) => {
 
-              console.log(`elementStyle`);
+              //console.log(`elementStyle`);
 
               let resizeWrapper = true;
               parentHeight = parseInt($(document).height());
-              console.log(`parentHeight:${parentHeight}`);
+              //console.log(`parentHeight:${parentHeight}`);
               if(state || $('.waveform-playlist:visible').length ){
                 if( $('.annotations-boxes').length ){
                   parentBottomPadding = 435;
@@ -1208,7 +1208,7 @@
                 parentBottomPadding = 240;
               }
               parentHeight -=parentBottomPadding
-              console.log(`parentHeight:${parentHeight}`);
+              //console.log(`parentHeight:${parentHeight}`);
 
               if (!parentHeight) {
                 parentHeight = parseInt($('#file-catalogue').parent().css('height'));
@@ -1220,13 +1220,13 @@
                 }
               }
               //console.log(dimension, size, gutterSize)
-              console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
-              console.log(`size:${size}`);
-              console.log(`gutterSize:${gutterSize}`);
+              //console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
+              //console.log(`size:${size}`);
+              //console.log(`gutterSize:${gutterSize}`);
 
               // The additional scroll is appear
               parentHeight -=15;
-              console.log(`parentHeight:${parentHeight}`);
+              //console.log(`parentHeight:${parentHeight}`);
 
               let height = parentHeight / 100 * size - gutterSize;
 
@@ -1234,8 +1234,8 @@
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
               if (resizeWrapper || force) {
                 let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-                console.log(`parentHeight:${parentHeight}`);
-                console.log(`wrapper:${wrapper}`);
+                //console.log(`parentHeight:${parentHeight}`);
+                //console.log(`wrapper:${wrapper}`);
 
                 $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
                 // height = this.inViewport($('.file-catalogue-files-wrapper'));
@@ -1262,7 +1262,7 @@
               if (height > maxSize && resizeWrapper) {
                 height = maxSize;
               }
-              console.log(`height:${height}`);
+              //console.log(`height:${height}`);
               return {'height': height + 'px'};
             }
 
