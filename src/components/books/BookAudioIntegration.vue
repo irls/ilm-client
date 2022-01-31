@@ -110,7 +110,7 @@
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
         <div class="tts-volume-label">Volume:</div>
-        <vue-slider ref="slider" v-model="pre_volume" :min="0.1" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
+       <Slider ref="slider" v-model="pre_volume" :step="0.1" :min="0.1" :max="1.0" />
         <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -187,7 +187,7 @@
   import Vue from 'vue'
   import access from '../../mixins/access.js';
   import {mapGetters, mapActions} from 'vuex';
-  import vueSlider from 'vue-slider-component';
+  import Slider from 'primevue/slider';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
@@ -207,7 +207,7 @@
       Accordion,
       AccordionTab,
       dropdown,
-      vueSlider,
+      Slider,
       'select-tts-voice':SelectTTSVoice,
       draggable
 
@@ -1026,7 +1026,6 @@
         }).catch((err) => {
           this.getBookAlign();
           this.$root.$emit('stop-align');
-          console.log('error11: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
             //this.checkAligningBlocks();
           } else {
@@ -1144,13 +1143,13 @@
         return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
       },
       splitRecalc(force = false, state) {
-        console.log('splitRecalc')
+        //console.log('splitRecalc')
 
         let parentHeight;
         let parentBottomPadding;
 
         parentHeight = parseInt($(document).height());
-        console.log(`parentHeight:${parentHeight}`);
+        //console.log(`parentHeight:${parentHeight}`);
         if(state || $('.waveform-playlist:visible').length ){
           if( $('.annotations-boxes').length ){
             parentBottomPadding = 435;
@@ -1162,12 +1161,12 @@
         }
 
         parentHeight -=parentBottomPadding
-        console.log(`parentHeight:${parentHeight}`);
+        //console.log(`parentHeight:${parentHeight}`);
 
         // The additional scroll is appear
         parentHeight -=15;
 
-        console.log(`parentHeight:${parentHeight}`);
+        //console.log(`parentHeight:${parentHeight}`);
         let height = parentHeight / 100 * 70 - 5;
 
         let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
@@ -1175,7 +1174,7 @@
 
       },
       initSplit(force = false, state) {
-        console.log('initSplit')
+        //console.log('initSplit')
         // if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
         if (force || (this.isActive === true && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;

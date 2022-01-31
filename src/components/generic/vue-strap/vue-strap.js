@@ -4330,7 +4330,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _this2 = this;
 
 	    var $el = (0, _NodeList2.default)(this.$refs.dropdown);
-      console.log(`vue-strap.el: `, $el);
 	    $el.onBlur(function (e) {
 	      _this2.show = false;
 	    });
