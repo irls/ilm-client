@@ -1224,6 +1224,16 @@ export const store = new Vuex.Store({
           }
         }
       }
+    },
+    
+    updateBookExecutors(state, [bookid, executors]) {
+      let bookIndex = state.books_meta.findIndex(book => {
+        return book.bookid === bookid;
+      });
+      if (bookIndex !== -1) {
+        state.books_meta[bookIndex].executors = executors;
+        this.commit('set_currentbook_executors');
+      }
     }
   },
 
