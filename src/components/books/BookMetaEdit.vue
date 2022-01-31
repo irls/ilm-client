@@ -2250,9 +2250,7 @@ Vue.filter('prettyBytes', function (num) {
   }
   /* Wrapper around entire side editor */
   .sidebar {
-    /*position: fixed;*/
     width: 100%;
-    /*min-width: 426px;*/
     margin-top:0px;
     margin-left:0;
     padding-left:0;
