@@ -38,7 +38,7 @@
 
 
 
-    <alert v-show="passwordChanged" placement="top-right" duration="3000" type="success" width="400px">
+    <alert v-show="passwordChanged" placement="top-right" :duration="3000" type="success" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>Password reset.</p>
     </alert>
@@ -50,14 +50,14 @@
         <div class="t-box"><span>{{user.email}}</span></div>
         <div class="t-box">
           <select-roles
-            :selected="user.roles"
+            :selected="[...user.roles]"
             :isDisabled="!$store.state.isAdmin"
             @select="updateUser(user._id, 'roles', $event)"
           ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
-            :selected="user.languages || []"
+            :selected="user.languages ? [...user.languages] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
@@ -70,7 +70,7 @@
           <i class="fa fa-unlock"></i>  Reset Password
         </button>  &nbsp; -->
 
-        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable)" v-show="$store.state.isAdmin">
+        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable, true)" v-show="$store.state.isAdmin">
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
