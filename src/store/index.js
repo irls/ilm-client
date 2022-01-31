@@ -623,7 +623,7 @@ export const store = new Vuex.Store({
             return obj.bookid === meta.bookid;
           });
           if (index) {
-            state.books_meta[index] = meta;
+            state.books_meta[index] = Object.assign(state.books_meta[index], meta);
             state.books_meta.push(meta)
             state.books_meta.pop();// force re draw lists
           }
@@ -665,6 +665,7 @@ export const store = new Vuex.Store({
         state.currentBookMeta = {}
         state.currentBookid = ''
       }
+      this.commit('set_currentbook_executors');
     },
 
 //     CLEAN_CURRENTBOOK_FILES (state) {
@@ -722,6 +723,7 @@ export const store = new Vuex.Store({
 
     SET_BOOKLIST (state, books) {
       state.books_meta = books;
+      this.commit('set_currentbook_executors');
       this.commit('PREPARE_BOOK_COLLECTIONS');
     },
 
@@ -1208,6 +1210,20 @@ export const store = new Vuex.Store({
     
     set_toc_section_book(state, tocSectionBook) {
       state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
+    },
+    
+    set_currentbook_executors(state) {
+      
+      if (state.currentBookMeta && state.currentBookMeta._id) {
+        if (!state.currentBookMeta.executors) {
+          let book = state.books_meta.find(book => {
+            return book.bookid === state.currentBookMeta._id;
+          });
+          if (book) {
+            state.currentBookMeta.executors = book.executors;
+          }
+        }
+      }
     }
   },
 
@@ -1611,6 +1627,12 @@ export const store = new Vuex.Store({
           if (answer.job_status_error) {
             return Promise.reject(answer);
           }
+          let bookMeta = state.books_meta.find(bookMeta => {
+            return bookMeta.bookid === book_id;
+          });
+          if (bookMeta) {
+            answer.executors = bookMeta.executors;
+          }
           commit('SET_CURRENTBOOK_META', answer);
           let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof answer.version !== 'undefined' && answer.version === answer.publishedVersion);
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
@@ -1814,7 +1836,7 @@ export const store = new Vuex.Store({
 
       let newMeta = Object.assign(state.currentBookMeta, update);
       commit('SET_CURRENTBOOK_META', newMeta);
-      console.log('update', update);
+      //console.log('update', update);
 
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
