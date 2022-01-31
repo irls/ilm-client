@@ -624,7 +624,7 @@ export const store = new Vuex.Store({
             return obj.bookid === meta.bookid;
           });
           if (index) {
-            state.books_meta[index] = Object.assign(state.books_meta[index], meta);
+            state.books_meta[index] = state.books_meta[index] ? Object.assign(state.books_meta[index], meta) : meta;
             state.books_meta.push(meta)
             state.books_meta.pop();// force re draw lists
           }
