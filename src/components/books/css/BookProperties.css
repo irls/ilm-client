@@ -339,6 +339,10 @@ div.tab-heading thead {
   padding-right:17px;
 }
 
+.book-listing {
+  heigth: 100%;
+}
+
 div.book-listing span {
   float:right;
   width:50%;

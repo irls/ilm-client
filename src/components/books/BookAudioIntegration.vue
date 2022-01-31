@@ -1122,8 +1122,8 @@
         }
       },
       _setCatalogueSize( ) {
-        let file_catalogue_height = $(document).height();
-        $('.file-catalogue-files').css('max-height', `${file_catalogue_height}px`);
+        //let file_catalogue_height = $(document).height();
+        //$('.file-catalogue-files').css('max-height', `${file_catalogue_height}px`);
       },
 
       clearErrors() {
@@ -1156,6 +1156,7 @@
           }else{
             parentBottomPadding = 410;
           }
+          parentHeight -=20;
         }else{
           parentBottomPadding = 240;
         }
@@ -1164,13 +1165,13 @@
         //console.log(`parentHeight:${parentHeight}`);
 
         // The additional scroll is appear
-        parentHeight -=15;
+        parentHeight -=45;
 
         //console.log(`parentHeight:${parentHeight}`);
         let height = parentHeight / 100 * 70 - 5;
 
         let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-        $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+        $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
 
       },
       initSplit(force = false, state) {
@@ -1203,6 +1204,7 @@
                 }else{
                   parentBottomPadding = 410;
                 }
+                parentHeight -=20;
               }else{
                 parentBottomPadding = 240;
               }
@@ -1224,7 +1226,7 @@
               //console.log(`gutterSize:${gutterSize}`);
 
               // The additional scroll is appear
-              parentHeight -=15;
+              parentHeight -=45;
               //console.log(`parentHeight:${parentHeight}`);
 
               let height = parentHeight / 100 * size - gutterSize;
@@ -1235,8 +1237,7 @@
                 let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
                 //console.log(`parentHeight:${parentHeight}`);
                 //console.log(`wrapper:${wrapper}`);
-
-                $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+                $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
                 // height = this.inViewport($('.file-catalogue-files-wrapper'));
                 // console.log(`parentHeight inViewport:${parentHeight}`);
                 //
@@ -1457,8 +1458,8 @@
       'blockSelection': {
         handler(val) {
           this.highlightDuplicateId = '';
-          var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
-          var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
+          var openAudio = this.activeTabIndex == 0;
+          var openTTS = this.activeTabIndex == 1;
           if (!openAudio && openTTS) {
             this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
           }
@@ -1525,7 +1526,6 @@
     }
     .file-catalogue-files-wrapper {
         height: 100%;
-        /*max-height: 220px;*/
         overflow-y: scroll;
     }
     .file-catalogue-files-wrapper::-webkit-scrollbar-track {
@@ -1547,7 +1547,6 @@
       margin-left: 0px;
       padding-left: 0px;
       min-height: 300px;
-      max-height: 300px;
       .audiofile {
         list-style-type: none;
         padding: 2px;
