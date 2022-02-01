@@ -117,7 +117,7 @@
   import task_controls from '../../../mixins/task_controls.js';
   import access from '../../../mixins/access.js';
   import { mapGetters, mapActions } from 'vuex';
-  import { modal } from 'vue-strap'
+  import { modal } from 'vue-strap';
   export default {
     name: 'BookAssignments',
     data() {
@@ -222,6 +222,7 @@
                 this.getCurrentJobInfo();
                 this.tc_loadBookTask(this.currentBookMeta._id);
               }
+              this.$store.commit('updateBookExecutors', [this.currentBookMeta._id, response.data.executors]);
                //console.log(this.tasks_counter);
                //this.tasks_counter.forEach(function(el, index) {
                //  console.log(el.key, el.data);

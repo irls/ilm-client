@@ -624,7 +624,7 @@ export const store = new Vuex.Store({
             return obj.bookid === meta.bookid;
           });
           if (index) {
-            state.books_meta[index] = Object.assign(state.books_meta[index], meta);
+            state.books_meta[index] = state.books_meta[index] ? Object.assign(state.books_meta[index], meta) : meta;
             state.books_meta.push(meta)
             state.books_meta.pop();// force re draw lists
           }
@@ -1224,6 +1224,16 @@ export const store = new Vuex.Store({
             state.currentBookMeta.executors = book.executors;
           }
         }
+      }
+    },
+    
+    updateBookExecutors(state, [bookid, executors]) {
+      let bookIndex = state.books_meta.findIndex(book => {
+        return book.bookid === bookid;
+      });
+      if (bookIndex !== -1) {
+        state.books_meta[bookIndex].executors = executors;
+        this.commit('set_currentbook_executors');
       }
     }
   },
