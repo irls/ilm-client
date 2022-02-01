@@ -109,8 +109,10 @@
         </div>
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
-        <div class="tts-volume-label">Volume:</div>
-       <Slider ref="slider" v-model="pre_volume" :step="0.1" :min="0.1" :max="1.0" />
+        <div class="volume-slider-margin">
+          <div class="tts-volume-label">Volume:</div>
+          <Slider ref="slider" v-model="pre_volume" :step="0.1" :min="0.1" :max="1.0" />
+        </div>
         <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -171,7 +173,7 @@
         <div class="clearfix align-process-start">
           <button class="btn btn-default pull-right" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
           <span v-else class="align-preloader -big"></span>
-          <button v-if="hasLocks('align')" class="cancel-align pull-right" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
+          <button v-if="hasLocks('align')" class="cancel-align pull-left" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
       </AccordionTab>
     </Accordion>
@@ -1502,9 +1504,16 @@
 </script>
 <style lang="less">
 
-.panel-group.audio-integration-accordion .p-accordion-content{
-  padding-bottom: 0px;
-}
+  .p-accordion.audio-integration-accordion {
+    .p-accordion-content {
+      /*padding-bottom: 0px;*/
+
+      .volume-slider-margin {
+        margin: 0px 8px;
+      }
+    }
+  }
+
   .btn-small {
     font-size: 12px;
   }
@@ -1546,7 +1555,7 @@
       list-style-type: none;
       margin-left: 0px;
       padding-left: 0px;
-      min-height: 300px;
+      /*min-height: 300px;*/
       .audiofile {
         list-style-type: none;
         padding: 2px;
