@@ -1359,7 +1359,7 @@ export default {
     unableToJoinChangedMessage() {
       this.$root.$emit('show-modal', {
         title: 'Unsaved Changes',
-        text: 'Blocks have unsaved changes.<br/>Please save or discard your changes before joining.',
+        text: 'Blocks have unsaved changes.<br>Save or discard your changes before joining',
         buttons: [
           {
             title: 'Ok',

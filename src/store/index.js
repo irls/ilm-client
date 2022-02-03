@@ -4083,7 +4083,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo]) {
       return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
         .then((response) => {
           let storeBlock = state.storeList.get(blockid);
@@ -4099,6 +4099,8 @@ export const store = new Vuex.Store({
             });
           }
           commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -4476,6 +4478,8 @@ export const store = new Vuex.Store({
         .then(response => {
           dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
           commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
         })
         .catch(err => {
           return Promise.reject(err);
@@ -4513,6 +4517,8 @@ export const store = new Vuex.Store({
           }
           commit('set_storeList', new BookBlock(response.data));
           state.storeListO.refresh();
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
           return Promise.resolve();
         })
         .catch(err => {
@@ -4536,6 +4542,8 @@ export const store = new Vuex.Store({
           
           dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
           commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
           return Promise.resolve();
         })
         .catch(err => {
@@ -4543,13 +4551,15 @@ export const store = new Vuex.Store({
         });
     },
     
-    mergeAllBlockParts({state, commit}, [blockid]) {
+    mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
         .then((response) => {
           commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
           return Promise.resolve(response.data);
         })
         .catch(err => {

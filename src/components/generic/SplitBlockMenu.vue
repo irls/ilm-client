@@ -22,9 +22,16 @@
       }
     },
     name: 'split-block-menu',
-    props: ['allowRejoin', 'allowSplit', 'allowRejoinAll'],
+    props: ['allowRejoin', 'allowSplit', 'allowRejoinAll', 'disabled', 'checkBeforeOpen'],
     methods: {
       toggleMenu() {
+        if (this.disabled) {
+          this.showMenu = false;
+          return;
+        }
+        if (!this.checkBeforeOpen()) {
+          return;
+        }
         this.showMenu = !this.showMenu;
       },
       reJoin() {
@@ -38,6 +45,15 @@
       reJoinAll() {
         this.$emit('reJoinAll');
         this.toggleMenu();
+      }
+    },
+    watch: {
+      disabled: {
+        handler(val) {
+          if (val && this.showMenu) {
+            this.toggleMenu();
+          }
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 <template>
 <ul ref="menu"
     v-show="viewMenu"
-    class="click-menu"
+    class="click-menu direction-ltr"
     tabindex="-1"
     :style="{ top, left }"
     @click="close">

@@ -489,6 +489,9 @@ export default {
         }
       }
     }
+    .direction-ltr {
+      direction: ltr;
+    }
   }
 }
 /* Display mode */
