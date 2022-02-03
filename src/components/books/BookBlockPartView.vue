@@ -288,7 +288,7 @@
         :allowSplit="blockPartIdx < block.parts.length - 1 && splitIntoBlocksAllowed"
         :allowRejoinAll="blockPartIdx === block.parts.length - 1"
         :disabled="isMergeSubblocksDisabled"
-        :checkBeforeOpen="checkAllowNarrateUnassigned"
+        :checkBeforeOpen="checkAllowUpdateUnassigned"
         @reJoin="mergeSubblocks()"
         @split="splitSubblock()"
         @reJoinAll="mergeAllSubblocks()"></split-block-menu>
@@ -415,7 +415,7 @@ export default {
       //'modal': modal,
       'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -1318,7 +1318,7 @@ export default {
         this.setRangeSelection('byOne', $event)
       },
       onContext(e) {
-        if (!this.checkAllowNarrateUnassigned()) {
+        if (!this.checkAllowUpdateUnassigned()) {
           return false;
         }
         if (!this.$refs.blockCntx) {
