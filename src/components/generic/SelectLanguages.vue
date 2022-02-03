@@ -9,6 +9,7 @@
     multiple
     :placeholder="'Editor Languages'"
     :disabled="isDisabled"
+    class="select-languages"
   ></v-select>
 </template>
 <script>
@@ -68,3 +69,12 @@ export default {
 
 }
 </script>
+<style lang="less">
+  .select-languages {
+    &.disabled {
+      .dropdown-menu {
+        display: none;
+      }
+    }
+  }
+</style>

@@ -9,6 +9,7 @@
     multiple
     :placeholder="'Select Roles'"
     :disabled="isDisabled"
+    class="roles-select"
   ></v-select>
 </template>
 
@@ -54,3 +55,12 @@ export default {
 
 }
 </script>
+<style lang="less">
+  .roles-select {
+    &.disabled {
+      .dropdown-menu {
+        display: none;
+      }
+    }
+  }
+</style>
