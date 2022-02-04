@@ -61,6 +61,7 @@
 <style lang="less">
   .open-split-menu {
     cursor: pointer;
+    float: left;
   }
   .open-split-menu:after {
     content: '\2807';

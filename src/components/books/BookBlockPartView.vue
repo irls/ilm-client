@@ -282,20 +282,20 @@
   </div>
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
-      <split-block-menu v-if="isMergeSubblocksAllowed"
-        ref="splitBlockMenu"
-        :allowRejoin="blockPartIdx < block.parts.length - 1"
-        :allowSplit="blockPartIdx < block.parts.length - 1 && splitIntoBlocksAllowed"
-        :allowRejoinAll="blockPartIdx === block.parts.length - 1"
-        :disabled="isMergeSubblocksDisabled"
-        :checkBeforeOpen="checkAllowUpdateUnassigned"
-        @reJoin="mergeSubblocks()"
-        @split="splitSubblock()"
-        @reJoinAll="mergeAllSubblocks()"></split-block-menu>
       <div class="controls-bottom-wrapper">
         <!-- <div class="par-ctrl -hidden -left" v-if="isMergeSubblocksAllowed">
           <div class="merge-subblocks" @click="mergeSubblocks()"></div>
         </div> -->
+        <split-block-menu v-if="isMergeSubblocksAllowed"
+          ref="splitBlockMenu"
+          :allowRejoin="blockPartIdx < block.parts.length - 1"
+          :allowSplit="blockPartIdx < block.parts.length - 1 && splitIntoBlocksAllowed"
+          :allowRejoinAll="blockPartIdx === block.parts.length - 1"
+          :disabled="isMergeSubblocksDisabled"
+          :checkBeforeOpen="checkAllowUpdateUnassigned"
+          @reJoin="mergeSubblocks()"
+          @split="splitSubblock()"
+          @reJoinAll="mergeAllSubblocks()"></split-block-menu>
         <div class="par-ctrl -hidden -right">
           <div class="save-block -right" @click="discardBlock"
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && (isChanged || isIllustrationChanged)) || isLocked}">
