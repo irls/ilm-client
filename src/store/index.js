@@ -2403,7 +2403,7 @@ export const store = new Vuex.Store({
           'block': cleanBlock,
         })
           .then(response => {
-            console.log('putBlockPart', response);
+            //console.log('putBlockPart', response);
             if (response.data) {
               dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
             }
