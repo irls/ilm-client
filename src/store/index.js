@@ -3948,6 +3948,7 @@ export const store = new Vuex.Store({
               if (l) {
                 l.audiosrc = r.audiosrc;
                 //l.audiosrc_ver = r.audiosrc_ver;
+                l.process_info = r.process_info ? r.process_info : {};
               }
             });
           }
@@ -3993,6 +3994,19 @@ export const store = new Vuex.Store({
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
         mode: state.bookMode
       };
+      if (Array.isArray(state.audioTasksQueue.log)) {
+        state.audioTasksQueue.log.filter(l => {
+          return l.process_info && Object.keys(l.process_info).length > 0;
+        })
+        .forEach(l => {
+          if (l.process_info.cut_at_start === true) {
+            data.audio_blockid_prev = null;
+          }
+          if (l.process_info.cut_at_end === true) {
+            data.audio_blockid_next = null;
+          }
+        });
+      }
       if (block.getIsSplittedBlock()) {
         block.parts[alignBlock.partIdx].isSaving = true;
       } else {
