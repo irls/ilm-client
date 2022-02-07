@@ -1,7 +1,7 @@
 <template>
   <div>
-    <accordion :one-at-atime="true" ref="accordionAudio" class="audio-integration-accordion">
-      <panel :is-open="true" :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
+    <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion">
+      <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
           <div class="file-catalogue-buttons" v-if="allowEditing">
             <div class="" v-if="allowEditing">
@@ -107,10 +107,12 @@
             </div>
           </div>
         </div>
-      </panel>
-      <panel :is-open="false" :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
-        <div class="tts-volume-label">Volume:</div>
-        <vue-slider ref="slider" v-model="pre_volume" :min="0.1" :max="1.0" :interval="0.1" :tooltip="false"></vue-slider>
+      </AccordionTab>
+      <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
+        <div class="volume-slider-margin">
+          <div class="tts-volume-label">Volume:</div>
+          <Slider ref="slider" v-model="pre_volume" :step="0.1" :min="0.1" :max="1.0" />
+        </div>
         <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -168,24 +170,26 @@
         <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
           <span class="red">Select audio</span>
         </div>-->
-        <div class="pull-right align-process-start">
-          <button class="btn btn-default" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
+        <div class="clearfix align-process-start">
+          <button class="btn btn-default pull-right" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
           <span v-else class="align-preloader -big"></span>
-          <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
+          <button v-if="hasLocks('align')" class="cancel-align pull-left" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
-      </panel>
-    </accordion>
+      </AccordionTab>
+    </Accordion>
     <div id="player"></div>
   </div>
 </template>
 <script>
-  import {accordion, panel, dropdown} from 'vue-strap'
+  import {/*accordion, panel, */dropdown} from 'vue-strap'
+  import Accordion from 'primevue/accordion';
+  import AccordionTab from 'primevue/accordiontab';
   import task_controls from '../../mixins/task_controls.js'
   import api_config from '../../mixins/api_config.js'
   import Vue from 'vue'
   import access from '../../mixins/access.js';
   import {mapGetters, mapActions} from 'vuex';
-  import vueSlider from 'vue-slider-component';
+  import Slider from 'primevue/slider';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
@@ -200,10 +204,12 @@
 
     },
     components: {
-      accordion,
-      panel,
+//       accordion,
+//       panel,
+      Accordion,
+      AccordionTab,
       dropdown,
-      vueSlider,
+      Slider,
       'select-tts-voice':SelectTTSVoice,
       draggable
 
@@ -383,16 +389,6 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       })
-      $('body').on('click', '.audio-integration-accordion .panel', () => {
-        this.activeTabIndex = null;
-        if (this.$refs.accordionAudio && this.$refs.accordionAudio.$children) {
-          this.$refs.accordionAudio.$children.forEach((ch, i) => {
-            if (ch.open === true) {
-              this.activeTabIndex = i;
-            }
-          });
-        }
-      });
     },
     methods: {
       uploadAudio() {
@@ -1032,7 +1028,6 @@
         }).catch((err) => {
           this.getBookAlign();
           this.$root.$emit('stop-align');
-          console.log('error11: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
             //this.checkAligningBlocks();
           } else {
@@ -1129,8 +1124,8 @@
         }
       },
       _setCatalogueSize( ) {
-        let file_catalogue_height = $(document).height();
-        $('.file-catalogue-files').css('max-height', `${file_catalogue_height}px`);
+        //let file_catalogue_height = $(document).height();
+        //$('.file-catalogue-files').css('max-height', `${file_catalogue_height}px`);
       },
 
       clearErrors() {
@@ -1163,6 +1158,7 @@
           }else{
             parentBottomPadding = 410;
           }
+          parentHeight -=20;
         }else{
           parentBottomPadding = 240;
         }
@@ -1171,17 +1167,17 @@
         //console.log(`parentHeight:${parentHeight}`);
 
         // The additional scroll is appear
-        parentHeight -=15;
+        parentHeight -=45;
 
         //console.log(`parentHeight:${parentHeight}`);
         let height = parentHeight / 100 * 70 - 5;
 
         let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-        $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+        $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
 
       },
       initSplit(force = false, state) {
-        console.log('initSplit')
+        //console.log('initSplit')
         // if (force || (this.isActive === true && $('.gutter.gutter-vertical').length == 0 && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
         if (force || (this.isActive === true && $('#file-catalogue').length > 0 && this.activeTabIndex === 0)) {
           let parentHeight = false;
@@ -1199,22 +1195,23 @@
             sizes: [70, 30],
             elementStyle: (dimension, size, gutterSize) => {
 
-              console.log(`elementStyle`);
+              //console.log(`elementStyle`);
 
               let resizeWrapper = true;
               parentHeight = parseInt($(document).height());
-              console.log(`parentHeight:${parentHeight}`);
+              //console.log(`parentHeight:${parentHeight}`);
               if(state || $('.waveform-playlist:visible').length ){
                 if( $('.annotations-boxes').length ){
                   parentBottomPadding = 435;
                 }else{
                   parentBottomPadding = 410;
                 }
+                parentHeight -=20;
               }else{
                 parentBottomPadding = 240;
               }
               parentHeight -=parentBottomPadding
-              console.log(`parentHeight:${parentHeight}`);
+              //console.log(`parentHeight:${parentHeight}`);
 
               if (!parentHeight) {
                 parentHeight = parseInt($('#file-catalogue').parent().css('height'));
@@ -1226,13 +1223,13 @@
                 }
               }
               //console.log(dimension, size, gutterSize)
-              console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
-              console.log(`size:${size}`);
-              console.log(`gutterSize:${gutterSize}`);
+              //console.log(`waveform-playlist:${$('.waveform-playlist:visible').length}`);
+              //console.log(`size:${size}`);
+              //console.log(`gutterSize:${gutterSize}`);
 
               // The additional scroll is appear
-              parentHeight -=15;
-              console.log(`parentHeight:${parentHeight}`);
+              parentHeight -=45;
+              //console.log(`parentHeight:${parentHeight}`);
 
               let height = parentHeight / 100 * size - gutterSize;
 
@@ -1240,10 +1237,9 @@
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
               if (resizeWrapper || force) {
                 let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-                console.log(`parentHeight:${parentHeight}`);
-                console.log(`wrapper:${wrapper}`);
-
-                $('.file-catalogue-files-wrapper').css('height', wrapper + 'px')
+                //console.log(`parentHeight:${parentHeight}`);
+                //console.log(`wrapper:${wrapper}`);
+                $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
                 // height = this.inViewport($('.file-catalogue-files-wrapper'));
                 // console.log(`parentHeight inViewport:${parentHeight}`);
                 //
@@ -1268,7 +1264,7 @@
               if (height > maxSize && resizeWrapper) {
                 height = maxSize;
               }
-              console.log(`height:${height}`);
+              //console.log(`height:${height}`);
               return {'height': height + 'px'};
             }
 
@@ -1464,8 +1460,8 @@
       'blockSelection': {
         handler(val) {
           this.highlightDuplicateId = '';
-          var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
-          var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
+          var openAudio = this.activeTabIndex == 0;
+          var openTTS = this.activeTabIndex == 1;
           if (!openAudio && openTTS) {
             this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
           }
@@ -1508,9 +1504,16 @@
 </script>
 <style lang="less">
 
-.panel-group.audio-integration-accordion .panel-body{
-  padding-bottom: 0px;
-}
+  .p-accordion.audio-integration-accordion {
+    .p-accordion-content {
+      /*padding-bottom: 0px;*/
+
+      .volume-slider-margin {
+        margin: 0px 8px;
+      }
+    }
+  }
+
   .btn-small {
     font-size: 12px;
   }
@@ -1532,7 +1535,6 @@
     }
     .file-catalogue-files-wrapper {
         height: 100%;
-        /*max-height: 220px;*/
         overflow-y: scroll;
     }
     .file-catalogue-files-wrapper::-webkit-scrollbar-track {
@@ -1553,8 +1555,7 @@
       list-style-type: none;
       margin-left: 0px;
       padding-left: 0px;
-      min-height: 300px;
-      max-height: 300px;
+      /*min-height: 300px;*/
       .audiofile {
         list-style-type: none;
         padding: 2px;
@@ -1740,6 +1741,7 @@
   }
   .table.table-voices {
     margin-top: 10px;
+    margin-bottom: 10px;
     thead {
       tr {
 
@@ -1764,7 +1766,7 @@
     }
   }
   .panel-audio-catalogue {
-      .panel-body {
+      .p-accordion-content {
         padding-left: 9px;
         padding-right: 9px;
         .all-audio-dropdown {
@@ -1913,6 +1915,10 @@
   }
   .audiofile.-renaming #rename-input{
     width: 90% !important;
+  }
+
+  .align-process-start {
+    width: 100%;
   }
 
 

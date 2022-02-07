@@ -1212,9 +1212,9 @@ export const store = new Vuex.Store({
     set_toc_section_book(state, tocSectionBook) {
       state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
     },
-    
+
     set_currentbook_executors(state) {
-      
+
       if (state.currentBookMeta && state.currentBookMeta._id) {
         if (!state.currentBookMeta.executors) {
           let book = state.books_meta.find(book => {
@@ -1226,7 +1226,7 @@ export const store = new Vuex.Store({
         }
       }
     },
-    
+
     updateBookExecutors(state, [bookid, executors]) {
       let bookIndex = state.books_meta.findIndex(book => {
         return book.bookid === bookid;
@@ -4393,10 +4393,10 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
-          
+
         });
     },
-    
+
     createCollection({state, dispatch}, data) {
       return axios.post(`${state.API_URL}collection`, data)
         .then(response => {
@@ -4462,7 +4462,7 @@ export const store = new Vuex.Store({
       if (!state.currentCollection._id) {
         return Promise.reject(new Error('No collection selected'))
       }
-      return axios.post(`${state.API_URL}collection/${state.currentCollection._id}/link_books`, 
+      return axios.post(`${state.API_URL}collection/${state.currentCollection._id}/link_books`,
         {
           books_ids: bookids
         })
@@ -4487,7 +4487,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     updateCollectionCoverimg({state}, imgData) {
       if (!state.currentCollection._id) {
         return Promise.reject(new Error('No collection selected'))
@@ -4499,10 +4499,10 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
-          
+
         });
     },
-    
+
     getCollection({state}, _id) {
       return axios.get(`${state.API_URL}collection/${_id}`)
         .then(response => {
