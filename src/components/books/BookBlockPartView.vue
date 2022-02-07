@@ -3353,6 +3353,23 @@ Save text changes and realign the Block?`,
               if (checkParentSup.nextElementSibling && ['SUP', 'SUB'].includes(checkParentSup.nextElementSibling.nodeName)) {
                 return false;
               }
+              if (checkParentSup.childNodes.length > 0) {
+                let supNode;
+                checkParentSup.childNodes.forEach(cNode => {
+                  if (['SUP', 'SUB'].includes(cNode.nodeName)) {
+                    supNode = cNode;
+                  }
+                });
+                if (supNode) {// rare case from ILM-4656: user adds footnote, and without saving sets split point between word and footnote
+                  //console.log(this.range.getBoundingClientRect());
+                  //console.log(supNode.getBoundingClientRect());
+                  let rangePosition = this.range.getBoundingClientRect();
+                  let nodePosition = supNode.getBoundingClientRect();
+                  if (rangePosition && rangePosition.x && nodePosition && nodePosition.x && rangePosition.x < nodePosition.x) {
+                    return false;
+                  }
+                }
+              }
               checkParentSup = checkParentSup.parentElement;
             }
             let skipLengthCheck = false;
