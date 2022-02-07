@@ -520,6 +520,7 @@ export const store = new Vuex.Store({
     },
     currentBookTocCombined: state => {
       let currentBookTocCombined = [];
+      if (!state.bookTocSections) return [];
       state.currentBookToc.data.forEach(toc => {
         let section = state.bookTocSections.find(s => {
           return s.startBlockid === toc.blockid;
@@ -1203,11 +1204,11 @@ export const store = new Vuex.Store({
       }
       state.selectedBlocks = blockList;
     },
-    
+
     set_book_toc_sections(state, sections) {
       state.bookTocSections = sections;
     },
-    
+
     set_toc_section_book(state, tocSectionBook) {
       state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
     },
@@ -2203,6 +2204,7 @@ export const store = new Vuex.Store({
               oldBlock.footnotes = response.data.footnotes;
               oldBlock.status = response.data.status;
               oldBlock.type = response.data.type;
+              oldBlock.language = response.data.language;
               oldBlock.classes = response.data.classes;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();
@@ -4243,7 +4245,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     getBlocksInRange({state}, [start_id, end_id]) {
       return axios.get(`${state.API_URL}books/${state.currentBookid}/blocks_range?start_id=${encodeURIComponent(start_id)}&end_id=${encodeURIComponent(end_id)}`)
         .then(response => {
@@ -4252,7 +4254,7 @@ export const store = new Vuex.Store({
           }
         });
     },
-    
+
     checkInsertedBlocks({state, dispatch, commit}, [old_out, new_out]) {
       return new Promise((resolve, reject) => {
         if (old_out !== new_out) {
@@ -4282,7 +4284,7 @@ export const store = new Vuex.Store({
         return resolve();
       });
     },
-    
+
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
@@ -4305,7 +4307,7 @@ export const store = new Vuex.Store({
           });
       }
     },
-    
+
     updateBookTocSection({state, dispatch}, [id, update]) {
       if (state.adminOrLibrarian) {
         state.bookTocSectionsXHR = axios.put(`${state.API_URL}toc_section/${encodeURIComponent(id)}`, update);
@@ -4319,7 +4321,7 @@ export const store = new Vuex.Store({
           });
       }
     },
-    
+
     createBookTocSection({state, dispatch}, data) {
       if (state.adminOrLibrarian) {
         return axios.post(`${state.API_URL}toc_section`, data)
@@ -4331,7 +4333,7 @@ export const store = new Vuex.Store({
           });
       }
     },
-    
+
     removeTocSection({state, dispatch}, id) {
       state.bookTocSectionsXHR = axios.delete(`${state.API_URL}toc_section/${encodeURIComponent(id)}`);
       return state.bookTocSectionsXHR.then((response) => {
@@ -4343,7 +4345,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     exportTocSection({state, dispatch}, id) {
       state.bookTocSectionsXHR = axios.post(`${state.API_URL}toc_section/${encodeURIComponent(id)}/export`);
       return state.bookTocSectionsXHR.then(response => {
@@ -4355,7 +4357,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     exportTocSectionBook({state, dispatch}) {
       if (state.currentBookid) {
         state.tocSectionBook.isBuilding = true;
@@ -4370,7 +4372,7 @@ export const store = new Vuex.Store({
         });
       }
     },
-    
+
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
         state.bookCategories = categories.data

@@ -100,7 +100,7 @@
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                            <option v-if="!blockLanguages.hasOwnProperty(block.language) && block.language != false" :value="block.language">{{ block.language }}</option>
+                            <option v-if="block.language != false && !blockLanguages.hasOwnProperty(block.language)" :value="block.language">{{ block.language }}</option>
                             <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
@@ -391,7 +391,7 @@
                         </label>
                         <label><i class="fa fa-language" aria-hidden="true"></i>
                         <select :disabled="!allowEditing ||  proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
-                          <option v-if="!footnLanguages.hasOwnProperty(footnote.language)" :value="footnote.language">{{ footnote.language }}</option>
+                          <option v-if="!footnLanguages.hasOwnProperty(footnote.language) && block.language != false" :value="footnote.language">{{ footnote.language }}</option>
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -1084,7 +1084,7 @@ export default {
           if (this.block.language && this.block.language.length && this.block.language !== false) {
             return this.block.language;
           } else {
-            return this.meta.language;
+            return false;//this.meta.language;
           }
         }
       },
@@ -1375,7 +1375,7 @@ export default {
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
-      if (!this.block.language) this.block.language = this.meta.language;
+      //if (!this.block.language) this.block.language = this.meta.language;
       this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
 //       Vue.nextTick(() => {
@@ -1982,11 +1982,12 @@ export default {
             }
             break;
         }
+
         if (this.block.type == 'illustration') {
           if (this.isIllustrationChanged) {
             return this.uploadIllustration();
           } else if (this.isChanged) {
-            return this.assembleBlock({
+            const updBlock = {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
@@ -1994,7 +1995,17 @@ export default {
               type: this.block.type,
               flags: this.block.flags || [],
               bookid: this.block.bookid
-            });
+            }
+            if (this.changes && Array.isArray(this.changes)) {
+              this.changes.forEach(c => {
+                switch(c) {
+                  case 'language': {
+                    updBlock.language = this.block.language || null
+                  }
+                }
+              })
+            }
+            return this.assembleBlock(updBlock);
           }
         } else {
           if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
@@ -2849,11 +2860,12 @@ Save text changes and realign the Block?`,
         });
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
         let data = {};
-        if (this.block.language) {
-          data.language = this.block.language;
-        } else if (this.meta.language) {
-          data.language = this.meta.language;
-        }
+//         if (this.meta.language) {
+//           data.language = this.meta.language;
+//         } else if (this.block.language) {
+//           data.language = this.block.language;
+//         }
+        data.language = false;
         this.block.addFootnote(pos, data);
         this.$forceUpdate();
         this.isChanged = true;
@@ -3481,7 +3493,7 @@ Save text changes and realign the Block?`,
       setChanged(val, type = null, event = null) {
         //console.log('setChanged', val, type, event, this.block.classes);
         this.isChanged = val;
-        if (val && type) {
+        if (val && type && event && event.target) {
           this.pushChange(type);
           if (event.target.value == 'title'){
             this.block.classes.style = '';
@@ -3523,6 +3535,8 @@ Save text changes and realign the Block?`,
               }
             });
           }
+        } else if (type) {
+          this.pushChange(type);
         }
       },
       setChangedByClass(val) {
@@ -3779,7 +3793,11 @@ Save text changes and realign the Block?`,
 
         let formData = new FormData();
         formData.append('illustration', image, image.name);
-        formData.append('block', JSON.stringify({description: this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
+        formData.append('block', JSON.stringify({
+          description: this.$refs.blocks[0].$refs.blockDescription.innerHTML,
+          flags: this.block.flags || [],
+          language: this.block.language || null
+        }));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
@@ -3921,6 +3939,7 @@ Save text changes and realign the Block?`,
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
       selectLangSubmit(ev){
+        //console.log(`selectLangSubmit: `, ev.target.value);
         this.block.language = ev.target.value;
         this.setChanged(true, 'language');
         this.$refs.blockMenu.close();
