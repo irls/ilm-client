@@ -206,6 +206,13 @@
                 }
               },
               {
+                title: 'Editor',
+                path: 'executors',
+                render(val) {
+                  return val && val.editor ? val.editor.title : '';
+                }
+              },
+              {
                 title: 'Published',
                 path: 'pub_ver'
               },
