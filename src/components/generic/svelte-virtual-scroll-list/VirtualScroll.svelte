@@ -261,13 +261,13 @@
     }
 </script>
 
-<div bind:this={root} on:scroll={onScroll} style="overflow-y: auto; height: inherit">
+<div id="t1" bind:this={root} on:scroll={onScroll} style="overflow-y: auto; height: inherit">
     {#if $$slots.header}
         <Item on:resize={onItemResized} type="slot" uniqueKey="header">
             <slot name="header"/>
         </Item>
     {/if}
-    <div style="padding: {paddingStyle}">
+    <div id="t2" style="padding: {paddingStyle}">
         {#each displayItems as data (data[key])}
             <Item
                     on:resize={onItemResized}

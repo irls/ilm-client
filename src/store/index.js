@@ -1343,6 +1343,7 @@ export const store = new Vuex.Store({
       } else if (data.block && data.block.blockid) {
         this.commit('set_storeList', new BookBlock(data.block));
       }
+    }
   },
 
   actions: {
@@ -3147,14 +3148,25 @@ export const store = new Vuex.Store({
     },
 
     getCurrentJobInfo({state, commit}, clear) {
-      /*state.currentJobInfo = {
+      const default_currentJobInfo = {
         can_resolve_tasks: [],
         mastering: null,
         proofing: null,
         published: null,
         text_cleanup: null,
-        is_proofread_unassigned: null
-      };*/
+        is_proofread_unassigned: null,
+        tasks_counter: [],
+        executors: {editor: null, proofer: null, narrator: null},
+        description: '',
+        id: null,
+        completed: null,
+        workflow: {
+          status: null,
+          archived: null
+        },
+        locked_blocks: {proofer: [], narrator: [], editor: []},
+        is_narrate_unassiged: false
+      };
       if (state.jobInfoRequest) {
         return state.jobInfoRequest;
       }
@@ -3169,23 +3181,8 @@ export const store = new Vuex.Store({
           .then(data => {
             state.jobInfoTimer = Date.now();
             state.jobInfoRequest = null;
-            state.currentJobInfo = data.data.id ? data.data : {can_resolve_tasks: [],
-              mastering: null,
-              proofing: null,
-              published: null,
-              text_cleanup: null,
-              is_proofread_unassigned: null,
-              tasks_counter: [],
-              executors: {editor: null, proofer: null, narrator: null},
-              description: '',
-              id: null,
-              completed: null,
-              workflow: {
-                status: null,
-                archived: null
-              },
-              locked_blocks: {proofer: [], narrator: [], editor: []},
-              is_narrate_unassiged: false};
+            //state.currentJobInfo = data.data.id ? data.data : default_currentJobInfo;
+            commit('set_currentJobInfo', data.data.id ? data.data : default_currentJobInfo);
 
             let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
             commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);

@@ -10,10 +10,9 @@
         :blocks="parlistArray"
         :lang="meta.language"
         :mode = "mode"
-        :startId="startId"
         :hotkeyScrollTo="hotkeyScrollTo"
-        :currentJobInfo="currentJobInfo"
-        @onScroll="handleScroll"
+        :currentJobInfo="viewCurrentJobInfo"
+        @onScroll="smoothHandleScroll"
       ></SvelteBookPreviewInVue>
 
       <!--
@@ -43,12 +42,12 @@
       <div class="content-background">-->
   </div>
   <!--<div class="container-block">-->
-
-  <div id="editorFrontContainer" v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+  <!--, 'margin-top': '-84px' -->
+  <div id="editorFrontContainer" v-bind:style="{ top: screenTop + 'px'}"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
-        v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
+        v-for="(viewObj, blockIdx) in parlistO.idsViewArray(10)"
         v-bind:id="'s-'+ viewObj.blockId"
         v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
         <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
@@ -116,7 +115,7 @@ Vue.use(VueHotkey);
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
 
-const initialTopOffset = 84;
+const initialTopOffset = 0;//84;
 
 export default {
   data () {
@@ -260,6 +259,11 @@ export default {
           //return this.$store.state.storeListUpdateCounter && Array.from(this.$store.state.storeList.values());
         }
       },
+      viewCurrentJobInfo: { cache: true,
+        get: function() {
+          return this.currentJobInfo;
+        }
+      }
   },
   mixins: [access, taskControls, api_config],
   components: {
@@ -1556,6 +1560,7 @@ export default {
       const editorFrontContainer = document.getElementById('editorFrontContainer');
       console.log(`previewScrollHeader: `, previewScrollHeader);
       console.log(`editorFrontContainer: `, editorFrontContainer);
+      editorFrontContainer.style.marginLeft = '0px';
       previewScrollHeader.appendChild(editorFrontContainer);
     },
 
@@ -1577,12 +1582,28 @@ export default {
     },
 
     smoothHandleScroll: _.debounce(function (ev) {
-      ev.stopPropagation();
-      this.handleScroll();
-    }, 100),
+      //ev.stopPropagation();
+      this.handleScroll(ev);
+    }, 150),
 
-    handleScroll(force = false) {
-      console.log('handleScroll', (new Date()).toJSON());
+    handleScroll(ev, force = false) {
+      const range = ev.detail.range;
+      const blockO = this.parlistO.get(this.parlistArray[range.start]._rid);
+      //console.log(`blockO.blockid: `, blockO.blockid, this.startId);
+      if (this.startId !== blockO.blockid) {
+        this.parlistO.setStartId(this.parlistArray[range.start]._rid);
+        this.startId = blockO.blockid;
+        this.screenTop = range.padFront;
+      } else {
+        //const previewFrontContainer = document.getElementById('v-'+this.startId);
+        //this.screenTop += previewFrontContainer.offsetHeight;
+
+        if (this.screenTop !== range.padFront) {
+          console.log(`else: `, this.screenTop, range.padFront);
+          this.screenTop = range.padFront;
+        }
+      }
+
       if (true) return;
       const contSWRef = this.$refs.contentScrollWrapRef;
       const scrolledBottom = contSWRef.offsetHeight + contSWRef.scrollTop >= contSWRef.scrollHeight;
@@ -1658,7 +1679,7 @@ export default {
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
-      //console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
+      console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
       if (firstVisible !== false) {
 
         let checkUpp = !this.parlistO.isInViewArray(firstVisible.in);
@@ -2530,11 +2551,6 @@ export default {
       },
       deep: true
     },
-    'startId': {
-      handler(newVal, oldVal) {
-
-      }
-    },
     'mode': {
       handler(val) {
         Vue.nextTick(() => {
@@ -2705,18 +2721,20 @@ export default {
 
     .container-block {
       /*padding-top: 15px;*/
-      width: 49%;
+      width: 100%;
 
       &.back {
         /*margin-right: -50%;*/
+        /*width: 100%;*/
         .content-background {
           height: 100%;
+          /*width: 100%;*/
         }
       }
       &.front {
-        position: relative;
+        position: absolute;
         top: 0px;
-        /*margin-left: -50%;*/
+        /*margin-left: -300%;*/
 
         .content-background {
           background: white;
@@ -2888,6 +2906,7 @@ export default {
 #previewScrollHeader {
   position: relative;
   z-index: 1;
+  /*opacity: 0.5;*/
 }
 
 .table-body {

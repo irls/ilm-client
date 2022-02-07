@@ -48,27 +48,38 @@
                               <hr class="{block.getClass()}" />
                             {:else if block.type === 'illustration'}
                               <div class="table-body illustration-block {block.getClass()}">
-                                {#await getImgProps(block.viewIllustration)}
-                                  <div class="bview-empty-image-wrapper">
-                                    <div class="bview-empty-image">No image</div>
-                                  </div>
-                                {:then imgProps}
-                                  {#if imgProps.url}
-                                  <img src="{imgProps.url}"
+
+                                {#if block.imgProps.url}
+                                  <img src="{block.imgProps.url}"
                                       alt="{block.description}"
                                       class="{block.getClass()}"
                                       width="auto"
-                                      height="{block.illustration_height || imgProps.height}"/>
-                                  {:else}
-                                  <!--<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                      alt="{block.description}"
-                                      class="{block.getClass()}"
-                                      width="{imgProps.width}"
-                                      height="{imgProps.height}"
-                                      style="background-color: #EEEEEE" />-->
-                                  <div style="height: 10px"></div>
-                                  {/if}
-                                {/await}
+                                      height="{block.imgProps.height}"/>
+                                {:else}
+
+                                  {#await getImgProps(block.imgUrl)}
+                                    <div class="bview-empty-image-wrapper">
+                                      <div class="bview-empty-image">No image</div>
+                                    </div>
+                                  {:then imgProps}
+                                    {#if imgProps.url}
+                                    <img src="{imgProps.url}"
+                                        alt="{block.description}"
+                                        class="{block.getClass()}"
+                                        width="auto"
+                                        height="{block.illustration_height || imgProps.height}"/>
+                                    {:else}
+                                    <!--<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                                        alt="{block.description}"
+                                        class="{block.getClass()}"
+                                        height="{block.illustration_height || imgProps.height}"
+                                        style="background-color: #EEEEEE" />-->
+                                    <div style="height: 10px"></div>
+                                    {/if}
+                                  {/await}
+
+                                {/if}
+
                                 {#if allowEditing()}
                                   <div class="table-row drag-uploader no-picture" class:__hidden="{isChanged() && !isIllustrationChanged()}">
                                     <div class="preview-container"></div>
@@ -204,28 +215,23 @@
     //console.log(`beforeUpdate.blockid: `, block._id, getParnum());
   });
 
-  const imgPropsDefault = {
-    width: 200,
-    height: 200,
-    url: false
-  }
-
   const getImgProps = (imgUrl = false) => {
     return new Promise((resolve, reject) => {
-      if (!imgUrl) return resolve(imgPropsDefault);
+      if (!imgUrl) return resolve(block.imgProps);
+      if (block.imgProps.url && block.imgProps.url == imgUrl) {
+        return resolve(block.imgProps);
+      }
 
       const img = new Image();
 
       img.onload = function() {
-        resolve({
-          width: this.width,
-          height: this.height,
-          url: imgUrl
-        })
+        block.imgProps.width  = this.width;
+        block.imgProps.height = this.height;
+        block.imgProps.url    = imgUrl;
+        resolve(block.imgProps);
       };
 
       img.src = imgUrl;
-      //return resolve({})
 
     })
   }

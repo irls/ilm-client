@@ -26,7 +26,7 @@
 </VirtualList>-->
 
     <VirtualScroll bind:this={virtualList} data={blocks}
-      key="_id" let:data on:scroll="{onVScroll}" keeps={20} >
+      key="_id" let:data on:scroll="{onVScroll}" keeps={10} >
       <div slot="header" id="previewScrollHeader"></div>
       <BlockPreview
         blockRid="{data._rid}"
@@ -51,7 +51,6 @@ export let parlistO = {};
 export let blocks = [];
 export let lang = 'en';
 export let mode = 'edit';
-export let startId;
 //export let hotkeyScrollTo;
 export let currentJobInfo;
 
@@ -79,40 +78,14 @@ let prevBlocksLength = 0;
 // }
 
 beforeUpdate(/*async */() => {
-
   //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'bookId:', bookId, 'loadedBookId:', loadedBookId);
-  if (startId && false) console.log('startId', startId);
-//   if (blocks.length > prevBlocksLength) {
-//       blocksVuew = blocks;
-//       //blocksVuew = blocksVuew;
-//   } else {
-//       blocksVuew = blocks;
-//   }
-//   prevBlocksLength = blocks.length;
-//   if (bookId && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== bookId)) {
-//     //fntCounter = 0; uncomment for through numeration
-//     loadedBookId = bookId;
-//     for (let i = 0; i < blocks.length; i++) {
-//       fntCounter = 0;
-//       blocks[i].blockView = blockView(blocks[i].blockRid);
-//       blocks[i].visible = blocks[i].loaded;
-//       blocks[i].idx = i;
-//       if (startId && blocks[i].blockId == startId) {
-//         startIdIdx = i;
-//       }
-//     }
-//     //intBlocks = blocks;
-//     if (startIdIdx > 0) {
-//       vListStartFrom = startIdIdx;
-//     }
-//   }
 });
 
 const dispatch = createEventDispatcher();
 
 const onVScroll = (ev) => {
-  //console.log(`onVScroll: `, ev);
-  dispatch('onScroll', ev);
+  //console.log(`onVScroll: `, ev.detail.range);
+  dispatch('onScroll', ev.detail);
 }
 
 const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
@@ -122,12 +95,24 @@ const blockFull = (blockRid) => {
   return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : null;
 }
 
+const imgProps = {
+    width: 200,
+    height: 100,
+    url: false
+  }
+
 const blockView = (block) => {
   if (block) {
     //let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang });
 
     block.language = block.language || parlistO.meta.lang || lang;
-    block.viewIllustration = block.illustration ? process.env.ILM_API + block.illustration + '?' + timestamp : false;
+    block.imgUrl   = block.illustration ? (process.env.ILM_API + block.illustration + '?' + timestamp) : false;
+
+    if (!block.imgProps || block.imgProps.url !== block.imgUrl) {
+      block.imgProps = Object.assign({}, imgProps); // clone
+    }
+
+    //console.log(`block.imgProps: `, block.imgProps);
 
     block.isSplittedBlock = (block.voicework === 'narration' && !currentJobInfo.text_cleanup && Array.isArray(block.parts) && block.parts.length > 1 && !(currentJobInfo.mastering || currentJobInfo.mastering_complete));
 

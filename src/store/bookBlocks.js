@@ -40,7 +40,7 @@ class BookBlocks {
     this.firstVisibleId = null;
   }
 
-  idsViewArray() {
+  idsViewArray(length = 10) {
     if (this.listRIds.length == 0) return [];
     if (this.listIdsCache.rid === this.startRId && this.listIdsCache.list.length) {
       return this.listIdsCache.list;
@@ -49,7 +49,7 @@ class BookBlocks {
       this.listIdsCache.rid = this.startRId;
       this.listIdsCache.list = [];
       let seqId = this.startRId;
-      for (var i=0; i<=9; i++) {
+      for (var i=0; i<=(length-1); i++) {
         if (this.lookupList.hasOwnProperty(seqId)) {
           this.listIdsCache.list.push({blockRid: seqId, blockId: this.lookupList[seqId].blockid});
           seqId = this.lookupList[seqId].out;

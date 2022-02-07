@@ -5197,7 +5197,7 @@ Save text changes and realign the Block?`,
       position: relative;
 
       .par-ctrl {
-        width: 440px;
+        width: 480px;
         /*background: green;*/
 
         display: flex;
