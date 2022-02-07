@@ -4228,6 +4228,7 @@ export const store = new Vuex.Store({
                 if (blocks.length > 1) {
                   dispatch('tc_loadBookTask', state.currentBookid);
                 }
+                dispatch('getBookAlign');
               }
               return resolve();
             });
