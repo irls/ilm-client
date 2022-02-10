@@ -388,9 +388,10 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                  
+                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
                     <legend>{{styleCaption('header', 'level')}}</legend>
-                    <ul>
+                    <ul class="no-bullets">
                       <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
                         <block-style-labels
                           :blockType="blockType"
@@ -403,7 +404,7 @@
                       </li>
                     </ul>
                   </fieldset>
-                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset" >
                     <legend>{{styleCaption(blockType, 'style')}}</legend>
                     <ul>
                       <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
@@ -418,14 +419,45 @@
                       </li>
                     </ul>
                   </fieldset>
-                  <fieldset v-if="(blockType === 'header' || blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+
+                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
                     <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']">
+                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']"  class="no-bullets">
                       <li v-for="(sVal, sIdx) in styleObj">
                         <block-style-labels
                           :blockType="blockType"
                           :styleArr="[sVal]"
                           :styleKey="'table of contents'+'.'+styleKey"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
+                  </fieldset>
+                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                    <legend>{{styleCaption(blockType, 'toc')}}</legend>
+                    <ul  class="no-bullets">
+                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'table of contents.isInToc'"
+                          :styleTabs="styleTabs"
+                          :styleValue="styleValue"
+                          @selectStyleEv="selectStyle"
+                        ></block-style-labels>
+                      </li>
+                    </ul>
+                  </fieldset>
+                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                    <legend>{{styleCaption(blockType, 'toc level')}}</legend>
+                    <ul class="no-bullets">
+                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].tocLevel">
+                        <block-style-labels
+                          :blockType="blockType"
+                          :styleArr="[sVal]"
+                          :styleKey="'table of contents.tocLevel'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
                           @selectStyleEv="selectStyle"
@@ -538,7 +570,7 @@
       :img="currentBook"
     ></book-edit-cover-modal>
 
-    <modal v-model="generatingAudiofile" :backdrop="false" effect="fade">
+    <modal :show.sync="generatingAudiofile" :backdrop="false" effect="fade">
       <div slot="modal-header" class="modal-header">
         <h4>Export audio</h4>
       </div>
@@ -576,12 +608,13 @@ import _ from 'lodash'
 import PouchDB from 'pouchdb'
 import axios from 'axios'
 import { modal, accordion, panel } from 'vue-strap'
-import task_controls from '../../mixins/task_controls.js'
-import api_config from '../../mixins/api_config.js'
-import access from '../../mixins/access.js'
-import { Languages } from "../../mixins/lang_config.js"
-import time_methods from '../../mixins/time_methods.js'
+import task_controls  from '../../mixins/task_controls.js'
+import api_config     from '../../mixins/api_config.js'
+import access         from '../../mixins/access.js'
+import { Languages }  from "../../mixins/lang_config.js"
+import time_methods   from '../../mixins/time_methods.js';
 import number_methods from "../../mixins/number_methods.js"
+import toc_methods    from '../../mixins/toc_methods.js';
 import { VueTabs, VTab } from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments from './details/BookAssignments';
@@ -817,7 +850,7 @@ export default {
     },
     allowMetadataEdit: {
       get() {
-        //do not allow to edit metadata while book is in Publish Queue:      
+        //do not allow to edit metadata while book is in Publish Queue:
         if (this.currentBookMeta.isInTheQueueOfPublication === true || this.currentBookMeta.isIntheProcessOfPublication === true)
             return false;
 
@@ -850,7 +883,7 @@ export default {
         return '';
       }
     },
-    
+
     currentBookCategory: {
       get() {
         if (typeof this.currentBookCollection.category !== 'undefined') {
@@ -862,7 +895,7 @@ export default {
         this.currentBook.category = value;
       }
     },
-    
+
     categoryEditDisabled: {
       get() {
         if (!this.allowMetadataEdit) {
@@ -876,7 +909,7 @@ export default {
     }
   },
 
-  mixins: [task_controls, api_config, access, time_methods, number_methods],
+  mixins: [task_controls, api_config, access, time_methods, number_methods, toc_methods],
 
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
@@ -1688,7 +1721,7 @@ export default {
       if (lang != 'en'){
         result.lang = lang;
       }
-      
+
       if (this.bookMode !== 'narrate') {
 
         this.styleTabs = result;
@@ -1743,7 +1776,11 @@ export default {
 
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
-              if (pBlock && blockType == 'title') { // ILM-2533
+              if (pBlock) {
+                pBlock.classes = this.mixin_buildTOCStyle({blockType, styleKey, styleVal, classes: pBlock.classes}); // ILM-2533
+              }
+
+              /*if (pBlock && blockType == 'title') { // ILM-2533
                 if (styleKey == 'style') {
                   if (styleVal != '') {
                     pBlock.classes['table of contents'] = {isInToc: 'off'};
@@ -1760,6 +1797,9 @@ export default {
               if (pBlock && blockType == 'header') { // ILM-2533
                 if (styleKey == 'level')
                   switch(styleVal) {
+                    case 'h1' : {
+                      pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc1'};
+                    } break;
                     case 'h2' : {
                       pBlock.classes['table of contents'] = {isInToc: 'on', tocLevel: 'toc2'};
                     } break;
@@ -1783,7 +1823,7 @@ export default {
                     }
                   };
                 }
-              }
+              }*/
 
               if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){
                 pBlock.parnum = false;
@@ -1821,7 +1861,7 @@ export default {
                 } else {
                   //pBlock.status = pBlock.status || {};
                   //pBlock.status.marked = false;
-                  console.log(styleKey, styleVal, pBlock.isChanged, pBlock.content);
+                  //console.log(styleKey, styleVal, pBlock.isChanged, pBlock.content);
                   let updateBody = {
                     blockid: pBlock.blockid,
                     bookid: pBlock.bookid,
@@ -2001,9 +2041,9 @@ export default {
     prepareStyleTabLabel(title) {
       if (this.styleTabLabels.hasOwnProperty(title)) {
         let caption = this.styleTabLabels[title];
-        return caption; 
+        return caption;
       }
-      return title; 
+      return title;
     },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
@@ -2239,9 +2279,7 @@ Vue.filter('prettyBytes', function (num) {
   }
   /* Wrapper around entire side editor */
   .sidebar {
-    /*position: fixed;*/
     width: 100%;
-    /*min-width: 426px;*/
     margin-top:0px;
     margin-left:0;
     padding-left:0;
@@ -2675,6 +2713,11 @@ Vue.filter('prettyBytes', function (num) {
       display: none;
     }
   }
+}
+ul.no-bullets {
+  list-style-type: none;
+  padding: 0; 
+  margin: 0; 
 }
 
 </style>

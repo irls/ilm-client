@@ -36,11 +36,11 @@
 
     <v-dialog :clickToClose="false"/>
     <modals-container/>
-    <alert v-model="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
+    <alert :show="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{errorAlert}}</p>
     </alert>
-    <alert v-model="hasAlert" placement="top" :duration="5000" type="info" width="400px">
+    <alert :show="hasAlert" placement="top" :duration="5000" type="info" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{messageAlert}}</p>
     </alert>
@@ -63,10 +63,11 @@ import task_controls from '../mixins/task_controls.js'
 import BookReimport from './books/BookReimport'
 import Vue from 'vue';
 import {alert} from 'vue-strap';
+
 var modal = require('vue-js-modal');
 
 Vue.use(modal, {dialog: true, dynamic: true});
-Vue.use(Clipboard)
+Vue.use(Clipboard);
 
 
 export default {
