@@ -2322,7 +2322,7 @@ Vue.filter('prettyBytes', function (num) {
   .edit-button {
     float: right;  cursor: pointer; margin-top: -5px;
   }
-
+  
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;
