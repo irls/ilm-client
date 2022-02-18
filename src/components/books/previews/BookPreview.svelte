@@ -26,7 +26,7 @@
 </VirtualList>-->
 
     <VirtualScroll bind:this={virtualList} data={blocks}
-      key="_id" let:data on:scroll="{onVScroll}" keeps={10} >
+      key="_id" let:data on:scroll="{onVScroll}" keeps={20} >
       <div slot="header" id="previewScrollHeader"></div>
       <BlockPreview
         blockRid="{data._rid}"
@@ -51,7 +51,7 @@ export let parlistO = {};
 export let blocks = [];
 export let lang = 'en';
 export let mode = 'edit';
-//export let hotkeyScrollTo;
+export let hotkeyScrollTo;
 export let currentJobInfo;
 
 let virtualList;
@@ -61,21 +61,22 @@ let loadedBookId = '';
 let startBlockIdx = 0;
 let endBlockIdx = 0;
 let vListStartFrom = false;
-let vListScrollTo = false;
+//let vListScrollTo = false;
 let startReached = false;
 let endReached = false;
 let startIdIdx = 0;
 let fntCounter = 0;
 let prevBlocksLength = 0;
 
-// $: hotkeyScrolledTo(hotkeyScrollTo);
-// async function hotkeyScrolledTo(hotkeyScrollTo) {
-//   if (hotkeyScrollTo !== false) {
-//     await tick();
-//     vListScrollTo = hotkeyScrollTo;
-//     //console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
-//   }
-// }
+$: hotkeyScrolledTo(hotkeyScrollTo);
+async function hotkeyScrolledTo(hotkeyScrollTo) {
+  if (hotkeyScrollTo !== false) {
+    await tick();
+    //vListScrollTo = hotkeyScrollTo;
+    if (virtualList) virtualList.scrollToIndex(hotkeyScrollTo);
+    console.log('BookPreview.svelte->hotkeyScrolledTo', hotkeyScrollTo);
+  }
+}
 
 beforeUpdate(/*async */() => {
   //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'bookId:', bookId, 'loadedBookId:', loadedBookId);

@@ -133,8 +133,9 @@ export default {
       blockReindexProcess: false,
 
       startId: false,
+      hotkeyScrollTo: 0,
+
       isBookMounted: false,
-      hotkeyScrollTo: false,
       fntCounter: 0,
       onScrollEv: false,
 
@@ -205,9 +206,9 @@ export default {
           },
           'ctrl+up': (ev)=>{
             //console.log('ctrl+up arrow');
-            let idsArray = this.parlistO.idsArray();
-            let jumpStep = Math.floor(idsArray.length * 0.1);
-            let currIdx = idsArray.indexOf(this.startId);
+            const idsArray = this.parlistO.idsArray();
+            const jumpStep = Math.floor(idsArray.length * 0.1);
+            const currIdx = this.hotkeyScrollTo;
             if (currIdx > -1) {
               let jumpIdx = currIdx - jumpStep;
               if (jumpIdx < 0) jumpIdx = 0;
@@ -216,9 +217,9 @@ export default {
           },
           'ctrl+down': (ev)=>{
             //console.log('ctrl+down arrow');
-            let idsArray = this.parlistO.idsArray();
-            let jumpStep = Math.floor(idsArray.length * 0.1);
-            let currIdx = idsArray.indexOf(this.startId);
+            const idsArray = this.parlistO.idsArray();
+            const jumpStep = Math.floor(idsArray.length * 0.1);
+            const currIdx = this.hotkeyScrollTo;
             if (currIdx > -1) {
               let jumpIdx = currIdx + jumpStep;
               if (jumpIdx > idsArray.length) jumpIdx = idsArray.length -1;
@@ -226,22 +227,22 @@ export default {
             }
           },
           'pgup': (ev)=>{
-            //console.log('page up');
+            console.log('page up', ` this.startId: `, this.startId, 'this.hotkeyScrollTo: ', this.hotkeyScrollTo);
             ev.preventDefault();
-            let prevId = this.parlistO.getInId(this.startId);
-            if (prevId && prevId !== this.startId) {
-              this.startId = prevId;
-              this.scrollToBlock(prevId);
-            }
+            const currId = this.parlistO.idsArray()[this.hotkeyScrollTo];
+            const nextId = this.parlistO.getInId(currId);
+            const nextIdx = this.parlistO.idsArray().indexOf(nextId) || 0;
+            console.log(`nextId: `, nextId, ` nextIdx: `, nextIdx);
+            this.scrollToBlock(nextId);
           },
           'pgdn': (ev)=>{
-            //console.log('page down');
+            console.log('page down', ` this.startId: `, this.startId, 'this.hotkeyScrollTo: ', this.hotkeyScrollTo);
             ev.preventDefault();
-            let nextId = this.parlistO.getOutId(this.startId);
-            if (nextId && nextId !== this.startId) {
-              this.startId = nextId;
-              this.scrollToBlock(nextId);
-            }
+            const currId = this.parlistO.idsArray()[this.hotkeyScrollTo];
+            const nextId = this.parlistO.getOutId(currId);
+            const nextIdx = this.parlistO.idsArray().indexOf(nextId) || 0;
+            console.log(`nextId: `, nextId, ` nextIdx: `, nextIdx);
+            this.scrollToBlock(nextId);
           },
 //           'enter': {
 //             keydown: ()=>{console.log('enter+keydown')},
@@ -1489,46 +1490,52 @@ export default {
 
     scrollToBlock(blockId, blockPartIdx = null)
     {
-      //console.log('scrollToBlock', blockId, blockPartIdx);
-      let id = 'v-'+ blockId;
-      if (blockPartIdx !== null) {
-        id+= '-' + blockPartIdx;
+      console.log('scrollToBlock blockId: ', blockId, ' blockPartIdx: ', blockPartIdx);
+      const nextIdx = this.parlistO.idsArray().indexOf(blockId);
+      console.log(`scrollToBlock nextIdx: `, nextIdx);
+
+      if (nextIdx >-1 && nextIdx < this.parlistO.idsArray().length && nextIdx !== this.hotkeyScrollTo) {
+        this.hotkeyScrollTo = nextIdx;
       }
-      let vBlock = document.getElementById(id);
-      if (vBlock) {
-        this.parlistO.setFirstVisibleId(blockId);
-        let firstId = this.parlistO.idsViewArray()[0];
-        if (firstId) {
-          firstId = firstId.blockRid;
-        }
-        this.scrollToId = blockId;
-        vBlock.scrollIntoView();
-        if (firstId) {
-          let i = 0;
-          let scrollInterval = setInterval(() => {// force scroll to the element after all visible elements are loaded
-            ++i;
-            if (i > 10) {
-              clearInterval(scrollInterval);
-            }
-            let newFirstId = this.parlistO.idsViewArray()[0];
-            if (newFirstId && newFirstId.blockRid) {
-              if (newFirstId.blockRid !== firstId) {
-                let loaded = true;
-                this.parlistO.idsViewArray().forEach(l => {
-                  loaded = !loaded ? false : this.parlistO.getBlockByRid(l.blockRid).loaded;
-                });
-                if (loaded) {
-                  vBlock.scrollIntoView();
-                  clearInterval(scrollInterval);
-                }
-              }
-            } else {
-              clearInterval(scrollInterval);
-            }
-          }, 100);
-        }
-        //this.parlistO.setStartId(blockId)
-      }
+//       let id = 'v-'+ blockId;
+//       if (blockPartIdx !== null) {
+//         id+= '-' + blockPartIdx;
+//       }
+//       let vBlock = document.getElementById(id);
+//       if (vBlock) {
+//         this.parlistO.setFirstVisibleId(blockId);
+//         let firstId = this.parlistO.idsViewArray()[0];
+//         if (firstId) {
+//           firstId = firstId.blockRid;
+//         }
+//         this.scrollToId = blockId;
+//         vBlock.scrollIntoView();
+//         if (firstId) {
+//           let i = 0;
+//           let scrollInterval = setInterval(() => {// force scroll to the element after all visible elements are loaded
+//             ++i;
+//             if (i > 10) {
+//               clearInterval(scrollInterval);
+//             }
+//             let newFirstId = this.parlistO.idsViewArray()[0];
+//             if (newFirstId && newFirstId.blockRid) {
+//               if (newFirstId.blockRid !== firstId) {
+//                 let loaded = true;
+//                 this.parlistO.idsViewArray().forEach(l => {
+//                   loaded = !loaded ? false : this.parlistO.getBlockByRid(l.blockRid).loaded;
+//                 });
+//                 if (loaded) {
+//                   vBlock.scrollIntoView();
+//                   clearInterval(scrollInterval);
+//                 }
+//               }
+//             } else {
+//               clearInterval(scrollInterval);
+//             }
+//           }, 100);
+//         }
+//         //this.parlistO.setStartId(blockId)
+//       }
     },
 
     scrollToBlockEnd(id) {
@@ -1558,10 +1565,14 @@ export default {
     initEditorPosition() {
       const previewScrollHeader = document.getElementById('previewScrollHeader');
       const editorFrontContainer = document.getElementById('editorFrontContainer');
-      console.log(`previewScrollHeader: `, previewScrollHeader);
-      console.log(`editorFrontContainer: `, editorFrontContainer);
-      editorFrontContainer.style.marginLeft = '0px';
-      previewScrollHeader.appendChild(editorFrontContainer);
+      //console.log(`previewScrollHeader: `, previewScrollHeader);
+      //console.log(`editorFrontContainer: `, editorFrontContainer);
+      editorFrontContainer.style.marginLeft = '-3000px';
+      editorFrontContainer.style.display = 'none';
+//       previewScrollHeader.appendChild(editorFrontContainer);
+      const blockO = this.parlistO.get(this.parlistArray[0]._rid);
+//       //this.parlistO.setStartId(this.parlistArray[range.start]._rid);
+      this.startId = blockO.blockid;
     },
 
     checkVisible(elm, viewHeight = false) {
@@ -1589,93 +1600,114 @@ export default {
     handleScroll(ev, force = false) {
       const range = ev.detail.range;
       const blockO = this.parlistO.get(this.parlistArray[range.start]._rid);
-      //console.log(`blockO.blockid: `, blockO.blockid, this.startId);
-      if (this.startId !== blockO.blockid) {
-        this.parlistO.setStartId(this.parlistArray[range.start]._rid);
-        this.startId = blockO.blockid;
+      console.log(`handleScroll: `, range.start, range.end, blockO.blockid, this.startId);
+
+      const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+      let firstVisible = false;
+      let lastVisible = false;
+
+      for (let i = range.start; i <= range.end; i++) {
+        const blockId = this.parlistO.idsArray()[i];
+        const blockRef = document.getElementById('v-' + blockId);
+        const visible = this.checkVisible(blockRef, viewHeight);
+        console.log(`this.parlistO.idsArray()[${i}]: `, blockId, 'visible: ', visible);
+        if (visible) {
+          if (!firstVisible) {
+            firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
+            //this.parlistO.setFirstVisibleId(blockO._rid);
+          }
+          lastVisible = this.parlistO.get(this.parlistArray[i]._rid);
+        } else if (firstVisible) break;
+      }
+
+      if (this.startId !== firstVisible.blockid) {
+        this.parlistO.setStartId(firstVisible._rid);
+        this.startId = firstVisible.blockid;
         this.screenTop = range.padFront;
       } else {
         //const previewFrontContainer = document.getElementById('v-'+this.startId);
         //this.screenTop += previewFrontContainer.offsetHeight;
 
         if (this.screenTop !== range.padFront) {
-          console.log(`else: `, this.screenTop, range.padFront);
+          //console.log(`else: `, this.screenTop, range.padFront);
           this.screenTop = range.padFront;
         }
       }
 
+      console.log(`handleScroll this.startId: `, this.startId, ' firstVisible.blockid: ', firstVisible.blockid);
+
       if (true) return;
-      const contSWRef = this.$refs.contentScrollWrapRef;
-      const scrolledBottom = contSWRef.offsetHeight + contSWRef.scrollTop >= contSWRef.scrollHeight;
-      this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
-      if (!this.onScrollEv) {
-        let firstVisible = false;
-        let lastVisible = false;
-        let fixJump = 'false';
-        let loadIdsArray = [];
-        let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-        //let loadCount = 5;
-        let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
-        this.scrollToId = null;
-
-        for (var i = startFrom; i < this.parlistArray.length; i++) {
-          const blockO = this.parlistO.get(this.parlistArray[i]._rid);
-          const blockRef = document.getElementById('v-' + blockO.blockid);
-          const visible = this.checkVisible(blockRef, viewHeight);
-          if (visible) {
-            if (!firstVisible) {
-              firstVisible = blockO;
-              this.parlistO.setFirstVisibleId(blockO.blockid);
-            }
-            lastVisible = blockO;
-          } else if (firstVisible) break;
-        }
-
-        //if (scrolledBottom) {
-          //this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
-        //}
-
-        /*if (fixJump !== 'true' && fixJump !== 'false') {
-          //this.scrollToBlock(fixJump.blockid);
-          this.scrollToBlock(this.parlistO.get(fixJump.in).blockid);
-          //return false;
-        }*/
-
-        if (loadIdsArray.length) {
-          this.getBlocksArr(loadIdsArray)
-          .then((resIdsArray)=>{
-            for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
-              let updCount = 0;
-              if (resIdsArray.indexOf(this.$refs.viewBlocks[i].blockId) > -1) {
-                //this.parlistO.setLoaded(blockRef.blockO.rid);
-                updCount++;
-                this.$refs.viewBlocks[i].$forceUpdate();
-              }
-              if (updCount >= resIdsArray.length) break;
-            }
-            this.moveEditWrapper(firstVisible, lastVisible, force)
-          })
-        } else {
-          this.moveEditWrapper(firstVisible, lastVisible, force);
-        }
-
-//         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
-//           this.onScrollEv = true;
-//           this.$router.push({
-//             name: 'BookEditDisplay',
-//             params: { block: firstVisibleId }
-//           });
+//       const contSWRef = this.$refs.contentScrollWrapRef;
+//       const scrolledBottom = contSWRef.offsetHeight + contSWRef.scrollTop >= contSWRef.scrollHeight;
+//       this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
+//       if (!this.onScrollEv) {
+//         let firstVisible = false;
+//         let lastVisible = false;
+//         let fixJump = 'false';
+//         let loadIdsArray = [];
+//         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+//         //let loadCount = 5;
+//         let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
+//         this.scrollToId = null;
+//
+//         for (var i = startFrom; i < this.parlistArray.length; i++) {
+//           const blockO = this.parlistO.get(this.parlistArray[i]._rid);
+//           const blockRef = document.getElementById('v-' + blockO.blockid);
+//           const visible = this.checkVisible(blockRef, viewHeight);
+//           if (visible) {
+//             if (!firstVisible) {
+//               firstVisible = blockO;
+//               this.parlistO.setFirstVisibleId(blockO.blockid);
+//             }
+//             lastVisible = blockO;
+//           } else if (firstVisible) break;
 //         }
-     } else this.onScrollEv = false;
-//       this.parlistO.idsViewArray().forEach(l => {
-//         let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
-//         if (this.parlistO.has(l.blockRid) && this.parlist.has(l.blockId)) {
-//           this.parlistO.setLoaded(l.blockRid);
-//           if (blockRef) {
-//             blockRef.$forceUpdate();
-//           }
+//
+//         //if (scrolledBottom) {
+//           //this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
+//         //}
+//
+//         /*if (fixJump !== 'true' && fixJump !== 'false') {
+//           //this.scrollToBlock(fixJump.blockid);
+//           this.scrollToBlock(this.parlistO.get(fixJump.in).blockid);
+//           //return false;
+//         }*/
+//
+//         if (loadIdsArray.length) {
+//           this.getBlocksArr(loadIdsArray)
+//           .then((resIdsArray)=>{
+//             for (var i = 0; i < this.$refs.viewBlocks.length; i++) {
+//               let updCount = 0;
+//               if (resIdsArray.indexOf(this.$refs.viewBlocks[i].blockId) > -1) {
+//                 //this.parlistO.setLoaded(blockRef.blockO.rid);
+//                 updCount++;
+//                 this.$refs.viewBlocks[i].$forceUpdate();
+//               }
+//               if (updCount >= resIdsArray.length) break;
+//             }
+//             this.moveEditWrapper(firstVisible, lastVisible, force)
+//           })
+//         } else {
+//           this.moveEditWrapper(firstVisible, lastVisible, force);
 //         }
-//       });
+//
+// //         if (firstVisibleId !== false && this.$route.params.block !== firstVisibleId) {
+// //           this.onScrollEv = true;
+// //           this.$router.push({
+// //             name: 'BookEditDisplay',
+// //             params: { block: firstVisibleId }
+// //           });
+// //         }
+//      } else this.onScrollEv = false;
+// //       this.parlistO.idsViewArray().forEach(l => {
+// //         let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
+// //         if (this.parlistO.has(l.blockRid) && this.parlist.has(l.blockId)) {
+// //           this.parlistO.setLoaded(l.blockRid);
+// //           if (blockRef) {
+// //             blockRef.$forceUpdate();
+// //           }
+// //         }
+// //       });
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
