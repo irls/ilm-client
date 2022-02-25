@@ -2837,7 +2837,7 @@ export default {
 
   .content-scroll-wrapper {
 
-    z-index: 0;
+    z-index: 1;
     display:flex;
     flex-grow: 2;
 
