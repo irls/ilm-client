@@ -2,11 +2,13 @@
   <textarea class="resizable-textarea" 
     v-on:change="onValueChanged($event)"
     v-model="textareaValue"
-    :disabled="disabled">
+    :disabled="disabled"
+    rows="1">
     
   </textarea>
 </template>
 <script>
+  import Vue from 'vue';
   export default {
     name: 'resizable-textarea',
     data() {
@@ -20,24 +22,32 @@
         event.target.style.height = (event.target.scrollHeight) + 'px'
       },
       initSize() {
-        this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;')
+        this.$el.setAttribute('style', 'height:20px;');
+        this.$el.setAttribute('style', 'height:auto;');
+        this.$el.setAttribute('style', 'height:' + (this.$el.scrollHeight) + 'px;overflow-y:hidden;');
       },
       onValueChanged(event) {
         this.$emit('valueChanged', event);
       },
       setValue(value) {
         this.textareaValue = value ? value : "";
+        Vue.nextTick(() => {
+          this.initSize();
+        })
       }
     },
     mounted () {
       this.$nextTick(() => {
-        this.initSize();
-      })
+        //this.initSize();
+        //if (this.initValue) {
+          this.setValue(this.initValue);
+        //}
+      });
 
-      this.$el.addEventListener('input', this.resizeTextarea)
+      this.$el.addEventListener('input', this.resizeTextarea);
     },
     beforeDestroy () {
-      this.$el.removeEventListener('input', this.resizeTextarea)
+      this.$el.removeEventListener('input', this.resizeTextarea);
     },
     render () {
       return this.$slots.default[0]
@@ -51,7 +61,7 @@
     padding: 0;
     margin: 0;
     border: none;
-    min-height: 20px;
+    /*min-height: 20px;*/
     resize: vertical;
     outline: 0;
   }

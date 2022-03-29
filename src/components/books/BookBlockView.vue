@@ -100,7 +100,7 @@
                       <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
                           <i class="fa fa-language" aria-hidden="true"></i>
                           Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                            <option v-if="!blockLanguages.hasOwnProperty(block.language) && block.language != false" :value="block.language">{{ block.language }}</option>
+                            <option v-if="block.language != false && !blockLanguages.hasOwnProperty(block.language)" :value="block.language">{{ block.language }}</option>
                             <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
                         </select>
                       </li>
@@ -141,19 +141,19 @@
 
                   <!-- Block Type selector -->
                   <label>
-                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event)" class="block-type-select">
+                    <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.type" @input="setChanged(true, 'type', $event, 'type')" class="block-type-select">
                       <option v-for="(type, key) in blockTypes" :value="key">{{ getClassValue('type', key) }}</option>
                     </select>
                   </label>
 
                     <label v-if="block.type === 'title'">
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event)" class="block-class-select">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.style" @input="setChanged(true, 'classes', $event, 'style')" class="block-class-select">
                         <option v-for="(value, key) in blockTypes['title']['style']" :value="value">{{ getClassValue('title', value) }}</option>
                       </select>
                     </label>
 
                     <label v-if="block.type === 'header'">
-                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event)" class="block-class-select">
+                      <select :disabled="!allowEditing || proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model="block.classes.level" @input="setChanged(true, 'classes', $event, 'level')" class="block-class-select">
                         <option v-for="(value, key) in blockTypes['header']['level']" :value="value">{{ getClassValue('header', value) }}</option>
                       </select>
                     </label>
@@ -384,14 +384,17 @@
                     <template v-if="allowEditing || proofreadModeReadOnly">
                       <template v-if="allowVoiceworkChange">
                         <label>
+                          <span class="hidden">{{footnote.voicework}}</span>
                           <i class="fa fa-volume-off"></i>
                           <select  :disabled="(!allowEditing && proofreadModeReadOnly) || editingLocked ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>
-                        <label><i class="fa fa-language" aria-hidden="true"></i>
+                        <label>
+                          <span class="hidden">{{footnote.language}}</span>
+                          <i class="fa fa-language" aria-hidden="true"></i>
                         <select :disabled="!allowEditing ||  proofreadModeReadOnly || editingLocked ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
-                          <option v-if="!footnLanguages.hasOwnProperty(footnote.language)" :value="footnote.language">{{ footnote.language }}</option>
+                          <option v-if="!footnLanguages.hasOwnProperty(footnote.language) && block.language != false" :value="footnote.language">{{ footnote.language }}</option>
                           <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
                         </select>
                         </label>
@@ -552,12 +555,12 @@
         <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
       </div>
       <div class="modal-body">
-        <tabs ref="htmlContentTabs">
-          <tab :header="parnumCompNotHidden || '0'">
+        <TabView ref="htmlContentTabs" :scrollable="true" v-on:tab-change="onBlockHTMLTabChange">
+          <TabPanel :header="parnumCompNotHidden || '0'">
             <div class="modal-title-wrapper">
               <h4>Block ID:&nbsp;{{shortBlockid}}; &nbsp;&nbsp;&nbsp;wordsRange:&nbsp;{{wordsRange}};</h4>
-              <h4>
-                <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Audio URL</a>
+              <h4 v-if="block.audiosrc">
+                Download: <a v-if="audioUrl" :href="audioUrl" target="_blank">flac</a>&nbsp;&nbsp;<a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">m4a</a>
               </h4>
             </div>
             <div class="block-content-update-pending">
@@ -571,20 +574,20 @@
               :class="[{'-disabled': !adminOrLibrarian || isSplittedBlock}]"
             />
             <div class="block-html-header">&lt;/div&gt;</div>
-          </tab>
+          </TabPanel>
           <template v-if="block.getIsSplittedBlock()">
-            <tab v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
+            <TabPanel v-for="(blockPart, blockPartIdx) in blockParts" :header="(subBlockParnumComp ? subBlockParnumComp + '_' : '') + (blockPartIdx + 1)" v-bind:key="'part-' + blockPartIdx + '-html-content'">
               <!-- <textarea :ref="'block-part-' + blockPartIdx + '-html'" :disabled="!adminOrLibrarian" class="block-html"></textarea> -->
               <codemirror
                 :ref="'block-part-' + blockPartIdx + '-html'"
                 :options="getCodeMirrorOptions(blockPartIdx)"
                 :class="[{'-disabled': !adminOrLibrarian}]"
               />
-            </tab>
+            </TabPanel>
           </template>
           <!-- <highlightjs language="html" :code="block.content" /> -->
           <!-- <pre v-highlightjs="block.content"><code class="html agate" style="agate"></code></pre> -->
-        </tabs>
+        </TabView>
       </div>
       <div class="modal-footer">
         <textarea class="copy-block-html-content" ref="copy-block-html-content"></textarea>
@@ -616,13 +619,16 @@ import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
+import toc_methods        from '../../mixins/toc_methods.js'
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
-import { tabs, tab } from 'vue-strap';
-import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
-import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
+//import { tabs, tab } from 'vue-strap';
+// import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
+// import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
 //import hljs from 'highlight.js';
 //import VueHighlightJS from 'vue-highlightjs';
 import { codemirror } from 'vue-codemirror';
@@ -707,15 +713,17 @@ export default {
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
       BookBlockPartView: BookBlockPartView,
-      'tabs': tabs,// vue-strap
-      'tab': tab,// vue-strap,
+      //'tabs': tabs,// vue-strap
+      //'tab': tab,// vue-strap,
+      'TabView': TabView,
+      'TabPanel': TabPanel,
       //'highlightjs': highlightjs
       //'highlightjs': hljs
       //'VueHighlightJS': VueHighlightJS
       'codemirror': codemirror
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
-  mixins: [taskControls, apiConfig, access],
+  mixins: [taskControls, apiConfig, access, toc_methods],
   computed: {
       isLocked: {
         get() {
@@ -1080,7 +1088,7 @@ export default {
           if (this.block.language && this.block.language.length && this.block.language !== false) {
             return this.block.language;
           } else {
-            return this.meta.language;
+            return false;//this.meta.language;
           }
         }
       },
@@ -1093,6 +1101,16 @@ export default {
           }
           let format = this.block.audiosrc_ver && this.block.audiosrc_ver['m4a'] ? 'm4a' : 'flac';
           return `${this.API_URL}audio_download/${this.block.bookid}/${this.block.blockid}/${format}`;
+        }
+      },
+      audioUrl: {
+        cache: false,
+        get() {
+          let audio = this.block.getAudiosrc('flac', false);
+          if (!audio) {
+            return false;
+          }
+          return `${this.API_URL}audio_download/${this.block.bookid}/${this.block.blockid}/flac`;
         }
       },
       shortBlockid: {
@@ -1361,7 +1379,7 @@ export default {
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
-      if (!this.block.language) this.block.language = this.meta.language;
+      //if (!this.block.language) this.block.language = this.meta.language;
       this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
 //       Vue.nextTick(() => {
@@ -1968,18 +1986,30 @@ export default {
             }
             break;
         }
+
         if (this.block.type == 'illustration') {
           if (this.isIllustrationChanged) {
             return this.uploadIllustration();
           } else if (this.isChanged) {
-            return this.assembleBlock({
+            const updBlock = {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
               blockid: this.block.blockid,
               type: this.block.type,
-              flags: this.block.flags || []
-            });
+              flags: this.block.flags || [],
+              bookid: this.block.bookid
+            }
+            if (this.changes && Array.isArray(this.changes)) {
+              this.changes.forEach(c => {
+                switch(c) {
+                  case 'language': {
+                    updBlock.language = this.block.language || null
+                  }
+                }
+              })
+            }
+            return this.assembleBlock(updBlock);
           }
         } else {
           if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
@@ -2105,8 +2135,9 @@ export default {
 
         this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
-        let is_content_changed = this.hasChange('content');
-        let is_type_changed = this.hasChange('type');
+        const is_content_changed = this.hasChange('content');
+        const is_type_changed = this.hasChange('type');
+        const is_level_changed = ['title', 'header'].indexOf(this.block.type) > -1 && (this.hasChange('level') || this.hasChange('style'));
         this.block.isSaving = true;
         this.storeListById(this.block.blockid).setIsSaving(true);
         if (this.isAudioEditing) {
@@ -2145,7 +2176,7 @@ export default {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
               this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
             }
-          } else if (is_type_changed) {
+          } else if (is_type_changed || is_level_changed) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
             this.loadBookTocSections([]);
           }
@@ -2834,11 +2865,12 @@ Save text changes and realign the Block?`,
         });
         let pos = this.updFootnotes(this.block.footnotes.length + 1);
         let data = {};
-        if (this.block.language) {
-          data.language = this.block.language;
-        } else if (this.meta.language) {
-          data.language = this.meta.language;
-        }
+//         if (this.meta.language) {
+//           data.language = this.meta.language;
+//         } else if (this.block.language) {
+//           data.language = this.block.language;
+//         }
+        data.language = false;
         this.block.addFootnote(pos, data);
         this.$forceUpdate();
         this.isChanged = true;
@@ -2909,6 +2941,15 @@ Save text changes and realign the Block?`,
         this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
         if (field === 'voicework') {
           this.block.setAudiosrcFootnote(pos, '');
+        }
+        // ILM-4404 In MacOS properties are not set from first time
+        if (this.block.footnotes[pos] && !(this.block.footnotes[pos] instanceof FootNote)) {
+          this.block.footnotes[pos] = new FootNote(this.block.footnotes[pos]);
+        }
+        if (field && ev && ev.target && typeof ev.target.value !== 'undefined') {
+          if (this.block.footnotes[pos] && this.block.footnotes[pos].hasAttribute(field)) {
+            this.block.footnotes[pos][field] = ev.target.value;
+          }
         }
       },
 
@@ -3463,19 +3504,33 @@ Save text changes and realign the Block?`,
       hideModal(name) {
         this.$modal.hide(name + this.block._id);
       },
-      setChanged(val, type = null, event = null) {
-        //console.log('setChanged', val, type, event, this.block.classes);
+      setChanged(val, type = null, event = null, classKey = null) {
+        //console.log('BookBlockView.setChanged', val, type, event.target.value, JSON.stringify(this.block.classes));
         this.isChanged = val;
-        if (val && type) {
+        if (val && type && event && event.target) {
           this.pushChange(type);
+          let styleVal = event.target.value;
+          let blockType = this.block.type;
           if (event.target.value == 'title'){
             this.block.classes.style = '';
-            console.log('classes:', this.block.classes);
+            blockType = 'title';
             this.pushChange('classes');
           }
           if (event.target.value == 'header'){
-            this.block.classes.level = 'h2';
+            this.block.classes.level = 'h1';
+            styleVal = 'h1';
+            blockType = 'header';
             this.pushChange('classes');
+          }
+
+          if (classKey) {
+            this.block.classes = this.mixin_buildTOCStyle({
+              blockType: blockType,
+              styleKey: classKey,
+              styleVal: styleVal,
+              classes: this.block.classes
+            })
+            this.pushChange(classKey);
           }
 
           if (event.target.className !== 'block-class-select')
@@ -3508,6 +3563,8 @@ Save text changes and realign the Block?`,
               }
             });
           }
+        } else if (type) {
+          this.pushChange(type);
         }
       },
       setChangedByClass(val) {
@@ -3764,7 +3821,11 @@ Save text changes and realign the Block?`,
 
         let formData = new FormData();
         formData.append('illustration', image, image.name);
-        formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
+        formData.append('block', JSON.stringify({
+          description: this.$refs.blocks[0].$refs.blockDescription.innerHTML,
+          flags: this.block.flags || [],
+          language: this.block.language || null
+        }));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
@@ -3855,7 +3916,7 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        
+
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             this.voiceworkUpdating = false;
@@ -3906,6 +3967,7 @@ Save text changes and realign the Block?`,
         this.$root.$emit('for-bookedit:scroll-to-block', id);
       },
       selectLangSubmit(ev){
+        //console.log(`selectLangSubmit: `, ev.target.value);
         this.block.language = ev.target.value;
         this.setChanged(true, 'language');
         this.$refs.blockMenu.close();
@@ -3987,40 +4049,28 @@ Save text changes and realign the Block?`,
             }
           });
         }
-        $(`#${this.block.blockid} .nav-tabs`).scrollingTabs({
-        })
-        .on('ready.scrtabs', () => {
-          if (!this.block.getIsSplittedBlock()) {
-            $(`#${this.block.blockid} .scrtabs-tab-container`).hide();
-          }
-
-          $(`#${this.block.blockid} .nav-tabs li a`).click((e) => {// , .nav-tabs a
-            e.preventDefault();
-            //console.log('HERE prevent');
-            //console.log(this.$refs.htmlContentTabs);
-            let index = $(`#${this.block.blockid} .nav-tabs`).find('a').index(e.target);
-            //console.log($('.nav-tabs').find('a').index(e.target))
-            //this.$refs.htmlContentTabs.index = index;
-            this.$refs.htmlContentTabs.select(this.$refs.htmlContentTabs.$children[index]);
-            $(`#${this.block.blockid} .nav-tabs li`).removeClass('active');
-            $(e.target).parent().addClass('active');
-            if (index === 0) {
-              $(`#${this.block.blockid} .copy-block-html`).show();
-            } else {
-              $(`#${this.block.blockid} .copy-block-html`).hide();
-            }
-            if (index > 0) {
-              Vue.nextTick(() => {
-                //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.setValue('<span>go-Doc-Start</span>');
-                //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.changeGeneration(true);
-                this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.focus();
-                this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.execCommand('goDocStart');
-                //console.log(this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror);
-              });
-            }
-          })
-        });
+        if (!this.block.getIsSplittedBlock()) {
+          $(`#${this.block.blockid} .p-tabview-nav-content`).hide();
+        }
       },
+
+      onBlockHTMLTabChange(ev) {
+        if (ev.index === 0) {
+          $(`#${this.block.blockid} .copy-block-html`).show();
+        } else {
+          $(`#${this.block.blockid} .copy-block-html`).hide();
+        }
+        if (ev.index > 0) {
+          Vue.nextTick(() => {
+            //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.setValue('<span>go-Doc-Start</span>');
+            //this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror.doc.changeGeneration(true);
+            this.$refs['block-part-' + (ev.index - 1) + '-html'][0].codemirror.focus();
+            this.$refs['block-part-' + (ev.index - 1) + '-html'][0].codemirror.execCommand('goDocStart');
+            //console.log(this.$refs['block-part-' + (index - 1) + '-html'][0].codemirror);
+          });
+        }
+      },
+
       setContent() {
         //console.log('value', this.$refs['block-html' + this.block._id].value)
         this.block.content = this.$refs['block-html' + this.block._id].value;
@@ -4703,7 +4753,7 @@ Save text changes and realign the Block?`,
       'block.content': {
         handler(val, oldval) {
           if (!oldval) {
-            
+
           }
         },
         deep: true
@@ -5717,23 +5767,44 @@ Save text changes and realign the Block?`,
         margin-right: 10px;
       }
     }
-    .nav.nav-tabs {
-      li {
-        a {
-          font-size: 1.2em;
-          /*&:first-child {
-            font-weight: bolder;
-          }*/
-        }
-        &:first-child {
-
-          a {
-            font-weight: bolder;
-            font-size: 1.5em;
+    .p-tabview-nav-container {
+      .p-tabview-nav {
+        li {
+          .p-tabview-nav-link {
+            font-size: 1.2em;
+            /*&:first-child {
+              font-weight: bolder;
+            }*/
+              border: solid #dee2e6;
+              border-top-color: rgb(222, 226, 230);
+              border-top-width: medium;
+              border-right-color: rgb(222, 226, 230);
+              border-right-width: medium;
+              border-bottom-color: rgb(222, 226, 230);
+              border-bottom-width: medium;
+              border-left-color: rgb(222, 226, 230);
+              border-left-width: medium;
+              border-width: 0 0 2px 0;
+              border-color: transparent transparent #dee2e6 transparent;
+              background: #ffffff;
+              color: #6c757d;
+              padding: 1.25rem;
+              font-weight: 700;
+              border-top-right-radius: 6px;
+              border-top-left-radius: 6px;
+              transition: box-shadow 0.2s;
+              margin: 0 0 -2px 0;
+          }
+          &:first-child {
+            .p-tabview-nav-link {
+              font-weight: bolder;
+              font-size: 1.5em;
+            }
           }
         }
       }
     }
+
     .tab-pane {
       /*div {
         margin: 15px 0px 5px 0px;

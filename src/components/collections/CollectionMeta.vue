@@ -381,6 +381,11 @@
           handler(val, oldVal) {
             
             this.init();
+            //if (this.$refs.collectionDescription) {
+              //Vue.nextTick(() => {
+                //this.$refs.collectionDescription.initSize();
+              //});
+            //}
           },
           deep: true
         }/*,

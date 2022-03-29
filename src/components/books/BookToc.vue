@@ -61,7 +61,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="5" v-on:dblclick="sectionEditMode(toc.section)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
+                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -70,10 +70,10 @@
                       <template v-if="editingSectionId === toc.section.id">
                         <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug']}]" 
                           v-model="editingSlug"
-                          v-on:keyup.enter="sectionEditMode(null)"
+                          v-on:keyup.enter="blurEditingSlug(null)"
                           v-on:change="updateSlug(editingSlug)"
-                          v-on:blur="sectionEditMode(null)"
-                          v-on:keypress="editingSlugChanged()" />
+                          v-on:blur="blurEditingSlug(null)"
+                          v-on:input="editingSlugChanged($event)" />
                         <span class="validation-error" v-if="validationErrors['slug']">{{validationErrors['slug']}}</span>
                       </template>
                       <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>{{toc.section.slug}}</label>
@@ -123,19 +123,20 @@
               </td>
               <template v-if="toc.level == 'toc1'">
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+                <td colspan="4" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
               <template v-if="toc.level == 'toc2'">
+                <td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
               <template v-if="toc.level == 'toc3'">
-                <td></td>
+                <td></td><td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
               <template v-if="toc.level == 'toc4'">
-                <td></td><td></td>
+                <td></td><td></td><td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
                 <td :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
               </template>
@@ -238,31 +239,35 @@ export default {
     },
     
     sectionEditMode(section) {
-      Vue.nextTick(() => {
-        if (!(section instanceof Object)) {
-          let tc = this.currentBookTocCombined.find(toc => {
-            return toc.section && toc.section.id === section;
-          });
-          if (tc && tc.section) {
-            section = tc.section;
-          }
-        }
-        if (section) {
-          if (this.editingSectionId !== section.id) {
-            if (this.hasError()) {
-              this.showNameError();
-              return false;
+      return new Promise((resolve, reject) => {
+        Vue.nextTick(() => {
+          if (!(section instanceof Object)) {
+            let tc = this.currentBookTocCombined.find(toc => {
+              return toc.section && toc.section.id === section;
+            });
+            if (tc && tc.section) {
+              section = tc.section;
             }
-            this.editingSectionId = section.id;
-            this.editingSlug = section.slug;
           }
-          this.focusEditingSlug();
-        } else {
-          if (!this.hasError()) {
-            this.editingSectionId = null;
-            this.editingSlug = '';
+          if (section) {
+            if (this.editingSectionId !== section.id) {
+              if (this.hasError()) {
+                this.showNameError();
+                return false;
+              }
+              this.editingSectionId = section.id;
+              this.editingSlug = section.slug;
+            }
+            this.focusEditingSlug();
+            return resolve();
+          } else {
+            if (!this.hasError()) {
+              this.editingSectionId = null;
+              this.editingSlug = '';
+            }
+            return resolve();
           }
-        }
+        });
       });
     },
     
@@ -300,7 +305,44 @@ export default {
         if (tc && tc.section) {
           if (this.validateSlug(slug)) {
             if (tc.section.slug !== slug) {
-              return this.updateSection({slug: slug, manualSlug: slug ? true : false, buildModified: tc.section.zipPath ? true : false});
+              return this.updateSection({slug: slug, manualSlug: slug ? true : false, buildModified: tc.section.zipPath ? true : false})
+                .then(() => {
+                  return Promise.resolve();
+                })
+                .catch(err => {
+                  let slugError = err ? err.message : '';
+                  if (err && err.response && err.response.data) {
+                    switch (err.response.data) {
+                      case 'slug_not_unique':
+                        slugError = 'Section name is not unique';
+                        break;
+                    }
+                  }
+                  if (slugError) {
+                    //tc.section.slug = slug;
+                    this.sectionEditMode(tc.section)
+                      .then(() => {
+                        //this.editingSlug = '';
+                        //Vue.nextTick(() => {
+                          this.editingSlug = slug;
+                          this.validationErrors.slug = slugError;
+                          //let el = document.getElementsByClassName('edit-section-slug');
+                          //if (el && el[0]) {
+                            //el[0].value = '';
+                            //el[0].value = slug + ' ';
+                            //el[0].onchange();
+                            /*if ("createEvent" in document) {
+                              var evt = document.createEvent("HTMLEvents");
+                              evt.initEvent("change", false, true);
+                              el[0].dispatchEvent(evt);
+                            } else {
+                              el[0].fireEvent("onchange");
+                            }*/
+                          //}
+                        //});
+                      });
+                  }
+                });
             }
             this.sectionEditMode(null);
           } else {
@@ -352,7 +394,7 @@ export default {
       return hasError;
     },
     
-    editingSlugChanged() {
+    editingSlugChanged(event) {
       this.validationErrors['slug'] = '';
     },
     
@@ -420,6 +462,14 @@ export default {
           }
         }
       });
+    },
+    blurEditingSlug() {
+      let tc = this.currentBookTocCombined.find(toc => {
+        return toc.section && toc.section.id === this.editingSectionId;
+      });
+      if (tc && tc.section && tc.section.slug === this.editingSlug && !this.validationErrors.slug) {
+        this.sectionEditMode(null);
+      }
     }
   },
 
@@ -546,10 +596,10 @@ export default {
             }
             .edit-section-slug {
               &.-has-error {
-                border-color: red;
+                border: 2px solid red;
                 outline-color: red;
                 &:focus {
-                  border-color: red;
+                  border: 2px solid red;
                   outline-color: red;
                 }
               }

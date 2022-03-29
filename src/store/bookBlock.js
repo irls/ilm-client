@@ -75,7 +75,7 @@ let BlockTypes = {
 
   header: {
     //type: ['', 'subhead'],
-    level: [/*'', */'h2', 'h3', 'h4'],
+    level: [/*'', */'h1', 'h2', 'h3', 'h4'],
     align: ['', 'left', 'center', 'right', 'justify'],
     'table of contents': {
       isInToc: ['on', 'off'],
@@ -226,6 +226,7 @@ let BlockTypesAlias = {
     level: {
       title: 'type',
       values: {
+        h1: 'section header',
         h2: 'chapter header',
         h3: 'subheader',
         h4: 'sub subheader'
@@ -357,7 +358,7 @@ class BookBlock {
       this.classes.style = '';
     }
     if (this.type === 'header' && !this.classes.hasOwnProperty('level')) {
-      this.classes.level = 'h2';
+      this.classes.level = 'h1';
     }
   }
 
@@ -1101,12 +1102,19 @@ class FlagPart {
     this.creator_role = init.creator_role || null;
   }
 }
+  
+const allFootnoteAttributes = ["voicework", "wordsRange", "language", "content", "audiosrc", "audiosrc_ver"];
+  
 
 class FootNote {
   constructor(init) {
     this.content = init.content || '<p></p>';
     this.voicework = init.voicework || 'no_audio';
     this.language = init.language || '';
+  }
+  
+  hasAttribute(attribute) {
+    return allFootnoteAttributes.includes(attribute);
   }
 }
 
