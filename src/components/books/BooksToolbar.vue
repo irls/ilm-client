@@ -15,7 +15,7 @@
   <!-- Meta Filter -->
   <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter by Author or Title"></input> &nbsp;
 
-  <input type="text" @keyup="booksFilterTagChange" class="form-control" placeholder="Filter by Project tag"></input> &nbsp;
+  <input type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 15em;" placeholder="Filter by Editor or Project tag"></input> &nbsp;
 
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
