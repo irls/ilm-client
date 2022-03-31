@@ -17,6 +17,7 @@ import AudioEditor from '../components/AudioEditor'
 import Collections from '../components/Collections'
 import CollectionsGrid from '../components/collections/CollectionsGrid';
 import Settings from '../components/Settings'
+import TestAudioConvert from '../components/audio/TestAudioConvert';
 
 
 Vue.use(Router)
@@ -144,6 +145,10 @@ export default new Router({
           component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
         }
       ]
+    },
+    {
+      path: '/test_audio_convert',
+      component: TestAudioConvert
     },
     { path: '*', redirect: '/books' }
   ]
