@@ -13,9 +13,9 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-  <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter by Author or Title"></input> &nbsp;
+  <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input><input @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"  type="button" class="btn-inside" value="X"> &nbsp;
 
-  <input type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 15em;" placeholder="Filter by Editor or Project tag"></input> &nbsp;
+  <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="booksFilterTagChange=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;
 
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
@@ -61,7 +61,9 @@ export default {
     return {
       filterStr: '',
       showImportBooksModal: false,
-      languages: Languages
+      languages: Languages,
+      filterAuthorTitle: '',
+      filterAuthorTag: ''
     }
   },
 
@@ -169,5 +171,13 @@ img.bookstack {
 input {width: 12em}
 
 .form-control {display: inline}
+
+input.btn-inside {
+    margin-left: -22px;
+    height: 30px;
+    width: 20px;
+    border: 0;
+}
+
 
 </style>
