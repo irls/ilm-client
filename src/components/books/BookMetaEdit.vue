@@ -264,6 +264,7 @@
               <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
             </div>
             <div v-else class="t-box red-message">Define block range</div>
+            <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
@@ -781,7 +782,8 @@ export default {
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
-      currentBookCollection: 'currentBookCollection'
+      currentBookCollection: 'currentBookCollection',
+      alignBlocksLimitMessage: 'alignBlocksLimitMessage'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -2427,7 +2429,7 @@ Vue.filter('prettyBytes', function (num) {
   }
 
   .t-box {
-    height: 45px;
+    height: 30px;
     border-left: 1px solid #ddd;
     padding-top: 7px;
     padding-left: 20px;
@@ -2718,6 +2720,10 @@ ul.no-bullets {
   list-style-type: none;
   padding: 0; 
   margin: 0; 
+}
+.align-blocks-limit {
+  padding-left: 20px;
+  padding-bottom: 10px;
 }
 
 </style>

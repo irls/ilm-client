@@ -2883,7 +2883,7 @@ Revert to original block audio?`,
           get() {
             return this.blockSelection.start && this.blockSelection.start._id &&
                     this.blockSelection.end && this.blockSelection.end._id &&
-                    this.alignCounter.count;
+                    this.alignCounter.count && this.allowAlignBlocksLimit;
           }
         },
         selectionBlocksToAlign: {
@@ -2952,7 +2952,8 @@ Revert to original block audio?`,
           audioTasksQueue: 'audioTasksQueue',
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
-          coupletSeparator: 'coupletSeparator'})
+          coupletSeparator: 'coupletSeparator',
+          allowAlignBlocksLimit: 'allowAlignBlocksLimit'})
       },
       watch: {
         'cursorPosition': {
