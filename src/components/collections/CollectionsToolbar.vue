@@ -6,7 +6,13 @@
         </h3>
 
 
-        <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input>
+        <!-- <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input> -->
+  <input v-model="filterAuthorTitle" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input><input @click="filterAuthorTitle=''; $store.commit('SET_COLLECTIONS_FILTER', '');"  type="button" class="btn-inside" value="X"> &nbsp;
+
+  <input v-model="filterTag" type="text" @keyup="filterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="filterTag=''; $store.commit('SET_COLLECTIONS_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;
+
+
+
         <template v-if="adminOrLibrarian">
           <select @change="filterChange('jobStatus', $event)" v-model="collectionsFilter.jobStatus">
             <option value="">Not filtered</option>
@@ -49,6 +55,9 @@
       return {
         /*,
         metaVisible: false*/
+        filterAuthorTitle: '',
+        filterTag: ''
+
       };
     },
     props: [
@@ -75,6 +84,10 @@
         filter[field] = event.target.value;
         this.$store.commit('SET_COLLECTIONS_FILTER', filter);
       },
+      filterTagChange (el) {
+        this.$store.commit('SET_COLLECTIONS_FILTER', {projectTag: el.target.value})
+      },
+
       addCollection() {
         return this.createCollection({})
           .then(doc => {
@@ -113,6 +126,10 @@
     display: inline-block;
   }
 
+  .toolbar {
+    justify-content: end !important;
+  }
+
   select {
     padding: 3px; height: 2.5em;
   }
@@ -143,9 +160,10 @@
     opacity: .75
   }
 
-  input {width: 14em}
+  input {width: 14em;}
+  input, select, button {margin-right: 15px;}
 
-  .form-control {display: inline}
+  .form-control {display: inline; margin-right: .5em;}
   div {
     &.table {
       display: table;
@@ -157,4 +175,13 @@
       display: table-cell;
     }
   }
+
+input.btn-inside {
+    margin-left: -22px;
+    height: 30px;
+    width: 20px;
+    border: 0;
+}
+
+
 </style>
