@@ -74,12 +74,6 @@
   </div>
   <!--<div class="container-block">   -->
 
-  <div id="narrateStartCountdown" class="modal fade in">
-    <div>
-      <strong>3</strong>
-    </div>
-  </div>
-
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -2842,9 +2836,10 @@ export default {
   }
 
   .content-scroll-wrapper {
-    flex-grow: 2;
 
+    z-index: 1;
     display:flex;
+    flex-grow: 2;
 
     /*position: relative;*/
     overflow-y: auto; /*hidden;*/
