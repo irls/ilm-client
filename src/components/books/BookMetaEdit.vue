@@ -264,6 +264,7 @@
               <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
             </div>
             <div v-else class="t-box red-message">Define block range</div>
+            <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
@@ -388,7 +389,7 @@
                       Hide from display
                     </label>
                   </fieldset>
-                  
+
                   <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
                     <legend>{{styleCaption('header', 'level')}}</legend>
                     <ul class="no-bullets">
@@ -781,7 +782,8 @@ export default {
       allowBookSplitPreview: 'allowBookSplitPreview',
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
-      currentBookCollection: 'currentBookCollection'
+      currentBookCollection: 'currentBookCollection',
+      alignBlocksLimitMessage: 'alignBlocksLimitMessage'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -2219,18 +2221,16 @@ Vue.filter('prettyBytes', function (num) {
 });
 </script>
 <style>
-  select.text-danger#categorySelection, input.text-danger{
-    color: #000;
-    border: 1px solid red!important;
-    border-radius: 0px;
-  }
+select.text-danger#categorySelection, input.text-danger{
+  color: #000;
+  border: 1px solid red!important;
+  border-radius: 0px;
+}
 .meta-edit-tabs .nav-tabs-navigation {
-  /*border: 1px solid red;*/
-  position: sticky;
+  /*position: sticky;*/
   top: 44px;
   background-color:white;
   z-index: 19;
-  /*border-top: 10px solid white;*/
 }
 
 #p-styles-switcher.tab-container {
@@ -2239,10 +2239,18 @@ Vue.filter('prettyBytes', function (num) {
 
 .meta-edit-tabs > .nav-tabs-navigation{
   border: 1px solid white;
-  position: sticky;
+  /*position: sticky;*/
   top: 0px;
   z-index: 20;
 }
+
+/*.meta-edit-tabs .nav-tabs-navigation .nav > li {
+  position: inherit;
+}
+
+.meta-edit-tabs .nav-tabs-navigation .nav > li > a {
+  position: inherit;
+}*/
 
 </style>
 
@@ -2322,7 +2330,7 @@ Vue.filter('prettyBytes', function (num) {
   .edit-button {
     float: right;  cursor: pointer; margin-top: -5px;
   }
-  
+
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;
@@ -2427,7 +2435,7 @@ Vue.filter('prettyBytes', function (num) {
   }
 
   .t-box {
-    height: 45px;
+    height: 30px;
     border-left: 1px solid #ddd;
     padding-top: 7px;
     padding-left: 20px;
@@ -2716,8 +2724,12 @@ Vue.filter('prettyBytes', function (num) {
 }
 ul.no-bullets {
   list-style-type: none;
-  padding: 0; 
-  margin: 0; 
+  padding: 0;
+  margin: 0;
+}
+.align-blocks-limit {
+  padding-left: 20px;
+  padding-bottom: 10px;
 }
 
 </style>

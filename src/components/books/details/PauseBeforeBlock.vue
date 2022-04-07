@@ -8,11 +8,11 @@
         <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
-    <vue-slider v-model="pause" 
-        :min="min" 
-        :max="max" 
-        :interval="interval" 
-        :width="'auto'" 
+    <vue-slider v-model="pause"
+        :min="min"
+        :max="max"
+        :interval="interval"
+        :width="'auto'"
         tooltip="none"
         :lazy="true"
         :silent="true"
@@ -67,7 +67,7 @@
         pause: 0,
         pauseUpdateEmitted: false,
         min: 0,
-        max: 4, 
+        max: 4,
         interval: 0.1,
         range: [],
         blockList: [],
@@ -509,6 +509,9 @@
 </script>
 <style lang="less">
   .pause-before-container {
+    .vue-slider-component.vue-slider-horizontal {
+      z-index: 0;
+    }
     .pause-before-input {
       text-align: left;
       padding: 0px;

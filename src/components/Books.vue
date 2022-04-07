@@ -1,5 +1,12 @@
 <template>
   <div id='booksarea' :class="bookMode"><!-- v-cloak-->
+
+    <div id="narrateStartCountdown" class="modal fade in">
+      <div>
+        <strong>3</strong>
+      </div>
+    </div>
+
     <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
       <BookEditToolbar v-if="isEditMode()"

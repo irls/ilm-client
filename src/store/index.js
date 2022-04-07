@@ -229,7 +229,9 @@ export const store = new Vuex.Store({
     bookTocSections: [],
     bookTocSectionsTimer: null,
     bookTocSectionsXHR: null,
-    tocSectionBook: {}
+    tocSectionBook: {},
+    alignBlocksLimit: null,
+    allowAlignBlocksLimit: true
   },
 
   getters: {
@@ -540,6 +542,18 @@ export const store = new Vuex.Store({
         return collection ? collection : {};
       }
       return {};
+    },
+    allowAlignBlocksLimit: state => {
+      return state.allowAlignBlocksLimit;
+    },
+    alignBlocksLimit: state => {
+      return state.alignBlocksLimit;
+    },
+    alignBlocksLimitMessage: state => {
+      if (!state.allowAlignBlocksLimit) {
+        return `Сoncurrent alignment capacity is limited to ${state.alignBlocksLimit} blocks`;
+      }
+      return '';
     }
   },
 
@@ -1095,6 +1109,7 @@ export const store = new Vuex.Store({
       state.alignCounter.blocks = typeof counter.blocks !== 'undefined' ? counter.blocks : [];
       //let countAudio = state.alignCounter.count - state.alignCounter.countTTS;
       //state.alignCounter.countAudio = countAudio >= 0 ? countAudio : 0;
+      this.commit('set_allowAlignBlocksLimit');
     },
     set_job_status_error(state, error) {
       state.jobStatusError = error;
@@ -1235,6 +1250,15 @@ export const store = new Vuex.Store({
         state.books_meta[bookIndex].executors = executors;
         this.commit('set_currentbook_executors');
       }
+    },
+    
+    set_alignBlocksLimit(state, value) {
+      state.alignBlocksLimit = value;
+      this.commit('set_allowAlignBlocksLimit');
+    },
+    
+    set_allowAlignBlocksLimit(state) {
+      state.allowAlignBlocksLimit = state.alignBlocksLimit ? state.alignCounter.countAudio <= state.alignBlocksLimit : true;
     }
   },
 
@@ -1351,6 +1375,7 @@ export const store = new Vuex.Store({
             })
           dispatch('getBookCategories');
           dispatch('getCollections');
+          dispatch('getAlignBlocksLimit');
           state.liveDB.startWatch('collection', 'collection', {}, (data) => {
             //console.log(data);
             if (data.action) {
@@ -4507,6 +4532,20 @@ export const store = new Vuex.Store({
       return axios.get(`${state.API_URL}collection/${_id}`)
         .then(response => {
           return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    getAlignBlocksLimit({state, commit}) {
+      return axios.get(`${state.API_URL}align_config/blocks_limit`)
+        .then(response => {
+          let value = response.data.limit ? parseInt(response.data.limit) : 0;
+          if (value) {
+            commit('set_alignBlocksLimit', value);
+          }
+          return Promise.resolve(value);
         })
         .catch(err => {
           return Promise.reject(err);
