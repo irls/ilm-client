@@ -120,7 +120,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: '', jobStatus: 'active'},
+    collectionsFilter: {title: '', language: '', jobStatus: 'active', projectTag: ''},
     currentCollection: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
