@@ -11,6 +11,7 @@ const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
+import testAudioConvert from './modules/testAudioConvert';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -66,7 +67,8 @@ function defer() {
 
 export const store = new Vuex.Store({
   modules: {
-    uploadImage
+    uploadImage,
+    testAudioConvert
   },
   state: {
     audioRenaming : false,
