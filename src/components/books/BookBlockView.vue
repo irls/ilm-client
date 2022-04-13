@@ -3519,6 +3519,8 @@ Save text changes and realign the Block?`,
           }
           if (event.target.value == 'header'){
             this.block.classes.level = 'h1';
+            this.block.classes['table of contents'] = this.block.classes['table of contents'] || {};
+            this.block.classes['table of contents'].isInToc = 'on';
             styleVal = 'h1';
             blockType = 'header';
             this.pushChange('classes');
