@@ -1050,7 +1050,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false, allow_cancel: b.allow_cancel});
       });
     },
     add_aligning_block(state, block) {
@@ -3057,6 +3057,19 @@ export const store = new Vuex.Store({
             return Promise.resolve(err);
           });
       }
+    },
+    
+    cancelAlignment({state, dispatch}, [bookid, blockid = null]) {
+      let api_url = `${state.API_URL}align_queue/${bookid}`;
+      if (blockid) {
+        api_url+= `/${blockid}`;
+      }
+
+      return axios.delete(api_url, {}, {}).then((response) => {
+        return dispatch('getBookAlign');
+      }).catch((err) => {
+        return dispatch('getBookAlign');
+      });
     },
 
     startAudiobookWatch({state, dispatch}) {
