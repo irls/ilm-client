@@ -2,7 +2,6 @@
   <div v-if="lockedType === 'align'" class="cancel-block-align">
     <button class="btn btn-default" v-if="allowAlignCancel" v-on:click="cancelAlign">
       <i class="fa fa-ban"></i>
-      Cancel
     </button>
   </div>
 </template>
@@ -19,7 +18,7 @@
           let lockedBlock = this.aligningBlocks.find(blk => {
             return blk._id === this.block.blockid && (this.blockPartIdx === null || blk.partIdx === this.blockPartIdx);
           });
-          return lockedBlock ? lockedBlock.allow_cancel : false;
+          return lockedBlock && this.block.voicework === 'narration';
         }
       },
       ...mapGetters(['aligningBlocks'])

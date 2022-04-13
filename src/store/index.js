@@ -1050,7 +1050,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false, allow_cancel: b.allow_cancel});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false});
       });
     },
     add_aligning_block(state, block) {
