@@ -7,10 +7,11 @@
 
 
         <!-- <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input> -->
-  <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input><input @click="filterChange('title', {target: {'value': ''}});"  type="button" class="btn-inside" value="X"> &nbsp;
+  <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input><!-- ILM-4544<input @click="filterChange('title', {target: {'value': ''}});"  type="button" class="btn-inside" value="X"> &nbsp;-->
 
+  <!-- ILM-4544
   <input v-model="collectionsFilter.projectTag" type="text" @keyup="filterChange('projectTag', $event)"" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="filterTag=''; $store.commit('SET_COLLECTIONS_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;
-
+  -->
 
 
         <template v-if="adminOrLibrarian">
@@ -22,6 +23,7 @@
             <option value="suspended">Suspended</option>
           </select> &nbsp;
         </template>
+        
         <select @change="filterChange('language', $event)" v-model="collectionsFilter['language']">
           <option v-for="(name, code) in languages" :value="code">{{name}}</option>
         </select>
@@ -124,10 +126,6 @@
     margin: 0;
     padding-top: 0;
     display: inline-block;
-  }
-
-  .toolbar {
-    justify-content: end !important;
   }
 
   select {
