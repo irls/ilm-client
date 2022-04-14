@@ -312,6 +312,7 @@
     </div>
     <!--<div class="table-row controls-bottom">-->
   </div>
+  <div :id="this.block.blockid + '-part-' + this.blockPartIdx + '-toolbar-container'" class="toolbar-container"></div>
 </div>
 </template>
 
@@ -1246,6 +1247,21 @@ export default {
                 extensions: extensions,
                 disableEditing: true,
               imageDragging: false
+            });
+          } else if (this.mode === 'narrate' && this.block.voicework === 'narration') {
+            extensions = {
+              'suggestPreview': new SuggestPreview()
+            };
+            toolbar = {
+              buttons: [],
+              relativeContainer: document.getElementById(`${this.block.blockid}-part-${this.blockPartIdx}-toolbar-container`),
+            };
+            this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
+              toolbar: toolbar,
+              quotesList: [],
+              extensions: extensions,
+              disableEditing: true,
+              imageDragging: false,
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -4078,6 +4094,9 @@ Save or discard your changes before splitting`,
           transform: rotate(90deg);
         }
      }
+    }
+   .toolbar-container {
+     display: none;
    }
 
 </style>

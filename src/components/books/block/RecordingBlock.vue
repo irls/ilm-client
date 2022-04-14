@@ -42,6 +42,7 @@
         </div>
       </div>
     </div>
+    <div id="recording-block-toolbar" class="toolbar-container"></div>
   </div>
 </template>
 <script>
@@ -81,7 +82,10 @@
         'suggestPreview': new SuggestPreview()
       };
       this.editor = new MediumEditor('.recording-text', {
-        toolbar: {},
+        toolbar: {
+          buttons: [],
+          relativeContainer: document.getElementById('recording-block-toolbar'),
+        },
         buttonLabels: 'fontawesome',
         quotesList: [],
         extensions: extensions,
