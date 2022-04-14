@@ -31,6 +31,10 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
+          <fieldset class='hashtags'>
+            <legend>Project tags</legend>
+            <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="6" @removeItem="removeTag" @addItem="addTag"/>
+          </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
               :isPublishingQueue="isPublishingQueue"
@@ -625,7 +629,9 @@ import SplitPreview from './details/SplitPreview';
 import BlockStyleLabels from './details/BlockStyleLabels';
 import CompleteAudioExport from './details/CompleteAudioExport';
 import PauseBeforeBlock from './details/PauseBeforeBlock';
+import VTagSuggestion from './details/HashTag';
 import ResizableTextarea from '../generic/ResizableTextarea';
+
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -652,7 +658,9 @@ export default {
     BlockStyleLabels,
     CompleteAudioExport,
     PauseBeforeBlock,
+    VTagSuggestion,
     'resizable-textarea': ResizableTextarea
+
   },
 
   data () {
@@ -693,6 +701,7 @@ export default {
       showUnknownAuthor: -1,
       showUnknownAuthorEn: -1,
       lockLanguage: false,
+      arbitraryHashtags: '',
 
       // set blocks properties
       styleTabs: new Map(),
@@ -743,7 +752,7 @@ export default {
         4: 'illustration',
         5: 'hr'
       },
-      activeStyleTab: ''
+      activeStyleTab: '',
     }
   },
 
@@ -783,7 +792,8 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
       currentBookCollection: 'currentBookCollection',
-      alignBlocksLimitMessage: 'alignBlocksLimitMessage'
+      alignBlocksLimitMessage: 'alignBlocksLimitMessage',
+      //hashTagsSuggestions: 'hashTagsSuggestions',
     }),
     proofreadModeReadOnly: {
       get() {
@@ -792,6 +802,19 @@ export default {
           return this.mode === 'proofread'  ;
       }
     },
+    getHashTags: {
+      get() {
+        if (this.currentBook.hashTags && Array.isArray(this.currentBook.hashTags)) {
+          let hashtags = this.currentBook.hashTags;
+          return hashtags.join(', ');
+        } else return '';
+      },
+      set(val) {
+        return val;
+      }
+
+    },
+
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -1257,6 +1280,19 @@ export default {
       this.liveUpdate(key, value)
     },
 
+
+    removeTag(i){
+      this.currentBook.hashTags.splice(i,1)
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
+    },
+     addTag(tag){
+      if (this.currentBook.hashTags)
+        this.currentBook.hashTags.push(tag);
+      else 
+        this.currentBook.hashTags = [tag];
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
+    },
+
     change (key) {
       this.liveUpdate(key, this.currentBook[key])
       //if changed language let's refresh the page for update default block & footnote language.
@@ -1283,7 +1319,6 @@ export default {
         debounceTime = false;
       if(!disable)
         disable = false;
-
 
       if(key =='difficulty'){
 
@@ -2095,6 +2130,13 @@ export default {
       }
     }, 500),
 
+    updateHashTags (event) {
+      let array = event.target.value.split(', ');
+      console.log(array);
+      this.currentBook.hashTags = array;
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
+    },
+
     updateWeigth (event,debounceTime) {
       const value = event.target.value.replace(/ /g, '');
       const key = 'weight';
@@ -2161,6 +2203,7 @@ export default {
     updateJobDescription: _.debounce(function(event) {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
+
 
     goToBlock(blockId, ev) {
       this.$router.push({name: this.$route.name, params: {}});
@@ -2701,6 +2744,10 @@ select.text-danger#categorySelection, input.text-danger{
   .dropdown-content:hover {
     background: #1e90ff;
     color: #fff;
+  }
+
+  .tags-input {
+    width: 100%;
   }
 
   .outside {
