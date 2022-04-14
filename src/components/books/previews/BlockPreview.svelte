@@ -50,32 +50,20 @@
                               <div class="table-body illustration-block {block.getClass()}">
 
                                 {#if block.imgProps.url}
-                                  <img src="{block.imgProps.url}"
-                                      alt="{block.description}"
-                                      class="{block.getClass()}"
-                                      width="auto"
-                                      height="{block.imgProps.height}"/>
+                                  <ImgPreview
+                                      block="{block}"
+                                      height="{block.imgProps.height}"
+                                    />
                                 {:else}
-
                                   {#await getImgProps(block.imgUrl)}
                                     <div class="bview-empty-image-wrapper">
                                       <div class="bview-empty-image">No image</div>
                                     </div>
                                   {:then imgProps}
-                                    {#if imgProps.url}
-                                    <img src="{imgProps.url}"
-                                        alt="{block.description}"
-                                        class="{block.getClass()}"
-                                        width="auto"
-                                        height="{block.illustration_height || imgProps.height}"/>
-                                    {:else}
-                                    <!--<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                        alt="{block.description}"
-                                        class="{block.getClass()}"
-                                        height="{block.illustration_height || imgProps.height}"
-                                        style="background-color: #EEEEEE" />-->
-                                    <div style="height: 10px"></div>
-                                    {/if}
+                                    <ImgPreview
+                                      block="{block}"
+                                      height="{block.illustration_height || imgProps.height}"
+                                    />
                                   {/await}
 
                                 {/if}
@@ -195,6 +183,7 @@
 <script>
   import { beforeUpdate } from 'svelte';
   //import { fade } from 'svelte/transition';
+  import ImgPreview from './ImgPreview.svelte';
 
   export let block;
   export let blockRid = '';
