@@ -1567,9 +1567,9 @@ export default {
       const editorFrontContainer = document.getElementById('editorFrontContainer');
       //console.log(`previewScrollHeader: `, previewScrollHeader);
       //console.log(`editorFrontContainer: `, editorFrontContainer);
-      editorFrontContainer.style.marginLeft = '-3000px';
-      editorFrontContainer.style.display = 'none';
-//       previewScrollHeader.appendChild(editorFrontContainer);
+      //editorFrontContainer.style.marginLeft = '-3000px';
+      //editorFrontContainer.style.display = 'none';
+      previewScrollHeader.appendChild(editorFrontContainer);
       const blockO = this.parlistO.get(this.parlistArray[0]._rid);
 //       //this.parlistO.setStartId(this.parlistArray[range.start]._rid);
       this.startId = blockO.blockid;
@@ -1578,7 +1578,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < initialTopOffset+50 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1600,7 +1600,7 @@ export default {
     handleScroll(ev, force = false) {
       const range = ev.detail.range;
       const blockO = this.parlistO.get(this.parlistArray[range.start]._rid);
-      console.log(`handleScroll: `, range.start, range.end, blockO.blockid, this.startId);
+      //console.log(`handleScroll: `, range.start, range.end, blockO.blockid, this.startId);
 
       const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
       let firstVisible = false;
@@ -1610,7 +1610,7 @@ export default {
         const blockId = this.parlistO.idsArray()[i];
         const blockRef = document.getElementById('v-' + blockId);
         const visible = this.checkVisible(blockRef, viewHeight);
-        console.log(`this.parlistO.idsArray()[${i}]: `, blockId, 'visible: ', visible);
+        //console.log(`this.parlistO.idsArray()[${i}]: `, blockId, 'visible: ', visible);
         if (visible) {
           if (!firstVisible) {
             firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
@@ -1620,8 +1620,11 @@ export default {
         } else if (firstVisible) break;
       }
 
-      if (this.startId !== firstVisible.blockid) {
-        this.parlistO.setStartId(firstVisible._rid);
+      //console.log(`handleScroll this.parlistO.startRId: `, this.parlistO.startRId);
+      //console.log(`handleScroll firstVisible: `, firstVisible);
+      //console.log(`handleScroll firstVisible.blockid: `, firstVisible.blockid);
+      if (this.parlistO.startRId !== firstVisible.rid) {
+        this.parlistO.setStartId(firstVisible.rid);
         this.startId = firstVisible.blockid;
         this.screenTop = range.padFront;
       } else {
@@ -1634,7 +1637,11 @@ export default {
         }
       }
 
-      console.log(`handleScroll this.startId: `, this.startId, ' firstVisible.blockid: ', firstVisible.blockid);
+      //this.correctEditWrapper();
+      this.updatePositions();
+
+      //console.log(`handleScroll this.startId: `, this.startId, ' firstVisible.blockid: ', firstVisible);
+      //console.log(`handleScroll lastVisible: `, lastVisible);
 
       if (true) return;
 //       const contSWRef = this.$refs.contentScrollWrapRef;
@@ -1711,7 +1718,7 @@ export default {
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
-      console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
+      //console.log(`moveEditWrapper firstVisible, lastVisible, force: `, firstVisible, lastVisible, force);
       if (firstVisible !== false) {
 
         let checkUpp = !this.parlistO.isInViewArray(firstVisible.in);
