@@ -140,7 +140,6 @@ export default {
       onScrollEv: false,
 
       screenTop: initialTopOffset,
-      scrollPrev: 0,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -1581,21 +1580,19 @@ export default {
       return !(rect.bottom < initialTopOffset+50 || rect.top - viewHeight >= 0);
     },
 
-    updatePositions() {
-      if (this.$refs.contentScrollWrapRef) {
-        let currScroll = this.$refs.contentScrollWrapRef.scrollTop;
-        var editors = document.getElementsByClassName('medium-editor-toolbar-active');
-        if (editors && editors.length) { //move editor toolbar
-          editors[0].style.top = editors[0].getBoundingClientRect().top - (currScroll - this.scrollPrev) +'px';
-        }
-        this.scrollPrev = currScroll;
+    updateOpenToolbarPosition() {
+      const editors = document.getElementsByClassName('medium-editor-toolbar-active');
+      if (editors && editors.length) { //move editor toolbar
+        const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
+        const toolbarBound = editors[0].getBoundingClientRect();
+        editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
       }
     },
 
     smoothHandleScroll: _.debounce(function (ev) {
       //ev.stopPropagation();
       this.handleScroll(ev);
-    }, 150),
+    }, 10),
 
     handleScroll(ev, force = false) {
       const range = ev.detail.range;
@@ -1638,7 +1635,7 @@ export default {
       }
 
       //this.correctEditWrapper();
-      this.updatePositions();
+      this.updateOpenToolbarPosition();
 
       //console.log(`handleScroll this.startId: `, this.startId, ' firstVisible.blockid: ', firstVisible);
       //console.log(`handleScroll lastVisible: `, lastVisible);

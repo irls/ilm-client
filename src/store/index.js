@@ -3181,8 +3181,23 @@ export const store = new Vuex.Store({
           .then(data => {
             state.jobInfoTimer = Date.now();
             state.jobInfoRequest = null;
-            //state.currentJobInfo = data.data.id ? data.data : default_currentJobInfo;
-            commit('set_currentJobInfo', data.data.id ? data.data : default_currentJobInfo);
+            state.currentJobInfo = data.data.id ? data.data : {can_resolve_tasks: [],
+              mastering: null,
+              proofing: null,
+              published: null,
+              text_cleanup: null,
+              is_proofread_unassigned: null,
+              tasks_counter: [],
+              executors: {editor: null, proofer: null, narrator: null},
+              description: '',
+              id: null,
+              completed: null,
+              workflow: {
+                status: null,
+                archived: null
+              },
+              locked_blocks: {proofer: [], narrator: [], editor: []},
+              is_narrate_unassiged: false};
 
             let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
             commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
