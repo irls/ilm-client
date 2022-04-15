@@ -173,7 +173,8 @@
             return x.toString().toLowerCase()==name.toString().toLowerCase()
           })
           if(isExist==-1){
-            this.tags.push(name)
+            //this.tags.push(name);
+            this.$emit('addItem', name)
           }
           else {
             event.target.classList.add('shake')
@@ -183,7 +184,6 @@
           }
       },
       checkAndAdd(){
-
         this.name=this.name.trim()
         if(this.name==''){
           return
