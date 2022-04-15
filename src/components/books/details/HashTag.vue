@@ -100,7 +100,22 @@
       return (this.filter && length > 0) ? `${length} More Tags`:'Hide Tags'
       },
       top(){
-        return this.filter ? this.suggestions.slice(0,this.suggestionLength) : this.suggestions
+        let recommended = [
+            "Ocean Book", 
+            "Bahai Book", 
+            "Bahai Compilations", 
+            "The Bible KJV", 
+            "The Bible JPS", 
+            "Compilations",
+            "IVY 1",
+            "IVY 2",
+            "Robinson List",
+            "Reading Challenge",
+            "New Authors",
+            "No audio Book"
+            ];
+        return recommended;
+        //return this.filter ? this.suggestions.slice(0,this.suggestionLength) : this.suggestions
       },
       listSuggestions(){  
         if(this.name.trim()==''){
