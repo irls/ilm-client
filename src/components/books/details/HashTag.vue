@@ -102,8 +102,8 @@
       top(){
         let recommended = [
             "Ocean Book", 
-            "Bahai Book", 
-            "Bahai Compilations", 
+            "Baha’i Book", 
+            "Baha’i Book Compilations", 
             "The Bible KJV", 
             "The Bible JPS", 
             "Compilations",
