@@ -793,7 +793,7 @@ export default {
       aligningBlocks: 'aligningBlocks',
       currentBookCollection: 'currentBookCollection',
       alignBlocksLimitMessage: 'alignBlocksLimitMessage',
-      //hashTagsSuggestions: 'hashTagsSuggestions',
+      hashTagsSuggestions: 'hashTagsSuggestions',
     }),
     proofreadModeReadOnly: {
       get() {
