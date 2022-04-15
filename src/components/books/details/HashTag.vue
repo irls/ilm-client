@@ -100,7 +100,22 @@
       return (this.filter && length > 0) ? `${length} More Tags`:'Hide Tags'
       },
       top(){
-        return this.filter ? this.suggestions.slice(0,this.suggestionLength) : this.suggestions
+        let recommended = [
+            "Ocean Book", 
+            "Baha’i Book", 
+            "Baha’i Book Compilations", 
+            "The Bible KJV", 
+            "The Bible JPS", 
+            "Compilations",
+            "IVY 1",
+            "IVY 2",
+            "Robinson List",
+            "Reading Challenge",
+            "New Authors",
+            "No audio Book"
+            ];
+        return recommended;
+        //return this.filter ? this.suggestions.slice(0,this.suggestionLength) : this.suggestions
       },
       listSuggestions(){  
         if(this.name.trim()==''){
@@ -158,7 +173,8 @@
             return x.toString().toLowerCase()==name.toString().toLowerCase()
           })
           if(isExist==-1){
-            this.tags.push(name)
+            //this.tags.push(name);
+            this.$emit('addItem', name)
           }
           else {
             event.target.classList.add('shake')
@@ -168,7 +184,6 @@
           }
       },
       checkAndAdd(){
-
         this.name=this.name.trim()
         if(this.name==''){
           return

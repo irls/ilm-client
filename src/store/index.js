@@ -1330,7 +1330,7 @@ export const store = new Vuex.Store({
             if (response) {
               if (response.status == 200) {
                 state.hashTagsSuggestions = response.data;
-                console.log('hashTags', response.data);
+                //console.log('hashTags', response.data);
               }
             }
           })
