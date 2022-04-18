@@ -3059,10 +3059,13 @@ export const store = new Vuex.Store({
       }
     },
     
-    cancelAlignment({state, dispatch}, [bookid, blockid = null]) {
+    cancelAlignment({state, dispatch}, [bookid, blockid = null, partIdx = null]) {
       let api_url = `${state.API_URL}align_queue/${bookid}`;
       if (blockid) {
         api_url+= `/${blockid}`;
+      }
+      if (partIdx !== null) {
+        api_url+= `/${partIdx}`;
       }
 
       return axios.delete(api_url, {}, {}).then((response) => {
