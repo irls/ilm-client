@@ -1230,7 +1230,7 @@ export default {
                 this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
               }
             });
-          } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
+          } else if (this.block.voicework === 'narration' && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
                 'suggestPreview': new SuggestPreview()
@@ -1247,21 +1247,6 @@ export default {
                 extensions: extensions,
                 disableEditing: true,
               imageDragging: false
-            });
-          } else if (this.mode === 'narrate' && this.block.voicework === 'narration') {
-            extensions = {
-              'suggestPreview': new SuggestPreview()
-            };
-            toolbar = {
-              buttons: [],
-              relativeContainer: document.getElementById(`${this.block.blockid}-part-${this.blockPartIdx}-toolbar-container`),
-            };
-            this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
-              toolbar: toolbar,
-              quotesList: [],
-              extensions: extensions,
-              disableEditing: true,
-              imageDragging: false,
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
