@@ -22,7 +22,13 @@
       }
     },
     name: 'split-block-menu',
-    props: ['allowRejoin', 'allowSplit', 'allowRejoinAll', 'disabled', 'checkBeforeOpen'],
+    props: ['allowRejoin', 'allowSplit', 'allowRejoinAll', 'disabled', 'checkBeforeOpen', 'blockid', 'blockPartIdx'],
+    mounted() {
+      this.$root.$on('for-splitmenu:close', this.checkClose);
+    },
+    destroyed() {
+      this.$root.$off('for-splitmenu:close', this.checkClose);
+    },
     methods: {
       toggleMenu() {
         if (this.disabled) {
@@ -45,6 +51,11 @@
       reJoinAll() {
         this.$emit('reJoinAll');
         this.toggleMenu();
+      },
+      checkClose(blockPart) {
+        if (`${this.blockid}-${this.blockPartIdx}` !== blockPart && this.showMenu) {
+          this.toggleMenu();
+        }
       }
     },
     watch: {
@@ -62,6 +73,7 @@
   .open-split-menu {
     cursor: pointer;
     float: left;
+    font-size: 20px;
   }
   .open-split-menu:after {
     content: '\2807';

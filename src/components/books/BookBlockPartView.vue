@@ -293,6 +293,8 @@
           :allowRejoinAll="blockPartIdx === block.parts.length - 1"
           :disabled="isMergeSubblocksDisabled"
           :checkBeforeOpen="checkAllowUpdateUnassigned"
+          :blockid="block.blockid"
+          :blockPartIdx="blockPartIdx"
           @reJoin="mergeSubblocks()"
           @split="splitSubblock()"
           @reJoinAll="mergeAllSubblocks()"></split-block-menu>
@@ -1300,6 +1302,7 @@ export default {
         //this.$refs.blockContent.focus();
         //console.log(this.block.calcFlagsSummary());
         //console.log(this.tc_currentBookTasks.job.executors);
+        this.$root.$emit('for-splitmenu:close', `${this.block.blockid}-${this.blockPartIdx}`);
       },
       onBlur: function(e) {
         if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
@@ -1315,7 +1318,8 @@ export default {
 //           $(this).css('display', 'inline-block');
 //         });
         $event.target.checked = true;
-        this.setRangeSelection('byOne', $event)
+        this.setRangeSelection('byOne', $event);
+        this.$root.$emit('for-splitmenu:close', `${this.block.blockid}-${this.blockPartIdx}`);
       },
       onContext(e) {
         if (!this.checkAllowUpdateUnassigned()) {
