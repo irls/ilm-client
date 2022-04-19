@@ -88,6 +88,7 @@
      margin: 0;
      padding: 5px 10px;
      cursor: default;
+     font-size: 21px;
 
      &.separator {
        border-bottom: 1px solid #E0E0E0;
