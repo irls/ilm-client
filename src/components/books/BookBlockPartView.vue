@@ -293,6 +293,8 @@
           :allowRejoinAll="blockPartIdx === block.parts.length - 1"
           :disabled="isMergeSubblocksDisabled"
           :checkBeforeOpen="checkAllowUpdateUnassigned"
+          :blockid="block.blockid"
+          :blockPartIdx="blockPartIdx"
           @reJoin="mergeSubblocks()"
           @split="splitSubblock()"
           @reJoinAll="mergeAllSubblocks()"></split-block-menu>
@@ -1301,6 +1303,7 @@ export default {
         //this.$refs.blockContent.focus();
         //console.log(this.block.calcFlagsSummary());
         //console.log(this.tc_currentBookTasks.job.executors);
+        this.$root.$emit('for-splitmenu:close', `${this.block.blockid}-${this.blockPartIdx}`);
       },
       onBlur: function(e) {
         if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
@@ -1316,7 +1319,8 @@ export default {
 //           $(this).css('display', 'inline-block');
 //         });
         $event.target.checked = true;
-        this.setRangeSelection('byOne', $event)
+        this.setRangeSelection('byOne', $event);
+        this.$root.$emit('for-splitmenu:close', `${this.block.blockid}-${this.blockPartIdx}`);
       },
       onContext(e) {
         if (!this.checkAllowUpdateUnassigned()) {
@@ -3595,7 +3599,7 @@ Save text changes and realign the Block?`,
           if (this.isAudioChanged || partTo.isAudioChanged) {
             return false;
           }
-          if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged) {
+          if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged || this.$parent.isChanged || this.$parent.isAudioChanged) {
 
             this.$root.$emit('show-modal', {
               title: `Unsaved Changes`,
@@ -3611,6 +3615,7 @@ Please save or discard your changes before joining.`,
                 }
               ]
             });
+            return false;
           }
         }
         if (this.$parent.$refs.blocks) {
@@ -3708,6 +3713,9 @@ Please save or discard your changes before joining.`,
         if (hasAudioChanged) {
           return false;
         }
+        if (!hasChanged) {
+          hasChanged = this.$parent.isChanged || this.$parent.isAudioChanged;
+        }
         if (hasChanged) {
 
           this.$root.$emit('show-modal', {
@@ -3724,6 +3732,7 @@ Please save or discard your changes before joining.`,
               }
             ]
           });
+          return false;
         }
         if (this.$parent.$refs.blocks) {
           let refPlaying = this.$parent.$refs.blocks.find(blk => {
@@ -3753,6 +3762,9 @@ Please save or discard your changes before joining.`,
           hasChanges = this.$parent.$refs.blocks.find(subblock => {
             return subblock.isChanged || subblock.isAudioChanged;
           });
+        }
+        if (!hasChanges) {
+          hasChanges = this.$parent.isChanged || this.$parent.isAudioChanged;
         }
         if (hasChanges) {
           this.splitUnsavedWarning();
