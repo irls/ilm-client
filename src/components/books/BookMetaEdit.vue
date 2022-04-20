@@ -31,7 +31,7 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
-          <fieldset class='hashtags'>
+          <fieldset class='hashtags' v-if="adminOrLibrarian">
             <legend>Project tags</legend>
             <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="16" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
