@@ -39,6 +39,11 @@
           return;
         }
         this.showMenu = !this.showMenu;
+        if (this.showMenu) {
+          setTimeout(() => document.addEventListener('click', this.toggleMenu), 0);
+        } else {
+          document.removeEventListener('click', this.toggleMenu);
+        }
       },
       reJoin() {
         this.$emit('reJoin');
