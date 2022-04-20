@@ -3385,7 +3385,7 @@ Save text changes and realign the Block?`,
             // Do not allow split point inside superscript or subscript
             let checkParentSup = container.parentElement;
             while (checkParentSup && checkParentSup.nodeName !== 'DIV') {
-              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB' || checkParentSup.nodeName === 'SG') {
+              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB' || (checkParentSup.nodeName === 'SG' && checkRange.endOffset < checkParentSup.innerText.length)) {
                 return false;
               }
               if (checkParentSup.nextElementSibling && ['SUP', 'SUB'].includes(checkParentSup.nextElementSibling.nodeName)) {
