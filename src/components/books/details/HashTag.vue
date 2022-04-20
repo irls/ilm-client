@@ -29,7 +29,7 @@
         {{tag}}
        </li>
      <!--</transition-group>-->
-       <li class="a-lb show-suggestion-btn" @click="filter=!filter" v-if="top.length>7">
+       <li class="a-lb show-suggestion-btn" @click="filter=!filter" v-if="top.length > 100">
          {{suggestionsLen}}
        </li>
     </ul>
@@ -189,7 +189,9 @@
           return
         }
 
-        const isExist = () => this.tags.findIndex(x=>x.toLowerCase() == this.name.toLowerCase())
+        //const isExist = () => this.tags.findIndex(x=>x.toLowerCase() == this.name.toLowerCase())
+        const isExist = () => this.tags.findIndex(x=>x == this.name)
+
         if(this.highlight<1){
           if(isExist(this.name)!==-1){
           this.$refs.input.style.color='red'
@@ -322,7 +324,7 @@ cursor: pointer;
   right: 0;
   top: 100%;
   border: 1px solid #eee;
-  margin-top: 10px;
+  margin-top: -8px;
   z-index: 100;
 }
 .tag-with-autosuggestion .tag-input .tag-suggestions-list .sugessted-tags {
