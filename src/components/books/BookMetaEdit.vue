@@ -33,7 +33,7 @@
           </fieldset>
           <fieldset class='hashtags' v-if="adminOrLibrarian">
             <legend>Project tags</legend>
-            <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="16" @removeItem="removeTag" @addItem="addTag"/>
+            <VTagSuggestion :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
