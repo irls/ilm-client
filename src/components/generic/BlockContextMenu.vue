@@ -1,7 +1,7 @@
 <template>
 <ul ref="menu"
     v-show="viewMenu"
-    class="click-menu direction-ltr"
+    class="click-menu direction-ltr context-menu"
     tabindex="-1"
     :style="{ top, left }"
     @click="close">
@@ -88,7 +88,6 @@
      margin: 0;
      padding: 5px 10px;
      cursor: default;
-     font-size: 21px;
 
      &.separator {
        border-bottom: 1px solid #E0E0E0;
@@ -100,6 +99,11 @@
      &:hover {
        background: #1E88E5;
        color: #FAFAFA;
+     }
+   }
+   &.context-menu {
+     li {
+       font-size: 21px;
      }
    }
 }
