@@ -189,7 +189,9 @@
           return
         }
 
-        const isExist = () => this.tags.findIndex(x=>x.toLowerCase() == this.name.toLowerCase())
+        //const isExist = () => this.tags.findIndex(x=>x.toLowerCase() == this.name.toLowerCase())
+        const isExist = () => this.tags.findIndex(x=>x == this.name)
+
         if(this.highlight<1){
           if(isExist(this.name)!==-1){
           this.$refs.input.style.color='red'
