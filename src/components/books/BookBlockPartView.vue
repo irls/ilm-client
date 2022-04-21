@@ -4054,9 +4054,9 @@ Save or discard your changes before splitting`,
    }
     .icon-menu-item {
       .icon-menu {
-        width: 18px;
-        height: 18px;
-        background-size: 18px;
+        width: 14px;
+        height: 14px;
+        background-size: 14px;
         background-repeat: no-repeat;
         background-color: gray;
         display: inline-block;
@@ -4066,19 +4066,21 @@ Save or discard your changes before splitting`,
         filter: invert(56%) sepia(0%) saturate(2237%) hue-rotate(19deg) brightness(89%) contrast(89%);
         &.-split-to-par {
           background: url(/static/split-into-paragraphs.svg);
-          background-size: 18px;
+          background-size: 14px;
         }
         &.-split-to-sub {
           background: url(/static/split-for-narration.svg);
-          background-size: 18px;
+          background-size: 14px;
           -webkit-transform: rotate(90deg);
           -moz-transform: rotate(90deg);
           -ms-transform: rotate(90deg);
           -o-transform: rotate(90deg);
           transform: rotate(90deg);
+          margin: 0px 6px 0px -2px;
         }
         &.-add-footnote {
           background-color: transparent;
+          font-size: 14px;
         }
         &.-re-join {
           background: url(/static/re-join-narration.svg);
