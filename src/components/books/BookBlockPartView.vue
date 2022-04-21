@@ -3592,7 +3592,7 @@ Save text changes and realign the Block?`,
         }
         return true;
       },
-      mergeSubblocks() {
+      mergeSubblocks(confirm = true) {
         let partFrom = this.blockPart;
         let partTo = this.block.parts[this.blockPartIdx + 1];
         if (partFrom && partTo) {
@@ -3616,6 +3616,16 @@ Please save or discard your changes before joining.`,
               ]
             });
             return false;
+          }
+        }
+        if (confirm) {
+          if (partFrom && partTo) {
+            if ((partFrom.audiosrc && !partTo.audiosrc) || (!partFrom.audiosrc && partTo.audiosrc)) {
+              this.joinAndRemoveAudioWarning(() => {
+                return this.mergeSubblocks(false);
+              });
+              return false;
+            }
           }
         }
         if (this.$parent.$refs.blocks) {
@@ -3703,7 +3713,7 @@ Please save or discard your changes before joining.`,
         return this.splitBySubblock([this.block.blockid, this.blockPartIdx]);
       },
       
-      mergeAllSubblocks() {
+      mergeAllSubblocks(confirm = true) {
         let hasChanged = this.block.parts.find(p => {
           return p.isChanged;
         });
@@ -3733,6 +3743,20 @@ Please save or discard your changes before joining.`,
             ]
           });
           return false;
+        }
+        if (confirm) {
+          let hasAudiosrc = this.block.parts.find(p => {
+            return p.audiosrc && p.audiosrc.length > 0;
+          });
+          let hasNotAudiosrc = this.block.parts.find(p => {
+            return !p.audiosrc || p.audiosrc.length === 0;
+          });
+          if (hasAudiosrc && hasNotAudiosrc) {
+            this.joinAndRemoveAudioWarning(() => {
+              this.mergeAllSubblocks(false);
+            });
+            return false;
+          }
         }
         if (this.$parent.$refs.blocks) {
           let refPlaying = this.$parent.$refs.blocks.find(blk => {
@@ -3801,6 +3825,32 @@ Save or discard your changes before splitting`,
         if (isAudioEditorOpened) {
           this.$root.$emit('for-audioeditor:force-close');
         }
+      },
+      
+      joinAndRemoveAudioWarning(callback) {
+        this.$root.$emit('show-modal', {
+          title: 'Join subblocks',
+          text: `Join of narrated and pending subblocks will also delete current audio.<br>
+Join subblocks?`,
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              class: ['btn btn-default']
+            },
+            {
+              title: 'Join',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                return callback.call(this);
+              },
+              class: ['btn btn-primary']
+            }
+          ],
+          class: ['align-modal']
+        });
       }
 
   },
