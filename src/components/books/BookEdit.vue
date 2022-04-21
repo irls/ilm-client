@@ -1575,9 +1575,10 @@ export default {
     },
 
     checkVisible(elm, viewHeight = false) {
-      var rect = elm.getBoundingClientRect();
+      const rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+50 || rect.top - viewHeight >= 0);
+      rect.isVisible = !(rect.bottom < initialTopOffset+50 || rect.top - viewHeight >= 0);
+      return rect;
     },
 
     updateOpenToolbarPosition() {
@@ -1601,36 +1602,45 @@ export default {
 
       const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
       let firstVisible = false;
+      let countHeight = 0;
       let lastVisible = false;
 
       for (let i = range.start; i <= range.end; i++) {
         const blockId = this.parlistO.idsArray()[i];
         const blockRef = document.getElementById('v-' + blockId);
-        const visible = this.checkVisible(blockRef, viewHeight);
-        //console.log(`this.parlistO.idsArray()[${i}]: `, blockId, 'visible: ', visible);
-        if (visible) {
-          if (!firstVisible) {
+        const elRect = this.checkVisible(blockRef, viewHeight);
+        //console.log(`elRect: `, elRect);
+        //console.log(`this.parlistO.idsArray()[${i}]: `, blockId, 'visible: ', elRect.isVisible);
+
+        if (elRect.isVisible) {
+          //if (!firstVisible) {
             firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
             //this.parlistO.setFirstVisibleId(blockO._rid);
-          }
-          lastVisible = this.parlistO.get(this.parlistArray[i]._rid);
-        } else if (firstVisible) break;
+          //}
+          break;
+          //lastVisible = this.parlistO.get(this.parlistArray[i]._rid);
+        } else {
+          if (firstVisible) break;
+          countHeight += elRect.height;
+        }
       }
 
       //console.log(`handleScroll this.parlistO.startRId: `, this.parlistO.startRId);
       //console.log(`handleScroll firstVisible: `, firstVisible);
       //console.log(`handleScroll firstVisible.blockid: `, firstVisible.blockid);
       if (this.parlistO.startRId !== firstVisible.rid) {
+        //console.log(`this.parlistO.startRId !== firstVisible.rid: `, this.parlistO.startRId, firstVisible.rid);
+        //console.log(`countHeight: `, countHeight);
         this.parlistO.setStartId(firstVisible.rid);
         this.startId = firstVisible.blockid;
-        this.screenTop = range.padFront;
+        this.screenTop = range.padFront + countHeight;
       } else {
         //const previewFrontContainer = document.getElementById('v-'+this.startId);
         //this.screenTop += previewFrontContainer.offsetHeight;
-
+        //console.log(`this.screenTop !== range.padFront: `, this.screenTop, range.padFront);
         if (this.screenTop !== range.padFront) {
           //console.log(`else: `, this.screenTop, range.padFront);
-          this.screenTop = range.padFront;
+          //this.screenTop = range.padFront;
         }
       }
 
