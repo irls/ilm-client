@@ -3386,7 +3386,7 @@ Save text changes and realign the Block?`,
             // Do not allow split point inside superscript or subscript
             let checkParentSup = container.parentElement;
             while (checkParentSup && checkParentSup.nodeName !== 'DIV') {
-              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB') {
+              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB' || (checkParentSup.nodeName === 'SG' && checkRange.endOffset < checkParentSup.innerText.length)) {
                 return false;
               }
               if (checkParentSup.nextElementSibling && ['SUP', 'SUB'].includes(checkParentSup.nextElementSibling.nodeName)) {
@@ -4063,6 +4063,7 @@ Save or discard your changes before splitting`,
         /* padding: 0px 5px; */
         margin: 0px 4px 0px 0px;
         vertical-align: middle;
+        filter: invert(56%) sepia(0%) saturate(2237%) hue-rotate(19deg) brightness(89%) contrast(89%);
         &.-split-to-par {
           background: url(/static/split-into-paragraphs.svg);
           background-size: 18px;
