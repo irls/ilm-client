@@ -88,6 +88,7 @@
      margin: 0;
      padding: 5px 10px;
      cursor: default;
+     font-size: 14px;
 
      &.separator {
        border-bottom: 1px solid #E0E0E0;
@@ -102,9 +103,7 @@
      }
    }
    &.context-menu {
-     li {
-       font-size: 21px;
-     }
+     width: 180px;
    }
 }
 </style>

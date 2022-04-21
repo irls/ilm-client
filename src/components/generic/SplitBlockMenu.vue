@@ -40,9 +40,9 @@
         }
         this.showMenu = !this.showMenu;
         if (this.showMenu) {
-          setTimeout(() => document.addEventListener('click', this.toggleMenu), 0);
+          setTimeout(() => document.addEventListener('mousedown', this.toggleMenu), 0);
         } else {
-          document.removeEventListener('click', this.toggleMenu);
+          document.removeEventListener('mousedown', this.toggleMenu);
         }
       },
       reJoin() {
