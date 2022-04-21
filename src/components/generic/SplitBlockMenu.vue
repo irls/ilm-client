@@ -40,9 +40,9 @@
         }
         this.showMenu = !this.showMenu;
         if (this.showMenu) {
-          setTimeout(() => document.addEventListener('mousedown', this.toggleMenu), 0);
+          setTimeout(() => document.addEventListener('click', this.toggleMenu), 0);
         } else {
-          document.removeEventListener('mousedown', this.toggleMenu);
+          document.removeEventListener('click', this.toggleMenu);
         }
       },
       reJoin() {
@@ -58,7 +58,7 @@
         this.toggleMenu();
       },
       checkClose(blockPart) {
-        if (`${this.blockid}-${this.blockPartIdx}` !== blockPart && this.showMenu) {
+        if (this.showMenu) {
           this.toggleMenu();
         }
       }
