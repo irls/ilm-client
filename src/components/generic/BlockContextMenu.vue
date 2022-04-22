@@ -89,6 +89,7 @@
      padding: 5px 10px;
      cursor: default;
      font-size: 14px;
+     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 
      &.separator {
        border-bottom: 1px solid #E0E0E0;
@@ -103,7 +104,7 @@
      }
    }
    &.context-menu {
-     width: 180px;
+     width: 190px;
    }
 }
 </style>
