@@ -253,7 +253,7 @@ export default {
 
     getAllBlocks(metaId, startBlock) {
       //console.log('getAllBlocks', metaId, startBlock);
-      return this.loadBookBlocks({bookId: metaId})
+      return this.$store.dispatch('loadBookBlocks', {bookId: metaId})
       .then((res)=>{
         this.parlistO.setLookupsList(metaId, res);
         if (res.blocks && res.blocks.length > 0) {
@@ -261,10 +261,9 @@ export default {
             if (!this.parlist.has(el._id)) {
               let newBlock = new BookBlock(el);
               this.$store.commit('set_storeList', newBlock);
-              if (el.type !== 'par' || idx < 100 || idx > res.blocks.length - 100) {
-                this.parlistO.setLoaded(el.rid);
+              /*if (el.type !== 'par' || idx < 100 || idx > res.blocks.length - 100) {
                 this.parlistO.setVisible(el.rid);
-              }
+              }*/
             } else {
               //this.parlistO.setLoaded(el.rid);
             }
@@ -319,18 +318,20 @@ export default {
     loadBookMounted() {
       //console.log('loadBookMounted', this.parlistO.listObjs.length, this.parlist.size);
       if (this.$route.params.hasOwnProperty('bookid')) {
-        let bookid = this.$route.params.bookid;
-        if (!this.meta._id || bookid !== this.parlistO.meta.bookid || !this.parlist.values().next().value) {
+        let checkMeta = this.parlistO.meta || {};
+        checkMeta = checkMeta.bookid || false;
+        const bookid = this.$route.params.bookid;
+        if (!this.meta._id || bookid !== checkMeta || !this.parlist.values().next().value) {
           console.log('loadBookMounted', 'load');
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
-          this.loadBook(bookid)
+          this.$store.dispatch('loadBook', bookid)
           .then((meta)=>{
-            let startBlock = this.$route.params.block || false;
+            const startBlock = this.$route.params.block || false;
+            const taskType = this.$route.params.task_type || false;
             //console.log('startBlock', startBlock, '$route.params.block', this.$route.params.block);
             this.startId = startBlock;
-            let taskType = this.$route.params.task_type || false;
-            return this.loadPartOfBookBlocks({
+            return this.$store.dispatch('loadPartOfBookBlocks', {
               bookId: this.$route.params.bookid,
               block: startBlock,
               taskType: taskType,
@@ -339,7 +340,7 @@ export default {
                 if (this.startId == false) {
                   this.startId = answer.blocks[0].blockid;
                 }
-                this.getAllBlocks(answer.meta.bookid, this.startId)
+                return this.getAllBlocks(answer.meta.bookid, this.startId)
                 .then((result)=>{
                   this.isBookMounted = true;
                 });

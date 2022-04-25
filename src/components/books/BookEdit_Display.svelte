@@ -87,7 +87,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
   }
 
   beforeUpdate(/*async */() => {
-    //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId, 'reloadBook', reloadBook);
+    //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     //loadedBookId = parlistO.meta.bookid;
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 

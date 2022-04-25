@@ -4889,41 +4889,53 @@ Save text changes and realign the Block?`,
 //book lang common
 //Specificity 1
 //lang priority 4
-.content-wrap-footn {
+.content-wrap-footn,
+.content-wrap-footn-preview {
   font-size: 13pt;
 }
 
 //book lang arabic or farsi
 //Specificity 2
 //lang priority 3
-.-lang-fa .content-wrap-footn, .-lang-ar .content-wrap-footn {
+.-lang-fa .content-wrap-footn,
+.-lang-ar .content-wrap-footn,
+.-lang-ar .content-wrap-footn-preview,
+.-lang-ar .content-wrap-footn-preview {
   font-size: 15pt;
 }
 
 //block lang common
 //Specificity 3
 //lang priority 2
-.table-cell .-content.content-wrap-footn{
+.table-cell .-content.content-wrap-footn,
+.table-cell .-content.content-wrap-footn-preview {
   font-size: 13pt;
 }
 
 //block lang arabic or farsi
 //Specificity 3
 //lang priority 2
-.table-cell .-langblock-ar.content-wrap-footn, .table-cell .-langblock-fa.content-wrap-footn {
+.table-cell .-langblock-ar.content-wrap-footn,
+.table-cell .-langblock-fa.content-wrap-footn,
+.table-cell .-langblock-ar.content-wrap-footn-preview,
+.table-cell .-langblock-fa.content-wrap-footn-preview {
   font-size: 15pt;
 }
 //footnote lang common
 //Specificity 4
 //lang priority 1
-.table-cell .content-wrap-footn.table-cell.-text{
+.table-cell .content-wrap-footn.table-cell.-text,
+.table-cell .content-wrap-footn-preview.table-cell.-text {
   font-size: 13pt;
 }
 
 //footnote lang arabic or farsi
 //Specificity 4
 //lang priority 1
-.table-cell .content-wrap-footn.-langftn-ar.-text, .table-cell .content-wrap-footn.-lang-fa.-text{
+.table-cell .content-wrap-footn.-langftn-ar.-text,
+.table-cell .content-wrap-footn.-lang-fa.-text,
+.table-cell .content-wrap-footn-preview.-lang-fa.-text,
+.table-cell .content-wrap-footn-preview.-lang-fa.-text {
   font-size: 15pt;
 }
 
@@ -5208,7 +5220,7 @@ Save text changes and realign the Block?`,
       position: relative;
 
       .par-ctrl {
-        width: 440px;
+        width: 480px;
         /*background: green;*/
 
         display: flex;
@@ -5224,7 +5236,7 @@ Save text changes and realign the Block?`,
         &.-par-num {
           width: 180px;
 
-          label.par-num {
+          label.par-num, span.par-num {
             padding-left: 12px;
             position: relative;
             top: 2px;
