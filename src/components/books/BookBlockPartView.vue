@@ -926,12 +926,12 @@ export default {
       },
       isMergeSubblocksDisabled: {
         get() {
-          if (this.isLocked || this.isChanged || this.isAudioChanged) {
+          if (this.isLocked || this.isAudioChanged) {
             return true;
           }
           if (this.$parent.$refs.blocks) {
             let locked = this.$parent.$refs.blocks.find(blk => {
-              return blk.isLocked || blk.isChanged || blk.isAudioChanged;
+              return blk.isLocked || blk.isAudioChanged;
             });
             if (locked) {
               return true;
