@@ -160,7 +160,7 @@
       <div class="item-table">
         <div class="item-row item-header">
           <div class="item-cell">Description</div>
-          <div class="item-cell">Size</div>
+          <div class="item-cell">Size&nbsp;(Kb)</div>
           <div class="item-cell">Reduction</div>
           <div class="item-cell">Actions</div>
         </div>
