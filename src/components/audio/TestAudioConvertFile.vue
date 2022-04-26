@@ -171,7 +171,7 @@
               {{items[itemK].size}}
             </div>
             <div class="item-cell">
-              {{items[itemK].reduction}}%
+              -{{items[itemK].reduction}}%
             </div>
             <div class="item-cell">
               <i class="fa fa-stop-circle" v-on:click="stop()" v-if="isPlaying && playingItem === itemK"></i>
