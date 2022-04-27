@@ -302,7 +302,7 @@ font-size: 1em;
 cursor: pointer;
 }
 .tag-with-autosuggestion .tag-name:first-letter {
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
 }
 .tag-with-autosuggestion .tag-input {
   display: inline-flex;
