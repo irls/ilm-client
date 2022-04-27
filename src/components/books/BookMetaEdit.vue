@@ -1282,14 +1282,14 @@ export default {
 
 
     removeTag(i){
-      if (!adminOrLibrarian)
+      if (!this.adminOrLibrarian)
         return;
 
       this.currentBook.hashTags.splice(i,1)
       this.liveUpdate('hashTags', this.currentBook.hashTags)
     },
     addTag(tag){
-      if (!adminOrLibrarian)
+      if (!this.adminOrLibrarian)
         return;
 
       if (this.currentBook.hashTags)
