@@ -33,7 +33,7 @@
           </fieldset>
           <fieldset class='hashtags' :disabled="!adminOrLibrarian">
             <legend>Project tags</legend>
-            <VTagSuggestion :key="handleHashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
+            <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
@@ -1027,8 +1027,9 @@ export default {
       handler (val) {
         this.init();
         this.lockLanguage = false;
-        this.handleHashTags++;  // to force reload hashTags template
+        //this.handleHashTags++;  // to force reload hashTags template
 
+        this.$refs['hashTags'].name = '';
       },
       deep: true
     },
