@@ -31,9 +31,9 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
-          <fieldset class='hashtags' v-if="adminOrLibrarian">
+          <fieldset class='hashtags' :disabled="!adminOrLibrarian">
             <legend>Project tags</legend>
-            <VTagSuggestion :key="handleHashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
+            <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
@@ -1029,8 +1029,9 @@ export default {
       handler (val) {
         this.init();
         this.lockLanguage = false;
-        this.handleHashTags++;  // to force reload hashTags template
+        //this.handleHashTags++;  // to force reload hashTags template
 
+        this.$refs['hashTags'].name = '';
       },
       deep: true
     },
@@ -1284,10 +1285,16 @@ export default {
 
 
     removeTag(i){
+      if (!this.adminOrLibrarian)
+        return;
+
       this.currentBook.hashTags.splice(i,1)
       this.liveUpdate('hashTags', this.currentBook.hashTags)
     },
-     addTag(tag){
+    addTag(tag){
+      if (!this.adminOrLibrarian)
+        return;
+
       if (this.currentBook.hashTags)
         this.currentBook.hashTags.push(tag);
       else 
