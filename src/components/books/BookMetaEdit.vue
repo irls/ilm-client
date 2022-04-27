@@ -31,7 +31,7 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
-          <fieldset class='hashtags' v-if="adminOrLibrarian">
+          <fieldset class='hashtags' :disabled="!adminOrLibrarian">
             <legend>Project tags</legend>
             <VTagSuggestion :key="handleHashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
           </fieldset>
@@ -1282,10 +1282,16 @@ export default {
 
 
     removeTag(i){
+      if (!adminOrLibrarian)
+        return;
+
       this.currentBook.hashTags.splice(i,1)
       this.liveUpdate('hashTags', this.currentBook.hashTags)
     },
-     addTag(tag){
+    addTag(tag){
+      if (!adminOrLibrarian)
+        return;
+
       if (this.currentBook.hashTags)
         this.currentBook.hashTags.push(tag);
       else 
