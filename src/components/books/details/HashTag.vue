@@ -18,7 +18,7 @@
       </div>
     </li>
   <!--</transition-group>-->
-    <li class="a-lb show-suggestion-btn suggestion-btn" v-if="suggestions.length" @click="showAll=!showAll ">{{showAll ? 'Hide Recommended': 'Recommended'}}
+    <li class="a-lb show-suggestion-btn suggestion-btn" v-if="suggestions.length && adminOrLibrarian" @click="showAll=!showAll ">{{showAll ? 'Hide Recommended': 'Recommended'}}
     </li>
   </ul>
   <transition name="fade">
@@ -39,6 +39,7 @@
 </template>
 
 <script>
+  import { mapGetters, mapActions } from 'vuex'
   export default{
     name:'Tag',
       model: {
@@ -148,7 +149,8 @@
           )
         suggestions.unshift(currentTag)
         return suggestions
-      }
+      },
+      ...mapGetters(['adminOrLibrarian'])
     },
     created(){
     },
