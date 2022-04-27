@@ -51,7 +51,7 @@ export let parlistO = {};
 export let blocks = [];
 export let lang = 'en';
 export let mode = 'edit';
-export let hotkeyScrollTo;
+export let hotkeyScrollTo = -1;
 export let currentJobInfo;
 
 let virtualList;
@@ -70,11 +70,11 @@ let prevBlocksLength = 0;
 
 $: hotkeyScrolledTo(hotkeyScrollTo);
 async function hotkeyScrolledTo(hotkeyScrollTo) {
-  if (hotkeyScrollTo !== false) {
+  if (hotkeyScrollTo !== false && hotkeyScrollTo > -1) {
     await tick();
     //vListScrollTo = hotkeyScrollTo;
     if (virtualList) virtualList.scrollToIndex(hotkeyScrollTo);
-    console.log('BookPreview.svelte->hotkeyScrolledTo', hotkeyScrollTo);
+    console.log('BookPreview.svelte->hotkeyScrolledTo->After', hotkeyScrollTo);
   }
 }
 

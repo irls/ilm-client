@@ -1351,8 +1351,11 @@ export default {
     {
       const nextIdx = this.parlistO.idsArray().indexOf(blockId);
 
-      if (nextIdx >-1 && nextIdx < this.parlistO.idsArray().length && nextIdx !== this.hotkeyScrollTo) {
-        this.hotkeyScrollTo = nextIdx;
+      if (nextIdx >-1 && nextIdx < this.parlistO.idsArray().length) {
+        this.hotkeyScrollTo = -1;
+        Vue.nextTick(()=>{
+          this.hotkeyScrollTo = nextIdx;
+        });
       }
     },
 
