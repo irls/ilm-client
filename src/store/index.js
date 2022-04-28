@@ -4344,10 +4344,10 @@ export const store = new Vuex.Store({
                 }
                 dispatch('getBookAlign');
               }
-              return resolve();
+              return resolve(true);
             });
         }
-        return resolve();
+        return resolve(false);
       });
     },
 
@@ -4603,6 +4603,11 @@ export const store = new Vuex.Store({
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+            .then(numUpdated => {
+              if (!numUpdated) {
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+              }
+            });
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
@@ -4667,6 +4672,11 @@ export const store = new Vuex.Store({
         .then(response => {
           
           dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+            .then(numUpdated => {
+              if (!numUpdated) {
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+              }
+            });
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
