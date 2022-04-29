@@ -161,11 +161,11 @@
         if(this.highlight > this.listSuggestions.length || !this.listSuggestions){
           this.highlight=-1;
         }
-        if(e.keyCode == 188) {
+        /*if(e.keyCode == 188) {
           this.name = this.name.split(',')[0]
           this.checkAndAdd()
           return false
-        }
+        }*/
       },
       addFromSuggestion(name,event){
           const isExist = this.tags.findIndex(x=>{
