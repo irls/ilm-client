@@ -4,7 +4,7 @@
   <!--<transition-group name="list-complete" tag="p">-->
     <li class="tag-name list-complete-item" v-for="(tag,index) in tags" :key="tag">
       {{tag}}
-      <span class="tag-remove" @click="remove(index)"><i class="fa fa-times-circle-o" aria-hidden="true"></i></span>
+      <span v-if="adminOrLibrarian" class="tag-remove" @click="remove(index)"><i class="fa fa-times-circle-o" aria-hidden="true"></i></span>
     </li>
     <li class="tag-input list-complete-item" key="tag-input">
       <input type="text" ref="input" class="tag-input-inner" name="tag" v-model="name" @keyup.enter.prevent="checkAndAdd" autocomplete="off" autofocus="on" @keyup="validateKeyStroke" @keydown="select" @keyup.delete="removeLastItem">
