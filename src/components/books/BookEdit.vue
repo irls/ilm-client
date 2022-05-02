@@ -42,11 +42,11 @@
       <div class="content-background">-->
   </div>
   <!--<div class="container-block">-->
-  <div id="editorFrontContainer" v-bind:style="{ top: editorsTop + 'px'}"
+  <div id="editorFrontContainer" v-bind:style="{'padding-top': editorsTop + 'px'}"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
-        v-for="(viewObj, blockIdx) in parlistO.idsViewArray(8)"
+        v-for="(viewObj, blockIdx) in parlistO.idsViewArray(showEditorsCount, prevEditorsCount)"
         v-bind:id="'s-'+ viewObj.blockId"
         v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
         <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
@@ -114,8 +114,6 @@ Vue.use(VueHotkey);
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
 
-const initialTopOffset = 0;//84;
-
 export default {
   data () {
     return {
@@ -138,7 +136,9 @@ export default {
       fntCounter: 0,
       onScrollEv: false,
 
-      editorsTop: initialTopOffset,
+      editorsTop: 0,
+      prevEditorsCount: 2,
+      showEditorsCount: 5,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -1399,7 +1399,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       const rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      rect.isVisible = !(rect.bottom < initialTopOffset+50 || rect.top - viewHeight >= 0);
+      rect.isVisible = !(rect.bottom < 50 || rect.top - viewHeight >= 0);
       return rect;
     },
 
@@ -1429,29 +1429,45 @@ export default {
 
       for (let i = range.start; i <= range.end; i++) {
         const blockId = this.parlistO.idsArray()[i];
-        const blockRef = document.getElementById('v-' + blockId);
-        const elRect = this.checkVisible(blockRef, viewHeight);
-        //console.log(`elRect: `, elRect);
-        //console.log(`this.parlistO.idsArray()[${i}]: `, blockId, 'visible: ', elRect.isVisible);
+        const blockVirtRef = document.getElementById('v-' + blockId);
+        const elRect = this.checkVisible(blockVirtRef, viewHeight);
 
         if (elRect.isVisible) {
-          //if (!firstVisible) {
-            firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
-            //this.parlistO.setFirstVisibleId(blockO._rid);
-          //}
+          firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
+
+          // This will correct height of virtual block if there was some editing
+          const blockEditRef = document.getElementById(firstVisible.blockid);
+          const rect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
+          blockVirtRef.style.height = `${rect.height}px`;
+
           break;
-          //lastVisible = this.parlistO.get(this.parlistArray[i]._rid);
         } else {
-          if (firstVisible) break;
           countHeight += elRect.height;
         }
       }
+      //console.log(`firstVisible: `, firstVisible.blockid);
 
       if (this.parlistO.startRId !== firstVisible.rid) {
         this.parlistO.setStartId(firstVisible.rid);
         this.startId = firstVisible.blockid;
-        this.editorsTop = range.padFront + countHeight;
       }
+
+      this.editorsTop = range.padFront + countHeight;
+
+      Vue.nextTick(()=>{
+        // This will correct top offset for editors blocks, that left before this.startId
+        let backwardFix = 0;
+        const prevEditorsArr = this.parlistO.idsViewBeforeArray(this.prevEditorsCount);
+        for (let block of prevEditorsArr) {
+          const blockEditRef = document.getElementById(block.blockId);
+          const rect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
+          backwardFix += rect.height;
+        }
+        if (backwardFix !== 0) {
+          this.editorsTop -= backwardFix;
+        }
+      });
+
       //this.correctEditWrapper();
       this.updateOpenToolbarPosition();
     },
@@ -2657,7 +2673,7 @@ export default {
 }
 
 #editorFrontContainer {
-
+  top: 0px,
 }
 
 #previewScrollHeader {
