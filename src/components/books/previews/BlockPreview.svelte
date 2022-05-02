@@ -302,5 +302,7 @@
 </script>
 
 <style>
-
+  .content-wrap-preview {
+    min-height: 54px
+  }
 </style>

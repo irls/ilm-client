@@ -40,7 +40,7 @@ class BookBlocks {
     this.firstVisibleId = null;
   }
 
-  idsViewArray(length = 10) {
+  idsViewArray(length = 10, beforeCount = 0) {
     if (this.listRIds.length == 0) return [];
     if (this.listIdsCache.rid === this.startRId && this.listIdsCache.list.length) {
       return this.listIdsCache.list;
@@ -48,25 +48,37 @@ class BookBlocks {
     if (this.startRId) {
       this.listIdsCache.rid = this.startRId;
       this.listIdsCache.list = [];
-      let seqId = this.startRId;
-      for (var i=0; i<=(length-1); i++) {
-        if (this.lookupList.hasOwnProperty(seqId)) {
-          this.listIdsCache.list.push({blockRid: seqId, blockId: this.lookupList[seqId].blockid});
-          seqId = this.lookupList[seqId].out;
-          if (seqId == this.meta.rid) return this.listIdsCache.list;
+      let forwardSeqId = this.startRId;
+      let backSeqId = this.lookupList[this.startRId].in;
+      for (var i=0; i<=(beforeCount-1); i++) {
+        if (this.lookupList.hasOwnProperty(backSeqId) && backSeqId !== this.meta.rid) {
+          this.listIdsCache.list.unshift({blockRid: backSeqId, blockId: this.lookupList[backSeqId].blockid});
+          backSeqId = this.lookupList[backSeqId].in;
         }
       }
-      //window.localStorage.setItem("startRId", this.startRId);
+      for (var i=0; i<=(length-1); i++) {
+        if (this.lookupList.hasOwnProperty(forwardSeqId)) {
+          this.listIdsCache.list.push({blockRid: forwardSeqId, blockId: this.lookupList[forwardSeqId].blockid});
+          forwardSeqId = this.lookupList[forwardSeqId].out;
+          if (forwardSeqId == this.meta.rid) return this.listIdsCache.list;
+        }
+      }
     }
     return this.listIdsCache.list;
   }
 
-  isInViewArray(blockRid) {
-    let result = false;
-    this.idsViewArray().forEach((viewObj)=>{
-      if (viewObj.blockRid == blockRid) result = true;
-    })
-    return result;
+  idsViewBeforeArray(beforeCount = 0) {
+    let result = [];
+    if (this.startRId) {
+      let backSeqId = this.lookupList[this.startRId].in;
+      for (var i=0; i<=(beforeCount-1); i++) {
+        if (this.lookupList.hasOwnProperty(backSeqId) && backSeqId !== this.meta.rid) {
+          result.unshift({blockRid: backSeqId, blockId: this.lookupList[backSeqId].blockid});
+          backSeqId = this.lookupList[backSeqId].in;
+        }
+      }
+    }
+    return result
   }
 
   idsArray() {
