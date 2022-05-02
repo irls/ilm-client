@@ -1448,18 +1448,22 @@ export default {
 
       this.editorsTop = range.padFront + countHeight;
 
+      this.correctCurrentEditHeight(this.startId);
+
+      //this.correctEditWrapper();
+      this.updateOpenToolbarPosition();
+    },
+
+    correctCurrentEditHeight (blockId) {
       Vue.nextTick(()=>{
         // This will correct height of virtual block if there was some editing
-        const blockEditRef = document.getElementById(firstVisible.blockid);
-        const blockVirtRef = document.getElementById('v-' + firstVisible.blockid);
+        const blockEditRef = document.getElementById(blockId);
+        const blockVirtRef = document.getElementById('v-' + blockId);
         if (blockEditRef && blockVirtRef) {
           const blockEditRect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
           blockVirtRef.style.height = `${blockEditRect.height}px`;
         }
       });
-
-      //this.correctEditWrapper();
-      this.updateOpenToolbarPosition();
     },
 
     correctEditWrapper() {
