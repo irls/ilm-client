@@ -138,6 +138,7 @@ export default {
 
       editorsTop: 0,
       showEditorsCount: 10,
+      editorFrontContainer: null,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -1384,12 +1385,12 @@ export default {
 
     initEditorPosition() {
       const previewScrollHeader = document.getElementById('previewScrollHeader');
-      const editorFrontContainer = document.getElementById('editorFrontContainer');
-      //console.log(`previewScrollHeader: `, previewScrollHeader);
-      //console.log(`editorFrontContainer: `, editorFrontContainer);
+      if (!this.editorFrontContainer) {
+        this.editorFrontContainer = document.getElementById('editorFrontContainer');
+      }
       //editorFrontContainer.style.marginLeft = '-3000px';
       //editorFrontContainer.style.display = 'none';
-      previewScrollHeader.appendChild(editorFrontContainer);
+      previewScrollHeader.appendChild(this.editorFrontContainer);
       const blockO = this.parlistO.get(this.parlistArray[0]._rid);
 //       //this.parlistO.setStartId(this.parlistArray[range.start]._rid);
       this.startId = blockO.blockid;
@@ -1513,6 +1514,7 @@ export default {
       this.$router.push({name: this.$route.name, params: {}});
       this.loadBookMounted() // also handle route params
       .then((metaResp)=>{
+        this.initEditorPosition();
         this.processOpenedBook();
       })
     },
