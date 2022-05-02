@@ -46,7 +46,7 @@
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
-        v-for="(viewObj, blockIdx) in parlistO.idsViewArray(showEditorsCount, prevEditorsCount)"
+        v-for="(viewObj, blockIdx) in parlistO.idsViewArray(showEditorsCount)"
         v-bind:id="'s-'+ viewObj.blockId"
         v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
         <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
@@ -137,8 +137,7 @@ export default {
       onScrollEv: false,
 
       editorsTop: 0,
-      prevEditorsCount: 1,
-      showEditorsCount: 8,
+      showEditorsCount: 10,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -1434,14 +1433,9 @@ export default {
 
         if (elRect.isVisible) {
           firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
-
-          // This will correct height of virtual block if there was some editing
-          const blockEditRef = document.getElementById(firstVisible.blockid);
-          const rect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
-          blockVirtRef.style.height = `${rect.height}px`;
-
           break;
-        } else {
+        }
+        if (!firstVisible) {
           countHeight += elRect.height;
         }
       }
@@ -1455,16 +1449,12 @@ export default {
       this.editorsTop = range.padFront + countHeight;
 
       Vue.nextTick(()=>{
-        // This will correct top offset for editors blocks, that left before this.startId
-        let backwardFix = 0;
-        const prevEditorsArr = this.parlistO.idsViewBeforeArray(this.prevEditorsCount);
-        for (let block of prevEditorsArr) {
-          const blockEditRef = document.getElementById(block.blockId);
-          const rect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
-          backwardFix += rect.height;
-        }
-        if (backwardFix !== 0) {
-          this.editorsTop -= backwardFix;
+        // This will correct height of virtual block if there was some editing
+        const blockEditRef = document.getElementById(firstVisible.blockid);
+        const blockVirtRef = document.getElementById('v-' + firstVisible.blockid);
+        if (blockEditRef && blockVirtRef) {
+          const blockEditRect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
+          blockVirtRef.style.height = `${blockEditRect.height}px`;
         }
       });
 
