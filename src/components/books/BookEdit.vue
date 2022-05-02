@@ -137,8 +137,8 @@ export default {
       onScrollEv: false,
 
       editorsTop: 0,
-      prevEditorsCount: 2,
-      showEditorsCount: 5,
+      prevEditorsCount: 1,
+      showEditorsCount: 8,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
