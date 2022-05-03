@@ -1441,6 +1441,11 @@ export default {
         }
       }
       //console.log(`firstVisible: `, firstVisible.blockid);
+      if (!firstVisible) {
+        const blockId = this.parlistO.idsArray()[range.end];
+        this.scrollToBlock(blockId);
+        return;
+      }
 
       if (this.parlistO.startRId !== firstVisible.rid) {
         this.parlistO.setStartId(firstVisible.rid);
