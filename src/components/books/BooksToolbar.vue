@@ -13,9 +13,9 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-  <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input> <!-- ILM-4544<input @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"  type="button" class="btn-inside" value="X"> &nbsp;-->
+  <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input> <input @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"  type="button" class="btn-inside" value="X">&nbsp;
 
-  <!-- ILM-4544<input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;-->
+  <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;
 
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
