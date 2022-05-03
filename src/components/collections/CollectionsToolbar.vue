@@ -7,11 +7,11 @@
 
 
         <!-- <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input> -->
-  <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input><!-- ILM-4544<input @click="filterChange('title', {target: {'value': ''}});"  type="button" class="btn-inside" value="X"> &nbsp;-->
+  <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input> <input @click="filterChange('title', {target: {'value': ''}});"  type="button" class="btn-inside" value="X"> 
 
-  <!-- ILM-4544
+  
   <input v-model="collectionsFilter.projectTag" type="text" @keyup="filterChange('projectTag', $event)"" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="filterTag=''; $store.commit('SET_COLLECTIONS_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;
-  -->
+
 
 
         <template v-if="adminOrLibrarian">
