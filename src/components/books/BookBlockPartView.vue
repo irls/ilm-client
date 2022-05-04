@@ -3345,6 +3345,9 @@ Save text changes and realign the Block?`,
               return false;
             }
             // Do not allow split point inside superscript or subscript
+            if (container.nextElementSibling && ['SUP', 'SUB'].includes(container.nextElementSibling.nodeName)) {
+              return false;
+            }
             let checkParentSup = container.parentElement;
             while (checkParentSup && checkParentSup.nodeName !== 'DIV') {
               if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB') {
@@ -3352,23 +3355,6 @@ Save text changes and realign the Block?`,
               }
               if (checkParentSup.nextElementSibling && ['SUP', 'SUB'].includes(checkParentSup.nextElementSibling.nodeName)) {
                 return false;
-              }
-              if (checkParentSup.childNodes.length > 0) {
-                let supNode;
-                checkParentSup.childNodes.forEach(cNode => {
-                  if (['SUP', 'SUB'].includes(cNode.nodeName)) {
-                    supNode = cNode;
-                  }
-                });
-                if (supNode) {// rare case from ILM-4656: user adds footnote, and without saving sets split point between word and footnote
-                  //console.log(this.range.getBoundingClientRect());
-                  //console.log(supNode.getBoundingClientRect());
-                  let rangePosition = this.range.getBoundingClientRect();
-                  let nodePosition = supNode.getBoundingClientRect();
-                  if (rangePosition && rangePosition.x && nodePosition && nodePosition.x && rangePosition.x < nodePosition.x) {
-                    return false;
-                  }
-                }
               }
               checkParentSup = checkParentSup.parentElement;
             }
@@ -3437,6 +3423,9 @@ Save text changes and realign the Block?`,
                 let checkContainer = container;
                 while (checkContainer.parentElement !== this.$refs.blockContent) {
                   checkContainer = checkContainer.parentElement;
+                  if (checkContainer && checkContainer.previousElementSibling) {
+                    break;
+                  }
                 }
                 if (!checkContainer.previousElementSibling) {
                   return false;
@@ -3452,6 +3441,9 @@ Save text changes and realign the Block?`,
                 let beforeDiv = container;
                 while (beforeDiv && beforeDiv.parentElement.nodeName !== 'DIV') {// search for container before block wrapper, skip if it has no sibling
                   beforeDiv = beforeDiv.parentElement;
+                  if (beforeDiv && beforeDiv.nextSibling) {
+                    break;
+                  }
                 }
                 if (beforeDiv && !beforeDiv.nextSibling) {
                   return false;
