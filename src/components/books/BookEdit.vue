@@ -226,21 +226,17 @@ export default {
             }
           },
           'pgup': (ev)=>{
-            console.log('page up', ` this.startId: `, this.startId, 'this.hotkeyScrollTo: ', this.hotkeyScrollTo);
             ev.preventDefault();
             const currId = this.parlistO.idsArray()[this.hotkeyScrollTo];
             const nextId = this.parlistO.getInId(currId);
             const nextIdx = this.parlistO.idsArray().indexOf(nextId) || 0;
-            console.log(`nextId: `, nextId, ` nextIdx: `, nextIdx);
             this.scrollToBlock(nextId);
           },
           'pgdn': (ev)=>{
-            console.log('page down', ` this.startId: `, this.startId, 'this.hotkeyScrollTo: ', this.hotkeyScrollTo);
             ev.preventDefault();
             const currId = this.parlistO.idsArray()[this.hotkeyScrollTo];
             const nextId = this.parlistO.getOutId(currId);
             const nextIdx = this.parlistO.idsArray().indexOf(nextId) || 0;
-            console.log(`nextId: `, nextId, ` nextIdx: `, nextIdx);
             this.scrollToBlock(nextId);
           },
 //           'enter': {
@@ -313,9 +309,9 @@ export default {
         let checkMeta = this.parlistO.meta || {};
         checkMeta = checkMeta.bookid || false;
         const bookid = this.$route.params.bookid;
-        console.log(`loadBookMounted.checkMeta:`, checkMeta, bookid);
+        let loadType = 'load';
         if (!checkMeta || checkMeta !== bookid || !this.parlist.values().next().value || this.$route.params.task_type) {
-          console.log('loadBookMounted', 'load');
+          console.log('loadBookMounted', loadType);
           this.freeze('loadBookMounted');
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
@@ -330,7 +326,7 @@ export default {
               bookId: this.$route.params.bookid,
               block: startBlock,
               taskType: taskType,
-              onPage: 1
+              onPage: 1,//this.showEditorsCount
             }).then((answer)=>{
               if (this.startId == false) {
                 this.startId = answer.blocks[0].blockid;
@@ -338,7 +334,7 @@ export default {
               return this.getAllBlocks(answer.meta.bookid, this.startId)
               .then((result)=>{
                 this.isBookMounted = true;
-                return Promise.resolve(meta);
+                return Promise.resolve({...meta, ...{loadType}});
               });
             })
           }).catch((err)=>{
@@ -346,7 +342,8 @@ export default {
             return Promise.reject(err);
           });
         } else {
-          console.log('loadBookMounted', 'pre');
+          loadType = 'pre';
+          console.log('loadBookMounted', loadType);
           if (this.$route.params.hasOwnProperty('block')) {
             if (this.$route.params.block=='unresolved') {
               this.startId = this.$route.params.block || false;
@@ -359,7 +356,7 @@ export default {
             this.$router.replace({name: this.$route.name, params: {block: this.meta.startBlock_id}});// force view update when switching from display mode
           }
           this.isBookMounted = true;
-          return Promise.resolve(this.parlistO.meta); // already loaded
+          return Promise.resolve({...this.parlistO.meta, ...{loadType}}); // already loaded
         }
       } else return Promise.reject('No bookid');
     },
@@ -1389,7 +1386,7 @@ export default {
       //editorFrontContainer.style.display = 'none';
       previewScrollHeader.appendChild(this.editorFrontContainer);
       const blockO = this.parlistO.get(this.parlistArray[0]._rid);
-//       //this.parlistO.setStartId(this.parlistArray[range.start]._rid);
+      //this.parlistO.setStartId(this.parlistArray[range.start]._rid);
       this.startId = blockO.blockid;
     },
 
@@ -2203,17 +2200,20 @@ export default {
 
       this.loadBookMounted() // also handle route params
       .then((metaResp)=>{
-        //console.log(`loadBookMounted.metaResp: `, metaResp);
         this.initEditorPosition();
         this.processOpenedBook();
+        const startBlock = this.$route.params.block || false;
+        if (metaResp.loadType && metaResp.loadType == 'load' && startBlock) {
+          this.scrollToBlock(startBlock);
+        }
       })
 
       window.addEventListener('keydown', this.eventKeyDown);
 
       //this.initRecorder();
       window.onscroll = function() {
-        $('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
-        $('#narrateStartCountdown').css('height', '100%')
+        //$('#narrateStartCountdown').css('top', document.scrollingElement.scrollTop + 'px');
+        //$('#narrateStartCountdown').css('height', '100%')
       }
 
       this.$root.$on('book-reimported', this.bookReimported);
