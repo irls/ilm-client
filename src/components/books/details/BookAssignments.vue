@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="hidden">({{storeListO.firstVisibleId}})</div>
+    <div class="hidden">({{storeListO.startId}})</div>
     <div v-for="counter in tasks_counter">
       <div class="counters-container">
         <div class="counter-executor">
@@ -182,7 +182,7 @@
       },
       startBlockId: {
         get() {
-          return this.storeListO.firstVisibleId
+          return this.storeListO.startId
         },
         cache: false
       },
@@ -644,12 +644,11 @@
       set_taskBlockMapPositions(fromBlockId = null) {
         //console.time('set_taskBlockMapPositions');
         if (!fromBlockId) {
-          fromBlockId = this.storeListO.firstVisibleId;
+          fromBlockId = this.storeListO.startId;
         }
         if (fromBlockId) {
           //console.log(this.storeListO);
           let start = this.storeListO.listIds.indexOf(fromBlockId);
-          //console.log(start)
           for (let type in this.taskBlockMap.map) {//const [type, data] in this.taskBlockMap.map.entries()
             //console.log(type, this.taskBlockMap.map[type])
             this.taskBlockMap.map[type].next = null;
@@ -768,7 +767,6 @@
       '$route': {
         handler(val) {
           window.setTimeout(this.set_taskBlockMapPositionsFromRoute(), 1);
-
         }
       },
       'currentBookMeta.language': {

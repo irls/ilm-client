@@ -136,6 +136,7 @@ export default {
       fntCounter: 0,
       onScrollEv: false,
 
+      correctVisibleTop: 86, //px
       editorsTop: 0,
       showEditorsCount: 10,
       editorFrontContainer: null,
@@ -852,7 +853,6 @@ export default {
           if (!this.parlistO.getInId(blockO['@rid'])) {
             this.startId = blockO.blockid;
             this.parlistO.setStartId(blockO['@rid']);
-            this.parlistO.setFirstVisibleId(blockO['@rid']);
           }
           this.unfreeze('insertBlockBefore');
           this.tc_loadBookTask(block.bookid);
@@ -953,9 +953,6 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
-          if (this.parlistO.firstVisibleId === block._id) {
-            this.parlistO.setFirstVisibleId(this.startId)
-          }
         }
         //this.getCurrentJobInfo();
 
@@ -1399,7 +1396,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       const rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      rect.isVisible = !(rect.bottom < 50 || rect.top - viewHeight >= 0);
+      rect.isVisible = !(rect.bottom < this.correctVisibleTop || rect.top - viewHeight >= 0);
       return rect;
     },
 
@@ -2328,8 +2325,8 @@ export default {
     'mode': {
       handler(val) {
         Vue.nextTick(() => {
-          if (this.parlistO.firstVisibleId) {
-            this.scrollToBlock(this.parlistO.firstVisibleId);
+          if (this.parlistO.startId) {
+            this.scrollToBlock(this.parlistO.startId);
           }
           this.correctEditWrapper();
         })
@@ -2340,8 +2337,8 @@ export default {
         if (val && val !== 'active') {
           if (this.mode && this.mode !== 'edit') {
             let params = {};
-            if (this.parlistO.firstVisibleId) {
-              params.block = this.parlistO.firstVisibleId;
+            if (this.parlistO.startId) {
+              params.block = this.parlistO.startId;
             }
             this.$router.push({ name: 'BookEdit', params: params });
           }
