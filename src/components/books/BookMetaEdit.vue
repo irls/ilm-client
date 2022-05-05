@@ -895,7 +895,7 @@ export default {
           });
         }
         return types;
-      }
+        }
     },
     trimSilenceConfigCalculated: {
       get() {
