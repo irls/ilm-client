@@ -1393,6 +1393,7 @@ export default {
         this.pushChange('content');
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
+        // emit for virtual scroll correction
         this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
       },
       onInputSuggestion: function(ev) {
@@ -1423,7 +1424,6 @@ export default {
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
       },
       discardBlock: function(ev) {
-
         this.getBlock(this.block.blockid)
         .then((block)=>{
 
@@ -1437,6 +1437,9 @@ export default {
               //this.$refs.blockContent.innerHTML = content;
             //}
             //this.$refs.blockContent.focus();
+
+            // emit for virtual scroll correction
+            this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
           }
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();

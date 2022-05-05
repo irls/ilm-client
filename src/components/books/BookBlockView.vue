@@ -1847,6 +1847,9 @@ export default {
             }
           }
 
+          // emit for virtual scroll correction
+          this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
+
         });
       },
 
