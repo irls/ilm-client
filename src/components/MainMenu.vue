@@ -100,10 +100,12 @@ export default {
 .livedb:hover .checkbox{
   display: block;
 }
-.livedb:hover .connected,.livedb:hover .disconected{
-  display: none;
+.livedb .connected,.livedb .disconected{
   height: 100%;
   width: 100%
+}
+.livedb:hover .connected,.livedb:hover .disconected{
+  display: none;
 }
 .livedb:hover {
   -webkit-transition: width 1s ease-in-out;
