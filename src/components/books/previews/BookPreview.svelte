@@ -106,7 +106,7 @@ const blockView = (block) => {
   if (block) {
     //let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || parlistO.meta.lang || lang });
 
-    block.language = block.language || parlistO.meta.lang || lang;
+    //block.language = block.language || parlistO.meta.lang || lang;
     block.imgUrl   = block.illustration ? (process.env.ILM_API + block.illustration + '?' + timestamp) : false;
 
     if (!block.imgProps || block.imgProps.url !== block.imgUrl) {
