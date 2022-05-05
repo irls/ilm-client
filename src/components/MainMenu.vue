@@ -44,6 +44,14 @@
       </ul>
     </td></tr>
   </table>
+    <div class='livedb'>
+      <div class="disconected"  v-if="!livedbStatus" style="background-color: red;"></div>
+      <div class="connected"  v-if="livedbStatus" style="background-color: green;"></div>
+      <div class="checkbox">
+        <input type="checkbox" id="checkbox" v-model="livedbEnabled" style="margin-left: 0px;">
+        <label for="checkbox">Livedb on/off</label>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -55,19 +63,57 @@ import { mapGetters } from 'vuex'
 
 
 export default {
-  data () {
-    return {
-      // process: this.$store.state.process
-    }
-  },
   mixins: [access],
-  computed:
-    mapGetters (['tc_userTasks'])
+  computed: {
+    livedbEnabled: {
+      get () {
+        return this.$store.state.livedbEnabled
+      },
+      set (value) {
+        this.$store.commit('SET_LIVEDB_CHECKBOX', value)
+      }
+    },
+    ...mapGetters(['tc_userTasks','livedbStatus']),
+  },
 
 }
 </script>
 
+<style lang="less">
+.livedb{
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  white-space:nowrap;
+  overflow:hidden;
+  height: 45px;
+}
+.livedb .checkbox{
+  height: 100%;
+  padding-top: 10px;
+  padding-left: 5px;
+  display: none;
+  margin:0px;
+  background-color: #00a9ff;
+}
+.livedb:hover .checkbox{
+  display: block;
+}
+.livedb:hover .connected,.livedb:hover .disconected{
+  display: none;
+  height: 100%;
+  width: 100%
+}
+.livedb:hover {
+  -webkit-transition: width 1s ease-in-out;
+  -moz-transition: width 1s ease-in-out;
+  -o-transition: width 1s ease-in-out;
+  transition: width 1s ease-in-out;
+  width:110px;
+}
 
+</style>
 
 <style scoped>
   .top-menu-wrapper {
