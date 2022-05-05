@@ -1461,7 +1461,9 @@ export default {
         const blockVirtRef = document.getElementById('v-' + blockId);
         if (blockEditRef && blockVirtRef) {
           const blockEditRect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
+          //console.log(`correctCurrentEditHeight: `, blockId, blockEditRect.height);
           blockVirtRef.style.height = `${blockEditRect.height}px`;
+          blockVirtRef.style.overflow = `hidden`;
         }
       });
     },
@@ -2229,6 +2231,7 @@ export default {
       this.$root.$on('from-audioeditor:undo', this.evFromAudioeditorUndo);
       this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
+      this.$root.$on('from-block-part-view:on-input', this.correctCurrentEditHeight);
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         e.preventDefault();
@@ -2255,6 +2258,7 @@ export default {
     this.$root.$off('from-audioeditor:revert', this.evFromAudioEditorRevert);
     this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
     this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+    this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
   },
   watch: {
     'meta._id': {

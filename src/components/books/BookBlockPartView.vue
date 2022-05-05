@@ -1274,7 +1274,7 @@ export default {
         }
       },
       onSelect: function($event) {
-        console.log('onSelect');
+        //console.log('onSelect');
       },
       onClick: function($event) {
 //         $('.medium-editor-toolbar').each(function(){
@@ -1351,6 +1351,7 @@ export default {
         this.pushChange('content');
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
+        this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
       },
       onInputSuggestion: function(ev) {
         this.isChanged = true;
