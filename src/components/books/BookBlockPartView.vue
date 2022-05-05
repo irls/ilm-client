@@ -3408,6 +3408,9 @@ Save text changes and realign the Block?`,
                 }
                 regexp = /[\r\n]$/;// check for line end with line break
                 if (container.parentElement && container.parentElement.nodeName === 'W' && !regexp.test(checkRange.toString())) {// for wrapped word check that next element is line break
+                    if (container.length === this.range.endOffset && container.parentElement.nextSibling && container.parentElement.nextSibling.nodeName === 'BR') {
+                      return true;
+                    }
                   if (container.length === checkRange.endOffset) {// end of line
                     if (container.parentElement.nextSibling && container.parentElement.nextSibling.nodeType === 3 && regexp.test(container.parentElement.nextSibling.nodeValue) && container.parentElement.nextElementSibling) {
                       regexp = /.*$/;
