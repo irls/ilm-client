@@ -39,7 +39,8 @@ export default {
       hotkeyScrollTo: false,
       onScrollEv: false,
       startReached: false,
-      endReached: false
+      endReached: false,
+      correctVisibleTop: 86, //px
     }
   },
   components: {
@@ -248,7 +249,7 @@ export default {
       var rect = elm.getBoundingClientRect();
       var viewHeight = document.getElementsByClassName('scroll-wrapper')[0].scrollHeight;
       //Math.max(document.getElementsByClassName('.scroll-wrapper').clientHeight, window.innerHeight);
-      return !(rect.bottom < 81 || rect.top - viewHeight >= 81);
+      return !(rect.bottom < this.correctVisibleTop || rect.top - viewHeight >= 0);
     },
 
     getAllBlocks(metaId, startBlock) {
