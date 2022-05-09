@@ -289,21 +289,6 @@ export default {
       //this.updateVisibleBlocks();
     },
 
-    refreshPreviewTmpl(idsArray) {
-      //console.time('refreshPreviewTmpl');
-      //console.log('refreshPreviewTmpl', idsArray);
-      if (this.$refs.viewBlocks) {
-        this.$refs.viewBlocks.forEach((blockRef, idx)=>{
-          if (idsArray.indexOf(blockRef.blockId) > -1) {
-            this.parlistO.setLoaded(blockRef.blockRid);
-            blockRef.$forceUpdate();
-          }
-        })
-
-      }
-      //console.timeEnd('refreshPreviewTmpl');
-    },
-
     loadBookMounted() {
       if (this.$route.params.hasOwnProperty('bookid')) {
         let checkMeta = this.parlistO.meta || {};
@@ -510,7 +495,6 @@ export default {
               }
             } else {
               this.$store.commit('set_storeList', newBlock);
-              this.refreshPreviewTmpl([newBlock.blockid]);
               this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
@@ -559,7 +543,6 @@ export default {
       return this.putBlockPart([blockData, realign])
       .then((updated)=>{
         this.updateVisibleBlocks();
-        this.refreshPreviewTmpl([updated.blockid]);
         this.$store.commit('set_storeList', new BookBlock(updated));
       })
       .catch((err)=>{})
@@ -598,7 +581,6 @@ export default {
 
     _refreshAfterUpdate(block) {
       this.updateVisibleBlocks();
-      this.refreshPreviewTmpl([block.blockid]);
       this.$store.commit('set_storeList', new BookBlock(block));
       //this.parlistO.getBlockByRid(block.id).type = block.type;
       Vue.nextTick(()=>{
@@ -1398,12 +1380,12 @@ export default {
     },
 
     updateOpenToolbarPosition() {
-      const editors = document.getElementsByClassName('medium-editor-toolbar-active');
-      if (editors && editors.length) { //move editor toolbar
-        const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
-        const toolbarBound = editors[0].getBoundingClientRect();
-        editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
-      }
+//       const editors = document.getElementsByClassName('medium-editor-toolbar-active');
+//       if (editors && editors.length) { //move editor toolbar
+//         const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
+//         const toolbarBound = editors[0].getBoundingClientRect();
+//         editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
+//       }
     },
 
     smoothHandleScroll: _.debounce(function (ev) {
