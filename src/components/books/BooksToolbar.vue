@@ -18,7 +18,7 @@
 
     <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input>
     <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"></i>
-  
+
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
       <option value="">Not filtered</option>
@@ -112,6 +112,8 @@ export default {
     },
     displayBook () {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
+      this.bookFilters.filter = '';
+      this.bookFilters.projectTag = '';
     },
     importBook () {
       console.log('event ok')
