@@ -2270,6 +2270,8 @@ export default {
           //});
         //}
         let updateTask;
+        let delCount = 0;// footnotes to delete
+        let updatedFootnotes = [];
         if (this.mode !== 'narrate') {
           if (this.block.footnotes && this.block.footnotes.length) {
             let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
@@ -2278,7 +2280,7 @@ export default {
             } else {
               footnotesInText = 0;
             }
-            let delCount = this.block.footnotes.length - footnotesInText;
+            delCount = this.block.footnotes.length - footnotesInText;
             if (this.block.footnotes.length > footnotesInText && this.$refs.blocks) {
               let delIdxList = [];
               let contentMerged = '';
@@ -2298,6 +2300,8 @@ export default {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
               });
+            } else {
+              updatedFootnotes = this.block.footnotes;
             }
           }
         }
@@ -2310,7 +2314,21 @@ export default {
             updateTask = this.assembleBlock(update, realign);
           }
         } else {
-          updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
+          updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign])
+            .then((updated) => {
+              if (delCount) {
+                return this.assembleBlock({
+                  footnotes: updatedFootnotes,
+                  blockid: this.block.blockid,
+                  bookid: this.block.bookid
+                }, realign)
+                  .then(() => {
+                    return updated;
+                  });
+              } else {
+                return updated;
+              }
+            });
         }
         return updateTask
           .then((response) => {
