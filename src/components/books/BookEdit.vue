@@ -48,7 +48,9 @@
         <div class="row content-scroll-item front"
           v-for="(viewObj, blockIdx) of parlistArray"
           v-bind:id="'s-'+ viewObj._id"
-          v-bind:key="viewObj._id"><!--{{parlistO.getInId(viewObj._rid)}} -> {{viewObj._id}}{{viewObj._rid}} -> {{parlistO.getOutId(viewObj._rid)}}-->
+          v-bind:key="viewObj._id"
+          v-bind:class="{ 'hidden-by-scroll': (idsViewArray.indexOf(viewObj._id) == -1) }">
+          <!--{{parlistO.getInId(viewObj._rid)}} -> {{viewObj._id}}{{viewObj._rid}} -> {{parlistO.getOutId(viewObj._rid)}}-->
           <div class='col' v-if="idsViewArray.indexOf(viewObj._id) > -1">
               <BookBlockView ref="blocks"
                 :block="parlist.get(viewObj._id)"
@@ -2512,7 +2514,13 @@ export default {
 
       &.front {
         position: relative;
+
+        &.hidden-by-scroll {
+          display: none;
+          position: static;
+        }
       }
+
     }
   }
 
