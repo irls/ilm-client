@@ -184,9 +184,8 @@ export const store = new Vuex.Store({
     taskTypes: {tasks: [], categories: []},
     liveDB: new liveDB((status) => {
       if( store.state.livedbStatus!=null && status){
-        if(store.state.watched.metaV){
-          store.dispatch('reloadBook');
-        }
+        store.state.liveDB.stopWatch('metaV');
+        store.dispatch('liveDBMetaUpdate');
       }
       store.state.livedbStatus = status;
 
@@ -585,9 +584,8 @@ export const store = new Vuex.Store({
         state.livedbEnabled = true;
         state.liveDB = new liveDB((status) => {
           if( store.state.livedbStatus!=null && status){
-            if(store.state.watched.metaV){
-              store.dispatch('reloadBook');
-            }
+            state.liveDB.stopWatch('metaV');
+            store.dispatch('liveDBMetaUpdate');
           }
           store.state.livedbStatus = status;
         })
@@ -3790,6 +3788,17 @@ export const store = new Vuex.Store({
         return Promise.reject({})
       })
     },
+
+    liveDBMetaUpdate({state, commit, dispatch}) {
+      if(store.state.watched.metaV){
+        store.state.liveDB.startWatch(store.state.watched.metaV + '-metaV', 'metaV', {bookid: store.state.watched.metaV}, (data) => {
+          commit('SET_CURRENTBOOK_META', data.meta)
+        })
+        setTimeout(() => {
+          return axios.get(`${state.API_URL}livedb/update/meta/${store.state.watched.metaV}`)
+        }, 1000)
+      }
+    },
     reloadBook({state, commit, dispatch}) {
       commit('clear_storeList');
       commit('clear_storeListO');
@@ -4384,6 +4393,7 @@ export const store = new Vuex.Store({
         return resolve(false);
       });
     },
+
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
