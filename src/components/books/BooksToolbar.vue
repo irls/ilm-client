@@ -13,10 +13,12 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-  <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input> <input @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"  type="button" class="btn-inside" value="X">&nbsp;
+    <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"></i>
 
-  <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input><input @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"    type="button" class="btn-inside" value="X"> &nbsp;
-
+    <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"></i>
+  
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
       <option value="">Not filtered</option>
@@ -172,11 +174,12 @@ input {width: 12em}
 
 .form-control {display: inline}
 
-input.btn-inside {
-    margin-left: -22px;
-    height: 30px;
-    width: 20px;
-    border: 0;
+.btn-inside {
+    margin-left: -30px;
+    margin-top: 7px;
+    z-index: 999;
+    position: absolute;
+
 }
 
 
