@@ -45,42 +45,42 @@
   <div id="editorFrontContainer" v-bind:style="{'padding-top': editorsTop + 'px'}"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
-      <div class="row content-scroll-item front"
-        v-for="(viewObj, blockIdx) in parlistO.idsViewArray(showEditorsCount)"
-        v-bind:id="'s-'+ viewObj.blockId"
-        v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
-        <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
-          <BookBlockView ref="blocks"
-              :block="parlist.get(viewObj.blockId)"
-              :blockO="parlistO.get(viewObj.blockRid)"
-              :blockId = "viewObj.blockId"
-              :putBlock ="putBlockProxy"
-              :getBlock ="getBlockProxy"
-              :putBlockPart ="putBlockPartProxy"
-              :putBlockO ="putBlockOProxy"
-              :putNumBlockO ="putNumBlockOProxy"
-              :recorder ="recorder"
-              :blockReindexProcess="blockReindexProcess"
-              :getBloksUntil="getBloksUntil"
-              :allowSetStart="allowSetStart"
-              :allowSetEnd="allowSetEnd"
-              :prevId="parlistO.getInId(viewObj.blockRid)"
-              :mode="mode"
-              :putBlockProofread="putBlockProofreadProxy"
-              :putBlockNarrate="putBlockNarrateProxy"
-              :initRecorder="initRecorder"
-              @stopRecordingAndNext="stopRecordingAndNext"
-              @insertBefore="insertBlockBefore"
-              @insertAfter="insertBlockAfter"
-              @deleteBlock="deleteBlock"
-              :joinBlocks="joinBlocks"
-              @setRangeSelection="setRangeSelection"
-              @blockUpdated="blockUpdated"
-          /></BookBlockView>
+        <div class="row content-scroll-item front"
+          v-for="(viewObj, blockIdx) of parlistArray"
+          v-bind:id="'s-'+ viewObj._id"
+          v-bind:key="viewObj._id"><!--{{parlistO.getInId(viewObj._rid)}} -> {{viewObj._id}}{{viewObj._rid}} -> {{parlistO.getOutId(viewObj._rid)}}-->
+          <div class='col' v-if="idsViewArray.indexOf(viewObj._id) > -1">
+              <BookBlockView ref="blocks"
+                :block="parlist.get(viewObj._id)"
+                :blockO="parlistO.get(viewObj._rid)"
+                :blockId = "viewObj._id"
+                :putBlock ="putBlockProxy"
+                :getBlock ="getBlockProxy"
+                :putBlockPart ="putBlockPartProxy"
+                :putBlockO ="putBlockOProxy"
+                :putNumBlockO ="putNumBlockOProxy"
+                :recorder ="recorder"
+                :blockReindexProcess="blockReindexProcess"
+                :getBloksUntil="getBloksUntil"
+                :allowSetStart="allowSetStart"
+                :allowSetEnd="allowSetEnd"
+                :prevId="parlistO.getInId(viewObj._rid)"
+                :mode="mode"
+                :putBlockProofread="putBlockProofreadProxy"
+                :putBlockNarrate="putBlockNarrateProxy"
+                :initRecorder="initRecorder"
+                @stopRecordingAndNext="stopRecordingAndNext"
+                @insertBefore="insertBlockBefore"
+                @insertAfter="insertBlockAfter"
+                @deleteBlock="deleteBlock"
+                :joinBlocks="joinBlocks"
+                @setRangeSelection="setRangeSelection"
+                @blockUpdated="blockUpdated"
+            /></BookBlockView>
+          </div>
+          <!--<div class='col'>-->
         </div>
-        <!--<div class='col'>-->
-      </div>
-      <!--<div class="row"-->
+        <!--<div class="row"-->
       </div>
       <!--<div class="content-background">-->
 
@@ -179,11 +179,11 @@ export default {
           }
           return result;
       },
-      getListObjs: { cache: false,
+      /*getListObjs: { cache: false,
         get: function () {
           return this.parlistO.listObjs;
         }
-      },
+      },*/
       keymap: function() {
         return {
           // 'esc+ctrl' is OK.
@@ -255,6 +255,11 @@ export default {
           //return this.$store.state.storeListUpdateCounter && Array.from(this.$store.state.storeList.values());
         }
       },
+      idsViewArray: { /*cache: false,*/
+        get: function () {
+          return this.parlistO.idsViewArray(this.showEditorsCount).map((el)=>el.blockId)
+        }
+      },
       viewCurrentJobInfo: { cache: true,
         get: function() {
           return this.currentJobInfo;
@@ -285,23 +290,9 @@ export default {
     },
     refreshTmpl() {
       // a hack to update template
+      console.log(`refreshTmpl: `, 1);
       this.$forceUpdate();
       //this.updateVisibleBlocks();
-    },
-
-    refreshPreviewTmpl(idsArray) {
-      //console.time('refreshPreviewTmpl');
-      //console.log('refreshPreviewTmpl', idsArray);
-      if (this.$refs.viewBlocks) {
-        this.$refs.viewBlocks.forEach((blockRef, idx)=>{
-          if (idsArray.indexOf(blockRef.blockId) > -1) {
-            this.parlistO.setLoaded(blockRef.blockRid);
-            blockRef.$forceUpdate();
-          }
-        })
-
-      }
-      //console.timeEnd('refreshPreviewTmpl');
     },
 
     loadBookMounted() {
@@ -464,7 +455,7 @@ export default {
     },
 
     refreshBlock (change) {
-      //console.log('refreshBlock', change);
+      console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -510,7 +501,6 @@ export default {
               }
             } else {
               this.$store.commit('set_storeList', newBlock);
-              this.refreshPreviewTmpl([newBlock.blockid]);
               this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
@@ -559,7 +549,6 @@ export default {
       return this.putBlockPart([blockData, realign])
       .then((updated)=>{
         this.updateVisibleBlocks();
-        this.refreshPreviewTmpl([updated.blockid]);
         this.$store.commit('set_storeList', new BookBlock(updated));
       })
       .catch((err)=>{})
@@ -598,7 +587,6 @@ export default {
 
     _refreshAfterUpdate(block) {
       this.updateVisibleBlocks();
-      this.refreshPreviewTmpl([block.blockid]);
       this.$store.commit('set_storeList', new BookBlock(block));
       //this.parlistO.getBlockByRid(block.id).type = block.type;
       Vue.nextTick(()=>{
@@ -1398,12 +1386,12 @@ export default {
     },
 
     updateOpenToolbarPosition() {
-      const editors = document.getElementsByClassName('medium-editor-toolbar-active');
-      if (editors && editors.length) { //move editor toolbar
-        const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
-        const toolbarBound = editors[0].getBoundingClientRect();
-        editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
-      }
+//       const editors = document.getElementsByClassName('medium-editor-toolbar-active');
+//       if (editors && editors.length) { //move editor toolbar
+//         const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
+//         const toolbarBound = editors[0].getBoundingClientRect();
+//         editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
+//       }
     },
 
     smoothHandleScroll: _.debounce(function (ev) {

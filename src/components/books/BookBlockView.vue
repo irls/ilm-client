@@ -1654,7 +1654,8 @@ export default {
                       'quoteButton', 'suggestButton'
                     ]
                   };
-              }
+              };
+              toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
               this.editorFootnRtl = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
@@ -1664,7 +1665,7 @@ export default {
                   suggestEl: this.suggestEl,
                   extensions: extensions,
                   disableEditing: !this.allowEditing || this.editingLocked,
-                imageDragging: false
+                  imageDragging: false
               });
             }
           }
@@ -1692,6 +1693,7 @@ export default {
                     ]
                   };
               }
+              toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
               this.editorFootnLtr = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
@@ -1701,7 +1703,7 @@ export default {
                   suggestEl: this.suggestEl,
                   extensions: extensions,
                   disableEditing: !this.allowEditing || this.editingLocked,
-                imageDragging: false
+                  imageDragging: false
               });
             }
           }

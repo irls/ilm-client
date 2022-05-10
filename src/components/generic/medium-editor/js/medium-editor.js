@@ -6128,7 +6128,6 @@ MediumEditor.extensions = {};
             MediumEditor.Extension.prototype.init.apply(this, arguments);
 
             this.initThrottledMethods();
-
             if (!this.relativeContainer) {
                 this.getEditorOption('elementsContainer').appendChild(this.getToolbarElement());
             } else {
@@ -6157,7 +6156,8 @@ MediumEditor.extensions = {};
             if (this.static) {
                 toolbar.className += ' static-toolbar';
             } else if (this.relativeContainer) {
-                toolbar.className += ' medium-editor-relative-toolbar';
+                //toolbar.className += ' medium-editor-relative-toolbar';
+                toolbar.className += ' medium-editor-stalker-toolbar';
             } else {
                 toolbar.className += ' medium-editor-stalker-toolbar';
             }
@@ -6475,11 +6475,13 @@ MediumEditor.extensions = {};
         // Updating the toolbar
 
         showAndUpdateToolbar: function () {
+          if (!this.isDisplayed()) {
             this.modifySelection();
             this.setToolbarButtonStates();
             this.trigger('positionToolbar', {}, this.base.getFocusedElement());
             this.showToolbarDefaultActions();
             this.setToolbarPosition();
+          }
         },
 
         setToolbarButtonStates: function () {
@@ -6573,14 +6575,13 @@ MediumEditor.extensions = {};
             if (this.static || !selection.isCollapsed) {
                 this.showToolbar();
 
-                // we don't need any absolute positioning if relativeContainer is set
-                if (!this.relativeContainer) {
-                    if (this.static) {
-                        this.positionStaticToolbar(container);
-                    } else {
-                        this.positionToolbar(selection);
-                    }
+                //if (!this.relativeContainer) {
+                if (this.static) {
+                    this.positionStaticToolbar(container);
+                } else {
+                    this.positionToolbar(selection);
                 }
+                //}
 
                 this.trigger('positionedToolbar', {}, this.base.getFocusedElement());
             }
@@ -6668,13 +6669,13 @@ MediumEditor.extensions = {};
                 halfOffsetWidth = toolbarWidth / 2,
                 buttonHeight = 50,
                 defaultLeft = this.diffLeft - halfOffsetWidth,
-                elementsContainer = this.getEditorOption('elementsContainer'),
-                elementsContainerAbsolute = ['absolute', 'fixed'].indexOf(window.getComputedStyle(elementsContainer).getPropertyValue('position')) > -1,
+                elementsContainer = this.relativeContainer || this.getEditorOption('elementsContainer'),
+                elementsContainerAbsolute = ['absolute', 'fixed', 'relative'].indexOf(window.getComputedStyle(elementsContainer).getPropertyValue('position')) > -1,
                 positions = {},
                 relativeBoundary = {},
                 middleBoundary, elementsContainerBoundary;
 
-            // If container element is absolute / fixed, recalculate boundaries to be relative to the container
+            // If container element is absolute / fixed / relative, recalculate boundaries to be relative to the container
             if (elementsContainerAbsolute) {
                 elementsContainerBoundary = elementsContainer.getBoundingClientRect();
                 ['top', 'left'].forEach(function (key) {
