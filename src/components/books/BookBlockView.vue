@@ -2314,20 +2314,29 @@ export default {
             updateTask = this.assembleBlock(update, realign);
           }
         } else {
-          updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign])
-            .then((updated) => {
+          updateTask = new Promise((resolve, reject) => {
+            let updFootnotes = new Promise((res, rej) => {
               if (delCount) {
                 return this.assembleBlock({
                   footnotes: updatedFootnotes,
                   blockid: this.block.blockid,
-                  bookid: this.block.bookid
+                  bookid: this.block.bookid,
+                  parts: this.block.parts
                 }, realign)
                   .then(() => {
-                    return updated;
+                    return res();
                   });
               } else {
-                return updated;
+                return res();
               }
+            });
+            return updFootnotes
+              .then(() => {
+                this.updateBlockPart([this.block._rid, update, blockPartIdx, realign])
+                  .then((updated) => {
+                    return resolve(updated);
+                  });
+              });
             });
         }
         return updateTask
