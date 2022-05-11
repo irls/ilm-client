@@ -222,6 +222,7 @@
         }
       }
     },
+    props: ['activeTab'],
     mounted() {
       this.audio_element = document.createElement('audio');
     },
@@ -246,6 +247,7 @@
       },
       startConvert() {
         if (this.file) {
+          this.stop();
           let formData = new FormData();
           formData.append('audiofile', this.file, this.filename);
           formData.append(`config`, JSON.stringify(this.convertConfig));
@@ -357,6 +359,13 @@
             return this.roundFloat(this.file.size / 1024);
           }
           return '';
+        }
+      }
+    },
+    watch: {
+      'activeTab': {
+        handler() {
+          this.stop();
         }
       }
     }
