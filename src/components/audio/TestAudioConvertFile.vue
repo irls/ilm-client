@@ -229,6 +229,11 @@
       
       this.convertConfig = lodash.cloneDeep(this.defaultConfig);
     },
+    beforeDestroy() {
+      if (this.isPlaying) {
+        this.stop();
+      }
+    },
     methods: {
       ...mapActions('testAudioConvert', ['convert']),
       onAudioFileChange(e) {
@@ -284,7 +289,7 @@
                 //resolve(audioBuffer);
               //}).catch(reject);
               this.audioSource.addEventListener('ended', () => {
-                console.log('HERE ended')
+                //console.log('HERE ended')
                 this.audioSource = null;
                 this.isPlaying = false;
                 this.playingItem = null;

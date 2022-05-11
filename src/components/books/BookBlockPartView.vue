@@ -1214,6 +1214,8 @@ export default {
               blockLang = 'en';
             }*/
 
+            toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
+
             this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
@@ -1240,6 +1242,9 @@ export default {
             toolbar = {
                 buttons: ['suggestButton']
               };
+
+            toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
+
             this.editor = new MediumEditor('#content-' + this.block.blockid + '-part-' + this.blockPartIdx, {
                 toolbar: toolbar,
                 buttonLabels: 'fontawesome',
@@ -1248,7 +1253,7 @@ export default {
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: true,
-              imageDragging: false
+                imageDragging: false
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -1273,7 +1278,10 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
-          }
+          };
+
+          toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
+
           this.editorDescr = new MediumEditor(this.$refs.blockDescription, {
               toolbar: toolbar,
               buttonLabels: 'fontawesome',
@@ -1281,7 +1289,7 @@ export default {
               onQuoteSave: this.onQuoteSave,
               extensions: extensions,
               disableEditing: !this.allowEditing,
-            imageDragging: false
+              imageDragging: false
           });
         } else if (this.editorDescr) {
           this.editorDescr.setup();
