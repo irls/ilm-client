@@ -1,8 +1,10 @@
 <template>
   <div class="test-audio-convert">
-    <vue-tabs>
+    <vue-tabs @tab-change="onTabChange">
       <v-tab title="Test on audio">
-        <TestAudioConvertFile/>
+        <TestAudioConvertFile
+          :activeTab="activeTab"
+          />
       </v-tab>
       <v-tab title="Predefined examples">
         <div class="item-table">
@@ -57,7 +59,8 @@
         items: [],
         audio_element: {duration: null},
         playing_item: null,
-        is_playing: false
+        is_playing: false,
+        activeTab: 0
       }
     },
     components: {
@@ -94,6 +97,9 @@
       },
       getItemId(itemIndex, convertedIndex = null) {
         return `${itemIndex}${convertedIndex === null ? '' : '_' + convertedIndex}`
+      },
+      onTabChange(index) {
+        this.activeTab = index;
       }
     },
     computed: {
