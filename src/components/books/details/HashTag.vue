@@ -82,7 +82,7 @@
           this.highlight=0;
         }
         // if(this.listSuggestions.length > 0 && this.highlight==-1){
-        //   this.highlight=0; 
+        //   this.highlight=0;
         //   // console.log("s")
         // }
       },
@@ -102,23 +102,28 @@
       },
       top(){
         let recommended = [
-            "Ocean Book", 
-            "Baha’i Book", 
-            "Baha’i Book Compilations", 
-            "The Bible KJV", 
-            "The Bible JPS", 
+            "Ocean Book",
+            "Baha’i Book",
+            "Baha’i Book Compilations",
+            "The Bible KJV",
+            "The Bible JPS",
             "Compilations",
             "IVY 1",
             "IVY 2",
             "Robinson List",
             "Reading Challenge",
             "New Authors",
-            "No audio Book"
+            "No audio Book",
+            "The Gospels",
+            "Beatrix Potter",
+            "IVY League",
+            "Training",
+            "Testing"
             ];
         return recommended;
         //return this.filter ? this.suggestions.slice(0,this.suggestionLength) : this.suggestions
       },
-      listSuggestions(){  
+      listSuggestions(){
         if(this.name.trim()==''){
           return false;
         }
@@ -137,7 +142,7 @@
             return x.toString().toLowerCase()==this.name.toString().toLowerCase()
           })
         }
-        
+
         let currentTag = this.name
 
         let suggestions = tags.filter(x => {
@@ -214,14 +219,14 @@
             this.add(name)
           }
           return
-        } 
+        }
         this.add(this.name)
       },
       select(e){
         if(!this.listSuggestions || this.highlight < -1 || !this.listSuggestions.length){
           return
         }
-        if (e.keyCode == 40) 
+        if (e.keyCode == 40)
         {
           if(this.listSuggestions.length-1 == this.highlight){
             this.highlight=0;
@@ -296,7 +301,7 @@
 }
 
 
-.tag-with-autosuggestion .tag-name .tag-remove { 
+.tag-with-autosuggestion .tag-name .tag-remove {
 color: inherit;
 font-weight: inherit;
 opacity:0.8;
