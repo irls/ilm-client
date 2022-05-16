@@ -44,7 +44,7 @@
       </ul>
     </td></tr>
   </table>
-    <div class='livedb' v-bind:class="{ notAProd: !isProd }" >
+    <div class='livedb' v-bind:class="{ isDev: isDev }" >
       <div class="disconected"  v-if="!livedbStatus" style="background-color: red;"></div>
       <div class="connected"  v-if="livedbStatus" style="background-color: green;"></div>
       <div class="checkbox">
@@ -65,9 +65,9 @@ import { mapGetters } from 'vuex'
 export default {
   mixins: [access],
   computed: {
-    isProd: {
+    isDev: {
       get () {
-        return process.env.NODE_ENV == 'production';
+        return process.env.NODE_ENV == 'development';
       }
     },
     livedbEnabled: {
@@ -102,17 +102,17 @@ export default {
   margin:0px;
   background-color: #00a9ff;
 }
-.notAProd:hover .checkbox{
+.isDev:hover .checkbox{
   display: block;
 }
 .livedb .connected,.livedb .disconected{
   height: 100%;
   width: 100%
 }
-.notAProd:hover .connected,.notAProd:hover .disconected{
+.isDev:hover .connected,.isDev:hover .disconected{
   display: none;
 }
-.notAProd:hover {
+.isDev:hover {
   -webkit-transition: width 1s ease-in-out;
   -moz-transition: width 1s ease-in-out;
   -o-transition: width 1s ease-in-out;
