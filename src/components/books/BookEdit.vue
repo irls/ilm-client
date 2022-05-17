@@ -292,8 +292,8 @@ export default {
     },
     refreshTmpl() {
       // a hack to update template
-      console.log(`refreshTmpl: `, 1);
-      this.$forceUpdate();
+      //console.log(`refreshTmpl: `, 1);
+      //this.$forceUpdate();
       //this.updateVisibleBlocks();
     },
 
@@ -753,7 +753,6 @@ export default {
       let next = this.findNextBlock(block, 'narrate');
       if (next) {
         this.scrollToBlock(next.blockid);
-        this.handleScroll(true);
         Vue.nextTick(()=>{
           this.$root.$emit('start-narration-part-' + next.blockid + '-part-0');
           //el.startRecording();
