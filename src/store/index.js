@@ -4156,7 +4156,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo]) {
       return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
         .then((response) => {
           let storeBlock = state.storeList.get(blockid);
@@ -4172,6 +4172,8 @@ export const store = new Vuex.Store({
             });
           }
           commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -4303,10 +4305,10 @@ export const store = new Vuex.Store({
                 }
                 dispatch('getBookAlign');
               }
-              return resolve();
+              return resolve(true);
             });
         }
-        return resolve();
+        return resolve(false);
       });
     },
 
@@ -4546,6 +4548,116 @@ export const store = new Vuex.Store({
             commit('set_alignBlocksLimit', value);
           }
           return Promise.resolve(value);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      let currentBlockO = state.storeListO.get(blockid);
+      let storeBlock = state.storeList.get(blockid);
+      storeBlock.isSaving = true;
+      update.mode = state.bookMode;
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
+        .then(response => {
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+            .then(numUpdated => {
+              if (!numUpdated) {
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+              }
+            });
+          commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      update.mode = state.bookMode;
+      let currentBlockO = state.storeListO.get(blockid);
+      
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
+        .then(response => {
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+          let storeBlock = state.storeList.get(blockid);
+          let isBlockPart = typeof update.partIdx !== 'undefined';
+          if (isBlockPart && storeBlock.parts.length !== response.data.parts.length) {
+            storeBlock.parts.forEach((p, pIdx) => {
+              if (pIdx < update.partIdx && (p.isChanged || p.isAudioChanged)) {
+                response.data.parts[pIdx] = p;
+              } else if (pIdx > update.partIdx && (p.isChanged || p.isAudioChanged)) {
+                //response.data.parts[pIdx + isSplitting] = p;
+                response.data.parts[pIdx + update.partIdx] = Object.assign(response.data.parts[pIdx + update.partIdx], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
+              }
+            });
+          }
+          commit('set_storeList', new BookBlock(response.data));
+          state.storeListO.refresh();
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+          return Promise.resolve();
+        })
+        .catch(err => {
+          console.log(err);
+          return Promise.reject(err);
+        });
+    },
+    
+    splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      let currentBlockO = state.storeListO.get(blockid);
+      let storeBlock = state.storeList.get(blockid);
+      storeBlock.isSaving = true;
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
+        partIdx: partIdx,
+        mode: state.bookMode
+      })
+        .then(response => {
+          
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+            .then(numUpdated => {
+              if (!numUpdated) {
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+              }
+            });
+          commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
+        .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+          return Promise.resolve(response.data);
         })
         .catch(err => {
           return Promise.reject(err);

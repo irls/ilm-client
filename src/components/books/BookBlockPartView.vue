@@ -248,7 +248,9 @@
                     :update="update"
                 >
                   <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
-                    <li @click="addFootnote">Add footnote</li>
+                    <li @click="addFootnote" class="icon-menu-item">
+                      <i class="fa fa-asterisk icon-menu -add-footnote"></i>Add footnote
+                    </li>
                     <li class="separator"></li>
                   </template>
                   <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
@@ -260,16 +262,16 @@
                   </template>
                   <template v-if="isSplitPointAllowed()">
                     <li class="separator"></li>
-                    <li @click="setSplitPoint($event)">Set split point</li>
+                    <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
+                      <i class="icon-menu -split-to-sub"></i>Split for narration
+                    </li>
+                    <li class="separator"></li>
+                    <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
+                      <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
+                    </li>
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
-                <split-pin-cntx-menu
-                  ref="splitPinCntx"
-                  dir="bottom"
-                  @close="splitPinCntxClose">
-                  <li @click="delSplitPoint">Delete split point</li>
-                </split-pin-cntx-menu>
               </div>
             </div>
             <!--<div class="table-row ilm-block">-->
@@ -281,10 +283,21 @@
   <div class="table-body">
     <div class="table-row controls-bottom" v-if="isSplittedBlock">
       <div class="controls-bottom-wrapper">
-        <div class="par-ctrl -hidden -left" v-if="isMergeSubblocksAllowed">
+        <!-- <div class="par-ctrl -hidden -left" v-if="isMergeSubblocksAllowed">
           <div class="merge-subblocks" @click="mergeSubblocks()"></div>
-          <!-- <object type="image/svg+xml" data="/static/merge-blocks.svg" style="width: 25px; height: 25px;"></object> -->
-        </div>
+        </div> -->
+        <split-block-menu v-if="isMergeSubblocksAllowed"
+          ref="splitBlockMenu"
+          :allowRejoin="blockPartIdx < block.parts.length - 1"
+          :allowSplit="blockPartIdx < block.parts.length - 1 && splitIntoBlocksAllowed"
+          :allowRejoinAll="blockPartIdx === block.parts.length - 1"
+          :disabled="isMergeSubblocksDisabled"
+          :checkBeforeOpen="checkAllowUpdateUnassigned"
+          :blockid="block.blockid"
+          :blockPartIdx="blockPartIdx"
+          @reJoin="mergeSubblocks()"
+          @split="splitSubblock()"
+          @reJoinAll="mergeAllSubblocks()"></split-block-menu>
         <div class="par-ctrl -hidden -right">
           <div class="save-block -right" @click="discardBlock"
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && (isChanged || isIllustrationChanged)) || isLocked}">
@@ -327,6 +340,7 @@ import RecordingBlock from './block/RecordingBlock';
 import UploadImage from './block/UploadImage'
 var BPromise = require('bluebird');
 import narrationBlockContent from './narrationBlockContent.js'
+import SplitBlockMenu from '../generic/SplitBlockMenu';
 
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -401,9 +415,9 @@ export default {
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
       //'modal': modal,
-      'split-pin-cntx-menu': BlockContextMenu
+      'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -905,21 +919,39 @@ export default {
           if (['edit', 'narrate'].indexOf(this.mode) === -1) {
             return false;
           }
-          if (this.blockPartIdx >= this.block.parts.length - 1) {
-            return false;
-          }
-          if (this.isLocked) {
-            return false;
+          return true;
+        },
+        cache: false
+      },
+      isMergeSubblocksDisabled: {
+        get() {
+          if (this.isLocked || this.isAudioChanged) {
+            return true;
           }
           if (this.$parent.$refs.blocks) {
             let locked = this.$parent.$refs.blocks.find(blk => {
-              return blk.isLocked;
+              return blk.isLocked || blk.isAudioChanged;
             });
             if (locked) {
-              return false;
+              return true;
             }
           }
-          return true;
+          return false;
+        },
+        cache: false
+      },
+      splitForNarrationAllowed: {
+        get() {
+          if (this.block.voicework === 'narration' && !this.currentJobInfo.text_cleanup) {
+            return true;
+          }
+          return false;
+        },
+        cache: false
+      },
+      splitIntoBlocksAllowed: {
+        get() {
+          return this.mode !== 'narrate';
         },
         cache: false
       }
@@ -1048,7 +1080,11 @@ export default {
         'shiftAudioTask',
         'applyTasksQueue',
         'saveBlockAudio',
-        'mergeBlockParts'
+        'mergeBlockParts',
+        'splitBlockToBlocks',
+        'splitBlockToSubblocks',
+        'splitBySubblock',
+        'mergeAllBlockParts'
       ]),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
@@ -1266,11 +1302,12 @@ export default {
         //this.$refs.blockContent.focus();
         //console.log(this.block.calcFlagsSummary());
         //console.log(this.tc_currentBookTasks.job.executors);
+        this.$root.$emit('for-splitmenu:close', `${this.block.blockid}-${this.blockPartIdx}`);
       },
       onBlur: function(e) {
         if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
-        if (this.$refs.splitPinCntx && this.$refs.splitPinCntx.viewMenu && (!e.target || e.target.nodeName !== 'I')) {
-          this.$refs.splitPinCntx.close();
+        if (this.$refs.splitBlockMenu && this.$refs.splitBlockMenu.showMenu) {
+          this.$refs.splitBlockMenu.toggleMenu();
         }
       },
       onSelect: function($event) {
@@ -1281,9 +1318,13 @@ export default {
 //           $(this).css('display', 'inline-block');
 //         });
         $event.target.checked = true;
-        this.setRangeSelection('byOne', $event)
+        this.setRangeSelection('byOne', $event);
+        this.$root.$emit('for-splitmenu:close', `${this.block.blockid}-${this.blockPartIdx}`);
       },
       onContext(e) {
+        if (!this.checkAllowUpdateUnassigned()) {
+          return false;
+        }
         if (!this.$refs.blockCntx) {
           return;
         }
@@ -3005,9 +3046,6 @@ export default {
           this.$refs.blockContent.addEventListener("mouseup", this.contentClickHandler);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
           $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', '[data-flag]', this.handleFlagClick);
-
-          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', 'i.pin', this.handlePinClick);
-          $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).on('click', 'i.pin', this.handlePinClick);
         }
         this.hasContentListeners = true;
       },
@@ -3347,7 +3385,7 @@ Save text changes and realign the Block?`,
             // Do not allow split point inside superscript or subscript
             let checkParentSup = container.parentElement;
             while (checkParentSup && checkParentSup.nodeName !== 'DIV') {
-              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB') {
+              if (checkParentSup.nodeName === 'SUP' || checkParentSup.nodeName === 'SUB' || (checkParentSup.nodeName === 'SG' && checkRange.endOffset < checkParentSup.innerText.length)) {
                 return false;
               }
               if (checkParentSup.nextElementSibling && ['SUP', 'SUB'].includes(checkParentSup.nextElementSibling.nodeName)) {
@@ -3497,18 +3535,19 @@ Save text changes and realign the Block?`,
         el.classList.add('pin');
         this.range.insertNode(el);
         //this.$parent.$forceUpdate();
-        if (!this.isSplittedBlock) {
+        /*if (!this.isSplittedBlock) {
           this.splitPointAdded();
         } else {
           this.pushChange('split_point');
           this.isChanged = true;
-        }
+        }*/
         let isMac = navigator && navigator.platform === 'MacIntel';
         if (isMac) {
           //console.log(this.$refs.blockContent.innerHTML);
           this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/(<\/w><w[^>]*?>)(<i class="pin"><\/i>)/img, '$2$1');
           //console.log(this.$refs.blockContent.innerHTML);
         }
+        return true;
       },
       isCursorInPinned() {
         if (!this.blockPart.audiosrc || this.blockPart.audiosrc.length === 0) {
@@ -3552,32 +3591,6 @@ Save text changes and realign the Block?`,
         }
         return true;
       },
-      handlePinClick(e) {
-        if (this.$refs.splitPinCntx && e.target) {
-          //console.log(`OFFSET: ${-1 * e.target.offsetTop}, ${-1 * e.originalEvent.target.offsetTop}`)
-          let container = $(e.target).closest('.-block.-subblock')[0];
-          let offsetX = container.offsetLeft;
-          this.$refs.splitPinCntx.open(e.originalEvent, container, /*this.mode === 'narrate' ? narrationShift : */offsetX, -1 * e.target.offsetTop);
-          this.splitPinSelection = e.target;
-        }
-      },
-      delSplitPoint() {
-        if (this.splitPinSelection) {
-          this.splitPinSelection.remove();
-          this.splitPinSelection = null;
-        }
-        if (this.block.getIsSplittedBlock()) {
-          let splitPoints = this.$refs.blockContent.querySelectorAll('i.pin');
-          if (splitPoints.length === 0) {
-            this.unsetChange('split_point');
-          }
-        } else {
-          this.splitPointRemoved();
-        }
-      },
-      splitPinCntxClose() {
-        this.splitPinSelection = null;
-      },
       mergeSubblocks(confirm = true) {
         let partFrom = this.blockPart;
         let partTo = this.block.parts[this.blockPartIdx + 1];
@@ -3585,7 +3598,7 @@ Save text changes and realign the Block?`,
           if (this.isAudioChanged || partTo.isAudioChanged) {
             return false;
           }
-          if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged) {
+          if (this.isChanged || this.isAudioChanged || partTo.isChanged || partTo.isAudioChanged || this.$parent.isChanged || this.$parent.isAudioChanged) {
 
             this.$root.$emit('show-modal', {
               title: `Unsaved Changes`,
@@ -3601,69 +3614,39 @@ Please save or discard your changes before joining.`,
                 }
               ]
             });
+            return false;
           }
         }
         if (confirm) {
-          let message = `Join with the next subblock?`;
           if (partFrom && partTo) {
             if ((partFrom.audiosrc && !partTo.audiosrc) || (!partFrom.audiosrc && partTo.audiosrc)) {
-              message = `Join of narrated and pending subblocks will also delete current audio.<br>
-Join with next subblock?`;
+              this.joinAndRemoveAudioWarning(() => {
+                return this.mergeSubblocks(false);
+              });
+              return false;
             }
           }
-          this.$root.$emit('show-modal', {
-            title: 'Join subblocks',
-            text: message,
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                },
-                class: ['btn btn-default']
-              },
-              {
-                title: 'Join',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  return this.mergeSubblocks(false);
-                },
-                class: ['btn btn-primary']
-              }
-            ],
-            class: ['align-modal']
-          });
-        } else {
-          if (this.$parent.$refs.blocks) {
-            let refPlaying = this.$parent.$refs.blocks.find(blk => {
-              return blk.isAudStarted || blk.isAudPaused;
-            });
-            if (refPlaying) {
-              refPlaying.audStop(refPlaying.block.blockid);
-            }
-          }
-          this.$parent.isSaving = true;
-          this.$parent.$forceUpdate();
-          let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
-            return b.isAudioEditing;
-          }) : false;
-          return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
-            .then((response) => {
-              if (this._isDestroyed) {
-                this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
-              }
-              this.$parent.isSaving = false;
-              /*if (this.isCompleted) {
-                this.tc_loadBookTask(this.block.bookid);
-                this.getCurrentJobInfo();
-              }*/
-              if (isAudioEditorOpened) {
-                this.$root.$emit('for-audioeditor:force-close');
-              }
-              this.$parent.$parent.refreshTmpl();
-              return Promise.resolve();
-            });
         }
+        if (this.$parent.$refs.blocks) {
+          let refPlaying = this.$parent.$refs.blocks.find(blk => {
+            return blk.isAudStarted || blk.isAudPaused;
+          });
+          if (refPlaying) {
+            refPlaying.audStop(refPlaying.block.blockid);
+          }
+        }
+        this.closeAudioEditor();
+        this.$parent.isSaving = true;
+        this.$parent.$forceUpdate();
+        return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
+          .then((response) => {
+            if (this._isDestroyed) {
+              this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
+            }
+            this.$parent.isSaving = false;
+            this.$parent.$parent.refreshTmpl();
+            return Promise.resolve();
+          });
       },
       // method to update properties if user swithes modes while block saving is in progress
       forceReloadContent() {
@@ -3678,6 +3661,195 @@ Join with next subblock?`;
             this.$forceUpdate();
           });
         }
+      },
+      
+      splitIntoBlocks(ev) {
+        if (!this.splitUnsavedCheck()) {
+          return false;
+        }
+        if (this.setSplitPoint()) {
+          this.closeAudioEditor();
+          let update = {
+            content: this.$refs.blockContent.innerHTML
+          };
+          if (this.block.getIsSplittedBlock()) {
+            update.partIdx = this.blockPartIdx;
+          }
+          this.block.isSaving = true;
+          this.$parent.isSaving = true;
+          this.$parent.$forceUpdate();
+          return this.splitBlockToBlocks([this.block.blockid, update]);
+        }
+      },
+      
+      splitIntoSubblocks(ev) {
+        if (!this.splitUnsavedCheck()) {
+          return false;
+        }
+        if (this.setSplitPoint()) {
+          this.closeAudioEditor();
+          let update = {
+            content: this.$refs.blockContent.innerHTML
+          };
+          if (this.block.getIsSplittedBlock()) {
+            update.partIdx = this.blockPartIdx;
+          }
+          this.block.isSaving = true;
+          this.$parent.isSaving = true;
+          this.$parent.$forceUpdate();
+          return this.splitBlockToSubblocks([this.block.blockid, update]);
+        }
+      },
+      
+      splitSubblock() {
+        if (!this.splitUnsavedCheck()) {
+          return false;
+        }
+        this.closeAudioEditor();
+        this.block.isSaving = true;
+        this.$parent.isSaving = true;
+        this.$parent.$forceUpdate();
+        return this.splitBySubblock([this.block.blockid, this.blockPartIdx]);
+      },
+      
+      mergeAllSubblocks(confirm = true) {
+        let hasChanged = this.block.parts.find(p => {
+          return p.isChanged;
+        });
+        let hasAudioChanged = this.block.parts.find(p => {
+          return p.isAudioChanged;
+        });
+        if (hasAudioChanged) {
+          return false;
+        }
+        if (!hasChanged) {
+          hasChanged = this.$parent.isChanged || this.$parent.isAudioChanged;
+        }
+        if (hasChanged) {
+
+          this.$root.$emit('show-modal', {
+            title: `Unsaved Changes`,
+            text: `Subblocks have unsaved changes.<br>
+Please save or discard your changes before joining.`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+          return false;
+        }
+        if (confirm) {
+          let hasAudiosrc = this.block.parts.find(p => {
+            return p.audiosrc && p.audiosrc.length > 0;
+          });
+          let hasNotAudiosrc = this.block.parts.find(p => {
+            return !p.audiosrc || p.audiosrc.length === 0;
+          });
+          if (hasAudiosrc && hasNotAudiosrc) {
+            this.joinAndRemoveAudioWarning(() => {
+              this.mergeAllSubblocks(false);
+            });
+            return false;
+          }
+        }
+        if (this.$parent.$refs.blocks) {
+          let refPlaying = this.$parent.$refs.blocks.find(blk => {
+            return blk.isAudStarted || blk.isAudPaused;
+          });
+          if (refPlaying) {
+            refPlaying.audStop(refPlaying.block.blockid);
+          }
+        }
+        this.closeAudioEditor();
+        this.$parent.isSaving = true;
+        this.$parent.$forceUpdate();
+        return this.mergeAllBlockParts([this.block.blockid])
+          .then((response) => {
+            if (this._isDestroyed) {
+              this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
+            }
+            this.$parent.isSaving = false;
+            this.$parent.$parent.refreshTmpl();
+            return Promise.resolve();
+          });
+      },
+      
+      splitUnsavedCheck() {
+        let hasChanges = this.isChanged || this.isAudioChanged;
+        if (!hasChanges || this.block.getIsSplittedBlock()) {
+          hasChanges = this.$parent.$refs.blocks.find(subblock => {
+            return subblock.isChanged || subblock.isAudioChanged;
+          });
+        }
+        if (!hasChanges) {
+          hasChanges = this.$parent.isChanged || this.$parent.isAudioChanged;
+        }
+        if (hasChanges) {
+          this.splitUnsavedWarning();
+          return false;
+        }
+        return true;
+      },
+      
+      splitUnsavedWarning() {
+        this.$root.$emit('show-modal', {
+          title: 'Unsaved Changes',
+          text: `Blocks have unsaved changes.<br>
+Save or discard your changes before splitting`,
+          buttons: [
+            {
+              title: 'OK',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              class: ['btn btn-primary']
+            }
+          ],
+          class: ['align-modal']
+        });
+      },
+      
+      closeAudioEditor() {
+        let isAudioEditorOpened = this.isAudioEditing;
+        if (!isAudioEditorOpened) {
+          isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+            return b.isAudioEditing;
+          }) : false;
+        }
+        if (isAudioEditorOpened) {
+          this.$root.$emit('for-audioeditor:force-close');
+        }
+      },
+      
+      joinAndRemoveAudioWarning(callback) {
+        this.$root.$emit('show-modal', {
+          title: 'Join subblocks',
+          text: `Join of narrated and pending subblocks will also delete current audio.<br>
+Join subblocks?`,
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              class: ['btn btn-default']
+            },
+            {
+              title: 'Join',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                return callback.call(this);
+              },
+              class: ['btn btn-primary']
+            }
+          ],
+          class: ['align-modal']
+        });
       }
 
   },
@@ -3928,6 +4100,49 @@ Join with next subblock?`;
             }
          }
       }
+   }
+    .icon-menu-item {
+      .icon-menu {
+        width: 14px;
+        height: 14px;
+        background-size: 14px;
+        background-repeat: no-repeat;
+        background-color: gray;
+        display: inline-block;
+        /* padding: 0px 5px; */
+        margin: 0px 4px 0px 0px;
+        vertical-align: middle;
+        filter: invert(56%) sepia(0%) saturate(2237%) hue-rotate(19deg) brightness(89%) contrast(89%);
+        &.-split-to-par {
+          background: url(/static/split-into-paragraphs.svg);
+          background-size: 14px;
+        }
+        &.-split-to-sub {
+          background: url(/static/split-for-narration.svg);
+          background-size: 14px;
+          -webkit-transform: rotate(90deg);
+          -moz-transform: rotate(90deg);
+          -ms-transform: rotate(90deg);
+          -o-transform: rotate(90deg);
+          transform: rotate(90deg);
+          margin: 0px 6px 0px -2px;
+        }
+        &.-add-footnote {
+          background-color: transparent;
+          font-size: 14px;
+        }
+        &.-re-join {
+          background: url(/static/re-join-narration.svg);
+          background-size: 14px;
+          width: 14px;
+          height: 14px;
+          -webkit-transform: rotate(90deg);
+          -moz-transform: rotate(90deg);
+          -ms-transform: rotate(90deg);
+          -o-transform: rotate(90deg);
+          transform: rotate(90deg);
+        }
+     }
    }
 
 </style>

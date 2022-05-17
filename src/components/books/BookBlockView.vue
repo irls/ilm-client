@@ -255,6 +255,7 @@
               :delFlagPart="delFlagPart"
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
+              :checkAllowUpdateUnassigned="checkAllowUpdateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               :splitPointAdded="splitPointAdded"
               :splitPointRemoved="splitPointRemoved"
@@ -4292,11 +4293,31 @@ Save text changes and realign the Block?`,
       },
 
       checkAllowNarrateUnassigned() {
+        return this.checkNarratorUnassignedAction('narrate');
+      },
+      
+      checkAllowUpdateUnassigned() {
+        return this.checkNarratorUnassignedAction('update');
+      },
+      
+      checkNarratorUnassignedAction(type = 'narrate') {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
+          let title = ``;
+          let text = '';
+          switch (type) {
+            case 'narrate':
+              title = 'Unable to re-narrate';
+              text = `The block can't be re-narrated because it is currently being edited.`;
+              break;
+            case 'update':
+              title = 'Unable to update';
+              text = `The block can't be updated because it is currently being edited`;
+              break;
+          }
           this.$root.$emit('show-modal', {
-            title: 'Unable to re-narrate',
-            text: `The block can't be re-narrated because it is currently being edited.`,
+            title: title,
+            text: text,
             buttons: [
               {
                 title: 'OK',

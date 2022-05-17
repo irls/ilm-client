@@ -1353,7 +1353,7 @@ export default {
     unableToJoinChangedMessage() {
       this.$root.$emit('show-modal', {
         title: 'Unsaved Changes',
-        text: 'Blocks have unsaved changes.<br/>Please save or discard your changes before joining.',
+        text: 'Blocks have unsaved changes.<br>Save or discard your changes before joining',
         buttons: [
           {
             title: 'Ok',
@@ -3209,27 +3209,7 @@ export default {
   background: #a6a6a6 !important;
 }
 i.pin {
-  background-color: #aaa;
-  background-image: linear-gradient(left, hsla(0,0%,100%,.2), hsla(0,0%,0%,.2));
-  display: inline-block;
-  height: 24px;
-  margin: 0px 2px -3px 2px;
-  position: relative;
-  width: 2px;
-  cursor: pointer;
-  pointer-events: all;
-  &:before {
-    background-color: skyBlue;
-    background-image: radial-gradient(25% 25%, circle, hsla(0,0%,100%,.2), hsla(0,0%,0%,.2));
-    border-radius: 50%;
-    content: '';
-    left: -4px;
-    position: absolute;
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    top: -5px;
-  }
+  display: none;
 }
 div.merge-subblocks {
    /*background-image: url(/static/merge-blocks.svg); */
