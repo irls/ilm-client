@@ -314,6 +314,7 @@
     </div>
     <!--<div class="table-row controls-bottom">-->
   </div>
+  <div :id="this.block.blockid + '-part-' + this.blockPartIdx + '-toolbar-container'" class="toolbar-container"></div>
 </div>
 </template>
 
@@ -1231,7 +1232,7 @@ export default {
                 this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
               }
             });
-          } else if (this.tc_isNarrationEnabled(this.block._id) && this.mode === 'narrate') {
+          } else if (this.block.voicework === 'narration' && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
                 'suggestPreview': new SuggestPreview()
@@ -4143,6 +4144,9 @@ Join subblocks?`,
           transform: rotate(90deg);
         }
      }
+    }
+   .toolbar-container {
+     display: none;
    }
 
 </style>

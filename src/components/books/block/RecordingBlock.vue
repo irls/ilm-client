@@ -42,13 +42,16 @@
         </div>
       </div>
     </div>
+    <div id="recording-block-toolbar" class="toolbar-container"></div>
   </div>
 </template>
 <script>
+  import {  SuggestPreview, MediumEditor } from '../../generic/ExtMediumEditor';
   export default {
     data() {
       return {
-        isPaused: false
+        isPaused: false,
+        editor: null
       }
     },
     props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang'],
@@ -74,6 +77,21 @@
     },
     mounted: function() {
       this.$refs.recordingText.style['max-height'] = window.innerHeight - 100 + 'px';
+      
+      let extensions = {
+        'suggestPreview': new SuggestPreview()
+      };
+      this.editor = new MediumEditor('.recording-text', {
+        toolbar: {
+          buttons: [],
+          relativeContainer: document.getElementById('recording-block-toolbar'),
+        },
+        buttonLabels: 'fontawesome',
+        quotesList: [],
+        extensions: extensions,
+        disableEditing: true,
+        imageDragging: false
+      });
     }
   }
 </script>
@@ -89,6 +107,7 @@
       padding: 15px 30px;
       font-family: GentiumPlus, serif;
       overflow-y: auto;
+      width: fit-content;
     }
     .table-body {
       padding: 20px;
@@ -102,9 +121,6 @@
       .fa {
         color: red;
       }
-    }
-    [data-suggestion] {
-      background: inherit;
     }
     /*br {
       display: block;
