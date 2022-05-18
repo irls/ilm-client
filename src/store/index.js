@@ -84,6 +84,7 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: false,
     publishButtonStatus: false,
     allRolls: [],
+    hashTagsSuggestions: [],
 
     authorsLangFarsi: authorsLangFarsi,
 
@@ -110,7 +111,7 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', language: '', jobStatus: 'active'},
+    bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -119,7 +120,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: '', jobStatus: 'active'},
+    collectionsFilter: {title: '', language: '', jobStatus: 'active', projectTag: ''},
     currentCollection: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
@@ -419,6 +420,7 @@ export const store = new Vuex.Store({
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
     adminOrProofer: state => state.adminOrProofer,
+    hashTagsSuggestions: state => state.hashTagsSuggestions,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
@@ -581,7 +583,7 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'language', 'jobStatus'].indexOf(prop) > -1) {
+      for (var prop in obj) if (['filter', 'projectTag', 'language', 'jobStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
         // console.log("Setting bookfilter."+prop, obj[prop])
         // console.log(state.bookFilters)
@@ -1404,6 +1406,18 @@ export const store = new Vuex.Store({
             }
           })
           .catch(err => console.log(err));
+
+        axios.get(state.API_URL + 'hashTags')
+          .then(response => {
+            if (response) {
+              if (response.status == 200) {
+                state.hashTagsSuggestions = response.data;
+                //console.log('hashTags', response.data);
+              }
+            }
+          })
+          .catch(err => console.log(err));
+
 
 //          state.librariesDB.replicate.from(state.librariesRemoteDB, {
 //          /*filter: '_view',

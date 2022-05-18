@@ -13,7 +13,11 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-  <input type="text" @keyup="booksFilterChange" class="form-control" placeholder="Filter"></input> &nbsp;
+    <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"></i>
+
+    <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"></i>
 
   <template v-if="adminOrLibrarian">
     <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
@@ -59,7 +63,9 @@ export default {
     return {
       filterStr: '',
       showImportBooksModal: false,
-      languages: Languages
+      languages: Languages,
+      filterAuthorTitle: '',
+      filterTag: ''
     }
   },
 
@@ -84,6 +90,9 @@ export default {
     booksFilterChange (el) {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {filter: el.target.value})
     },
+    booksFilterTagChange (el) {
+      this.$store.commit('SET_CURRENTBOOK_FILTER', {projectTag: el.target.value})
+    },
     booksLanguageChange (el) {
       this.$store.commit('SET_CURRENTBOOK_FILTER', {language: el.target.value})
       // console.log("language: "+el.target.value)
@@ -103,6 +112,8 @@ export default {
     },
     displayBook () {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
+      this.bookFilters.filter = '';
+      this.bookFilters.projectTag = '';
     },
     importBook () {
       console.log('event ok')
@@ -161,8 +172,17 @@ img.bookstack {
   opacity: .75
 }
 
-input {width: 8em}
+input {width: 12em}
 
 .form-control {display: inline}
+
+.btn-inside {
+    margin-left: -30px;
+    margin-top: 7px;
+    z-index: 999;
+    position: absolute;
+
+}
+
 
 </style>
