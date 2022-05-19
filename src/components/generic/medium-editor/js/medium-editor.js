@@ -6441,10 +6441,10 @@ MediumEditor.extensions = {};
 
             // If no editable has focus OR selection is inside contenteditable = false
             // hide toolbar
-            if (!this.base.getFocusedElement() ||
+            /*if (!this.base.getFocusedElement() ||
                     MediumEditor.selection.selectionInContentEditableFalse(this.window)) {
                 return this.hideToolbar();
-            }
+            }*/
 
             // If there's no selection element, selection element doesn't belong to this editor
             // or toolbar is disabled for this selection element
@@ -6475,13 +6475,11 @@ MediumEditor.extensions = {};
         // Updating the toolbar
 
         showAndUpdateToolbar: function () {
-          if (!this.isDisplayed()) {
-            this.modifySelection();
-            this.setToolbarButtonStates();
-            this.trigger('positionToolbar', {}, this.base.getFocusedElement());
-            this.showToolbarDefaultActions();
-            this.setToolbarPosition();
-          }
+          this.modifySelection();
+          this.setToolbarButtonStates();
+          this.trigger('positionToolbar', {}, this.base.getFocusedElement());
+          this.showToolbarDefaultActions();
+          this.setToolbarPosition();
         },
 
         setToolbarButtonStates: function () {
