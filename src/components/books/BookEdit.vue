@@ -1386,15 +1386,6 @@ export default {
       return rect;
     },
 
-    updateOpenToolbarPosition() {
-//       const editors = document.getElementsByClassName('medium-editor-toolbar-active');
-//       if (editors && editors.length) { //move editor toolbar
-//         const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
-//         const toolbarBound = editors[0].getBoundingClientRect();
-//         editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
-//       }
-    },
-
     smoothHandleScroll: _.debounce(function (ev) {
       //ev.stopPropagation();
       this.handleScroll(ev);
@@ -1440,7 +1431,6 @@ export default {
       this.correctCurrentEditHeight(this.startId);
 
       //this.correctEditWrapper();
-      this.updateOpenToolbarPosition();
     },
 
     correctCurrentEditHeight (blockId) {
