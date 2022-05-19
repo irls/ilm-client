@@ -44,7 +44,7 @@
       </ul>
     </td></tr>
   </table>
-    <div class='livedb' v-bind:class="{ isDev: isDev }" >
+    <div class='livedb' >
       <div class="disconected"  v-if="!livedbStatus" style="background-color: red;"></div>
       <div class="connected"  v-if="livedbStatus" style="background-color: green;"></div>
       <div class="checkbox">
