@@ -180,7 +180,15 @@ export const store = new Vuex.Store({
       is_narrate_unassiged: false
     },
     taskTypes: {tasks: [], categories: []},
-    liveDB: new liveDB(),
+    liveDB: new liveDB((status) => {
+      if( store.state.livedbStatus!=null && status){
+        store.state.liveDB.stopWatch('metaV');
+        store.dispatch('liveDBMetaUpdate');
+      }
+      store.state.livedbStatus = status;
+
+    }),
+
     bookCategories: [],
     // bookDifficulties: [
     //   '1',
@@ -233,10 +241,17 @@ export const store = new Vuex.Store({
     bookTocSectionsXHR: null,
     tocSectionBook: {},
     alignBlocksLimit: null,
-    allowAlignBlocksLimit: true
+    allowAlignBlocksLimit: true,
+    livedbStatus : null,
+    livedbEnabled : true,
+    watched:{
+      'metaV':null
+    },
   },
 
   getters: {
+    livedbStatus: state => state.livedbStatus,
+    livedbEnabled: state => state.livedbEnabled,
     auth: state => state.auth,
     isLoggedIn: state => state.isLoggedIn,
     isAdmin: state => state.isAdmin,
@@ -561,6 +576,24 @@ export const store = new Vuex.Store({
   },
 
   mutations: {
+    SET_LIVEDB_CHECKBOX(state,checkbox) {
+      state.liveDB.stop();
+      if(checkbox){
+        state.livedbEnabled = true;
+        state.liveDB = new liveDB((status) => {
+          if( store.state.livedbStatus!=null && status){
+            state.liveDB.stopWatch('metaV');
+            store.dispatch('liveDBMetaUpdate');
+          }
+          store.state.livedbStatus = status;
+        })
+
+      }else{
+        state.livedbEnabled = false;
+        store.state.livedbStatus = false;
+      }
+    },
+
     SET_AUDIO_RENAMING(state, status) {
       state.audioRenaming = status;
     },
@@ -1542,6 +1575,7 @@ export const store = new Vuex.Store({
         state.liveDB.stopWatch(vertex)
         return;
       }
+      state.watched['metaV'] = null;
 
       state.liveDB.stopWatch('metaV');
       state.liveDB.stopWatch('job');
@@ -1708,6 +1742,9 @@ export const store = new Vuex.Store({
           //dispatch('loadBookToc', {bookId: book_id});
           dispatch('stopWatchLiveQueries', 'metaV');
           dispatch('stopWatchLiveQueries', 'job');
+
+          state.watched['metaV'] = book_id;
+
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
@@ -3749,6 +3786,17 @@ export const store = new Vuex.Store({
         return Promise.reject({})
       })
     },
+
+    liveDBMetaUpdate({state, commit, dispatch}) {
+      if(store.state.watched.metaV){
+        store.state.liveDB.startWatch(store.state.watched.metaV + '-metaV', 'metaV', {bookid: store.state.watched.metaV}, (data) => {
+          commit('SET_CURRENTBOOK_META', data.meta)
+        })
+        setTimeout(() => {
+          return axios.get(`${state.API_URL}livedb/update/meta/${store.state.watched.metaV}`)
+        }, 1000)
+      }
+    },
     reloadBook({state, commit, dispatch}) {
       commit('clear_storeList');
       commit('clear_storeListO');
@@ -3773,14 +3821,9 @@ export const store = new Vuex.Store({
           selection: selection,
           format: 'm4a'
         })
-          .then((response) => {
-            if (response.data.bookid === state.currentBookMeta.bookid) {
-              commit('SET_CURRENTBOOK_META', response.data);
-            }
-          })
-          .catch(err => {
-            return Promise.reject(err);
-          });
+        .catch(err => {
+          return Promise.reject(err);
+        });
       }
     },
     getTaskUsers({state, commit}) {
@@ -4436,7 +4479,6 @@ export const store = new Vuex.Store({
         });
       }
     },
-
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
         state.bookCategories = categories.data
@@ -4614,14 +4656,14 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
       update.mode = state.bookMode;
       let currentBlockO = state.storeListO.get(blockid);
-      
+
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
@@ -4655,7 +4697,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
       if (!state.currentBookid) {
         return Promise.resolve();
@@ -4668,7 +4710,7 @@ export const store = new Vuex.Store({
         mode: state.bookMode
       })
         .then(response => {
-          
+
           dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
               if (!numUpdated) {
@@ -4684,7 +4726,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
@@ -4699,6 +4741,7 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+
     }
   }
 })
