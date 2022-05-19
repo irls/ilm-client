@@ -1,17 +1,17 @@
 <template>
  <!-- <transition name="modal"> -->
-  <modal id="bookEditCoverModal" :show="show" effect="fade" @closed="closed" @opened="opened">
+  <modal id="bookEditCoverModal" name="bookEditCoverModal" :adaptive="true" height="auto" :clickToClose="false" @opened="opened">
 
-    <div slot="modal-header" class="modal-header">
+    <div class="modal-header">
       <div class="header-title">
         <img src='/static/bookstack.svg' class='book-logo'> <h3 class="header-h">Book Cover</h3>
       </div>
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" v-on:click="hideModal">
         <i class="fa fa-times-circle-o" aria-hidden="true"></i>
       </button>
     </div>
 
-    <div slot="modal-body" class="modal-body">
+    <div class="modal-body">
 
       <!-- Selection tabs for Upload or Create forms -->
       <!-- <div class="row tabs">
@@ -100,7 +100,7 @@
 
     </div> <!-- modal body -->
 
-    <div slot="modal-footer" class="modal-footer">
+    <div class="modal-footer">
       <button class="btn btn-primary" type="button" @click="ok">Save</button>
     </div>
 
@@ -111,7 +111,7 @@
 
 <script>
 
-import { modal } from 'vue-strap'
+import v_modal from 'vue-js-modal';
 //import { Carousel3d, Slide } from 'vue-carousel-3d'
 import modalMixin from './../../mixins/modal'
 import api_config from './../../mixins/api_config'
@@ -123,6 +123,7 @@ import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 
 import { mapGetters, mapActions }    from 'vuex'
+import Vue from 'vue';
 
 const html2canvas = {};
 
@@ -142,15 +143,15 @@ const html2canvas = {};
 //   theme: 'snow'
 // }
 
+Vue.use(v_modal, {dialog: true});
+
 export default {
   name: 'BookEditCoverModal',
 
   mixins: [modalMixin, api_config],
 
   components: {
-    modal,
-//     Carousel3d,
-//     Slide
+    
   },
 
   // props: {
@@ -195,7 +196,7 @@ export default {
   },
 
   watch: {
-    show () {
+    show (val) {
       // this.tmp.coverimg = this.img.coverimg
       this.tmp.title.text = this.img.title
       // this.tmp.title.top = this.img.title.top || 0
@@ -211,6 +212,12 @@ export default {
       // this.quillAuthor.pasteHTML(this.tmp.author.text)
 
       // console.log("Showing cover editor with book: ", this.img)
+      if (val) {
+        
+        this.showModal();
+      } else {
+        this.hideModal();
+      }
     }
 
 
@@ -218,7 +225,6 @@ export default {
 
   activated () {
     //  this.uploadImage = this.img.coverimg
-    console.log('activated')
   },
 
   mounted () {
@@ -407,8 +413,15 @@ export default {
     },
 
     cancel () {
-      console.log('cancel')
       this.closed()
+    },
+    
+    showModal(name) {
+      this.$modal.show('bookEditCoverModal');
+    },
+    hideModal(name) {
+      this.$modal.hide('bookEditCoverModal');
+      this.$emit('closed');
     }
   },
   computed: {
