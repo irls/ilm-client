@@ -1404,8 +1404,10 @@ export default {
             //}
             //this.$refs.blockContent.focus();
 
-            // emit for virtual scroll correction
-            this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
+            if (ev && ev.target) {
+              // emit for virtual scroll correction
+              this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
+            }
           }
           if (this.$refs.blockFlagPopup) {
             this.$refs.blockFlagPopup.close();
