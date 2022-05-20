@@ -1389,7 +1389,7 @@ export default {
     smoothHandleScroll: _.debounce(function (ev) {
       //ev.stopPropagation();
       this.handleScroll(ev);
-    }, 10),
+    }, 20),
 
     handleScroll(ev, force = false) {
       const range = ev.detail.range;
@@ -1428,8 +1428,11 @@ export default {
 
       this.editorsTop = range.padFront + countHeight;
 
-      this.correctCurrentEditHeight(this.startId);
+      this.$refs.blocks.forEach((block, bIdx)=>{
+        this.correctCurrentEditHeight(block.blockId);
+      })
 
+      //this.correctCurrentEditHeight(this.startId);
       //this.correctEditWrapper();
     },
 
