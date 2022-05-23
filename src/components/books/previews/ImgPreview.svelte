@@ -9,14 +9,14 @@
 </template>
 
 <script>
-import { beforeUpdate} from 'svelte';//onMount, createEventDispatcher, tick
+//import { beforeUpdate} from 'svelte';//onMount, createEventDispatcher, tick
 
 export let block = {};
 export let height = 100;
 
-beforeUpdate(/*async */() => {
+//beforeUpdate(/*async */() => {
   //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'bookId:', bookId, 'loadedBookId:', loadedBookId);
-});
+//});
 
 const cleanAlt = (description) => {
   return description.replace(/<[^>]*>?/gm, '');
