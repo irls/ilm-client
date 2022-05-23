@@ -1437,7 +1437,7 @@ export default {
     },
 
     correctCurrentEditHeight (blockId) {
-      Vue.nextTick(()=>{
+      //Vue.nextTick(()=>{
         // This will correct height of virtual block if there was some editing
         const blockEditRef = document.getElementById(blockId);
         const blockVirtRef = document.getElementById('v-' + blockId);
@@ -1447,7 +1447,7 @@ export default {
           blockVirtRef.style.height = `${blockEditRect.height}px`;
           blockVirtRef.style.overflow = `hidden`;
         }
-      });
+      //});
     },
 
     correctEditWrapper() {
