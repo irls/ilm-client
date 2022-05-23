@@ -24,7 +24,7 @@
       <div class="tab-content">
         <!-- Selection tabs for Upload or Create forms -->
 
-        <div id="upload_pane" class="tab-pane fade in"  :class="{active: uploadMode}">
+        <div id="upload_pane" :class="['tab-pane fade in image-upload-wrapper', {active: uploadMode}]">
           <div class="row">
             <div class="col-md-12">
 
@@ -37,7 +37,7 @@
               <div class="col-sm-8">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" />
+                  <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" v-on:input="onImageChange" />
                 </div>
 
                  <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -46,7 +46,10 @@
                 <p v-if="errorCoverFileType" ><span class="alert alert-warning">Please select image file for cover</span></p>
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
-                  <input name="coverFile" type="file" v-show="false" accept="image/*"  @change="onFilesChange($event)"><br>
+                  <input name="coverFile" type="file" 
+                    v-show="false" 
+                    accept="image/*"  
+                    @change="onFilesChange($event)"><br>
                 </label>
               </div>
 
@@ -101,7 +104,9 @@
     </div> <!-- modal body -->
 
     <div class="modal-footer">
-      <button class="btn btn-primary" type="button" @click="ok">Save</button>
+      <button class="btn btn-primary" type="button" 
+        @click="save" 
+        :disabled="!saveEnabled">Save</button>
     </div>
 
   </modal>
@@ -143,7 +148,7 @@ const html2canvas = {};
 //   theme: 'snow'
 // }
 
-Vue.use(v_modal, {dialog: true});
+Vue.use(v_modal, {dialog: true, dynamic: true});
 
 export default {
   name: 'BookEditCoverModal',
@@ -162,7 +167,6 @@ export default {
 
   data () {
     return {
-      ilm_library_files: this.$store.state.filesRemoteDB,
       bookcovers: BOOKCOVERS,
       errorCoverFileType: false,
       uploadMode: true,
@@ -191,7 +195,8 @@ export default {
       quillTitle: null,
       quillAuthor: null,
       editorTitle: null,
-      editorAuthor: null
+      editorAuthor: null,
+      fileChanged: false
     }
   },
 
@@ -286,22 +291,29 @@ export default {
         this.errorCoverFileType = true;
         setTimeout(()=>{this.errorCoverFileType = false; console.log('end of timeout');}, 5000)
       }
+      this.onImageChange();
     },
 
     createImage (file) {
       this.uploadFile = file;
       // console.log('*** Creating new image', file)
       var reader = new FileReader()
-      var vm = this
-      reader.onload = e => { vm.uploadImage = e.target.result }
+      reader.onload = e => { 
+        this.uploadImage = e.target.result;
+      }
       reader.readAsDataURL(file)
     },
 
     uploadNewImageData () {
+      if (this.isUploading) {
+        return;
+      }
       //console.log('bookid:', bookid)
       // the book id is critical for the path
       let formData = new FormData();
-      formData.append('coverimg', this.uploadFile, 'coverimg');
+      if (this.uploadFile) {
+        formData.append('coverimg', this.uploadFile, 'coverimg');
+      }
       formData.append('coverimgURL', this.uploadImage);
 
       var config = {
@@ -312,16 +324,19 @@ export default {
       }
 
       this.isUploading = true;
+      this.fileChanged = false;
       this.uploadProgress = 'Uploading file';
       return this.updateBookCover({formData: formData, config: config})
         .then(doc => {
           this.isUploading = false;
           this.uploadProgress = '';
           this.uploadFile = null;
+          return Promise.resolve();
         }).catch(err => {
           this.isUploading = false;
           this.uploadProgress = '';
           this.uploadFile = null;
+          return Promise.resolve();
         })
     },
 
@@ -342,27 +357,16 @@ export default {
       })
     },
 
-    showUploadMsg () {
-
-    },
-
     closeWithDelay () {
-      setTimeout(this.closed, 1000)
+      this.hideModal();
     },
 
-    ok () {
+    save() {
       if (this.uploadMode) { // user uploded or browesed for image
-        var vm = this
-        var image = vm.uploadImage
-        // exit if no new external image
-        // if (this.uploadImage.indexOf('ilm_library_files'>-1)) this.closed()
 
-        vm.showUploadMsg() // show progress message until the form closes
-        // if already data format, upload else, convert to data then upload
-        // yeah, I don't really get how to do an await...
-        //if (image.indexOf('http') === 0) vm.uploadNewImageURL(image).then(vm.closeWithDelay)
-        //else vm.uploadNewImageData(image).then(vm.closeWithDelay)
-        vm.uploadNewImageData().then(vm.closeWithDelay);
+        this.uploadNewImageData().then(() => {
+          this.closeWithDelay();
+        });
       } else {
         // generate PNG image from preview using something like html2canvas
         this.captureBookImage()
@@ -416,16 +420,27 @@ export default {
       this.closed()
     },
     
-    showModal(name) {
+    showModal() {
       this.$modal.show('bookEditCoverModal');
     },
-    hideModal(name) {
+    hideModal() {
       this.$modal.hide('bookEditCoverModal');
       this.$emit('closed');
+    },
+    onImageChange() {
+      if (this.uploadFile || this.uploadImage) {
+        this.fileChanged = true;
+      }
     }
   },
   computed: {
-    ...mapGetters(['currentBookMeta'])
+    ...mapGetters(['currentBookMeta']),
+    saveEnabled: {
+      get() {
+        return !this.isUploading && this.fileChanged;
+      },
+      cache: false
+    }
   }
 
 }
@@ -561,6 +576,9 @@ export default {
   }
 
   img.preview_upload {width: 150px; margin-right:1em; margin-top:-.75em; padding:0;}
+  .image-upload-wrapper {
+    height: 200px;
+  }
 
 
 
