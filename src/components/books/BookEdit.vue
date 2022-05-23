@@ -1386,19 +1386,10 @@ export default {
       return rect;
     },
 
-    updateOpenToolbarPosition() {
-//       const editors = document.getElementsByClassName('medium-editor-toolbar-active');
-//       if (editors && editors.length) { //move editor toolbar
-//         const rangeBound = document.getSelection().getRangeAt(0).getBoundingClientRect()
-//         const toolbarBound = editors[0].getBoundingClientRect();
-//         editors[0].style.top = (rangeBound.top - toolbarBound.height) +'px';
-//       }
-    },
-
     smoothHandleScroll: _.debounce(function (ev) {
       //ev.stopPropagation();
       this.handleScroll(ev);
-    }, 10),
+    }, 20),
 
     handleScroll(ev, force = false) {
       const range = ev.detail.range;
@@ -1437,14 +1428,16 @@ export default {
 
       this.editorsTop = range.padFront + countHeight;
 
-      this.correctCurrentEditHeight(this.startId);
+      this.$refs.blocks.forEach((block, bIdx)=>{
+        this.correctCurrentEditHeight(block.blockId);
+      })
 
+      //this.correctCurrentEditHeight(this.startId);
       //this.correctEditWrapper();
-      this.updateOpenToolbarPosition();
     },
 
     correctCurrentEditHeight (blockId) {
-      Vue.nextTick(()=>{
+      //Vue.nextTick(()=>{
         // This will correct height of virtual block if there was some editing
         const blockEditRef = document.getElementById(blockId);
         const blockVirtRef = document.getElementById('v-' + blockId);
@@ -1454,7 +1447,7 @@ export default {
           blockVirtRef.style.height = `${blockEditRect.height}px`;
           blockVirtRef.style.overflow = `hidden`;
         }
-      });
+      //});
     },
 
     correctEditWrapper() {
