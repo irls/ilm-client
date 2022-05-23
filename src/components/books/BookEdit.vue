@@ -1383,6 +1383,7 @@ export default {
     },
 
     checkVisible(elm, viewHeight = false) {
+      if (!elm) return {isVisible: false, height: 0};
       const rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
       rect.isVisible = !(rect.bottom < this.correctVisibleTop || rect.top - viewHeight >= 0);
