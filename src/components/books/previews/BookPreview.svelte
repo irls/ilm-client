@@ -26,7 +26,7 @@
 </VirtualList>-->
 
     <VirtualScroll bind:this={virtualList} data={blocks}
-      key="_id" let:data on:scroll="{onVScroll}" keeps={20} >
+      key="_id" let:data on:scroll="{onVScroll}" >
       <div slot="header" id="previewScrollHeader"></div>
       <BlockPreview
         blockRid="{data._rid}"
@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { beforeUpdate, createEventDispatcher, tick } from 'svelte';//onMount,tick
+import { createEventDispatcher, tick } from 'svelte';//onMount,tick,beforeUpdate,
 import VirtualScroll from '../../generic/svelte-virtual-scroll-list/VirtualScroll.svelte';
 import BlockPreview from './BlockPreview.svelte';
 
@@ -58,12 +58,12 @@ let virtualList;
 
 let bookId = parlistO.meta.bookid || false;
 let loadedBookId = '';
-let startBlockIdx = 0;
-let endBlockIdx = 0;
-let vListStartFrom = false;
+//let startBlockIdx = 0;
+//let endBlockIdx = 0;
+//let vListStartFrom = false;
 //let vListScrollTo = false;
-let startReached = false;
-let endReached = false;
+//let startReached = false;
+//let endReached = false;
 let startIdIdx = 0;
 let fntCounter = 0;
 let prevBlocksLength = 0;
@@ -78,9 +78,9 @@ async function hotkeyScrolledTo(hotkeyScrollTo) {
   }
 }
 
-beforeUpdate(/*async */() => {
+//beforeUpdate(/*async */() => {
   //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'bookId:', bookId, 'loadedBookId:', loadedBookId);
-});
+//});
 
 const dispatch = createEventDispatcher();
 
