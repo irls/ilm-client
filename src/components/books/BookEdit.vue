@@ -1367,16 +1367,19 @@ export default {
     },
 
     initEditorPosition() {
-      const previewScrollHeader = document.getElementById('previewScrollHeader');
       if (!this.editorFrontContainer) {
         this.editorFrontContainer = document.getElementById('editorFrontContainer');
       }
       //editorFrontContainer.style.marginLeft = '-3000px';
       //editorFrontContainer.style.display = 'none';
-      previewScrollHeader.appendChild(this.editorFrontContainer);
-      const blockO = this.parlistO.get(this.parlistArray[0]._rid);
-      //this.parlistO.setStartId(this.parlistArray[range.start]._rid);
-      this.startId = blockO.blockid;
+      const previewScrollHeader = document.getElementById('previewScrollHeader');
+      if (previewScrollHeader) {
+        previewScrollHeader.appendChild(this.editorFrontContainer);
+      }
+      if (this.parlistArray && this.parlistArray.length) {
+        const blockO = this.parlistO.get(this.parlistArray[0]._rid);
+        this.startId = blockO.blockid;
+      }
     },
 
     checkVisible(elm, viewHeight = false) {
