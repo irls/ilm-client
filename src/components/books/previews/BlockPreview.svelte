@@ -181,7 +181,7 @@
 <!--<div class="clearfix"></div>-->
 </template>
 <script>
-  import { beforeUpdate } from 'svelte';
+  import { onMount } from 'svelte';
   //import { fade } from 'svelte/transition';
   import ImgPreview from './ImgPreview.svelte';
 
@@ -200,8 +200,21 @@
   }*/
   //let rand = getRandomInt(0, 200);
 
-  beforeUpdate(/*async */() => {
+  //beforeUpdate(/*async */() => {
     //console.log(`beforeUpdate.blockid: `, block._id, getParnum());
+  //});
+
+  onMount(async () => {
+    const blockEditRef = document.getElementById(block._id);
+    if (blockEditRef) {
+      const blockVirtRef = document.getElementById('v-' + block._id);
+      if (blockVirtRef) {
+        const blockEditRect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
+        blockVirtRef.style.height = `${blockEditRect.height}px`;
+        blockVirtRef.style.overflow = `hidden`;
+      }
+    }
+    //await tick();
   });
 
   const getImgProps = (imgUrl = false) => {

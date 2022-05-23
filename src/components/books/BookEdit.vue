@@ -1428,11 +1428,11 @@ export default {
 
       this.editorsTop = range.padFront + countHeight;
 
-      this.$refs.blocks.forEach((block, bIdx)=>{
-        this.correctCurrentEditHeight(block.blockId);
-      })
+//       this.$refs.blocks.forEach((block, bIdx)=>{
+//         this.correctCurrentEditHeight(block.blockId);
+//       })
 
-      //this.correctCurrentEditHeight(this.startId);
+      this.correctCurrentEditHeight(this.startId);
       //this.correctEditWrapper();
     },
 
