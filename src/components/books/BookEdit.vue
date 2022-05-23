@@ -1376,8 +1376,10 @@ export default {
       if (previewScrollHeader) {
         previewScrollHeader.appendChild(this.editorFrontContainer);
       }
-      const blockO = this.parlistO.get(this.parlistArray[0]._rid);
-      this.startId = blockO.blockid;
+      if (this.parlistArray && this.parlistArray.length) {
+        const blockO = this.parlistO.get(this.parlistArray[0]._rid);
+        this.startId = blockO.blockid;
+      }
     },
 
     checkVisible(elm, viewHeight = false) {
