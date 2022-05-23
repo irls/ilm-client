@@ -162,6 +162,7 @@
           <div class="item-cell">Description</div>
           <div class="item-cell">Size&nbsp;(Kb)</div>
           <div class="item-cell">Reduction</div>
+          <div class="item-cell">Time</div>
           <div class="item-cell">Actions</div>
         </div>
         <template v-for="itemK in itemKeys">
@@ -172,6 +173,9 @@
             </div>
             <div class="item-cell">
               -{{items[itemK].reduction}}%
+            </div>
+            <div class="item-cell">
+              {{items[itemK].time}}
             </div>
             <div class="item-cell">
               <i class="fa fa-stop-circle" v-on:click="stop()" v-if="isPlaying && playingItem === itemK"></i>
