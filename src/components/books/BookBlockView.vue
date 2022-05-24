@@ -255,6 +255,7 @@
               :delFlagPart="delFlagPart"
               :isCompleted="isCompleted"
               :checkAllowNarrateUnassigned="checkAllowNarrateUnassigned"
+              :checkAllowUpdateUnassigned="checkAllowUpdateUnassigned"
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               :splitPointAdded="splitPointAdded"
               :splitPointRemoved="splitPointRemoved"
@@ -1653,7 +1654,8 @@ export default {
                       'quoteButton', 'suggestButton'
                     ]
                   };
-              }
+              };
+              toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
               this.editorFootnRtl = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
@@ -1663,7 +1665,7 @@ export default {
                   suggestEl: this.suggestEl,
                   extensions: extensions,
                   disableEditing: !this.allowEditing || this.editingLocked,
-                imageDragging: false
+                  imageDragging: false
               });
             }
           }
@@ -1691,6 +1693,7 @@ export default {
                     ]
                   };
               }
+              toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
               this.editorFootnLtr = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                   toolbar: toolbar,
                   buttonLabels: 'fontawesome',
@@ -1700,7 +1703,7 @@ export default {
                   suggestEl: this.suggestEl,
                   extensions: extensions,
                   disableEditing: !this.allowEditing || this.editingLocked,
-                imageDragging: false
+                  imageDragging: false
               });
             }
           }
@@ -1846,6 +1849,10 @@ export default {
             }
           }
 
+          if (ev && ev.target) {
+            // emit for virtual scroll correction
+            this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
+          }
         });
       },
 
@@ -3518,6 +3525,8 @@ Save text changes and realign the Block?`,
           }
           if (event.target.value == 'header'){
             this.block.classes.level = 'h1';
+            this.block.classes['table of contents'] = this.block.classes['table of contents'] || {};
+            this.block.classes['table of contents'].isInToc = 'on';
             styleVal = 'h1';
             blockType = 'header';
             this.pushChange('classes');
@@ -4292,11 +4301,31 @@ Save text changes and realign the Block?`,
       },
 
       checkAllowNarrateUnassigned() {
+        return this.checkNarratorUnassignedAction('narrate');
+      },
+      
+      checkAllowUpdateUnassigned() {
+        return this.checkNarratorUnassignedAction('update');
+      },
+      
+      checkNarratorUnassignedAction(type = 'narrate') {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
+          let title = ``;
+          let text = '';
+          switch (type) {
+            case 'narrate':
+              title = 'Unable to re-narrate';
+              text = `The block can't be re-narrated because it is currently being edited.`;
+              break;
+            case 'update':
+              title = 'Unable to update';
+              text = `The block can't be updated because it is currently being edited`;
+              break;
+          }
           this.$root.$emit('show-modal', {
-            title: 'Unable to re-narrate',
-            text: `The block can't be re-narrated because it is currently being edited.`,
+            title: title,
+            text: text,
             buttons: [
               {
                 title: 'OK',
@@ -4866,41 +4895,53 @@ Save text changes and realign the Block?`,
 //book lang common
 //Specificity 1
 //lang priority 4
-.content-wrap-footn {
+.content-wrap-footn,
+.content-wrap-footn-preview {
   font-size: 13pt;
 }
 
 //book lang arabic or farsi
 //Specificity 2
 //lang priority 3
-.-lang-fa .content-wrap-footn, .-lang-ar .content-wrap-footn {
+.-lang-fa .content-wrap-footn,
+.-lang-ar .content-wrap-footn,
+.-lang-ar .content-wrap-footn-preview,
+.-lang-ar .content-wrap-footn-preview {
   font-size: 15pt;
 }
 
 //block lang common
 //Specificity 3
 //lang priority 2
-.table-cell .-content.content-wrap-footn{
+.table-cell .-content.content-wrap-footn,
+.table-cell .-content.content-wrap-footn-preview {
   font-size: 13pt;
 }
 
 //block lang arabic or farsi
 //Specificity 3
 //lang priority 2
-.table-cell .-langblock-ar.content-wrap-footn, .table-cell .-langblock-fa.content-wrap-footn {
+.table-cell .-langblock-ar.content-wrap-footn,
+.table-cell .-langblock-fa.content-wrap-footn,
+.table-cell .-langblock-ar.content-wrap-footn-preview,
+.table-cell .-langblock-fa.content-wrap-footn-preview {
   font-size: 15pt;
 }
 //footnote lang common
 //Specificity 4
 //lang priority 1
-.table-cell .content-wrap-footn.table-cell.-text{
+.table-cell .content-wrap-footn.table-cell.-text,
+.table-cell .content-wrap-footn-preview.table-cell.-text {
   font-size: 13pt;
 }
 
 //footnote lang arabic or farsi
 //Specificity 4
 //lang priority 1
-.table-cell .content-wrap-footn.-langftn-ar.-text, .table-cell .content-wrap-footn.-lang-fa.-text{
+.table-cell .content-wrap-footn.-langftn-ar.-text,
+.table-cell .content-wrap-footn.-lang-fa.-text,
+.table-cell .content-wrap-footn-preview.-lang-fa.-text,
+.table-cell .content-wrap-footn-preview.-lang-fa.-text {
   font-size: 15pt;
 }
 
@@ -5185,7 +5226,7 @@ Save text changes and realign the Block?`,
       position: relative;
 
       .par-ctrl {
-        width: 440px;
+        width: 480px;
         /*background: green;*/
 
         display: flex;
@@ -5201,7 +5242,7 @@ Save text changes and realign the Block?`,
         &.-par-num {
           width: 180px;
 
-          label.par-num {
+          label.par-num, span.par-num {
             padding-left: 12px;
             position: relative;
             top: 2px;

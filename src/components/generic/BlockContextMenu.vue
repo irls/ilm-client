@@ -1,7 +1,7 @@
 <template>
 <ul ref="menu"
     v-show="viewMenu"
-    class="click-menu"
+    class="click-menu direction-ltr context-menu"
     tabindex="-1"
     :style="{ top, left }"
     @click="close">
@@ -66,7 +66,7 @@
   }
 </script>
 
-<style lang='less' scoped>
+<style lang='less'>
 
 .click-menu{
     background: #FAFAFA;
@@ -88,6 +88,8 @@
      margin: 0;
      padding: 5px 10px;
      cursor: default;
+     font-size: 14px;
+     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 
      &.separator {
        border-bottom: 1px solid #E0E0E0;
@@ -100,6 +102,9 @@
        background: #1E88E5;
        color: #FAFAFA;
      }
+   }
+   &.context-menu {
+     width: 190px;
    }
 }
 </style>

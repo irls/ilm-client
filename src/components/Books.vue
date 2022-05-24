@@ -109,7 +109,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
+    ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian', 'hashTagsSuggestions']),
   },
 
   watch: {
@@ -496,6 +496,9 @@ export default {
           font-family: 'Times New Roman', 'Liberation Serif';
         }
       }
+    }
+    .direction-ltr {
+      direction: ltr;
     }
   }
 }

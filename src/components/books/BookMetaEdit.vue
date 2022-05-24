@@ -31,6 +31,10 @@
             <legend>Description </legend>
             <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
           </fieldset>
+          <fieldset class='hashtags' :disabled="!adminOrLibrarian">
+            <legend>Project tags</legend>
+            <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
+          </fieldset>
             <BookWorkflow
               v-if="adminOrLibrarian"
               :isPublishingQueue="isPublishingQueue"
@@ -45,11 +49,13 @@
               </div>
               <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
               <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
-                Download: <br />
-                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
-                <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
-                <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
-                <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
+                <template v-if="displayDownloadDemo">
+                  Download: <br />
+                  <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
+                  <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
+                  <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
+                  <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
+                </template>
                 <hr>
                 <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
                 <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
@@ -625,7 +631,9 @@ import SplitPreview from './details/SplitPreview';
 import BlockStyleLabels from './details/BlockStyleLabels';
 import CompleteAudioExport from './details/CompleteAudioExport';
 import PauseBeforeBlock from './details/PauseBeforeBlock';
+import VTagSuggestion from './details/HashTag';
 import ResizableTextarea from '../generic/ResizableTextarea';
+
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -652,7 +660,9 @@ export default {
     BlockStyleLabels,
     CompleteAudioExport,
     PauseBeforeBlock,
+    VTagSuggestion,
     'resizable-textarea': ResizableTextarea
+
   },
 
   data () {
@@ -693,6 +703,8 @@ export default {
       showUnknownAuthor: -1,
       showUnknownAuthorEn: -1,
       lockLanguage: false,
+      arbitraryHashtags: '',
+      handleHashTags: 0,
 
       // set blocks properties
       styleTabs: new Map(),
@@ -743,7 +755,7 @@ export default {
         4: 'illustration',
         5: 'hr'
       },
-      activeStyleTab: ''
+      activeStyleTab: '',
     }
   },
 
@@ -783,7 +795,9 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
       currentBookCollection: 'currentBookCollection',
-      alignBlocksLimitMessage: 'alignBlocksLimitMessage'
+      alignBlocksLimitMessage: 'alignBlocksLimitMessage',
+      hashTagsSuggestions: 'hashTagsSuggestions',
+      currentBookCollection: 'currentBookCollection'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -792,6 +806,19 @@ export default {
           return this.mode === 'proofread'  ;
       }
     },
+    getHashTags: {
+      get() {
+        if (this.currentBook.hashTags && Array.isArray(this.currentBook.hashTags)) {
+          let hashtags = this.currentBook.hashTags;
+          return hashtags.join(', ');
+        } else return '';
+      },
+      set(val) {
+        return val;
+      }
+
+    },
+
     collectionsList: {
       get() {
         let list = [{'_id': '', 'title' :''}];
@@ -871,7 +898,7 @@ export default {
           });
         }
         return types;
-      }
+        }
     },
     trimSilenceConfigCalculated: {
       get() {
@@ -908,6 +935,13 @@ export default {
         }
         return false;
       }
+    },
+
+    displayDownloadDemo: {
+      get() {
+        return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
+      },
+      cache: false
     }
   },
 
@@ -1005,7 +1039,9 @@ export default {
       handler (val) {
         this.init();
         this.lockLanguage = false;
+        //this.handleHashTags++;  // to force reload hashTags template
 
+        this.$refs['hashTags'].name = '';
       },
       deep: true
     },
@@ -1257,6 +1293,25 @@ export default {
       this.liveUpdate(key, value)
     },
 
+
+    removeTag(i){
+      if (!this.adminOrLibrarian)
+        return;
+
+      this.currentBook.hashTags.splice(i,1)
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
+    },
+    addTag(tag){
+      if (!this.adminOrLibrarian)
+        return;
+
+      if (this.currentBook.hashTags)
+        this.currentBook.hashTags.push(tag);
+      else
+        this.currentBook.hashTags = [tag];
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
+    },
+
     change (key) {
       this.liveUpdate(key, this.currentBook[key])
       //if changed language let's refresh the page for update default block & footnote language.
@@ -1283,7 +1338,6 @@ export default {
         debounceTime = false;
       if(!disable)
         disable = false;
-
 
       if(key =='difficulty'){
 
@@ -2095,6 +2149,13 @@ export default {
       }
     }, 500),
 
+    updateHashTags (event) {
+      let array = event.target.value.split(', ');
+      console.log(array);
+      this.currentBook.hashTags = array;
+      this.liveUpdate('hashTags', this.currentBook.hashTags)
+    },
+
     updateWeigth (event,debounceTime) {
       const value = event.target.value.replace(/ /g, '');
       const key = 'weight';
@@ -2161,6 +2222,7 @@ export default {
     updateJobDescription: _.debounce(function(event) {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
+
 
     goToBlock(blockId, ev) {
       this.$router.push({name: this.$route.name, params: {}});
@@ -2701,6 +2763,10 @@ select.text-danger#categorySelection, input.text-danger{
   .dropdown-content:hover {
     background: #1e90ff;
     color: #fff;
+  }
+
+  .tags-input {
+    width: 100%;
   }
 
   .outside {

@@ -11,6 +11,7 @@ const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
+import testAudioConvert from './modules/testAudioConvert';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -66,7 +67,8 @@ function defer() {
 
 export const store = new Vuex.Store({
   modules: {
-    uploadImage
+    uploadImage,
+    testAudioConvert
   },
   state: {
     audioRenaming : false,
@@ -84,6 +86,7 @@ export const store = new Vuex.Store({
     allowPublishCurrentBook: false,
     publishButtonStatus: false,
     allRolls: [],
+    hashTagsSuggestions: [],
 
     authorsLangFarsi: authorsLangFarsi,
 
@@ -110,7 +113,7 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', language: '', jobStatus: 'active'},
+    bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -119,7 +122,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: '', jobStatus: 'active'},
+    collectionsFilter: {title: '', language: '', jobStatus: 'active', projectTag: ''},
     currentCollection: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
@@ -138,6 +141,7 @@ export const store = new Vuex.Store({
     aligningBlocks: [],
     storeList: new Map(), // global parlist
     storeListO: new BookBlocks(),
+    storeListUpdateCounter: 0,
     blockSelection: {
       start: {},//block
       end: {},//block
@@ -178,7 +182,15 @@ export const store = new Vuex.Store({
       is_narrate_unassiged: false
     },
     taskTypes: {tasks: [], categories: []},
-    liveDB: new liveDB(),
+    liveDB: new liveDB((status) => {
+      if( store.state.livedbStatus!=null && status){
+        store.state.liveDB.stopWatch('metaV');
+        store.dispatch('liveDBMetaUpdate');
+      }
+      store.state.livedbStatus = status;
+
+    }),
+
     bookCategories: [],
     // bookDifficulties: [
     //   '1',
@@ -231,10 +243,17 @@ export const store = new Vuex.Store({
     bookTocSectionsXHR: null,
     tocSectionBook: {},
     alignBlocksLimit: null,
-    allowAlignBlocksLimit: true
+    allowAlignBlocksLimit: true,
+    livedbStatus : null,
+    livedbEnabled : true,
+    watched:{
+      'metaV':null
+    },
   },
 
   getters: {
+    livedbStatus: state => state.livedbStatus,
+    livedbEnabled: state => state.livedbEnabled,
     auth: state => state.auth,
     isLoggedIn: state => state.isLoggedIn,
     isAdmin: state => state.isAdmin,
@@ -418,6 +437,7 @@ export const store = new Vuex.Store({
     taskTypes: state => state.taskTypes,
     adminOrLibrarian: state => state.adminOrLibrarian,
     adminOrProofer: state => state.adminOrProofer,
+    hashTagsSuggestions: state => state.hashTagsSuggestions,
     currentJobInfo: state => state.currentJobInfo,
     taskTypes: state => state.taskTypes,
     liveDB: state => state.liveDB,
@@ -558,6 +578,24 @@ export const store = new Vuex.Store({
   },
 
   mutations: {
+    SET_LIVEDB_CHECKBOX(state,checkbox) {
+      state.liveDB.stop();
+      if(checkbox){
+        state.livedbEnabled = true;
+        state.liveDB = new liveDB((status) => {
+          if( store.state.livedbStatus!=null && status){
+            state.liveDB.stopWatch('metaV');
+            store.dispatch('liveDBMetaUpdate');
+          }
+          store.state.livedbStatus = status;
+        })
+
+      }else{
+        state.livedbEnabled = false;
+        store.state.livedbStatus = false;
+      }
+    },
+
     SET_AUDIO_RENAMING(state, status) {
       state.audioRenaming = status;
     },
@@ -580,7 +618,7 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'language', 'jobStatus'].indexOf(prop) > -1) {
+      for (var prop in obj) if (['filter', 'projectTag', 'language', 'jobStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
         // console.log("Setting bookfilter."+prop, obj[prop])
         // console.log(state.bookFilters)
@@ -1068,6 +1106,7 @@ export const store = new Vuex.Store({
       }
 
       state.storeList.set(blockObj.blockid, blockObj);
+      state.storeListUpdateCounter +=1;
     },
 
     clear_storeList (state) {
@@ -1229,7 +1268,6 @@ export const store = new Vuex.Store({
     },
 
     set_currentbook_executors(state) {
-
       if (state.currentBookMeta && state.currentBookMeta._id) {
         if (!state.currentBookMeta.executors) {
           let book = state.books_meta.find(book => {
@@ -1251,14 +1289,96 @@ export const store = new Vuex.Store({
         this.commit('set_currentbook_executors');
       }
     },
-    
     set_alignBlocksLimit(state, value) {
       state.alignBlocksLimit = value;
       this.commit('set_allowAlignBlocksLimit');
     },
-    
+
     set_allowAlignBlocksLimit(state) {
       state.allowAlignBlocksLimit = state.alignBlocksLimit ? state.alignCounter.countAudio <= state.alignBlocksLimit : true;
+    },
+
+    set_liveDB_block_update(state, data) {
+      //console.log(`set_liveDB_block_update.data: `, data);
+      let blockStore = state.storeList.get(data.block.blockid);
+      if (data.block.blockid
+        && state.audioTasksQueue.block.blockId
+        && state.audioTasksQueue.block.blockId === data.block.blockid
+        && state.audioTasksQueue.block.partIdx !== null) {
+
+        if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+          blockStore.parts.forEach((p, i) => {
+            if (p.isAudioChanged) {
+              data.block.parts[i] = p;
+            }
+          });
+          let hasChanges = blockStore.parts.find(p => {
+            return p.isChanged;
+          });
+          if (hasChanges) {
+            if (Array.isArray(blockStore.flags)) {
+              data.block.flags = blockStore.flags;// do not update flags for edited block
+            }
+          }
+        }
+      }
+      if (data.action === 'create' && data.block) {
+        if (!state.storeListO.get(data.block.id)) {
+          state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+        }
+      } else if (data.action === 'change' && data.block) {
+        if (blockStore) {
+          /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+            return p.isChanged;
+          }) : false;*/
+          if (blockStore.isSaving || blockStore.getIsChanged() || blockStore.getIsAudioChanged()) {
+            //console.log('isSaving hasChangedPart');
+            return;
+          }
+          let changes = [];// collect changes
+          ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+            if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
+              changes.push(k);
+            }
+          });
+          data.block.sync_changes = changes;
+          if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
+            state.storeListO.updBlockByRid(data.block.id, data.block);
+            //state.storeListUpdateCounter +=1;
+          }
+        }
+      } else if (data.action === 'delete') {
+        state.storeListO.delExistsBlock(data.block['@rid'])
+      }
+
+      if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
+        if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
+          let block = state.storeList.get(data.block.blockid);
+          if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+            block.parts.forEach((p, i) => {
+              if (p.inid) {
+                data.block.parts[i].inid = p.inid;
+              }
+            });
+          }
+          if (block.isChanged) {
+            if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
+                if (block.voicework != data.block.voicework) {
+                  block.voicework = data.block.voicework;
+                  block.audiosrc = data.block.audiosrc;
+                  block.audiosrc_ver = data.block.audiosrc_ver;
+                  this.commit('set_storeList', new BookBlock(block));
+                }
+              } else {
+                this.commit('set_storeList', new BookBlock(data.block));
+              }
+          } else {
+            this.commit('set_storeList', new BookBlock(data.block));
+          }
+        }
+      } else if (data.block && data.block.blockid) {
+        this.commit('set_storeList', new BookBlock(data.block));
+      }
     }
   },
 
@@ -1320,6 +1440,18 @@ export const store = new Vuex.Store({
             }
           })
           .catch(err => console.log(err));
+
+        axios.get(state.API_URL + 'hashTags')
+          .then(response => {
+            if (response) {
+              if (response.status == 200) {
+                state.hashTagsSuggestions = response.data;
+                //console.log('hashTags', response.data);
+              }
+            }
+          })
+          .catch(err => console.log(err));
+
 
 //          state.librariesDB.replicate.from(state.librariesRemoteDB, {
 //          /*filter: '_view',
@@ -1444,6 +1576,7 @@ export const store = new Vuex.Store({
         state.liveDB.stopWatch(vertex)
         return;
       }
+      state.watched['metaV'] = null;
 
       state.liveDB.stopWatch('metaV');
       state.liveDB.stopWatch('job');
@@ -1490,93 +1623,21 @@ export const store = new Vuex.Store({
       .catch(err => err)
     },
 
-    startBookWatch({state, dispatch}, bookid) {
+    startBookWatch({state, commit, dispatch}, bookid) {
       //console.log('state.liveDB.startWatch', bookid);
       if (!bookid) {
         bookid = state.currentBookid
       }
       if (bookid) {
         state.liveDB.startWatch(bookid + '-blockV', 'blockV', {bookid: bookid}, (data) => {
-          if (data && data.block) {
-            //state.storeListO.delBlock(data.block);
-
-            let blockStore = state.storeList.get(data.block.blockid);
-            if (data.block.blockid
-              && state.audioTasksQueue.block.blockId
-              && state.audioTasksQueue.block.blockId === data.block.blockid
-              && state.audioTasksQueue.block.partIdx !== null) {
-
-              if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
-                blockStore.parts.forEach((p, i) => {
-                  if (p.isAudioChanged) {
-                    data.block.parts[i] = p;
-                  }
-                });
-                let hasChanges = blockStore.parts.find(p => {
-                  return p.isChanged;
-                });
-                if (hasChanges) {
-                  if (Array.isArray(blockStore.flags)) {
-                    data.block.flags = blockStore.flags;// do not update flags for edited block
-                  }
-                }
-              }
-            }
-            if (data.action === 'create' && data.block) {
-              if (!state.storeListO.get(data.block.id)) {
-                state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
-              }
-            } else if (data.action === 'change' && data.block) {
-              if (blockStore) {
-                /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
-                  return p.isChanged;
-                }) : false;*/
-                if (blockStore.isSaving || blockStore.getIsChanged() || blockStore.getIsAudioChanged()) {
-                  //console.log('isSaving hasChangedPart');
-                  return;
-                }
-                let changes = [];// collect changes
-                ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
-                  if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
-                    changes.push(k);
-                  }
-                });
-                data.block.sync_changes = changes;
-                if (new Date(blockStore.updated) < new Date(data.block.updated)) {
-                  state.storeListO.updBlockByRid(data.block.id, data.block);
-                }
-              }
-            } else if (data.action === 'delete') {
-              state.storeListO.delExistsBlock(data.block['@rid'])
-            }
-
-            if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
-              if (new Date(blockStore.updated) < new Date(data.block.updated)) {
-                let block = state.storeList.get(data.block.blockid);
-                if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
-                  block.parts.forEach((p, i) => {
-                    if (p.inid) {
-                      data.block.parts[i].inid = p.inid;
-                    }
-                  });
-                }
-                if (block.isChanged) {
-                  if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
-                      if (block.voicework != data.block.voicework) {
-                        block.voicework = data.block.voicework;
-                        block.audiosrc = data.block.audiosrc;
-                        block.audiosrc_ver = data.block.audiosrc_ver;
-                        store.commit('set_storeList', new BookBlock(block));
-                      }
-                    } else {
-                      store.commit('set_storeList', new BookBlock(data.block));
-                    }
-                } else {
-                  store.commit('set_storeList', new BookBlock(data.block));
-                }
-              }
-            } else if (data.block && data.block.blockid) {
-              store.commit('set_storeList', new BookBlock(data.block));
+          //console.log('DATA', bookid + '-blockV', data);
+          if (data){
+            if (Array.isArray(data)) {
+              data.forEach((d)=>{
+                commit('set_liveDB_block_update', d);
+              })
+            } else if (data.block) {
+              commit('set_liveDB_block_update', data);
             }
             state.storeListO.refresh();
             state.blockSelection.refresh = !state.blockSelection.refresh;
@@ -1682,6 +1743,9 @@ export const store = new Vuex.Store({
           //dispatch('loadBookToc', {bookId: book_id});
           dispatch('stopWatchLiveQueries', 'metaV');
           dispatch('stopWatchLiveQueries', 'job');
+
+          state.watched['metaV'] = book_id;
+
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
@@ -3136,14 +3200,25 @@ export const store = new Vuex.Store({
     },
 
     getCurrentJobInfo({state, commit}, clear) {
-      /*state.currentJobInfo = {
+      const default_currentJobInfo = {
         can_resolve_tasks: [],
         mastering: null,
         proofing: null,
         published: null,
         text_cleanup: null,
-        is_proofread_unassigned: null
-      };*/
+        is_proofread_unassigned: null,
+        tasks_counter: [],
+        executors: {editor: null, proofer: null, narrator: null},
+        description: '',
+        id: null,
+        completed: null,
+        workflow: {
+          status: null,
+          archived: null
+        },
+        locked_blocks: {proofer: [], narrator: [], editor: []},
+        is_narrate_unassiged: false
+      };
       if (state.jobInfoRequest) {
         return state.jobInfoRequest;
       }
@@ -3712,6 +3787,17 @@ export const store = new Vuex.Store({
         return Promise.reject({})
       })
     },
+
+    liveDBMetaUpdate({state, commit, dispatch}) {
+      if(store.state.watched.metaV){
+        store.state.liveDB.startWatch(store.state.watched.metaV + '-metaV', 'metaV', {bookid: store.state.watched.metaV}, (data) => {
+          commit('SET_CURRENTBOOK_META', data.meta)
+        })
+        setTimeout(() => {
+          return axios.get(`${state.API_URL}livedb/update/meta/${store.state.watched.metaV}`)
+        }, 1000)
+      }
+    },
     reloadBook({state, commit, dispatch}) {
       commit('clear_storeList');
       commit('clear_storeListO');
@@ -3736,14 +3822,9 @@ export const store = new Vuex.Store({
           selection: selection,
           format: 'm4a'
         })
-          .then((response) => {
-            if (response.data.bookid === state.currentBookMeta.bookid) {
-              commit('SET_CURRENTBOOK_META', response.data);
-            }
-          })
-          .catch(err => {
-            return Promise.reject(err);
-          });
+        .catch(err => {
+          return Promise.reject(err);
+        });
       }
     },
     getTaskUsers({state, commit}) {
@@ -4156,7 +4237,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    mergeBlockParts({state, commit}, [blockid, partFrom, partTo]) {
+    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo]) {
       return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
         .then((response) => {
           let storeBlock = state.storeList.get(blockid);
@@ -4172,6 +4253,8 @@ export const store = new Vuex.Store({
             });
           }
           commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -4303,10 +4386,10 @@ export const store = new Vuex.Store({
                 }
                 dispatch('getBookAlign');
               }
-              return resolve();
+              return resolve(true);
             });
         }
-        return resolve();
+        return resolve(false);
       });
     },
 
@@ -4397,7 +4480,6 @@ export const store = new Vuex.Store({
         });
       }
     },
-
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
         state.bookCategories = categories.data
@@ -4537,7 +4619,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    
+
     getAlignBlocksLimit({state, commit}) {
       return axios.get(`${state.API_URL}align_config/blocks_limit`)
         .then(response => {
@@ -4546,6 +4628,117 @@ export const store = new Vuex.Store({
             commit('set_alignBlocksLimit', value);
           }
           return Promise.resolve(value);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+      
+    splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      let currentBlockO = state.storeListO.get(blockid);
+      let storeBlock = state.storeList.get(blockid);
+      storeBlock.isSaving = true;
+      update.mode = state.bookMode;
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
+        .then(response => {
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+            .then(numUpdated => {
+              if (!numUpdated) {
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+              }
+            });
+          commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+
+    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      update.mode = state.bookMode;
+      let currentBlockO = state.storeListO.get(blockid);
+
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
+        .then(response => {
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+          let storeBlock = state.storeList.get(blockid);
+          let isBlockPart = typeof update.partIdx !== 'undefined';
+          if (isBlockPart && storeBlock.parts.length !== response.data.parts.length) {
+            storeBlock.parts.forEach((p, pIdx) => {
+              if (pIdx < update.partIdx && (p.isChanged || p.isAudioChanged)) {
+                response.data.parts[pIdx] = p;
+              } else if (pIdx > update.partIdx && (p.isChanged || p.isAudioChanged)) {
+                //response.data.parts[pIdx + isSplitting] = p;
+                response.data.parts[pIdx + update.partIdx] = Object.assign(response.data.parts[pIdx + update.partIdx], {
+                  content: p.content,
+                  inid: p.inid,
+                  isAudioChanged: p.isAudioChanged,
+                  isChanged: p.isChanged,
+                  manual_boundaries: p.manual_boundaries,
+                  _id: p._id
+                });
+              }
+            });
+          }
+          commit('set_storeList', new BookBlock(response.data));
+          state.storeListO.refresh();
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+          return Promise.resolve();
+        })
+        .catch(err => {
+          console.log(err);
+          return Promise.reject(err);
+        });
+    },
+
+    splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      let currentBlockO = state.storeListO.get(blockid);
+      let storeBlock = state.storeList.get(blockid);
+      storeBlock.isSaving = true;
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
+        partIdx: partIdx,
+        mode: state.bookMode
+      })
+        .then(response => {
+
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+            .then(numUpdated => {
+              if (!numUpdated) {
+                dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
+              }
+            });
+          commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+
+    mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
+      if (!state.currentBookid) {
+        return Promise.resolve();
+      }
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
+        .then((response) => {
+          commit('set_storeList', new BookBlock(response.data));
+          dispatch('getCurrentJobInfo');
+          dispatch('tc_loadBookTask', state.currentBookid);
+          return Promise.resolve(response.data);
         })
         .catch(err => {
           return Promise.reject(err);

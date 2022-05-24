@@ -1,25 +1,47 @@
 import io from 'socket.io-client';
+let socket;
 
-const socket = io(
-  process.env.LIVE_QUERY_URL,
-  {
-    timeout: 100000
-  });
-
-let connection_attempts = 0;
-let max_connection_attempts = 5;
-socket.on('reconnect_error', () => {
-  ++connection_attempts;
-  if (connection_attempts >= max_connection_attempts) {
-    socket.close();
-  }
-})
 
 class liveDB {
-  constructor() {
+  constructor(onConnectCallback) {
+    this.start(onConnectCallback);
+    this.start(onConnectCallback);
+  }
+  stop() {
+    socket.close();
+  }
+  start(onConnectCallback) {
+    if(socket){
+      socket.close();
+    }
+
+    socket = new io(
+      process.env.LIVE_QUERY_URL,
+      {
+        timeout: 1000,
+      });
+
+    socket.on('reconnect_error', () => {
+      console.log('[liveDB]:reconnect_error');
+      onConnectCallback.call(this, socket.connected);
+    });
+    socket.on("connect", () => {
+      console.log('[liveDB]:connect');
+      onConnectCallback.call(this, socket.connected);
+    });
+    socket.on("reconnect_failed", () => {
+      console.log('[liveDB]:reconnect_failed');
+      onConnectCallback.call(this, socket.connected);
+    });
+    socket.on("error", (data) => {
+      console.log('[liveDB]:error',data);
+    });
+    socket.on('connect_error', (data) => {
+      console.log('[liveDB]:error',data);
+    });
+
     this.keys = {};
     this.subscriber_id = null;
-    //this.className = null;
   }
 
   setSubscriberId(subscriber_id) {
@@ -43,10 +65,6 @@ class liveDB {
       socket.on('stop-watch-all-' + key, (data) => {
         this.stopWatch(data.class);
       });
-      socket.on('connect_error', (data) => {
-        console.error(data)
-        socket.close();
-      })
     }
   }
 
