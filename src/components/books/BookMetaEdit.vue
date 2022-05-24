@@ -798,7 +798,6 @@ export default {
       alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
       currentBookCollection: 'currentBookCollection'
-
     }),
     proofreadModeReadOnly: {
       get() {

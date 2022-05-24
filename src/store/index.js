@@ -1289,7 +1289,6 @@ export const store = new Vuex.Store({
         this.commit('set_currentbook_executors');
       }
     },
-
     set_alignBlocksLimit(state, value) {
       state.alignBlocksLimit = value;
       this.commit('set_allowAlignBlocksLimit');
@@ -4634,6 +4633,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
+      
     splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
       if (!state.currentBookid) {
         return Promise.resolve();
@@ -4743,7 +4743,6 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
-
     }
   }
 })
