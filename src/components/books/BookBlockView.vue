@@ -259,6 +259,8 @@
               :addToQueueBlockAudioEdit="addToQueueBlockAudioEdit"
               :splitPointAdded="splitPointAdded"
               :splitPointRemoved="splitPointRemoved"
+              :checkVisible="checkVisible"
+              :checkFullyVisible="checkFullyVisible"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -723,7 +725,7 @@ export default {
       //'VueHighlightJS': VueHighlightJS
       'codemirror': codemirror
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder', 'playNextBlock', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access, toc_methods],
   computed: {
       isLocked: {
@@ -4140,24 +4142,6 @@ Save text changes and realign the Block?`,
         }
         this.hasContentListeners = true;
       },
-      _handleSpacePress(e) {
-        if (e) {
-          if (e.charCode == 32 && this.isRecording) {
-            if (!this.isRecordingPaused) {
-              this.pauseRecording();
-            } else {
-              this.resumeRecording();
-            }
-          }
-          if (e.charCode == 32 && this.isAudStarted) {
-            if (!this.isAudPaused) {
-              this.audPause();
-            } else {
-              this.audResume();
-            }
-          }
-        }
-      },
       _saveContent() {
         if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
           this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
@@ -4264,11 +4248,13 @@ Save text changes and realign the Block?`,
         }
       },
       partAudioComplete(partIdx) {
-        if (this.block.parts && this.block.parts[partIdx + 1]) {
+        if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[partIdx + 1] && this.block.parts[partIdx + 1].audiosrc) {
           let ref = this.$refs.blocks[partIdx + 1];
           if (ref) {
             ref.audPlay();
           }
+        } else {
+          this.playNextBlock(this.block.blockid);
         }
       },
       onIsAudioChanged(val) {
@@ -4436,6 +4422,12 @@ Save text changes and realign the Block?`,
           this.block.setContent(this.storeListById(this.block.blockid).getContent());
         }
         this.$forceUpdate();
+      },
+      getSubblockRef(index = 0) {
+        if (Array.isArray(this.$refs.blocks) && this.$refs.blocks.length > 0 && this.$refs.blocks[index]) {
+          return this.$refs.blocks[index];
+        }
+        return null;
       }
   },
   watch: {
@@ -4680,18 +4672,6 @@ Save text changes and realign the Block?`,
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
               this.initEditor(true);
-            }
-          }
-        }
-      },
-      'isAudStarted': {
-        handler(val) {
-          if (this.mode === 'narrate') {
-            if (val === true) {
-              $('body').off('keypress', this._handleSpacePress);
-              $('body').on('keypress', this._handleSpacePress);
-            } else {
-              $('body').off('keypress', this._handleSpacePress);
             }
           }
         }
