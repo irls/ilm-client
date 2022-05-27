@@ -4251,12 +4251,12 @@ Save text changes and realign the Block?`,
         if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[partIdx + 1] && this.block.parts[partIdx + 1].audiosrc) {
           let ref = this.$refs.blocks[partIdx + 1];
           if (ref) {
-            let lastW = ref.$el.querySelector('w:first-child');
-            let visible = lastW && this.checkFullyVisible(lastW);
-            if (!visible) {
+            //let lastW = ref.$el.querySelector('w:first-child');
+            //let visible = lastW && this.checkFullyVisible(lastW);
+            //if (!visible) {
               //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
-              ref.$el.scrollIntoView();
-            }
+              //ref.$el.scrollIntoView();
+            //}
             ref.audPlay();
           }
         } else {
