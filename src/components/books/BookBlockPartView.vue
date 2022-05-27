@@ -3,7 +3,14 @@
 
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
-    <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
+    <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
+      
+      <LockedBlockActions
+        :lockedType="lockedType"
+        :block="block"
+        :blockPartIdx="blockPartIdx"
+        />
+    </div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
       <div class="table-row">
         <div class="table-cell">
@@ -330,6 +337,7 @@ import ReadAlong          from 'readalong'
 import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
+import LockedBlockActions from './block/LockedBlockActions';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
@@ -411,7 +419,7 @@ export default {
     }
   },
   components: {
-    UploadImage,
+    UploadImage, LockedBlockActions,
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
