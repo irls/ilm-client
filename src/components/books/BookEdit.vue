@@ -13,6 +13,7 @@
         :hotkeyScrollTo="hotkeyScrollTo"
         :currentJobInfo="viewCurrentJobInfo"
         @onScroll="smoothHandleScroll"
+        ref="viewBlocks"
       ></SvelteBookPreviewInVue>
 
       <!--
@@ -2174,10 +2175,8 @@ export default {
           .then(block => {
             //console.log(block);
             if (block) {
-              let elementBack = this.$refs.viewBlocks.find(blk => {
-                return blk.block && blk.block.blockid === block.blockid;
-              });
-              if (elementBack && elementBack.$el) {
+              let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
+              if (elementBack && elementBack) {
                 let elementFront = this.$refs.blocks.find(blk => {
                   return blk.block && blk.block.blockid === block.blockid;
                 });
@@ -2197,14 +2196,14 @@ export default {
                     let visible = lastW && this.checkFullyVisible(lastW);
                     if (!visible) {
                       //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
-                      elementBack.$el.scrollIntoView();
+                      elementBack.scrollIntoView();
                     }
                     setTimeout(() => {
                       subRef.audPlay();
                     }, block.pause_before * 1000);
                   }
                 } else {
-                  elementBack.$el.scrollIntoView();
+                  elementBack.scrollIntoView();
                   setTimeout(() => {
                     let checks = 0;
                     let checkBlockLoaded = setInterval(() => {
