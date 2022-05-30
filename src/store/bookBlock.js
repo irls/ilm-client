@@ -38,7 +38,8 @@ let defBlock = [
   'audiosrc_original',
   'trimmed_silence',
   'pause_before',
-  'audio_quality'
+  'audio_quality',
+  'disabled'
 ];
 
 let BlockTypes = {
@@ -360,6 +361,7 @@ class BookBlock {
     if (this.type === 'header' && !this.classes.hasOwnProperty('level')) {
       this.classes.level = 'h1';
     }
+    this.disabled = init.disabled || false;
   }
 
   clean() {

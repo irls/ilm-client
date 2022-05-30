@@ -2,6 +2,7 @@
   <fieldset class="publish">
   <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
+    <BlocksDisable></BlocksDisable>
     <div v-if="currentBookMeta.publishedVersion">
       Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
     </div>
@@ -10,6 +11,15 @@
     </div>
     <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
       <span style="color: red">Publication failed</span>
+    </div>
+    <div v-if="disabledBlocks.ranges.length > 0">
+      {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range 
+      <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
+        <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
+        &nbsp;-&nbsp;
+        <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
+        <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+      </template>
     </div>
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
@@ -27,6 +37,7 @@
   import {mapActions, mapGetters} from 'vuex';
   import api_config from '../../../mixins/api_config.js';
   import axios from 'axios';
+  import BlocksDisable from './BlocksDisable';
   export default {
     name: 'BookPublish',
     data() {
@@ -38,6 +49,7 @@
       }
     },
     mixins: [api_config],
+    components: {BlocksDisable},
     methods: {
       checkPublish() {
         this.$emit('checkPublish');
@@ -200,7 +212,11 @@
               this.currentBookMeta.isInTheQueueOfPublication = true;
             }
           });
-      }
+      },
+      goToBlock(blockid) {
+        this.$root.$emit('for-bookedit:scroll-to-block', blockid);
+      },
+      ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
     },
     computed: {
       publishDate: {
@@ -235,7 +251,8 @@
         },
         cache: false
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList'])
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList']),
+      ...mapGetters('setBlocksDisabled', ['disabledBlocks'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
@@ -244,6 +261,7 @@
       if (this.currentBookMeta && this.currentBookMeta.isIntheProcessOfPublication) {
         this.isPublishing = this.currentBookMeta.isIntheProcessOfPublication;
       }
+      this.getDisabledBlocks();
     },
     watch: {
       'currentBookMeta.publicationStatus': {
