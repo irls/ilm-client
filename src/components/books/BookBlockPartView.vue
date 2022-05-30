@@ -426,7 +426,7 @@ export default {
       //'modal': modal,
       'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -2638,6 +2638,7 @@ export default {
                 this.isAudPaused = false;
                 this.$root.$emit('playBlock', this.block._id);
                 this.$root.$emit('playBlockFootnote', false);
+                //this.player.audio_element.volume = 0;
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
@@ -2653,6 +2654,25 @@ export default {
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
+            },
+            on_newline: () => {
+              let element = document.getElementById(this.block.blockid);
+              if (element) {
+                let highlighted = element.querySelector('w.audio-highlight');
+                let isVisible = this.checkFullyVisible(highlighted);
+                if (!isVisible) {
+                  let previousId = this.storeListO.getInId(this.block.blockid);
+                  if (previousId) {
+                    let previousBlock = document.getElementById(previousId);
+                    if (previousBlock) {
+                      let lastW = previousBlock.querySelector('w:last-child');
+                      if (lastW && this.checkVisible(lastW)) {
+                        element.scrollIntoView({behavior: 'smooth'});
+                      }
+                    }
+                  }
+                }
+              }
             }
         });
         var self = this;
@@ -3100,22 +3120,28 @@ export default {
           });
         }
       },
-      _handleSpacePress(e) {
+      handleAudioControl(e) {
         if (e) {
-          if (e.charCode == 32 && this.isRecording) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
             if (!this.isRecordingPaused) {
               this.pauseRecording();
             } else {
               this.resumeRecording();
             }
           }
-          if (e.charCode == 32 && this.isAudStarted) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isAudStarted) {
             if (!this.isAudPaused) {
               this.audPause();
             } else {
               this.audResume();
             }
+            e.preventDefault();
           }
+          if ((e.keyCode == 27 || (e.code && e.code.toLowerCase() === 'escape')) && this.isAudStarted) {
+            this.audStop(this.block.blockid, e);
+            e.preventDefault();
+          }
+          //console.log(e);
         }
       },
       _saveContent() {
@@ -4032,13 +4058,9 @@ Join subblocks?`,
       },
       'isAudStarted': {
         handler(val) {
-          if (this.mode === 'narrate') {
-            if (val === true) {
-              $('body').off('keypress', this._handleSpacePress);
-              $('body').on('keypress', this._handleSpacePress);
-            } else {
-              $('body').off('keypress', this._handleSpacePress);
-            }
+          document.body.removeEventListener('keydown', this.handleAudioControl);
+          if (val === true) {
+            document.body.addEventListener('keydown', this.handleAudioControl);
           }
         }
       },

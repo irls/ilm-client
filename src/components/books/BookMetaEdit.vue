@@ -797,6 +797,7 @@ export default {
       currentBookCollection: 'currentBookCollection',
       alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
+      currentBookCollection: 'currentBookCollection'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -935,7 +936,7 @@ export default {
         return false;
       }
     },
-    
+
     displayDownloadDemo: {
       get() {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
@@ -1306,7 +1307,7 @@ export default {
 
       if (this.currentBook.hashTags)
         this.currentBook.hashTags.push(tag);
-      else 
+      else
         this.currentBook.hashTags = [tag];
       this.liveUpdate('hashTags', this.currentBook.hashTags)
     },
