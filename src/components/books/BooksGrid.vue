@@ -25,7 +25,8 @@ export default {
   data () {
     return {
       idField: 'bookid',
-      selectedBooks: []
+      selectedBooks: [],
+      clickCounter: 0
     }
   },
 
@@ -58,7 +59,7 @@ export default {
 
     booksMeta () { // because our grid does not work with nested values
       let result = []
-      for (let book of this.books) { 
+      for (let book of this.books) {
         if (book.importStatus == 'staging' && book.blocksCount <= 2){
           if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
             book.importStatus = 'staging_empty'
@@ -181,7 +182,24 @@ export default {
     rowClick (ev) {
       let bookid = ev.bookid
       if (bookid) {
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+
+        this.clickCounter++;
+        this.bookFilters.filter = '';
+        this.bookFilters.projectTag = '';
+
+
+        if(this.clickCounter == 1) {
+          this.timer = setTimeout(() => {
+            this.clickCounter = 0;
+            this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+          }, 300);
+
+          return;
+        }
+        clearTimeout(this.timer);
+        this.clickCounter = 0;
+        this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
+
       }
     }
   }
