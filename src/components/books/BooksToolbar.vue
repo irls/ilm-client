@@ -112,22 +112,9 @@ export default {
       }
     },
     displayBook () {
-      this.counter++;
       this.bookFilters.filter = '';
       this.bookFilters.projectTag = '';
-
-
-      if(this.counter == 1) {
-         this.timer = setTimeout(() => {
-            this.counter = 0;
-            this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
-         }, 300);
-
-         return;
-      }
-      clearTimeout(this.timer);
-      this.counter = 0;
-      this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/edit')
+      this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
     },
     importBook () {
       console.log('event ok')
