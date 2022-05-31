@@ -3507,6 +3507,14 @@ Save text changes and realign the Block?`,
       },
       deleteBlock() {
         if (!this.blockReindexProcess) {
+          if (this.$refs.blocks) {
+            this.$refs.blocks.forEach(blk => {
+              if (blk.isAudStarted || blk.isAudPaused) {
+                blk.audStop(this.block.blockid);
+              }
+              blk.closeAudioEditor();
+            });
+          }
           this.deletePending = false;
           this.hideModal('delete-block-message');
           this.block.isSaving = true;
