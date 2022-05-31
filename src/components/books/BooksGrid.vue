@@ -26,7 +26,7 @@ export default {
     return {
       idField: 'bookid',
       selectedBooks: [],
-      clickCounter: 0
+      openBookClickCounter: 0
     }
   },
 
@@ -184,21 +184,21 @@ export default {
       let bookid = ev.bookid
       if (bookid) {
 
-        this.clickCounter++;
+        this.openBookClickCounter++;
         this.bookFilters.filter = '';
         this.bookFilters.projectTag = '';
 
 
-        if(this.clickCounter == 1) {
+        if(this.openBookClickCounter == 1) {
           this.timer = setTimeout(() => {
-            this.clickCounter = 0;
+            this.openBookClickCounter = 0;
             this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
           }, 300);
 
           return;
         }
         clearTimeout(this.timer);
-        this.clickCounter = 0;
+        this.openBookClickCounter = 0;
         this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
 
       }

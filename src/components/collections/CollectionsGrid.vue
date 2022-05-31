@@ -54,7 +54,7 @@
         return {
           idField: '_id',
           selectedBooks: [],
-          clickCounter: 0
+          openBookClickCounter: 0
         }
       },
       methods: {
@@ -71,14 +71,14 @@
           let bookid = book.bookid;
           if (bookid) {
 
-            this.clickCounter++;
+            this.openBookClickCounter++;
             this.bookFilters.filter = '';
             this.bookFilters.projectTag = '';
 
 
-            if(this.clickCounter == 1) {
+            if(this.openBookClickCounter == 1) {
               this.timer = setTimeout(() => {
-                this.clickCounter = 0;
+                this.openBookClickCounter = 0;
                 this.selectedBooks = [book.bookid];
                 this.$emit('selectBook', book.bookid, book.collection_id);
               }, 300);
@@ -86,7 +86,7 @@
               return;
             }
             clearTimeout(this.timer);
-            this.clickCounter = 0;
+            this.openBookClickCounter = 0;
             this.$router.push('/books/' + book.bookid + '/display')
           }
 
