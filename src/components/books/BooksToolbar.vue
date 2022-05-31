@@ -8,7 +8,7 @@
   <div class="pull-right">
   <!-- Edit Button -->
   <button v-if="hasBookSelected()"
-    @click='displayBook' class='btn btn-default'>
+    @click.prevent='displayBook' class='btn btn-default'>
     <i class="fa fa-pencil fa-lg"></i>  Display Book
   </button>  &nbsp;
 
@@ -65,7 +65,8 @@ export default {
       showImportBooksModal: false,
       languages: Languages,
       filterAuthorTitle: '',
-      filterTag: ''
+      filterTag: '',
+      counter: 0
     }
   },
 
@@ -111,9 +112,22 @@ export default {
       }
     },
     displayBook () {
-      this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
+      this.counter++;
       this.bookFilters.filter = '';
       this.bookFilters.projectTag = '';
+
+
+      if(this.counter == 1) {
+         this.timer = setTimeout(() => {
+            this.counter = 0;
+            this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
+         }, 300);
+
+         return;
+      }
+      clearTimeout(this.timer);
+      this.counter = 0;
+      this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/edit')
     },
     importBook () {
       console.log('event ok')
