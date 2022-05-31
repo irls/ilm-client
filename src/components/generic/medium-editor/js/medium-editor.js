@@ -7036,7 +7036,8 @@ MediumEditor.extensions = {};
             length = element.nodeValue ? element.nodeValue.length : 0,
             selection = length ? element.nodeValue.substring(0, offset) : '',
             afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
-            mediumEditorElement = this.elements[0];
+            mediumEditorElement = this.elements[0],
+            isVerse = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-wrap']);
             if (afterSelection.trim().length === 0) {
                 selection+= afterSelection;
                 afterSelection = '';
@@ -7062,8 +7063,14 @@ MediumEditor.extensions = {};
                 }
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
+                    let editorContent = (element.parentNode.innerHTML || "");
+                    let lineBreaks = /[\r\n]/.test(editorContent)
                     element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length : selection.length);
+                    if (isVerse) {
+                      MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                    } else {
+                      MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length : selection.length + 1);
+                    }
                 } else {
                     if (element.nodeName === 'BR') {
                         //console.log('HERE1');
