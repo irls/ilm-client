@@ -34,6 +34,8 @@ export default {
             });
           }
           dispatch('getDisabledBlocks');
+          dispatch('loadBookToc', {bookId: rootState.currentBookid, isWait: true}, {root: true});
+          dispatch('loadBookTocSections', [], {root: true});
           return Promise.resolve();
         })
         .catch(err => {
