@@ -1837,6 +1837,12 @@ export const store = new Vuex.Store({
 
     updateBookVersion({state, dispatch}, update) {
       let currMeta = state.currentBookMeta;
+
+      //ILM-4963:
+    	if (currMeta.hasOwnProperty('hashTags')){
+    		return dispatch('updateBookMeta', update);
+    	}
+      
       if (currMeta.hasOwnProperty('publishLog')){
           update.publishLog = currMeta.publishLog || {publishTime: false, updateTime: false};
           update.publishLog.updateTime = Date();
