@@ -4759,6 +4759,17 @@ export const store = new Vuex.Store({
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+
+    loginAdminAs({state}, [user_id]) {
+      return axios.post(`${process.env.ILM_API}/auth/login_admin_as`, {
+        user_id: user_id
+      })
+        .then(response => {
           return Promise.resolve(response.data);
         })
         .catch(err => {
