@@ -116,6 +116,7 @@
 
 <script>
 
+import axios from 'axios'
 import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
 import UserAddModal from './users/UserAddModal'
@@ -123,6 +124,7 @@ import UserEditModal from './users/UserEditModal'
 import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
+import superlogin from 'superlogin-client'
 import { alert } from 'vue-strap'
 import { mapGetters, mapActions } from 'vuex';
 
