@@ -8,7 +8,7 @@
   <div class="pull-right">
   <!-- Edit Button -->
   <button v-if="hasBookSelected()"
-    @click.prevent='displayBook' class='btn btn-default'>
+    @click='displayBook' class='btn btn-default'>
     <i class="fa fa-pencil fa-lg"></i>  Display Book
   </button>  &nbsp;
 
@@ -65,8 +65,7 @@ export default {
       showImportBooksModal: false,
       languages: Languages,
       filterAuthorTitle: '',
-      filterTag: '',
-      counter: 0
+      filterTag: ''
     }
   },
 
