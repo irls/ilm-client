@@ -72,8 +72,6 @@
           if (bookid) {
 
             this.openBookClickCounter++;
-            this.bookFilters.filter = '';
-            this.bookFilters.projectTag = '';
 
 
             if(this.openBookClickCounter == 1) {
@@ -86,6 +84,8 @@
               return;
             }
             clearTimeout(this.timer);
+            this.bookFilters.filter = '';
+            this.bookFilters.projectTag = '';
             this.openBookClickCounter = 0;
             this.$router.push('/books/' + book.bookid + '/display')
           }

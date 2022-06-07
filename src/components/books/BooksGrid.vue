@@ -184,9 +184,6 @@ export default {
       if (bookid) {
 
         this.openBookClickCounter++;
-        this.bookFilters.filter = '';
-        this.bookFilters.projectTag = '';
-
 
         if(this.openBookClickCounter == 1) {
           this.timer = setTimeout(() => {
@@ -198,6 +195,8 @@ export default {
         }
         clearTimeout(this.timer);
         this.openBookClickCounter = 0;
+	    this.bookFilters.filter = '';
+	    this.bookFilters.projectTag = '';
         this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
 
       }
