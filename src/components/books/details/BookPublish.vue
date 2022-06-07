@@ -2,7 +2,7 @@
   <fieldset class="publish">
   <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
-    <BlocksDisable></BlocksDisable>
+    <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
     <div v-if="currentBookMeta.publishedVersion">
       Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
     </div>
@@ -38,6 +38,7 @@
   import api_config from '../../../mixins/api_config.js';
   import axios from 'axios';
   import BlocksDisable from './BlocksDisable';
+  import access from '../../../mixins/access.js';
   export default {
     name: 'BookPublish',
     data() {
@@ -48,7 +49,7 @@
         txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       }
     },
-    mixins: [api_config],
+    mixins: [api_config, access],
     components: {BlocksDisable},
     methods: {
       checkPublish() {
@@ -251,7 +252,13 @@
         },
         cache: false
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList']),
+      showDisabledBlock: {
+        get() {
+          return this.adminOrLibrarian || this._is('editor', true);
+        },
+        cache: false
+      },
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks'])
     },
     mounted() {
@@ -278,6 +285,13 @@
       'currentBookMeta.isInTheQueueOfPublication': {
         handler(val) {
           this.isPublishingQueue = !!val;
+        }
+      },
+      'currentBookMeta.bookid': {
+        handler(val) {
+          if (val) {
+            this.getDisabledBlocks();
+          }
         }
       }
 

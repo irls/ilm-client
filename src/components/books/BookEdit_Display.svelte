@@ -89,6 +89,12 @@ bind:startReached={startReached} bind:endReached={endReached} >
   beforeUpdate(/*async */() => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     //loadedBookId = parlistO.meta.bookid;
+    blocks.forEach((blk, Idx) => {
+      let fullBlock = blockFull(blk.blockRid);
+      if (fullBlock && fullBlock.disabled) {
+        blocks.splice(Idx, 1);
+      }
+    });
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 
       //fntCounter = 0; uncomment for through numeration

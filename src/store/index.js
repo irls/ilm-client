@@ -133,7 +133,7 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0', total_blocks: '0'},
+    currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0', total_blocks: '0', enabled_blocks: '0'},
 
     ttsVoices : [],
 
@@ -1620,6 +1620,7 @@ export const store = new Vuex.Store({
       .then((response) => {
         dispatch('startBookWatch', params.bookId)
         commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: null});
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'enabled_blocks', value: null});
         return response.data;
       })
       .catch(err => err)
@@ -1697,6 +1698,7 @@ export const store = new Vuex.Store({
         commit('SET_ALLOW_BOOK_PUBLISH', false);
         commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: 0});
         commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: 0});
+        commit('SET_CURRENTBOOK_COUNTER', {name: 'enabled_blocks', value: 0});
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1737,7 +1739,7 @@ export const store = new Vuex.Store({
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'not_marked_blocks_missed_audio', 'not_marked_blocks', 'total_blocks']);
+          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'not_marked_blocks_missed_audio', 'not_marked_blocks', 'total_blocks', 'enabled_blocks']);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);

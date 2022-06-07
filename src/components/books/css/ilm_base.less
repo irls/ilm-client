@@ -1369,12 +1369,22 @@ language specific styles, ILM-4019
   }
 }
 
-.-block.-disabled-block {
+.-block.-disabled-block, .content-scroll-item.back.-disabled-block {
   hr {
     color: #bebebe;
     filter: opacity(0.5);
   }
-  .content-wrap {
+  .content-wrap, .ilm-block .content-wrap, .ilm-block .header.h2, .content-wrap-preview {
+    color: #bebebe;
+    background: inherit;
+  }
+  .illustration-block {
+    img {
+      filter: opacity(0.6);
+      -webkit-filter: opacity(0.6);
+    }
+  }
+  .content-wrap-desc {
     color: #bebebe;
     background: inherit;
   }
