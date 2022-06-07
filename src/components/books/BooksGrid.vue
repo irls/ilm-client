@@ -49,7 +49,7 @@ export default {
           return (str.indexOf(find) > -1)
         })
         .filter(book => {
-          let str = '${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`.toLowerCase()
+          let str = `${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`.toLowerCase()
           let find = this.bookFilters.projectTag.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
