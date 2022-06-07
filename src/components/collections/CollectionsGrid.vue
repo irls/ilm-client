@@ -186,7 +186,7 @@
                       item.books_list = item.books_list.filter(b => {
                         if (b.hasOwnProperty('hashTags')){
 
-                          let str = `${b.hashTags} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
+                          ${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`.toLowerCase()
                           return (str.indexOf(filter) > -1)
                         }
                       }); 
