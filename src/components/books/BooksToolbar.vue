@@ -13,10 +13,10 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-    <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input>
+    <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em; padding-right:30px;" placeholder="Filter by Author or Title"></input>
     <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"></i>
 
-    <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input>
+    <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em; padding-right:30px;" placeholder="Filter by Editor or Project tag"></input>
     <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"></i>
 
   <template v-if="adminOrLibrarian">
