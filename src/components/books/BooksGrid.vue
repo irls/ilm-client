@@ -181,6 +181,7 @@ export default {
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
       let bookid = ev.bookid
+      console.log('ev.bookid', ev.bookid);
       if (bookid) {
 
         this.openBookClickCounter++;
@@ -197,7 +198,7 @@ export default {
         this.openBookClickCounter = 0;
 	    this.bookFilters.filter = '';
 	    this.bookFilters.projectTag = '';
-        this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
+        this.$router.push('/books/' + bookid + '/display')
 
       }
     }
