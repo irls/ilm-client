@@ -2160,15 +2160,33 @@ export const store = new Vuex.Store({
       if (!blocksIds) {
         return Promise.resolve([]);
       }
-      return axios.get(state.API_URL + 'books/blocks_data/' + state.currentBookid + '?ids=' + blocksIds.join(','))
+
+      const chunkSize = 100;
+      let chunks = [];
+      for (let i = 0; i < blocksIds.length; i += chunkSize) {
+        chunks.push(blocksIds.slice(i, i + chunkSize));
+      }
+
+      let result = [];
+      const chunksPromiseArr = chunks.map((chunk)=>{
+        return axios.get(state.API_URL + 'books/blocks_data/' + state.currentBookid + '?ids=' + chunk.join(','))
         .then(res => {
-          let result = [];
           res.data.forEach(b => {
             result.push(b);
           });
           return result;
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+      })
+
+      return Promise.all(chunksPromiseArr).
+      then(()=>{
+        return result
+      })
+      .catch(err => err);
     },
 
     loopBlocksChain ({commit, state, dispatch}, params) {

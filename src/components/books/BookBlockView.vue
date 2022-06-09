@@ -4313,11 +4313,11 @@ Save text changes and realign the Block?`,
       checkAllowNarrateUnassigned() {
         return this.checkNarratorUnassignedAction('narrate');
       },
-      
+
       checkAllowUpdateUnassigned() {
         return this.checkNarratorUnassignedAction('update');
       },
-      
+
       checkNarratorUnassignedAction(type = 'narrate') {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
@@ -5901,7 +5901,7 @@ Save text changes and realign the Block?`,
     text-align: center;
     background-position: center;
     background-color: #8080807d;
-    z-index: 999;
+    z-index: 998;
     &.preloader-audio-positioning {
       z-index: 890;/* this one not covering audio editor */
     }
