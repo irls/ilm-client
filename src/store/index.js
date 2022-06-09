@@ -3816,7 +3816,6 @@ export const store = new Vuex.Store({
         return axios.get(state.API_URL + 'process_queue/' + state.currentBookMeta.bookid)
           .then(response => {
             //locks
-            //console.log(response.data);
             let oldIds = [];
             if (typeof response.data !== 'undefined' && Array.isArray(response.data)) {
               state.lockedBlocks.forEach(b => {
@@ -3825,11 +3824,6 @@ export const store = new Vuex.Store({
                 });
                 if (!r) {
                   oldIds.push(b._id);
-                  /*dispatch('getBlock', b._id)
-                    .then(block => {
-                      store.commit('set_storeList', new BookBlock(block));
-                      return Promise.resolve();
-                    });*/
                 }
               });
               if (oldIds.length > 0) {
