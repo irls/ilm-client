@@ -147,7 +147,10 @@ export default {
       scrollBarBlockHeight: 150,
       scrollBarBlockTimer: null,
 
-      scrollToId: null
+      scrollToId: null,
+
+      voiceworkUpdating: false,
+      subscribeOnVoiceworkBlocker: null
     }
   },
   props: ['mode'],
@@ -457,7 +460,7 @@ export default {
     },
 
     refreshBlock (change) {
-      console.log('refreshBlock', change);
+      //console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -2193,6 +2196,7 @@ export default {
         const startBlock = this.$route.params.block || false;
         if (metaResp.loadType && metaResp.loadType == 'load' && startBlock) {
           this.scrollToBlock(startBlock);
+          this.$store.dispatch('getProcessQueue');
         }
       })
 
@@ -2224,6 +2228,36 @@ export default {
       });
 
       //this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
+
+      this.subscribeOnVoiceworkBlocker = this.$store.subscribeAction((action, state) => {
+        switch(action.type) {
+          case 'addBlockLock' : {
+            if (!this.voiceworkUpdating && action.payload.type === 'changeVoiceWork') {
+              this.voiceworkUpdating = true;
+              if (this.$refs.blocks && this.$refs.blocks.length) {
+                this.$refs.blocks[0].voiceworkUpdating = true;
+                this.$refs.blocks[0].showModal('voicework-change');
+              }
+            }
+          } break;
+          case 'clearBlockLock' : {
+            if (this.voiceworkUpdating && this.$store.state.lockedBlocks.length <= 1) {
+              this.voiceworkUpdating = false;
+              if (this.$refs.blocks && this.$refs.blocks.length) {
+                this.$refs.blocks[0].voiceworkUpdating = false;
+                this.$refs.blocks[0].hideModal('voicework-change');
+              } else {
+                this.$store.state.liveDB.onBookReimport();
+                this.$store.state.liveDB.stopWatch('metaV');
+                this.$store.state.liveDB.stopWatch('job');
+                this.$root.$emit('book-reloaded');
+              }
+            }
+          } break;
+          default : {
+          } break;
+        };
+      });
   },
 
   beforeDestroy:  function() {
@@ -2245,6 +2279,9 @@ export default {
     this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
     this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
     this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
+
+    // unsubscribe
+    this.subscribeOnVoiceworkBlocker();
   },
   watch: {
     'meta._id': {
