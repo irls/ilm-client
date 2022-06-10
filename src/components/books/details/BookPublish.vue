@@ -13,12 +13,17 @@
       <span style="color: red">Publication failed</span>
     </div>
     <div v-if="disabledBlocks.ranges.length > 0">
+      <template v-if="disabledBlocksQuery">
+        <div class="preloader-spinner"></div>
+      </template>
+      <template v-else>
       {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range 
-      <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
-        <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
-        &nbsp;-&nbsp;
-        <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
-        <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+        <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
+          <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
+          &nbsp;-&nbsp;
+          <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
+          <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+        </template>
       </template>
     </div>
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
@@ -259,7 +264,7 @@
         cache: false
       },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian']),
-      ...mapGetters('setBlocksDisabled', ['disabledBlocks'])
+      ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
@@ -269,6 +274,10 @@
         this.isPublishing = this.currentBookMeta.isIntheProcessOfPublication;
       }
       this.getDisabledBlocks();
+      this.$root.$on('book-reimported', this.getDisabledBlocks);
+    },
+    beforeDestroy() {
+      this.$root.$off('book-reimported', this.getDisabledBlocks);
     },
     watch: {
       'currentBookMeta.publicationStatus': {
@@ -298,5 +307,14 @@
     }
   }
 </script>
-<style>
+<style lang="less">
+  .preloader-spinner {
+    width: 100%;
+    height: 50px;
+    background: url(/static/preloader-snake-small.gif);
+
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center center;
+  }
 </style>

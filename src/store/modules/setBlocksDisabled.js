@@ -3,11 +3,15 @@ import axios from 'axios';
 export default {
   namespaced: true,
   state: {
-    disabledBlocks: {blocks: [], ranges: []}
+    disabledBlocks: {blocks: [], ranges: []},
+    disabledBlocksQuery: false
   },
   getters: {
     disabledBlocks: state => {
       return state.disabledBlocks;
+    },
+    disabledBlocksQuery: state => {
+      return state.disabledBlocksQuery;
     }
   },
   mutations: {
@@ -31,11 +35,20 @@ export default {
               if (blkStore) {
                 blkStore.disabled = blk.disabled;
               }
+              let blkSelected = rootState.selectedBlocks.find(sb => {
+                return sb.blockid === blk.blockid;
+              });
+              if (blkSelected) {
+                blkSelected.disabled = blk.disabled;
+              }
             });
           }
           dispatch('getDisabledBlocks');
           dispatch('loadBookToc', {bookId: rootState.currentBookid, isWait: true}, {root: true});
           dispatch('loadBookTocSections', [], {root: true});
+          if (rootState.currentJobInfo && rootState.currentJobInfo.published) {
+            dispatch('updateBookVersion', {major: true}, {root: true});
+          }
           return Promise.resolve();
         })
         .catch(err => {
@@ -43,9 +56,11 @@ export default {
         });
     },
     getDisabledBlocks({state, rootState, commit}) {
+      state.disabledBlocksQuery = true;
       return axios.get(`${rootState.API_URL}books/${rootState.currentBookid}/blocks/disabled`)
         .then(response => {
           commit('setDisabledBlocks', response.data);
+          state.disabledBlocksQuery = false;
           return Promise.resolve();
         })
         .catch(err => {

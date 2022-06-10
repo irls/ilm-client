@@ -2284,7 +2284,7 @@ export const store = new Vuex.Store({
             dispatch('tc_loadBookTask', block.bookid);
             dispatch('getCurrentJobInfo')
               .then(() => {
-                if (state.currentJobInfo && state.currentJobInfo.published) {
+                if (state.currentJobInfo && state.currentJobInfo.published && !response.data.disabled) {
                   dispatch('updateBookVersion', {major: true});
                 }
               });
