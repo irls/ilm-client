@@ -4,7 +4,8 @@ export default {
   namespaced: true,
   state: {
     disabledBlocks: {blocks: [], ranges: []},
-    disabledBlocksQuery: false
+    disabledBlocksQuery: false,
+    disabledBlocksApply: false
   },
   getters: {
     disabledBlocks: state => {
@@ -12,6 +13,9 @@ export default {
     },
     disabledBlocksQuery: state => {
       return state.disabledBlocksQuery;
+    },
+    disabledBlocksApply: state => {
+      return state.disabledBlocksApply;
     }
   },
   mutations: {
@@ -22,6 +26,7 @@ export default {
   },
   actions: {
     setDisabledValue({state, rootState, dispatch}, [disabled]) {
+      state.disabledBlocksApply = true;
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/blocks/disabled`,
       {
         startId: rootState.blockSelection.start._id,
@@ -29,6 +34,7 @@ export default {
         disabled: disabled
       })
         .then((response) => {
+          state.disabledBlocksApply = false;
           if (response.data && Array.isArray(response.data)) {
             response.data.forEach(blk => {
               let blkStore = rootState.storeList.get(blk.blockid);
@@ -52,6 +58,7 @@ export default {
           return Promise.resolve();
         })
         .catch(err => {
+          state.disabledBlocksApply = false;
           return Promise.reject(err);
         });
     },
