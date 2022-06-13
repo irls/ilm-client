@@ -2,6 +2,7 @@
   <fieldset class="publish">
   <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
+    <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
     <div v-if="currentBookMeta.publishedVersion">
       Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
     </div>
@@ -10,6 +11,20 @@
     </div>
     <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
       <span style="color: red">Publication failed</span>
+    </div>
+    <div v-if="disabledBlocks.ranges.length > 0">
+      <template v-if="disabledBlocksQuery">
+        <div class="preloader-spinner"></div>
+      </template>
+      <template v-else>
+      {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range 
+        <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
+          <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
+          &nbsp;-&nbsp;
+          <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
+          <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+        </template>
+      </template>
     </div>
     <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
       <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
@@ -27,6 +42,8 @@
   import {mapActions, mapGetters} from 'vuex';
   import api_config from '../../../mixins/api_config.js';
   import axios from 'axios';
+  import BlocksDisable from './BlocksDisable';
+  import access from '../../../mixins/access.js';
   export default {
     name: 'BookPublish',
     data() {
@@ -37,7 +54,8 @@
         txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       }
     },
-    mixins: [api_config],
+    mixins: [api_config, access],
+    components: {BlocksDisable},
     methods: {
       checkPublish() {
         this.$emit('checkPublish');
@@ -200,7 +218,11 @@
               this.currentBookMeta.isInTheQueueOfPublication = true;
             }
           });
-      }
+      },
+      goToBlock(blockid) {
+        this.$root.$emit('for-bookedit:scroll-to-block', blockid);
+      },
+      ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
     },
     computed: {
       publishDate: {
@@ -235,7 +257,14 @@
         },
         cache: false
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList'])
+      showDisabledBlock: {
+        get() {
+          return this.adminOrLibrarian || this._is('editor', true);
+        },
+        cache: false
+      },
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian']),
+      ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
@@ -244,6 +273,11 @@
       if (this.currentBookMeta && this.currentBookMeta.isIntheProcessOfPublication) {
         this.isPublishing = this.currentBookMeta.isIntheProcessOfPublication;
       }
+      this.getDisabledBlocks();
+      this.$root.$on('book-reimported', this.getDisabledBlocks);
+    },
+    beforeDestroy() {
+      this.$root.$off('book-reimported', this.getDisabledBlocks);
     },
     watch: {
       'currentBookMeta.publicationStatus': {
@@ -261,10 +295,26 @@
         handler(val) {
           this.isPublishingQueue = !!val;
         }
+      },
+      'currentBookMeta.bookid': {
+        handler(val) {
+          if (val) {
+            this.getDisabledBlocks();
+          }
+        }
       }
 
     }
   }
 </script>
-<style>
+<style lang="less">
+  .preloader-spinner {
+    width: 100%;
+    height: 50px;
+    background: url(/static/preloader-snake-small.gif);
+
+    background-repeat: no-repeat;
+    text-align: center;
+    background-position: center center;
+  }
 </style>

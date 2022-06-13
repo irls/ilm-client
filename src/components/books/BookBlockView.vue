@@ -1,6 +1,6 @@
 <template>
   <div ref="viewBlock" :id="block.blockid"
-    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework]">
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
       <LockedBlockActions
         :block="block"

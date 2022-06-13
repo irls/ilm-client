@@ -1813,9 +1813,10 @@ export default {
 
     selectStyle(blockType, styleKey, styleVal)
     {
-      if(this.proofreadModeReadOnly)
-          return
-
+      if(this.proofreadModeReadOnly) {
+        return;
+      }
+      let updateBookVersion = false;
       let styleKeyArr = styleKey.split('.');
       styleKey = styleKeyArr.shift();
       //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
@@ -1829,10 +1830,12 @@ export default {
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock) {
               let pBlock = this.storeList.get(oBlock.blockid);
-
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock) {
+                if (!updateBookVersion && !pBlock.disabled) {
+                  updateBookVersion = true;
+                }
                 pBlock.classes = this.mixin_buildTOCStyle({blockType, styleKey, styleVal, classes: pBlock.classes}); // ILM-2533
               }
 
@@ -1939,7 +1942,9 @@ export default {
               }
             }
           })
-          this.updateBookVersion({major: true});
+          if (updateBookVersion) {
+            this.updateBookVersion({major: true});
+          }
         }
         Promise.all(updatePromises)
           .then(()=>{

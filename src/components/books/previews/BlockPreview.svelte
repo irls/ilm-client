@@ -1,7 +1,7 @@
 <template>
 <!--{blockRid}->{block.type}->{block._id}->{block.isSplittedBlock}-->
 {#if block && block._id}
-  <div id="v-{block._id}" data-rid="{blockRid}" class="row content-scroll-item back">
+  <div id="v-{block._id}" data-rid="{blockRid}" class="row content-scroll-item back" class:-disabled-block="{block.disabled}">
     <div class='col'>
       <div blockid="{block._id}">
         <div class="block-preview">

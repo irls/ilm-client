@@ -955,7 +955,9 @@ export default {
           });
 
         this.unfreeze('deleteBlock');
-        this.updateBookVersion({major: true})
+        if (!block.disabled) {
+          this.updateBookVersion({major: true})
+        }
         this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
         //this.refreshTmpl();

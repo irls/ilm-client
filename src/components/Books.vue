@@ -241,6 +241,7 @@ export default {
         this.$root.$on('set-error-alert', this.setErrorAlert);
         this.$root.$on('set-alert', this.setAlert);
         this.$root.$on('preloader-toggle', this.onPreloaderToggle);
+        this.$root.$on('for-bookedit:scroll-to-block', this.goToBlock);
 
 //         this.loadTTSVoices();
   },
@@ -321,6 +322,13 @@ export default {
         this.preloaderType = '';
       }
     },
+    goToBlock(blockid) {
+      if (this.$route && ['BookEdit', 'BookNarrate', 'BookProofread'].includes(this.$route.name)) {
+        return;
+      }
+      let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}, name: 'BookEdit'};
+      this.$router.push(params);
+    },
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
   },
@@ -331,6 +339,7 @@ export default {
     this.$root.$off('set-error-alert', this.setErrorAlert);
     this.$root.$off('set-alert', this.setAlert);
     this.$root.$off('preloader-toggle', this.onPreloaderToggle);
+    this.$root.$off('for-bookedit:scroll-to-block', this.goToBlock);
   }
 }
 </script>
