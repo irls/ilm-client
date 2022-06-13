@@ -4303,7 +4303,9 @@ Save text changes and realign the Block?`,
             ref.audPlay();
           }
         } else {
-          this.playNextBlock(this.block.blockid);
+          if (!this.block.disabled) {
+            this.playNextBlock(this.block.blockid);
+          }
         }
       },
       onIsAudioChanged(val) {
