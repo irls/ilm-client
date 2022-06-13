@@ -9,11 +9,11 @@
       &nbsp;-&nbsp;
       <a v-on:click="goToBlock(blockSelection.end._id)" class="go-to-block">{{blockSelection.end._id_short}}</a>
     </div>
-    <button class="btn btn-primary" :disabled="!selectedEnabledBlocks" v-on:click="disable()">
+    <button class="btn btn-primary" :disabled="!selectedEnabledBlocks || disabledBlocksApply" v-on:click="disable()">
       Disable
       <template v-if="selectedEnabledBlocks">({{selectedEnabledBlocks}})</template>
     </button>
-    <button class="btn btn-primary" :disabled="!selectedDisabledBlocks" v-on:click="enable()">
+    <button class="btn btn-primary" :disabled="!selectedDisabledBlocks || disabledBlocksApply" v-on:click="enable()">
       Enable
       <template v-if="selectedDisabledBlocks">({{selectedDisabledBlocks}})</template>
     </button>
@@ -37,6 +37,7 @@
     },
     computed: {
       ...mapGetters({blockSelection: 'blockSelection', selectedBlocks: 'selectedBlocks'}),
+      ...mapGetters('setBlocksDisabled', ['disabledBlocksApply']),
       selectedEnabledBlocks: {
         get() {
           let selected = [];
