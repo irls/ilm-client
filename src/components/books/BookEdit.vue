@@ -2152,13 +2152,13 @@ export default {
       },
 
       processOpenedBook() {
+        this.$store.dispatch('getProcessQueue');
         return this.tc_loadBookTask()
         .then(()=>{
           this.checkMode();
           this.$store.commit('set_taskBlockMap');
           this.$store.dispatch('loadBookToc', {bookId: this.meta._id, isWait: true});
-          this.$store.dispatch('loadBookTocSections', []);
-          return this.getProcessQueue();
+          return this.$store.dispatch('loadBookTocSections', []);
         })
       },
 
@@ -2261,7 +2261,6 @@ export default {
         const startBlock = this.$route.params.block || false;
         if (metaResp.loadType && metaResp.loadType == 'load' && startBlock) {
           this.scrollToBlock(startBlock);
-          this.$store.dispatch('getProcessQueue');
         }
       })
 
@@ -2295,14 +2294,20 @@ export default {
       //this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
 
       this.subscribeOnVoiceworkBlocker = this.$store.subscribeAction((action, state) => {
+
         switch(action.type) {
           case 'addBlockLock' : {
+            console.log(`action.payload: `, action.payload);
             if (!this.voiceworkUpdating && action.payload.type === 'changeVoiceWork') {
               this.voiceworkUpdating = true;
-              if (this.$refs.blocks && this.$refs.blocks.length) {
-                this.$refs.blocks[0].voiceworkUpdating = true;
-                this.$refs.blocks[0].showModal('voicework-change');
-              }
+              Vue.nextTick(()=>{
+                if (this.$refs.blocks && this.$refs.blocks.length) {
+                  this.$refs.blocks[0].voiceworkUpdating = true;
+                  this.$refs.blocks[0].voiceworkChange = action.payload.voicework;
+                  this.$refs.blocks[0].voiceworkUpdateType = action.payload.updateType;
+                  this.$refs.blocks[0].showModal('voicework-change');
+                }
+              });
             }
           } break;
           case 'clearBlockLock' : {

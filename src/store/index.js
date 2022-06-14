@@ -3837,8 +3837,12 @@ export const store = new Vuex.Store({
               }
               if (response.data.length > 0) {
                 response.data.forEach(r => {
+                  let voicework, updateType;
+                  if (r.taskType === 'changeVoiceWork') {
+                    ({updateType, voicework} = JSON.parse(r.content));
+                  }
                   delete r.content;
-                  dispatch('addBlockLock', {block: r, type: r.taskType, inProcess: true});
+                  dispatch('addBlockLock', {block: r, type: r.taskType, inProcess: true, updateType, voicework});
                 });
                 dispatch('startProcessQueueWatch');
               } else {
@@ -4413,6 +4417,7 @@ export const store = new Vuex.Store({
         });
     },
     changeBlocksVoicework({state, dispatch, commit}, [block, voicework, updateType]) {
+      dispatch('startProcessQueueWatch');
       return axios.post(`${state.API_URL}book/block/${state.currentBookid}/${block._uRid}/set_voicework`, {
         voicework: voicework,
         updateType: updateType
@@ -4420,7 +4425,7 @@ export const store = new Vuex.Store({
         .then(response => {
           if (response.status === 200) {
             if (response && response.data && response.data.blocks) {
-              if (response.data.blocks.length <= 300) {
+              //if (response.data.blocks.length <= 300) {
                 response.data.blocks.forEach(block => {
                   state.storeListO.updBlockByRid(block.rid, {
                     status: block.status
@@ -4440,7 +4445,7 @@ export const store = new Vuex.Store({
                   state.blockSelection.refresh = Date.now();
                   commit('set_selected_blocks');
                 }
-              }
+              //}
             }
           }
           state.currentBookCounters.voiceworks_for_remove = 0;
