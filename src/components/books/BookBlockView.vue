@@ -692,6 +692,7 @@ export default {
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       voiceworkUpdating: false,
+      voiceworkBlockType: false,
       changes: [],
       deletePending: false,
       audioEditFootnote: {footnote: {}, isAudioChanged: false},
@@ -1166,6 +1167,9 @@ export default {
       },
       blockTypeLabel: {
         get() {
+          if (this.voiceworkBlockType) {
+            return this.voiceworkBlockType === 'par' ? 'paragraph' : this.voiceworkBlockType;
+          }
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
       },
