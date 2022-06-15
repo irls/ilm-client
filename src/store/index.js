@@ -3837,12 +3837,19 @@ export const store = new Vuex.Store({
               }
               if (response.data.length > 0) {
                 response.data.forEach(r => {
-                  let voicework, updateType;
+                  let voicework, updateType, blockType;
                   if (r.taskType === 'changeVoiceWork') {
-                    ({updateType, voicework} = JSON.parse(r.content));
+                    ({updateType, voicework, blockType} = JSON.parse(r.content));
                   }
                   delete r.content;
-                  dispatch('addBlockLock', {block: r, type: r.taskType, inProcess: true, updateType, voicework});
+                  dispatch('addBlockLock', {
+                    block: r,
+                    type: r.taskType,
+                    inProcess: true,
+                    blockType,
+                    updateType,
+                    voicework
+                  });
                 });
                 dispatch('startProcessQueueWatch');
               } else {

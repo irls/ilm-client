@@ -2297,7 +2297,7 @@ export default {
 
         switch(action.type) {
           case 'addBlockLock' : {
-            console.log(`action.payload: `, action.payload);
+            //console.log(`action.payload: `, action.payload);
             if (!this.voiceworkUpdating && action.payload.type === 'changeVoiceWork') {
               this.voiceworkUpdating = true;
               Vue.nextTick(()=>{
@@ -2305,6 +2305,7 @@ export default {
                   this.$refs.blocks[0].voiceworkUpdating = true;
                   this.$refs.blocks[0].voiceworkChange = action.payload.voicework;
                   this.$refs.blocks[0].voiceworkUpdateType = action.payload.updateType;
+                  this.$refs.blocks[0].voiceworkBlockType = action.payload.blockType;
                   this.$refs.blocks[0].showModal('voicework-change');
                 }
               });
@@ -2315,6 +2316,7 @@ export default {
               this.voiceworkUpdating = false;
               if (this.$refs.blocks && this.$refs.blocks.length) {
                 this.$refs.blocks[0].voiceworkUpdating = false;
+                this.$refs.blocks[0].voiceworkBlockType = false;
                 this.$refs.blocks[0].hideModal('voicework-change');
               } else {
                 this.$store.state.liveDB.onBookReimport();
