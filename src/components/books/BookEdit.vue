@@ -2219,7 +2219,6 @@ export default {
     this.stopWatchLiveQueries();
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
-    this.setBlockSelection({start: {}, end: {}});
     //console.log('BookEdit beforeDestroy');
     this.$root.$emit('for-audioeditor:force-close');
 

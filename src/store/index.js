@@ -576,6 +576,24 @@ export const store = new Vuex.Store({
         return `Сoncurrent alignment capacity is limited to ${state.alignBlocksLimit} blocks`;
       }
       return '';
+    },
+    filteredSelectedBlocks: state => {
+      switch (state.bookMode) {
+        case 'edit':
+        case 'proofread':
+          return state.selectedBlocks;
+          break;
+        case 'narrate':
+          let filteredSelectedBlocks = [];
+          state.selectedBlocks.forEach(block => {
+            if (block.allowNarrate(state.bookMode)) {
+              filteredSelectedBlocks.push(block);
+            }
+          });
+          return filteredSelectedBlocks;
+          break;
+      }
+      return [];
     }
   },
 
@@ -689,6 +707,9 @@ export const store = new Vuex.Store({
             //state.currentBookMeta[k] = meta[k];
           }
         });*/
+        if (state.currentBookid && state.currentBookid !== meta.bookid) {
+          this.dispatch('setBlockSelection', {start: {}, end: {}});
+        }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -719,6 +740,7 @@ export const store = new Vuex.Store({
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''
+        this.dispatch('setBlockSelection', {start: {}, end: {}});
       }
       this.commit('set_currentbook_executors');
     },
@@ -1193,17 +1215,7 @@ export const store = new Vuex.Store({
         for (let idx = 0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            switch (state.bookMode) {
-              case 'edit':
-              case 'proofread':
-                blockList.push(block);
-                break;
-              case 'narrate':
-                if (block.allowNarrate(state.bookMode)) {
-                  blockList.push(block);
-                }
-                break;
-            }
+            blockList.push(block);
             /*let hasAssignment = this.currentJobInfo.mastering  || this.currentJobInfo.text_cleanup;
             let hasTask = this.tc_currentBookTasks.tasks.find((t) => {
               return t.blockid == block._id;
