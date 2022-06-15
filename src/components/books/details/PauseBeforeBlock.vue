@@ -473,7 +473,7 @@
         storeList: 'storeList',
         storeListO: 'storeListO',
         bookMode: 'bookMode',
-        selectedBlocks: 'selectedBlocks'
+        selectedBlocks: 'filteredSelectedBlocks'
       })
     },
     watch: {

@@ -830,13 +830,6 @@ export default {
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-          if (!this.parlistO.get(blockO.blockid)) {
-            this.parlistO.addBlock(blockO);
-          }
-          if (!this.parlist.get(b_new.blockid)) {// can be already added by syncgronization
-            this.$store.commit('set_storeList', new BookBlock(b_new));
-          }
-
 //           if (b_old) {
 //             this.refreshBlock({doc: b_old, deleted: false});
 //           }
@@ -876,12 +869,6 @@ export default {
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-          if (!this.parlistO.get(blockO.blockid)) {
-            this.parlistO.addBlock(blockO);
-          }
-          if (!this.parlist.get(b_new.blockid)) {// can be already set by synchronization
-            this.$store.commit('set_storeList', new BookBlock(b_new));
-          }
 
 //           if (b_old) {
 //             this.refreshBlock({doc: b_old, deleted: false});
@@ -2349,7 +2336,6 @@ export default {
     this.stopWatchLiveQueries();
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
-    this.setBlockSelection({start: {}, end: {}});
     //console.log('BookEdit beforeDestroy');
     this.$root.$emit('for-audioeditor:force-close');
 

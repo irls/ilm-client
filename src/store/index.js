@@ -576,6 +576,24 @@ export const store = new Vuex.Store({
         return `Сoncurrent alignment capacity is limited to ${state.alignBlocksLimit} blocks`;
       }
       return '';
+    },
+    filteredSelectedBlocks: state => {
+      switch (state.bookMode) {
+        case 'edit':
+        case 'proofread':
+          return state.selectedBlocks;
+          break;
+        case 'narrate':
+          let filteredSelectedBlocks = [];
+          state.selectedBlocks.forEach(block => {
+            if (block.allowNarrate(state.bookMode)) {
+              filteredSelectedBlocks.push(block);
+            }
+          });
+          return filteredSelectedBlocks;
+          break;
+      }
+      return [];
     }
   },
 
@@ -689,6 +707,9 @@ export const store = new Vuex.Store({
             //state.currentBookMeta[k] = meta[k];
           }
         });*/
+        if (state.currentBookid && state.currentBookid !== meta.bookid) {
+          this.dispatch('setBlockSelection', {start: {}, end: {}});
+        }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -719,6 +740,7 @@ export const store = new Vuex.Store({
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''
+        this.dispatch('setBlockSelection', {start: {}, end: {}});
       }
       this.commit('set_currentbook_executors');
     },
@@ -1193,17 +1215,7 @@ export const store = new Vuex.Store({
         for (let idx = 0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            switch (state.bookMode) {
-              case 'edit':
-              case 'proofread':
-                blockList.push(block);
-                break;
-              case 'narrate':
-                if (block.allowNarrate(state.bookMode)) {
-                  blockList.push(block);
-                }
-                break;
-            }
+            blockList.push(block);
             /*let hasAssignment = this.currentJobInfo.mastering  || this.currentJobInfo.text_cleanup;
             let hasTask = this.tc_currentBookTasks.tasks.find((t) => {
               return t.blockid == block._id;
@@ -3611,6 +3623,26 @@ export const store = new Vuex.Store({
           if (response && response.data && response.data.block && response.data.block.job_status_error) {
             commit('set_job_status_error', response.data.block.job_status_error);
           } else {
+            if (response && response.data && response.data.new_block) {
+              let new_block = response.data.new_block;
+              if (!state.storeListO.get(new_block.blockid)) {
+                state.storeListO.addBlock(new_block);
+              }
+              if (!state.storeList.get(new_block.blockid)) {// can be already added by syncgronization
+                commit('set_storeList', new BookBlock(new_block));
+              }
+              if (state.selectedBlocks && state.selectedBlocks.length > 0) {
+                let listIds = state.storeListO.idsArray();
+                let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+                let insertedIndex = listIds.indexOf(new_block.blockid);
+                let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+                if (insertedIndex > firstIndex && insertedIndex < lastIndex) {
+                  state.storeListO.get(new_block.blockid).checked = true;
+                  commit('set_selected_blocks');
+                  dispatch('getAlignCount');
+                }
+              }
+            }
             return Promise.resolve(response);
           }
         })
