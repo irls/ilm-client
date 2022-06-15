@@ -285,7 +285,7 @@ export default {
       if (!this.isAdmin) {
         return false;
       }
-      return user.enable && Array.isArray(user.roles) && (!user.roles.includes('admin') && !user.roles.includes('librarian'));
+      return user.enable;
     },
     ...mapActions(['loginAdminAs', 'connectDB'])
   },
