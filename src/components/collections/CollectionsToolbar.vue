@@ -72,7 +72,7 @@
       'hasItemSelected', 'metaVisible', 'hasBookSelected'
     ],
     mounted() {
-       9
+      //this.$store.commit('CLEAR_CURRENTBOOK_FILTER');
     },
     methods: {
       collectionCount() {

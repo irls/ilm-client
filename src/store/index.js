@@ -114,6 +114,7 @@ export const store = new Vuex.Store({
     currentAudiobook: {},
 
     bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
+    defaultBookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -620,9 +621,13 @@ export const store = new Vuex.Store({
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
       for (var prop in obj) if (['filter', 'projectTag', 'language', 'jobStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
-        // console.log("Setting bookfilter."+prop, obj[prop])
-        // console.log(state.bookFilters)
+         //console.log("Setting bookfilter."+prop, obj[prop])
+         //console.log('SET_CURRENTBOOK_FILTER', state.bookFilters)
       }
+    },
+
+    CLEAR_CURRENTBOOK_FILTER (state) {
+      state.bookFilters = Object.assign({}, state.defaultBookFilters);
     },
 
     // initiateBooks (state, books) {
@@ -4633,7 +4638,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-      
+
     splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
       if (!state.currentBookid) {
         return Promise.resolve();

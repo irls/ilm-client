@@ -1,5 +1,6 @@
 <template>
   <Grid id='books_grid'
+    ref="books_grid"
     :data="booksMeta"
     :columns="headers"
     :rowsPerPage="100"
@@ -58,7 +59,7 @@ export default {
 
     booksMeta () { // because our grid does not work with nested values
       let result = []
-      for (let book of this.books) { 
+      for (let book of this.books) {
         if (book.importStatus == 'staging' && book.blocksCount <= 2){
           if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
             book.importStatus = 'staging_empty'
@@ -172,6 +173,14 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.selectedBooks = [this.$route.params.bookid]
       } else this.selectedBooks = [];
+    },
+    bookFilters: {
+      deep: true,
+      handler(val) {
+        if (this.$refs.books_grid) {
+          this.$refs.books_grid.currentPage = 0;
+        }
+      }
     }
   },
 
