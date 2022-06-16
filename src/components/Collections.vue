@@ -13,7 +13,7 @@
       @collectionAdded="onCollectionAdded"
       @toggleMetaVisible="toggleMetaVisible"/>
 
-      
+
       <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
           <template v-if="isEditMode()">
             <BookEdit v-if="bookEditMode == 'Editor'" :mode="mode"/>
@@ -179,14 +179,13 @@
             this.loadBook(this.$route.params.bookid);
 
         }
-        let self = this;
-        this.$root.$on('from-bookedit:set-selection', function(start, end) {
-          self.blocksForAlignment.start = start;
-          self.blocksForAlignment.end = end;
-          self.getBlockSelectionInfo();
+        this.$root.$on('from-bookedit:set-selection', (start, end) => {
+          this.blocksForAlignment.start = start;
+          this.blocksForAlignment.end = end;
+          this.getBlockSelectionInfo();
         });
-        this.$root.$on('from-bookblockview:voicework-type-changed', function() {
-          self.getBlockSelectionInfo();
+        this.$root.$on('from-bookblockview:voicework-type-changed', () => {
+          this.getBlockSelectionInfo();
         });
         this.$root.$on('show-modal', (params) => {this.showModal(params)})
         this.$root.$on('hide-modal', () => {this.hideModal()})

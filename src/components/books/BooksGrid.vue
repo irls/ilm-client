@@ -1,5 +1,6 @@
 <template>
   <Grid id='books_grid'
+    ref="books_grid"
     :data="booksMeta"
     :columns="headers"
     :rowsPerPage="100"
@@ -173,6 +174,14 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.selectedBooks = [this.$route.params.bookid]
       } else this.selectedBooks = [];
+    },
+    bookFilters: {
+      deep: true,
+      handler(val) {
+        if (this.$refs.books_grid) {
+          this.$refs.books_grid.currentPage = 0;
+        }
+      }
     }
   },
 
