@@ -287,6 +287,7 @@ export default {
     'putNumBlockOBatch',
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections', 'findNextAudioblock']),
+    ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
 
     test(ev) {
         console.log('test', ev);
@@ -924,6 +925,7 @@ export default {
       this.removeBlock(block._id)
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
+        this.getDisabledBlocks();
         if (response.data) {
 
           let newStartId = this.parlistO.delBlock(response.data);
@@ -1039,6 +1041,7 @@ export default {
                 //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: blockBefore, force: true});
                 this.clearBlockLock({block: block, force: true});
+                this.getDisabledBlocks();
                 if (response.data.ok && response.data.blocks) {
                   response.data.blocks.forEach((res)=>{
                     this.refreshBlock({doc: res, deleted: res.deleted});
@@ -1142,6 +1145,7 @@ export default {
                 //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: block, force: true});
                 this.clearBlockLock({block: blockAfter, force: true});
+                this.getDisabledBlocks();
                 if (response.data.ok && response.data.blocks) {
                   response.data.blocks.forEach((res)=>{
                     this.refreshBlock({doc: res, deleted: res.deleted});
