@@ -1050,7 +1050,7 @@ export default {
     if (this.isRecording) {
       this.cancelRecording();
     }
-    if (!this.meta || !this.meta.bookid || !this.mode || (this.$route && this.$route.name === 'BookEditDisplay')) {// going out from book or to Display mode
+    if (!this.meta || !this.meta.bookid || !this.mode || (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].includes(this.$route.name))) {// going out from book or to Display mode
       if (this.isAudStarted) {
         this.audStop();
       }
