@@ -4469,6 +4469,17 @@ export const store = new Vuex.Store({
                     } else {
                       state.storeListO.updBlockByRid(blk.id, blk);
                     }
+                    if (state.selectedBlocks && state.selectedBlocks.length > 0) {
+                      let listIds = state.storeListO.idsArray();
+                      let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+                      let insertedIndex = listIds.indexOf(blk.blockid);
+                      let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+                      if (insertedIndex > firstIndex && insertedIndex < lastIndex) {
+                        state.storeListO.get(blk.blockid).checked = true;
+                        commit('set_selected_blocks');
+                        dispatch('getAlignCount');
+                      }
+                    }
                   }
                 })
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
