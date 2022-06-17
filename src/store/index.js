@@ -4741,12 +4741,13 @@ export const store = new Vuex.Store({
         return Promise.resolve();
       }
       let currentBlockO = state.storeListO.get(blockid);
+      let currentOut = currentBlockO.out;
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       update.mode = state.bookMode;
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
-          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+          dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
@@ -4767,10 +4768,11 @@ export const store = new Vuex.Store({
       }
       update.mode = state.bookMode;
       let currentBlockO = state.storeListO.get(blockid);
+      let currentOut = currentBlockO.out;
 
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
         .then(response => {
-          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
+          dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
           let storeBlock = state.storeList.get(blockid);
           let isBlockPart = typeof update.partIdx !== 'undefined';
           if (isBlockPart && storeBlock.parts.length !== response.data.parts.length) {
@@ -4807,6 +4809,7 @@ export const store = new Vuex.Store({
         return Promise.resolve();
       }
       let currentBlockO = state.storeListO.get(blockid);
+      let currentOut = currentBlockO.out;
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
@@ -4815,7 +4818,7 @@ export const store = new Vuex.Store({
       })
         .then(response => {
 
-          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
+          dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
