@@ -166,14 +166,28 @@ export default {
   },
 
   mounted () {
-    this.updateBooksList();
+    this.updateBooksList()
+    .then(()=>{
+      if (this.$route.params.hasOwnProperty('bookid')) {
+        this.goToBookPage(this.$route.params.bookid);
+        this.scrollToRow(this.$route.params.bookid);
+      }
+    })
+    .catch((e)=>{
+      console.error(e)
+    })
   },
 
   watch: {
     '$route' () {
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.selectedBooks = [this.$route.params.bookid]
-      } else this.selectedBooks = [];
+        this.selectedBooks = [this.$route.params.bookid];
+      } else {
+        this.selectedBooks = [];
+        if (this.$refs.books_grid) {
+          this.$refs.books_grid.currentPage = 0;
+        }
+      }
     },
     bookFilters: {
       deep: true,
@@ -210,7 +224,23 @@ export default {
         this.$router.push('/books/' + bookid + '/display')
 
       }
-    }
+    },
+    goToBookPage (bookId) {
+      if (this.$refs.books_grid) {
+        //const index = this.cacheFiltered.findIndex((book)=>book.bookid === bookId);
+        const index = this.$refs.books_grid.filteredData.findIndex((book)=>book.bookid === bookId);
+        const page = Math.trunc(index / this.$refs.books_grid.rowsPerPage);
+        this.$refs.books_grid.currentPage = page;
+      }
+    },
+    scrollToRow(bookId) {
+      let t = setTimeout(function() {
+        let el = document.querySelector(`[data-id="${bookId}"]`);
+        if (el) {
+          el.scrollIntoView();
+        }
+      }, 300);
+    },
   }
 
 }

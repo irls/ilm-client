@@ -139,7 +139,7 @@
             if (el) {
               var offset = el.getBoundingClientRect();
               window.scrollTo(0, window.pageYOffset + offset.top - 110);
-              clearInterval(t);
+              //clearInterval(t);
             }
           }, 500);
         },
@@ -177,7 +177,6 @@
         }
         if (this.$route.params.hasOwnProperty('bookid')) {
             this.loadBook(this.$route.params.bookid);
-
         }
         this.$root.$on('from-bookedit:set-selection', (start, end) => {
           this.blocksForAlignment.start = start;
@@ -232,7 +231,7 @@
         'currentCollectionId': {
           handler(val, oldVal) {
             if (oldVal && !val) {
-              this.$router.replace({name: 'CollectionsList'});
+              this.$router.replace({name: 'Collections'});
             }
           }
         }

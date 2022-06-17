@@ -111,15 +111,9 @@ export default new Router({
     {
       name: 'Collections',
       path: '/collections',
-      component: Books,
-      props: {listing: 'collections'},
+      component: Collections,
+      props: {listing: 'collections', mode: 'edit1'},
       children: [
-        {
-          path: '',
-          component: Collections,
-          name: 'CollectionsList',
-          props: { mode: 'edit1' }
-        },
         {
           path: '/collections/:collectionid',
           component: Collections,
