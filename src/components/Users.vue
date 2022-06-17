@@ -180,7 +180,7 @@ export default {
       }
     },
     
-    ...mapGetters(['adminOrLibrarian', 'isAdmin'])
+    ...mapGetters(['adminOrLibrarian', 'isAdmin', 'user'])
 
   },
   mounted () {
@@ -291,7 +291,7 @@ export default {
       if (!this.isAdmin) {
         return false;
       }
-      return user.enable;
+      return user.enable && user._id !== this.user._id;
     },
     ...mapActions(['loginAdminAs', 'connectDB'])
   },
