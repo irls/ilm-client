@@ -507,6 +507,7 @@ export default {
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
           }
+          this.correctCurrentEditHeight(change.doc.blockid);
         }
       }
       if (this.$refs.blocks) this.$refs.blocks.forEach(($ref)=>{
@@ -1042,14 +1043,14 @@ export default {
               .then((response)=>{
                 //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: blockBefore, force: true});
-                this.clearBlockLock({block: block, force: true});
+                //this.clearBlockLock({block: block, force: true});
                 if (response.data.ok && response.data.blocks) {
-                  response.data.blocks.forEach((res)=>{
-                    this.refreshBlock({doc: res, deleted: res.deleted});
-                  });
+                  //response.data.blocks.forEach((res)=>{
+                    this.refreshBlock({doc: response.data.blocks[0], deleted: false});
+                  //});
                 }
-                if (response.data.blocks && response.data.blocks[2]) {
-                  this.parlistO.delBlock(response.data.blocks[2]);
+                if (response.data.blocks && response.data.blocks[1]) {
+                  this.parlistO.delBlock(response.data.blocks[1]);
                 }
 
                 this.putNumBlockOBatchProxy({bookId: block.bookid})
@@ -1145,14 +1146,14 @@ export default {
               .then((response)=>{
                 //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: block, force: true});
-                this.clearBlockLock({block: blockAfter, force: true});
+                //this.clearBlockLock({block: blockAfter, force: true});
                 if (response.data.ok && response.data.blocks) {
-                  response.data.blocks.forEach((res)=>{
-                    this.refreshBlock({doc: res, deleted: res.deleted});
-                  });
+                  //response.data.blocks.forEach((res)=>{
+                    this.refreshBlock({doc: response.data.blocks[0], deleted: false});
+                  //});
                 }
-                if (response.data.blocks && response.data.blocks[2]) {
-                  this.parlistO.delBlock(response.data.blocks[2]);
+                if (response.data.blocks && response.data.blocks[1]) {
+                  this.parlistO.delBlock(response.data.blocks[1]);
                 }
 
                 this.putNumBlockOBatchProxy({bookId: block.bookid})
