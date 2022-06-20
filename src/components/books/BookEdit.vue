@@ -507,6 +507,7 @@ export default {
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
           }
+          this.correctCurrentEditHeight(change.doc.blockid);
         }
       }
       if (this.$refs.blocks) this.$refs.blocks.forEach(($ref)=>{
