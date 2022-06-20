@@ -262,6 +262,7 @@ export default {
           console.log(`idsViewArray: `, this.$store.state.storeListUpdateCounter);
           let idsArray = this.$store.state.storeListUpdateCounter && this.$store.state.storeListO.idsViewArray(this.showEditorsCount);
           idsArray = Array.isArray(idsArray) ? idsArray : [];
+          console.log(`idsViewArray: `, this.$store.state.storeListUpdateCounter);
           return idsArray.map((el)=>el.blockId)
         }
       },
