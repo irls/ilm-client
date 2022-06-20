@@ -40,8 +40,6 @@ class BookBlocks {
   }
 
   idsViewArray(length = 10, beforeCount = 0) {
-    console.log(`idsViewArray: `, this.startRId);
-    console.log(`this.lookupList: `, this.lookupList);
     if (this.listRIds.length == 0) return [];
     if (this.listIdsCache.rid === this.startRId && this.listIdsCache.list.length) {
       return this.listIdsCache.list;
@@ -512,7 +510,6 @@ class BookBlocks {
   }
 
   delBlock(block) {
-    console.log('delBlock', block);
     block.rid = block.rid || block['@rid'];
     block.in = block.in || block.in[0];
     block.out = block.out || block.out[0];

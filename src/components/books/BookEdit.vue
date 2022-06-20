@@ -259,11 +259,7 @@ export default {
       },
       idsViewArray: { /*cache: false,*/
         get: function () {
-          console.log(`idsViewArray: `, this.$store.state.storeListUpdateCounter);
-          let idsArray = this.$store.state.storeListUpdateCounter && this.$store.state.storeListO.idsViewArray(this.showEditorsCount);
-          idsArray = Array.isArray(idsArray) ? idsArray : [];
-          console.log(`idsViewArray: `, this.$store.state.storeListUpdateCounter);
-          return idsArray.map((el)=>el.blockId)
+          return this.parlistO.idsViewArray(this.showEditorsCount).map((el)=>el.blockId)
         }
       },
       viewCurrentJobInfo: { cache: true,
@@ -1063,7 +1059,6 @@ export default {
                     }
                   });
                 this.refreshTmpl();
-                this.$store.state.storeListUpdateCounter +=1;
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
                 return Promise.resolve();
