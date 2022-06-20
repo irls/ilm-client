@@ -2633,7 +2633,7 @@ export default {
             on_start: ()=>{
                 this.isAudStarted = true;
                 this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
+                this.$root.$emit('playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
                 this.$root.$emit('playBlockFootnote', false);
                 //this.player.audio_element.volume = 0;
                 this.$root.$on('playBlock', this.onAudPlay);
@@ -2643,7 +2643,7 @@ export default {
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
+                this.$root.$emit('playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
             },
             on_complete: ()=>{
                 this.$root.$off('playBlock', this.onAudPlay);
@@ -2674,17 +2674,9 @@ export default {
               }
             }
         });
-        var self = this;
-        this.$root.$on('playBlock', function(blockid) {
-          if (blockid !== self.block._id) {
-            if (self.player) {
-              self.audStop();
-            }
-          }
-        });
       },
       onAudPlay(blockid) {
-        if (blockid !== this.block._id) {
+        if (blockid !== `${this.block.blockid}-${this.blockPartIdx}`) {
           if (this.player && (this.isAudStarted || this.isAudPaused)) {
             this.audStop();
           }
