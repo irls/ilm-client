@@ -41,6 +41,7 @@ class BookBlocks {
 
   idsViewArray(length = 10, beforeCount = 0) {
     console.log(`idsViewArray: `, this.startRId);
+    console.log(`this.lookupList: `, this.lookupList);
     if (this.listRIds.length == 0) return [];
     if (this.listIdsCache.rid === this.startRId && this.listIdsCache.list.length) {
       return this.listIdsCache.list;
