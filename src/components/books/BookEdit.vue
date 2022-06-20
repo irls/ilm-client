@@ -1041,16 +1041,15 @@ export default {
                 donorBlock_id: block.blockid
               })
               .then((response)=>{
-                //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: blockBefore, force: true});
-                //this.clearBlockLock({block: block, force: true});
+
                 if (response.data.ok && response.data.blocks) {
-                  //response.data.blocks.forEach((res)=>{
-                    this.refreshBlock({doc: response.data.blocks[0], deleted: false});
-                  //});
-                }
-                if (response.data.blocks && response.data.blocks[1]) {
-                  this.parlistO.delBlock(response.data.blocks[1]);
+                  if (response.data.blocks.updatedBlock) {
+                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+                  }
+                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+                  }
                 }
 
                 this.putNumBlockOBatchProxy({bookId: block.bookid})
@@ -1144,16 +1143,14 @@ export default {
                 donorBlock_id: blockAfter.blockid
               })
               .then((response)=>{
-                //this.setBlockSelection({start: {}, end: {}});
-                this.clearBlockLock({block: block, force: true});
-                //this.clearBlockLock({block: blockAfter, force: true});
+
                 if (response.data.ok && response.data.blocks) {
-                  //response.data.blocks.forEach((res)=>{
-                    this.refreshBlock({doc: response.data.blocks[0], deleted: false});
-                  //});
-                }
-                if (response.data.blocks && response.data.blocks[1]) {
-                  this.parlistO.delBlock(response.data.blocks[1]);
+                  if (response.data.blocks.updatedBlock) {
+                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+                  }
+                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+                  }
                 }
 
                 this.putNumBlockOBatchProxy({bookId: block.bookid})
