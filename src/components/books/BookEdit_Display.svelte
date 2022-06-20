@@ -1,5 +1,5 @@
 <template>
-
+{#if !emptyBook}
 <!--{#each intBlocks as block, idx (block.blockRid)}-->
 <div class="bview-container">
 {#if intBlocks.length > 0}
@@ -21,6 +21,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
 {:else}<div class="content-process-run preloader-loading"></div>
 {/if}
 </div>
+{/if}
 
 </template>
 
@@ -47,6 +48,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
   let loadedBookId = '';
   let intBlocks = [];
   let itemHeight = false;
+  let emptyBook = false;
 
   const dispatch = createEventDispatcher();
 
@@ -89,12 +91,16 @@ bind:startReached={startReached} bind:endReached={endReached} >
   beforeUpdate(/*async */() => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     //loadedBookId = parlistO.meta.bookid;
-    blocks.forEach((blk, Idx) => {
-      let fullBlock = blockFull(blk.blockRid);
+    for (let i = blocks.length - 1; i >= 0; --i) {
+      let fullBlock = blockFull(blocks[i].blockRid);
+      console.log(`${fullBlock.blockid}, ${fullBlock.disabled}`);
       if (fullBlock && fullBlock.disabled) {
-        blocks.splice(Idx, 1);
+        blocks.splice(i, 1);
       }
-    });
+    }
+    if (blocks.length === 0) {
+      emptyBook = true;
+    }
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 
       //fntCounter = 0; uncomment for through numeration
