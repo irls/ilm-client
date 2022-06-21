@@ -139,6 +139,8 @@
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
+  const closeBracketsRegex = /[\)\]\}\﴿]/mg;
+  const closeQuotesRegex = /[\”\’\»]/mg;
   Vue.use(v_modal, { dialog: true });
 
   export default {
@@ -1997,7 +1999,12 @@
           while((match = textRg.exec(text))) {
             let word = match[2];
             if (currentLength < match.index) {
-              word = text.substr(currentLength, match.index - currentLength) + word;
+              let addPart = text.substr(currentLength, match.index - currentLength);
+              if (closeBracketsRegex.test(addPart) || closeQuotesRegex.test(addPart)) {
+                annotations[annotations.length - 1].id+= unescape(addPart.replace(/<\/?[^>]+?>/img, ''));
+              } else {
+                word = addPart + word;
+              }
             }
             word = unescape(word.replace(/<[^>]+?>/img, '')).replace(this.coupletSeparator, '');
             currentLength = match.index + match[0].length;
