@@ -3661,6 +3661,29 @@ export const store = new Vuex.Store({
           donorBlock_id: data.donorBlock_id
         })
         .then(response => {
+          if (state.blockSelection.start && data.donorBlock_id === state.blockSelection.start._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              let outId = state.storeListO.getOutId(data.donorBlock_id);
+              if (outId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  start: {_id: outId}
+                }));
+              }
+            }
+          } else if (state.blockSelection.end && data.donorBlock_id === state.blockSelection.end._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              let inId = state.storeListO.getInId(data.donorBlock_id);
+              if (inId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  end: {_id: inId}
+                }));
+              }
+            }
+          }
           return dispatch('getBookAlign')
             .then(() => {
               return dispatch('checkResponse', response);
