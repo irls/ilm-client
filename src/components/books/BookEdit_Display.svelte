@@ -36,7 +36,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
   export let startId;
   export let hotkeyScrollTo = false;
 
-  let blocks = parlistO.listObjs;
+  let blocks = [...parlistO.listObjs];
   let startBlockIdx = 0;
   let endBlockIdx = 0;
   let vListStartFrom = false;
@@ -93,7 +93,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
     //loadedBookId = parlistO.meta.bookid;
     for (let i = blocks.length - 1; i >= 0; --i) {
       let fullBlock = blockFull(blocks[i].blockRid);
-      console.log(`${fullBlock.blockid}, ${fullBlock.disabled}`);
       if (fullBlock && fullBlock.disabled) {
         blocks.splice(i, 1);
       }
