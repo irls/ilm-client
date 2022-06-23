@@ -95,6 +95,7 @@
       //fntCounter = 0; uncomment for through numeration
       loadedBookId = parlistO.meta.bookid;
       let disabledCounter = 0;
+
       for (let i = 0; i < blocks.length; i++) {
         fntCounter = 0;
         blocks[i].blockView = blockView(blocks[i].blockRid);
