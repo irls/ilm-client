@@ -153,7 +153,7 @@ export default {
       //console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved' && toRoute.params.block !== this.startId) {
-          const idsArray = this.parlistO.idsArray();
+          const idsArray = this.getIdsArray();
           const blkIdx = idsArray.indexOf(toRoute.params.block);
           if (blkIdx && blkIdx > -1) {
             this.scrollToBlock(blkIdx, toRoute.params.block);
@@ -178,7 +178,7 @@ export default {
 
     ctrlUp(ev) {
       //console.log('ctrl+up arrow', 'this.startId', this.startId);
-      const idsArray = this.parlistO.idsArray();
+      const idsArray = this.getIdsArray();
       const jumpStep = Math.floor(idsArray.length * 0.1);
       const currIdx = idsArray.indexOf(this.startId);
       if (currIdx > -1) {
@@ -191,7 +191,7 @@ export default {
 
     ctrlDown(ev) {
       //console.log('ctrl+down arrow', 'this.startId', this.startId);
-      const idsArray = this.parlistO.idsArray();
+      const idsArray = this.getIdsArray();
       const jumpStep = Math.floor(idsArray.length * 0.1);
       const currIdx = idsArray.indexOf(this.startId);
       if (currIdx > -1) {
@@ -200,6 +200,18 @@ export default {
         //console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
         if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
       }
+    },
+
+    getIdsArray() {
+      return this.parlistO.idsArray()
+      .filter((blkId)=>{
+        let result = true;
+        if (this.parlist.has(blkId)) {
+          const block = this.parlist.get(blkId);
+          if (block.disabled) result = false
+        }
+        return result;
+      });
     },
 
     scrollToBlock(blockIdx, blockId) {
@@ -272,26 +284,6 @@ export default {
           });
         }
         return res;
-      });
-    },
-    getBlocks(idsArray) {
-      //console.log('getBlocks idsArray', idsArray);
-      return this.loopPreparedBlocksChain({ids: idsArray})
-      .then((result)=>{
-        let resIdsArray = [];
-        if (result && result.rows && result.rows.length > 0) {
-          result.rows.forEach((el, idx, arr)=>{
-            if (!this.parlist.has(el.blockid)) {
-              let newBlock = new BookBlock(el);
-              this.$store.commit('set_storeList', newBlock);
-              this.parlistO.setLoaded(el.blockid);
-              resIdsArray.push(el.blockid);
-            } else {
-              this.parlistO.setLoaded(el.blockid);
-            }
-          });
-        }
-        return Promise.resolve(resIdsArray);
       });
     },
     listenSetNum(bookId, numMask, blockRid) {
