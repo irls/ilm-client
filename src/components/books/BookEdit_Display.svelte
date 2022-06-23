@@ -90,7 +90,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
 
   beforeUpdate(/*async */() => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
-    //loadedBookId = parlistO.meta.bookid;
     for (let i = blocks.length - 1; i >= 0; --i) {
       let fullBlock = blockFull(blocks[i].blockRid);
       if (fullBlock && fullBlock.disabled) {
@@ -104,8 +103,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
 
       //fntCounter = 0; uncomment for through numeration
       loadedBookId = parlistO.meta.bookid;
-      //console.log('beforeUpdate, loadedBookId', loadedBookId);
-      //console.log('beforeUpdate, blocks.length', blocks.length);
       for (let i = 0; i < blocks.length; i++) {
         fntCounter = 0;
         blocks[i].blockView = blockView(blocks[i].blockRid);
