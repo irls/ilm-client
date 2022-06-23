@@ -153,9 +153,10 @@ export default {
       //console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved' && toRoute.params.block !== this.startId) {
-          let block = this.parlistO.get(toRoute.params.block);
-          if (block) {
-            this.scrollToBlock(block.index, block.blockid);
+          const idsArray = this.parlistO.idsArray();
+          const blkIdx = idsArray.indexOf(toRoute.params.block);
+          if (blkIdx && blkIdx > -1) {
+            this.scrollToBlock(blkIdx, toRoute.params.block);
           }
 //         } else {
 //           //TODO add method to find unresolved
@@ -177,26 +178,26 @@ export default {
 
     ctrlUp(ev) {
       //console.log('ctrl+up arrow', 'this.startId', this.startId);
-      let idsArray = this.parlistO.idsArray();
-      let jumpStep = Math.floor(idsArray.length * 0.1);
-      let currIdx = idsArray.indexOf(this.startId);
+      const idsArray = this.parlistO.idsArray();
+      const jumpStep = Math.floor(idsArray.length * 0.1);
+      const currIdx = idsArray.indexOf(this.startId);
       if (currIdx > -1) {
         let jumpIdx = currIdx - jumpStep;
         if (jumpIdx < 0) jumpIdx = 0;
-        console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
+        //console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
         if (!this.startReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
       }
     },
 
     ctrlDown(ev) {
       //console.log('ctrl+down arrow', 'this.startId', this.startId);
-      let idsArray = this.parlistO.idsArray();
-      let jumpStep = Math.floor(idsArray.length * 0.1);
-      let currIdx = idsArray.indexOf(this.startId);
+      const idsArray = this.parlistO.idsArray();
+      const jumpStep = Math.floor(idsArray.length * 0.1);
+      const currIdx = idsArray.indexOf(this.startId);
       if (currIdx > -1) {
         let jumpIdx = currIdx + jumpStep;
         if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
-        console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
+        //console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
         if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
       }
     },

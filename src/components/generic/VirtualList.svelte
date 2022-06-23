@@ -135,29 +135,20 @@
     const isScrollToEnd = scrollTo && (scrollTo == items.length - 1);
 
     if (isScrollToEnd) {
-      console.log('IS SCROLL TO END', isScrollToEnd);
       let scrollTop = viewport.scrollTop;
       let checkTop = 0;
       _scrollInterval = setInterval(function(){
         scrollTop += 80;
         viewport.scrollTop = scrollTop;
-        //console.log('interval', count, viewport.scrollTop, checkTop, scrollTop, start, end);
         if (checkTop == viewport.scrollTop || scrollTo < items.length - 1) {
           clearInterval(_scrollInterval);
         }
         checkTop = viewport.scrollTop;
       }, 20);
     } else {
-      setTimeout(function(){
-        //console.log('viewport_height', viewport_height);
-        //console.log('contents.offsetHeight', contents.offsetHeight-top-bottom);
-        if (contents.offsetHeight-top-bottom < viewport_height) {
-          handle_scroll().then(function(){
-            //viewport.scrollTo(0, viewport.scrollTop + 1);
-            handle_scroll();
-          })
-        }
-      }, 1);
+      if (contents.offsetHeight-top-bottom < viewport_height) {
+        await handle_scroll();
+      }
     }
   }
 
