@@ -52,7 +52,7 @@
     {/if}
     </div>
   {:else} <!--block is disabled-->
-    <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" style="height: 0px;"></div>
+    <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" style="height: 1px;"></div>
   {/if}
 {:else}
   <div class="ilm-block ilm-display content-process-run preloader-loading"></div>
