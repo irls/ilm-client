@@ -196,8 +196,8 @@ export default {
         }
         clearTimeout(this.timer);
         this.openBookClickCounter = 0;
-	    this.bookFilters.filter = '';
-	    this.bookFilters.projectTag = '';
+	    //this.bookFilters.filter = '';
+	    //this.bookFilters.projectTag = '';
         this.$router.push('/books/' + bookid + '/display')
 
       }

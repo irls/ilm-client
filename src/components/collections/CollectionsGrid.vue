@@ -84,8 +84,8 @@
               return;
             }
             clearTimeout(this.timer);
-            this.bookFilters.filter = '';
-            this.bookFilters.projectTag = '';
+            //this.bookFilters.filter = '';
+            //this.bookFilters.projectTag = '';
             this.openBookClickCounter = 0;
             this.$router.push('/books/' + book.bookid + '/display')
           }
