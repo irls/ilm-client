@@ -1,55 +1,59 @@
 <template>
 <!--{blockRid}->{blockListObj.blockId}->{blockListObj.loaded}->{blockListObj.visible}-->
 {#if blockListObj && blockListObj.blockId}
-  <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}" style="/*min-height:{block.illustration_height}px*/">
-  {#if block.type === 'illustration'}
-    {#if block.viewIllustration}
-      <img alt="{block.blockid}" class="{block.getClass()}"
-      src="{block.viewIllustration}"
-      data-width="{block.illustration_width}"
-      data-height="{block.illustration_height}"/>
+  {#if !blockListObj.disabled}
+    <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}" style="/*min-height:{block.illustration_height}px*/">
+    {#if block.type === 'illustration'}
+      {#if block.viewIllustration}
+        <img alt="{block.blockid}" class="{block.getClass()}"
+        src="{block.viewIllustration}"
+        data-width="{block.illustration_width}"
+        data-height="{block.illustration_height}"/>
+      {:else}
+        <div class="bview-empty-image-wrapper">
+          <div class="bview-empty-image">No image</div>
+        </div>
+      {/if}
+      {#if block.description}
+        <div class="bview-image-descr-wrapper">
+          {@html block.description}
+        </div>
+      {/if}
+    {:else if block.type === 'hr'}
+      <hr class="{block.getClass()}"/>
     {:else}
-      <div class="bview-empty-image-wrapper">
-        <div class="bview-empty-image">No image</div>
-      </div>
-    {/if}
-    {#if block.description}
-      <div class="bview-image-descr-wrapper">
-        {@html block.description}
-      </div>
-    {/if}
-  {:else if block.type === 'hr'}
-    <hr class="{block.getClass()}"/>
-  {:else}
-    {#if block.viewParnum}
-      <div class="bview-parnum">{block.viewParnum}</div>
-    {/if}
+      {#if block.viewParnum}
+        <div class="bview-parnum">{block.viewParnum}</div>
+      {/if}
 
-    <div id="display-{block.blockid}" lang="{block.language}"
-      class="bview-content part-0 {block.getClass ? block.getClass() : ''} hide-archive"
-      data-parnum="{block.viewParnum}"
-      data-type="{block.type}"
-      on:click={handleFootnote}>
-      {@html block.content}
-    </div>
+      <div id="display-{block.blockid}" lang="{block.language}"
+        class="bview-content part-0 {block.getClass ? block.getClass() : ''} hide-archive"
+        data-parnum="{block.viewParnum}"
+        data-type="{block.type}"
+        on:click={handleFootnote}>
+        {@html block.content}
+      </div>
 
-    {#if block.footnotes && block.footnotes.length > 0}
-    <div class="footnotes">
-      {#each block.footnotes as footnote, footnoteIdx (footnote)}
-      <div class="{footnote.isShow ? '' : '-hidden'}">
-        <div class="-langftn-{footnote.language}">
-          <div class="-num">[fn{footnote.ftnIdx+1}]</div>
-          <div  class="-text">
-            {@html footnote.content}
+      {#if block.footnotes && block.footnotes.length > 0}
+      <div class="footnotes">
+        {#each block.footnotes as footnote, footnoteIdx (footnote)}
+        <div class="{footnote.isShow ? '' : '-hidden'}">
+          <div class="-langftn-{footnote.language}">
+            <div class="-num">[fn{footnote.ftnIdx+1}]</div>
+            <div  class="-text">
+              {@html footnote.content}
+            </div>
           </div>
         </div>
+        {/each}
       </div>
-      {/each}
-    </div>
-    {/if}
+      {/if}
 
+    {/if}
+    </div>
+  {:else} <!--block is disabled-->
+    <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" style="height: 0px;"></div>
   {/if}
-  </div>
 {:else}
   <div class="ilm-block ilm-display content-process-run preloader-loading"></div>
 {/if}
