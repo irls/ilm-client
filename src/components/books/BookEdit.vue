@@ -284,12 +284,6 @@ export default {
     test(ev) {
         console.log('test', ev);
     },
-    stopWatchLiveQueries(){
-      this.$store.state.liveDB.stopWatch('metaV');
-      this.$store.state.liveDB.stopWatch('job');
-      this.$store.state.liveDB.stopWatch('blockV');
-      this.$store.state.liveDB.stopWatch('task');
-    },
     refreshTmpl() {
       // a hack to update template
       //console.log(`refreshTmpl: `, 1);
@@ -2227,7 +2221,6 @@ export default {
   },
 
   beforeDestroy:  function() {
-    this.stopWatchLiveQueries();
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     this.setBlockSelection({start: {}, end: {}});

@@ -715,8 +715,9 @@ export const store = new Vuex.Store({
           state.currentBookMeta.collection_id = false;
         }
       } else {
-        state.currentBookMeta = {}
-        state.currentBookid = ''
+        state.currentBookMeta = {};
+        state.currentBookid = '';
+        this.dispatch('stopWatchLiveQueries');
       }
       this.commit('set_currentbook_executors');
     },
