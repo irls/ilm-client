@@ -100,6 +100,7 @@
 <style>
   .ilm-block.ilm-display {
     position: relative;
+    min-height: 5em;
   }
   .bview-parnum {
     padding-top: 10px;

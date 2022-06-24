@@ -236,13 +236,9 @@
     width: 100%;
   }
 
-  .card {
-    position: relative;
-    min-height: 5em;
-  }
-
   .card::after {
     clear: both;
     display: block;
   }
+
 </style>
