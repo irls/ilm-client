@@ -1,26 +1,26 @@
 <template>
 {#if !emptyBook}
-<!--{#each intBlocks as block, idx (block.blockRid)}-->
-<div class="bview-container">
-{#if intBlocks.length > 0}
-<VirtualList items={intBlocks} let:item
-bind:start={startBlockIdx} bind:end={endBlockIdx}
-bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-bind:startReached={startReached} bind:endReached={endReached} >
-<div class='card'>
-<!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
-<BookBlockDisplay
-  blockRid="{item.blockRid}"
-  block="{item.blockView}"
-  blockListObj="{item}"
-  lang="{lang}"
-/>
-</div>
-</VirtualList>
-<!--{/each}-->
-{:else}<div class="content-process-run preloader-loading"></div>
-{/if}
-</div>
+  <!--{#each intBlocks as block, idx (block.blockRid)}-->
+  <div class="bview-container">
+  {#if intBlocks.length > 0}
+    <VirtualList items={intBlocks} let:item
+    bind:start={startBlockIdx} bind:end={endBlockIdx}
+    bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
+    bind:startReached={startReached} bind:endReached={endReached} >
+    <div class='card'>
+    <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
+    <BookBlockDisplay
+      blockRid="{item.blockRid}"
+      block="{item.blockView}"
+      blockListObj="{item}"
+      lang="{lang}"
+    />
+    </div>
+    </VirtualList>
+    <!--{/each}-->
+  {:else}<div class="content-process-run preloader-loading"></div>
+  {/if}
+  </div>
 {/if}
 
 </template>
@@ -90,22 +90,11 @@ bind:startReached={startReached} bind:endReached={endReached} >
 
   beforeUpdate(/*async */() => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
-    //loadedBookId = parlistO.meta.bookid;
-    for (let i = blocks.length - 1; i >= 0; --i) {
-      let fullBlock = blockFull(blocks[i].blockRid);
-      if (fullBlock && fullBlock.disabled) {
-        blocks.splice(i, 1);
-      }
-    }
-    if (blocks.length === 0) {
-      emptyBook = true;
-    }
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 
       //fntCounter = 0; uncomment for through numeration
       loadedBookId = parlistO.meta.bookid;
-      //console.log('beforeUpdate, loadedBookId', loadedBookId);
-      //console.log('beforeUpdate, blocks.length', blocks.length);
+      let disabledCounter = 0;
       for (let i = 0; i < blocks.length; i++) {
         fntCounter = 0;
         blocks[i].blockView = blockView(blocks[i].blockRid);
@@ -114,7 +103,15 @@ bind:startReached={startReached} bind:endReached={endReached} >
         if (startId && blocks[i].blockId == startId) {
           startIdIdx = i;
         }
+        if (blocks[i].blockView.disabled) {
+          disabledCounter++;
+        }
       }
+
+      if (disabledCounter == blocks.length) {
+        emptyBook = true;
+      }
+
       intBlocks = blocks;
       if (startIdIdx > 0) {
         vListStartFrom = startIdIdx;
@@ -182,6 +179,8 @@ bind:startReached={startReached} bind:endReached={endReached} >
       viewObj.illustration_height = block.illustration_height;
       viewObj.illustration_width = block.illustration_width;
       viewObj.description = block.description;
+
+      viewObj.disabled = block.disabled || false;
 
       //viewObj.content = block.content
 
