@@ -202,16 +202,19 @@ export default {
       }
     },
 
-    getIdsArray() {
+    getIdsArray(isFilter = false) {
+      if (isFilter) {
+        return this.parlistO.idsArray()
+          .filter((blkId)=>{
+            let result = true;
+            if (this.parlist.has(blkId)) {
+              const block = this.parlist.get(blkId);
+              if (block.disabled) result = false
+            }
+            return result;
+          });
+      }
       return this.parlistO.idsArray()
-      .filter((blkId)=>{
-        let result = true;
-        if (this.parlist.has(blkId)) {
-          const block = this.parlist.get(blkId);
-          if (block.disabled) result = false
-        }
-        return result;
-      });
     },
 
     scrollToBlock(blockIdx, blockId) {
