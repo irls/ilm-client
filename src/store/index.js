@@ -3571,6 +3571,8 @@ export const store = new Vuex.Store({
         });
     },
     blocksJoin({state, commit, dispatch}, data) {
+      let rangeOutId = state.storeListO.getOutId(data.donorBlock_id);
+      let rangeInId = state.storeListO.getInId(data.donorBlock_id);
       return axios.post(state.API_URL + 'book/block_join/', {
           resultBlock_id: data.resultBlock_id,
           donorBlock_id: data.donorBlock_id
@@ -3580,10 +3582,9 @@ export const store = new Vuex.Store({
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               commit('set_block_selection', {start: {}, end: {}});
             } else {
-              let outId = state.storeListO.getOutId(data.donorBlock_id);
-              if (outId) {
+              if (rangeOutId) {
                 commit('set_block_selection', Object.assign(state.blockSelection, {
-                  start: {_id: outId}
+                  start: {_id: rangeOutId}
                 }));
               }
             }
@@ -3591,10 +3592,9 @@ export const store = new Vuex.Store({
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               commit('set_block_selection', {start: {}, end: {}});
             } else {
-              let inId = state.storeListO.getInId(data.donorBlock_id);
-              if (inId) {
+              if (rangeInId) {
                 commit('set_block_selection', Object.assign(state.blockSelection, {
-                  end: {_id: inId}
+                  end: {_id: rangeInId}
                 }));
               }
             }
