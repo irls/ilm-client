@@ -3,8 +3,7 @@
 
     <SvelteBookDisplayInVue
       v-if="isBookMounted"
-      :parlistO="parlistO"
-      :parlist="parlist"
+      :blocksList="{parlistO, parlist, blocks: getIdsArray()}"
       :lang="meta.language"
       :startId="startId"
       :hotkeyScrollTo="hotkeyScrollTo"
@@ -73,33 +72,44 @@ export default {
             //console.log('ctrl+home', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
-            let firstRid = this.parlistO.getFirstRid();
-            if (firstRid) {
-              let block = this.parlistO.getBlockByRid(firstRid);
-              console.log('ctrl+home', 'blockid:', block.blockid, this.startReached);
-              if (block && !this.startReached) {
-                this.scrollToBlock(block.index, block.blockid);
-              }
+            const idsArray = this.getIdsArray();
+            console.log('ctrl+home', 'blockid:', idsArray[0], this.startReached);
+            if (idsArray[0] && !this.startReached) {
+              this.scrollToBlock(0, idsArray[0]);
             }
           },
           'ctrl+end': (ev)=>{
             //console.log('ctrl+end', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
-            let lastRid = this.parlistO.getLastRid();
-            if (lastRid) {
-              let block = this.parlistO.getBlockByRid(lastRid);
-              console.log('ctrl+end', 'blockid:', block.blockid, this.endReached);
-              if (block && !this.endReached) {
-                this.scrollToBlock(block.index, block.blockid);
-              }
+            const idsArray = this.getIdsArray();
+            console.log('ctrl+end', 'blockid:', idsArray[idsArray.length - 1], this.endReached);
+            if (idsArray[idsArray.length - 1] && !this.endReached) {
+              this.scrollToBlock(idsArray.length - 1, idsArray[idsArray.length - 1]);
             }
           },
           'ctrl+up': (ev)=>{
-            this.ctrlUp(ev)
+            const idsArray = this.getIdsArray();
+            const jumpStep = Math.floor(idsArray.length * 0.1);
+            const currIdx = idsArray.indexOf(this.startId);
+            if (currIdx > -1) {
+              let jumpIdx = currIdx - jumpStep;
+              if (jumpIdx < 0) jumpIdx = 0;
+              console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
+              if (!this.startReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
+            }
           },
           'ctrl+down': (ev)=>{
-            this.ctrlDown(ev)
+            //console.log('ctrl+down arrow', 'this.startId', this.startId);
+            const idsArray = this.getIdsArray();
+            const jumpStep = Math.floor(idsArray.length * 0.1);
+            const currIdx = idsArray.indexOf(this.startId);
+            if (currIdx > -1) {
+              let jumpIdx = currIdx + jumpStep;
+              if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
+              console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
+              if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
+            }
           },
           /*'ctrl+pgup': (ev)=>{
             //ev.preventDefault();
@@ -115,12 +125,13 @@ export default {
             //console.log('page up', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
-            let prevId = this.parlistO.getInId(this.startId);
-            if (prevId) {
-              let block = this.parlistO.get(prevId);
-              if (block) {
-                console.log('page up', 'blockid:', block.blockid, this.startReached);
-                if (prevId !== this.startId && !this.startReached) this.scrollToBlock(block.index, block.blockid);
+            const idsArray = this.getIdsArray();
+            const currIdx = idsArray.indexOf(this.startId);
+            if (currIdx > 0) {
+              const prevId = idsArray[currIdx - 1];
+              if (prevId) {
+                console.log('page up', 'blockid:', prevId, this.startReached);
+                if (prevId !== this.startId && !this.startReached) this.scrollToBlock(currIdx - 1, prevId);
               }
             }
           },
@@ -128,12 +139,14 @@ export default {
             //console.log('page down', 'this.startId', this.startId);
             ev.stopPropagation();
             ev.preventDefault();
-            let nextId = this.parlistO.getOutId(this.startId);
-            if (nextId) {
-              let block = this.parlistO.get(nextId);
-              if (block) {
-                console.log('page down', 'blockid:', block.blockid, this.endReached);
-                if (nextId !== this.startId && !this.endReached) this.scrollToBlock(block.index, block.blockid);
+            const idsArray = this.getIdsArray();
+            const currIdx = idsArray.indexOf(this.startId);
+
+            if (currIdx > -1 && currIdx < idsArray.length - 1) {
+              const nextId = idsArray[currIdx + 1];
+              if (nextId) {
+                console.log('page down', 'blockid:', nextId, this.endReached);
+                if (nextId !== this.startId && !this.endReached) this.scrollToBlock(currIdx + 1, nextId);
               }
             }
           },
@@ -150,12 +163,12 @@ export default {
   },
   watch: {
     '$route' (toRoute, fromRoute) {
-      //console.log('$route', fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
+      //console.log('$route', 'this.startId:', this.startId, fromRoute.params.block, '->', toRoute.params.block, 'onScrollEv:', this.onScrollEv);
       if (!this.onScrollEv && toRoute.params.hasOwnProperty('block')) {
         if (toRoute.params.block !== 'unresolved' && toRoute.params.block !== this.startId) {
           const idsArray = this.getIdsArray();
           const blkIdx = idsArray.indexOf(toRoute.params.block);
-          if (blkIdx && blkIdx > -1) {
+          if (blkIdx > -1) {
             this.scrollToBlock(blkIdx, toRoute.params.block);
           }
 //         } else {
@@ -176,33 +189,7 @@ export default {
       'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
 
-    ctrlUp(ev) {
-      //console.log('ctrl+up arrow', 'this.startId', this.startId);
-      const idsArray = this.getIdsArray();
-      const jumpStep = Math.floor(idsArray.length * 0.1);
-      const currIdx = idsArray.indexOf(this.startId);
-      if (currIdx > -1) {
-        let jumpIdx = currIdx - jumpStep;
-        if (jumpIdx < 0) jumpIdx = 0;
-        //console.log('ctrl+up arrow', 'blockid:', idsArray[jumpIdx], this.startReached);
-        if (!this.startReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
-      }
-    },
-
-    ctrlDown(ev) {
-      //console.log('ctrl+down arrow', 'this.startId', this.startId);
-      const idsArray = this.getIdsArray();
-      const jumpStep = Math.floor(idsArray.length * 0.1);
-      const currIdx = idsArray.indexOf(this.startId);
-      if (currIdx > -1) {
-        let jumpIdx = currIdx + jumpStep;
-        if (jumpIdx > idsArray.length) jumpIdx = idsArray.length - 1;
-        //console.log('ctrl+down arrow', 'blockid:', idsArray[jumpIdx], this.endReached);
-        if (!this.endReached) this.scrollToBlock(jumpIdx, idsArray[jumpIdx]);
-      }
-    },
-
-    getIdsArray(isFilter = false) {
+    getIdsArray(isFilter = true) {
       if (isFilter) {
         return this.parlistO.idsArray()
           .filter((blkId)=>{
@@ -356,6 +343,9 @@ export default {
           this.isBookMounted = true;
         }
       }
+    },
+    findNextVisibleBlock(blockId) {
+
     },
     checkScrollBottom() {
     //console.log('checkScrollBottom', this.$refs.scrollWrap.offsetHeight, this.$refs.scrollWrap.scrollTop, this.$refs.scrollWrap.scrollHeight);
