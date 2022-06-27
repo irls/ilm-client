@@ -75,7 +75,7 @@ export default {
             ev.stopPropagation();
             let firstRid = this.parlistO.getFirstRid();
             if (firstRid) {
-              let block = this.parlistO.getBlockByRid(firstRid);
+              let block = this.getNextEnabledBlock(firstRid, 'next', true);
               console.log('ctrl+home', 'blockid:', block.blockid, this.startReached);
               if (block && !this.startReached) {
                 this.scrollToBlock(block.index, block.blockid);
@@ -88,7 +88,7 @@ export default {
             ev.stopPropagation();
             let lastRid = this.parlistO.getLastRid();
             if (lastRid) {
-              let block = this.parlistO.getBlockByRid(lastRid);
+              let block = this.getNextEnabledBlock(lastRid, 'prev', true);
               console.log('ctrl+end', 'blockid:', block.blockid, this.endReached);
               if (block && !this.endReached) {
                 this.scrollToBlock(block.index, block.blockid);
@@ -115,26 +115,20 @@ export default {
             //console.log('page up', 'this.startId', this.startId);
             ev.preventDefault();
             ev.stopPropagation();
-            let prevId = this.parlistO.getInId(this.startId);
-            if (prevId) {
-              let block = this.parlistO.get(prevId);
-              if (block) {
-                console.log('page up', 'blockid:', block.blockid, this.startReached);
-                if (prevId !== this.startId && !this.startReached) this.scrollToBlock(block.index, block.blockid);
-              }
+            let block = this.getNextEnabledBlock(this.startId, 'prev');
+            if (block) {
+              console.log('page up', 'blockid:', block.blockid, this.startReached);
+              if (block.blockid !== this.startId && !this.startReached) this.scrollToBlock(block.index, block.blockid);
             }
           },
           'pgdn': (ev)=>{
             //console.log('page down', 'this.startId', this.startId);
             ev.stopPropagation();
             ev.preventDefault();
-            let nextId = this.parlistO.getOutId(this.startId);
-            if (nextId) {
-              let block = this.parlistO.get(nextId);
-              if (block) {
-                console.log('page down', 'blockid:', block.blockid, this.endReached);
-                if (nextId !== this.startId && !this.endReached) this.scrollToBlock(block.index, block.blockid);
-              }
+            let block = this.getNextEnabledBlock(this.startId);
+            if (block) {
+              console.log('page down', 'blockid:', block.blockid, this.endReached);
+              if (block.blockid !== this.startId && !this.endReached) this.scrollToBlock(block.index, block.blockid);
             }
           },
           'end': (ev)=>{
@@ -347,10 +341,17 @@ export default {
         else {
           console.log('loadBookMounted', 'pre');
           if (this.$route.params.hasOwnProperty('block')) {
+            let paramsBlockid;
             if (this.$route.params.block=='unresolved') {
-              this.startId = this.$route.params.block || false;
+              paramsBlockid = this.$route.params.block || false;
             } else {
-              this.startId = this.$route.params.block;
+              paramsBlockid = this.$route.params.block;
+            }
+            let enabledBlock = this.getNextEnabledBlock(paramsBlockid, 'next', true);
+            if (enabledBlock) {
+              this.startId = enabledBlock.blockid;
+            } else {
+              this.startId = paramsBlockid;
             }
           }
           this.isBookMounted = true;
@@ -363,6 +364,31 @@ export default {
         let scrolledBottom = this.$refs.scrollWrap.offsetHeight + this.$refs.scrollWrap.scrollTop >= this.$refs.scrollWrap.scrollHeight;
         this.$store.commit('set_taskBlockMapAllowNext', !scrolledBottom);
       }
+    },
+    getNextEnabledBlock(fromBlockid, direction = 'next', checkStart = false) {
+      let next;
+      if (fromBlockid.charAt(0) === '#') { // Orient RID
+        fromBlockid = this.parlistO.getIdByRid(fromBlockid);
+      }
+      if (checkStart) {
+        next = this.parlist.get(fromBlockid);
+      } else {
+        let nextId = null;
+        if (direction === 'next') {
+          nextId = this.parlistO.getOutId(fromBlockid);
+        } else if (direction === 'prev') {
+          nextId = this.parlistO.getInId(fromBlockid);
+        }
+        if (nextId) {
+          next = this.parlist.get(nextId);
+        }
+      }
+      if (next && next.disabled) {
+        return this.getNextEnabledBlock(next.blockid, direction);
+      } else {
+        return next;
+      }
+      return null;
     }
   },
   mounted: function() {

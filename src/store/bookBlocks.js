@@ -620,6 +620,12 @@ class BookBlocks {
     } while (crossId);
     return list;
   }
+  getIdByRid(rid) {
+    if (this.lookupList.hasOwnProperty(rid)) {
+      return this.lookupList[rid].blockid;
+    }
+    return false;
+  }
 
 }
 
