@@ -1,27 +1,25 @@
 <template>
-{#if !emptyBook}
-  <!--{#each intBlocks as block, idx (block.blockRid)}-->
-  <div class="bview-container">
-  {#if intBlocks.length > 0}
-    <VirtualList items={intBlocks} let:item
-    bind:start={startBlockIdx} bind:end={endBlockIdx}
-    bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-    bind:startReached={startReached} bind:endReached={endReached} >
-    <div class='card'>
-    <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
-    <BookBlockDisplay
-      blockRid="{item.blockRid}"
-      block="{item.blockView}"
-      blockListObj="{item}"
-      lang="{lang}"
-    />
-    </div>
-    </VirtualList>
-    <!--{/each}-->
-  {:else}<div class="content-process-run preloader-loading"></div>
-  {/if}
+<!--{#each intBlocks as block, idx (block.blockRid)}-->
+<div class="bview-container">
+{#if intBlocks.length > 0}
+  <VirtualList items={intBlocks} let:item
+  bind:start={startBlockIdx} bind:end={endBlockIdx}
+  bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
+  bind:startReached={startReached} bind:endReached={endReached} >
+  <div class='card'>
+  <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
+  <BookBlockDisplay
+    blockRid="{item.blockRid}"
+    block="{item.blockView}"
+    blockListObj="{item}"
+    lang="{lang}"
+  />
   </div>
+  </VirtualList>
+  <!--{/each}-->
+{:else}<div class="content-process-run preloader-loading"></div>
 {/if}
+</div>
 
 </template>
 
@@ -31,12 +29,11 @@
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
   export let lang = 'en';
-  export let parlistO = {};
-  export let parlist = {};
-  export let startId;
+  export let blocksList = {};
+  export let startId = false;
   export let hotkeyScrollTo = false;
 
-  let blocks = [...parlistO.listObjs];
+  const { parlistO, parlist, blocks } = blocksList;
   let startBlockIdx = 0;
   let endBlockIdx = 0;
   let vListStartFrom = false;
@@ -48,7 +45,6 @@
   let loadedBookId = '';
   let intBlocks = [];
   let itemHeight = false;
-  let emptyBook = false;
 
   const dispatch = createEventDispatcher();
 
@@ -61,12 +57,12 @@
       }
       if (vListScrollTo) {
         vListScrollTo = false;
-        return;
+        //return;
       }
       dispatch('setStart', {
         blockIdx: startBlockIdx,
-        blockId: blocks[startBlockIdx].blockId,
-        blockRid: blocks[startBlockIdx].blockRid
+        blockId: blocks[startBlockIdx],
+        blockRid: blockRid(blocks[startBlockIdx])
       });
     }
   }
@@ -84,36 +80,44 @@
     if (hotkeyScrollTo !== false) {
       await tick();
       vListScrollTo = hotkeyScrollTo;
-      //console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
+      console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
     }
   }
 
-  beforeUpdate(/*async */() => {
+  beforeUpdate(/*async*/ () => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 
       //fntCounter = 0; uncomment for through numeration
       loadedBookId = parlistO.meta.bookid;
-      let disabledCounter = 0;
+      startIdIdx = -1;
 
-      for (let i = 0; i < blocks.length; i++) {
+      intBlocks = blocks.map((blockId, i)=>{
+        let block = {};
         fntCounter = 0;
-        blocks[i].blockView = blockView(blocks[i].blockRid);
-        blocks[i].visible = blocks[i].loaded;
-        blocks[i].idx = i;
-        if (startId && blocks[i].blockId == startId) {
+
+        block.blockView = blockView(blockId);
+        block.blockRid = block.blockView.blockRid;
+        block.blockId = blockId;
+        block.idx = i;
+
+        if (startId && blockId === startId) {
           startIdIdx = i;
         }
-        if (blocks[i].blockView.disabled) {
-          disabledCounter++;
+
+        return block;
+      })
+
+      if (startId && startIdIdx < 0) { // came from disabled block
+        let outId = parlistO.getOutId(startId);
+        while (outId !== false && blocks.indexOf(outId) < 0) {
+          outId = parlistO.getOutId(outId);
+        }
+        if (outId) {
+          hotkeyScrollTo = blocks.indexOf(outId) + ':' + Date.now();
         }
       }
 
-      if (disabledCounter == blocks.length) {
-        emptyBook = true;
-      }
-
-      intBlocks = blocks;
       if (startIdIdx > 0) {
         vListStartFrom = startIdIdx;
       }
@@ -129,9 +133,12 @@
   const timestamp = (new Date()).toJSON();
 
   const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
+  const blockRid = (blockId) => {
+    return parlist.has(blockId) ? parlist.get(blockId)._rid : null;
+  }
 
-  const blockFull = (blockRid) => {
-    return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : null;
+  const blockFull = (blockId) => {
+    return parlist.has(blockId) ? parlist.get(blockId) : null;
   }
 
   const getOutPaddings = (block) => {
@@ -157,9 +164,9 @@
     return false;
   }
 
-  const blockView = (blockRid) => {
-    let block = blockFull(blockRid);
-    let blockO = parlistO.getBlockByRid(blockRid);
+  const blockView = (blockId) => {
+    let block = blockFull(blockId);
+    let blockO = parlistO.getBlockByRid(block._rid);
     if (block) {
       //console.log('blockView', block.blockid, fntCounter);
       let viewObj = { footnotes: block.footnotes, language: block.language || lang };
@@ -168,6 +175,7 @@
           return process.env.ILM_API + block.illustration + '?' + timestamp;
         }
       }
+      viewObj.blockRid = block._rid;
       viewObj.getClass = block.getClass;
       viewObj.blockid = block.blockid;
       viewObj.classes = block.classes;
