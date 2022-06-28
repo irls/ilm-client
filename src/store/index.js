@@ -4701,6 +4701,7 @@ export const store = new Vuex.Store({
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
+          dispatch('setBlocksDisabled/getDisabledBlocks');
         })
         .catch(err => {
           return Promise.reject(err);
