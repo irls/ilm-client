@@ -146,9 +146,16 @@
         checkTop = viewport.scrollTop;
       }, 20);
     } else {
-      if (contents.offsetHeight-top-bottom < viewport_height) {
-        await handle_scroll();
-      }
+      setTimeout(function(){
+        //console.log('viewport_height', viewport_height);
+        //console.log('contents.offsetHeight', contents.offsetHeight-top-bottom);
+        if (contents.offsetHeight-top-bottom < viewport_height) {
+          handle_scroll().then(function(){
+            //viewport.scrollTo(0, viewport.scrollTop + 1);
+            handle_scroll();
+          })
+        }
+      }, 1);
     }
   }
 
