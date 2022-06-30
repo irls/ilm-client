@@ -284,6 +284,7 @@ export default {
     'putNumBlockOBatch',
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections', 'findNextAudioblock']),
+    ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
 
     test(ev) {
         console.log('test', ev);
@@ -827,13 +828,6 @@ export default {
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-          if (!this.parlistO.get(blockO.blockid)) {
-            this.parlistO.addBlock(blockO);
-          }
-          if (!this.parlist.get(b_new.blockid)) {// can be already added by syncgronization
-            this.$store.commit('set_storeList', new BookBlock(b_new));
-          }
-
 //           if (b_old) {
 //             this.refreshBlock({doc: b_old, deleted: false});
 //           }
@@ -873,12 +867,6 @@ export default {
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-          if (!this.parlistO.get(blockO.blockid)) {
-            this.parlistO.addBlock(blockO);
-          }
-          if (!this.parlist.get(b_new.blockid)) {// can be already set by synchronization
-            this.$store.commit('set_storeList', new BookBlock(b_new));
-          }
 
 //           if (b_old) {
 //             this.refreshBlock({doc: b_old, deleted: false});
@@ -934,6 +922,7 @@ export default {
       this.removeBlock(block._id)
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
+        this.getDisabledBlocks();
         if (response.data) {
 
           let newStartId = this.parlistO.delBlock(response.data);
@@ -943,6 +932,7 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
+          this.$store.commit('set_selected_blocks');
         }
         //this.getCurrentJobInfo();
 
@@ -955,7 +945,9 @@ export default {
           });
 
         this.unfreeze('deleteBlock');
-        this.updateBookVersion({major: true})
+        if (!block.disabled) {
+          this.updateBookVersion({major: true})
+        }
         this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
         //this.refreshTmpl();
@@ -1047,6 +1039,7 @@ export default {
                 //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: blockBefore, force: true});
                 this.clearBlockLock({block: block, force: true});
+                this.getDisabledBlocks();
                 if (response.data.ok && response.data.blocks) {
                   response.data.blocks.forEach((res)=>{
                     this.refreshBlock({doc: res, deleted: res.deleted});
@@ -1065,6 +1058,7 @@ export default {
                 this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
+                this.$store.commit('set_selected_blocks');
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -1150,6 +1144,7 @@ export default {
                 //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: block, force: true});
                 this.clearBlockLock({block: blockAfter, force: true});
+                this.getDisabledBlocks();
                 if (response.data.ok && response.data.blocks) {
                   response.data.blocks.forEach((res)=>{
                     this.refreshBlock({doc: res, deleted: res.deleted});
@@ -1168,6 +1163,7 @@ export default {
                 //this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
+                this.$store.commit('set_selected_blocks');
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -2306,7 +2302,6 @@ export default {
     this.stopWatchLiveQueries();
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
-    this.setBlockSelection({start: {}, end: {}});
     //console.log('BookEdit beforeDestroy');
     this.$root.$emit('for-audioeditor:force-close');
 

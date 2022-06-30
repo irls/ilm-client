@@ -1,5 +1,5 @@
 <template>
-<!--{blockRid}->{blockListObj.blockId}->{blockListObj.loaded}->{blockListObj.visible}-->
+<!--{blockRid}->{blockListObj.blockId}->{blockListObj.loaded}-->
 {#if blockListObj && blockListObj.blockId}
   <div data-rid="{blockRid}" id="{block.blockid}" data-id="{block.blockid}" class="ilm-block ilm-display -langblock-{block.language} {block.viewOutPaddings}" style="/*min-height:{block.illustration_height}px*/">
   {#if block.type === 'illustration'}
@@ -47,7 +47,6 @@
       {/each}
     </div>
     {/if}
-
   {/if}
   </div>
 {:else}
@@ -96,6 +95,7 @@
 <style>
   .ilm-block.ilm-display {
     position: relative;
+    min-height: 5em;
   }
   .bview-parnum {
     padding-top: 10px;

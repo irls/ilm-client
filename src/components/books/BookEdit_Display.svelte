@@ -1,23 +1,22 @@
 <template>
-
 <!--{#each intBlocks as block, idx (block.blockRid)}-->
 <div class="bview-container">
 {#if intBlocks.length > 0}
-<VirtualList items={intBlocks} let:item
-bind:start={startBlockIdx} bind:end={endBlockIdx}
-bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-bind:startReached={startReached} bind:endReached={endReached} >
-<div class='card'>
-<!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
-<BookBlockDisplay
-  blockRid="{item.blockRid}"
-  block="{item.blockView}"
-  blockListObj="{item}"
-  lang="{lang}"
-/>
-</div>
-</VirtualList>
-<!--{/each}-->
+  <VirtualList items={intBlocks} let:item
+  bind:start={startBlockIdx} bind:end={endBlockIdx}
+  bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
+  bind:startReached={startReached} bind:endReached={endReached} >
+  <div class='card'>
+  <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
+  <BookBlockDisplay
+    blockRid="{item.blockRid}"
+    block="{item.blockView}"
+    blockListObj="{item}"
+    lang="{lang}"
+  />
+  </div>
+  </VirtualList>
+  <!--{/each}-->
 {:else}<div class="content-process-run preloader-loading"></div>
 {/if}
 </div>
@@ -30,12 +29,11 @@ bind:startReached={startReached} bind:endReached={endReached} >
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
   export let lang = 'en';
-  export let parlistO = {};
-  export let parlist = {};
-  export let startId;
+  export let blocksList = {};
+  export let startId = false;
   export let hotkeyScrollTo = false;
 
-  let blocks = parlistO.listObjs;
+  const { parlistO, parlist, blocks } = blocksList;
   let startBlockIdx = 0;
   let endBlockIdx = 0;
   let vListStartFrom = false;
@@ -59,12 +57,12 @@ bind:startReached={startReached} bind:endReached={endReached} >
       }
       if (vListScrollTo) {
         vListScrollTo = false;
-        return;
+        //return;
       }
       dispatch('setStart', {
         blockIdx: startBlockIdx,
-        blockId: blocks[startBlockIdx].blockId,
-        blockRid: blocks[startBlockIdx].blockRid
+        blockId: blocks[startBlockIdx],
+        blockRid: blockRid(blocks[startBlockIdx])
       });
     }
   }
@@ -82,29 +80,44 @@ bind:startReached={startReached} bind:endReached={endReached} >
     if (hotkeyScrollTo !== false) {
       await tick();
       vListScrollTo = hotkeyScrollTo;
-      //console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
+      console.log('BookEdit_Display.svelte->hotkeyScrolledTo', vListScrollTo);
     }
   }
 
-  beforeUpdate(/*async */() => {
+  beforeUpdate(/*async*/ () => {
     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId);
-    //loadedBookId = parlistO.meta.bookid;
     if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
 
       //fntCounter = 0; uncomment for through numeration
       loadedBookId = parlistO.meta.bookid;
-      //console.log('beforeUpdate, loadedBookId', loadedBookId);
-      //console.log('beforeUpdate, blocks.length', blocks.length);
-      for (let i = 0; i < blocks.length; i++) {
+      startIdIdx = -1;
+
+      intBlocks = blocks.map((blockId, i)=>{
+        let block = {};
         fntCounter = 0;
-        blocks[i].blockView = blockView(blocks[i].blockRid);
-        blocks[i].visible = blocks[i].loaded;
-        blocks[i].idx = i;
-        if (startId && blocks[i].blockId == startId) {
+
+        block.blockView = blockView(blockId);
+        block.blockRid = block.blockView.blockRid;
+        block.blockId = blockId;
+        block.idx = i;
+
+        if (startId && blockId === startId) {
           startIdIdx = i;
         }
+
+        return block;
+      })
+
+      if (startId && startIdIdx < 0) { // came from disabled block
+        let outId = parlistO.getOutId(startId);
+        while (outId !== false && blocks.indexOf(outId) < 0) {
+          outId = parlistO.getOutId(outId);
+        }
+        if (outId) {
+          hotkeyScrollTo = blocks.indexOf(outId) + ':' + Date.now();
+        }
       }
-      intBlocks = blocks;
+
       if (startIdIdx > 0) {
         vListStartFrom = startIdIdx;
       }
@@ -120,9 +133,12 @@ bind:startReached={startReached} bind:endReached={endReached} >
   const timestamp = (new Date()).toJSON();
 
   const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
+  const blockRid = (blockId) => {
+    return parlist.has(blockId) ? parlist.get(blockId)._rid : null;
+  }
 
-  const blockFull = (blockRid) => {
-    return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : null;
+  const blockFull = (blockId) => {
+    return parlist.has(blockId) ? parlist.get(blockId) : null;
   }
 
   const getOutPaddings = (block) => {
@@ -148,9 +164,9 @@ bind:startReached={startReached} bind:endReached={endReached} >
     return false;
   }
 
-  const blockView = (blockRid) => {
-    let block = blockFull(blockRid);
-    let blockO = parlistO.getBlockByRid(blockRid);
+  const blockView = (blockId) => {
+    let block = blockFull(blockId);
+    let blockO = parlistO.getBlockByRid(block._rid);
     if (block) {
       //console.log('blockView', block.blockid, fntCounter);
       let viewObj = { footnotes: block.footnotes, language: block.language || lang };
@@ -159,6 +175,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
           return process.env.ILM_API + block.illustration + '?' + timestamp;
         }
       }
+      viewObj.blockRid = block._rid;
       viewObj.getClass = block.getClass;
       viewObj.blockid = block.blockid;
       viewObj.classes = block.classes;
@@ -171,6 +188,8 @@ bind:startReached={startReached} bind:endReached={endReached} >
       viewObj.illustration_height = block.illustration_height;
       viewObj.illustration_width = block.illustration_width;
       viewObj.description = block.description;
+
+      viewObj.disabled = block.disabled || false;
 
       //viewObj.content = block.content
 
@@ -225,13 +244,9 @@ bind:startReached={startReached} bind:endReached={endReached} >
     width: 100%;
   }
 
-  .card {
-    position: relative;
-    min-height: 5em;
-  }
-
   .card::after {
     clear: both;
     display: block;
   }
+
 </style>
