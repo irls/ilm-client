@@ -304,6 +304,7 @@ export default {
         let checkMeta = this.parlistO.meta || {};
         checkMeta = checkMeta.bookid || false;
         const bookid = this.$route.params.bookid;
+        this.$store.commit('SET_CURRENTBOOK_ID', bookid);
         let loadType = 'load';
         if (!checkMeta || checkMeta !== bookid || !this.parlist.values().next().value || this.$route.params.task_type) {
           console.log('loadBookMounted', loadType);

@@ -659,6 +659,10 @@ export const store = new Vuex.Store({
       state.currentBook = book
     },
 
+    SET_CURRENTBOOK_ID (state, bookId) {
+      state.currentBookid = bookId;
+    },
+
     SET_CURRENTBOOK_META (state, meta) {
       // console.log('SET_CURRENTBOOK_META', state.currentBookMeta, meta);
       // state.currentBookid = meta._id
@@ -1518,7 +1522,7 @@ export const store = new Vuex.Store({
 
           dispatch('getTaskTypes')
             .then(() => {
-              dispatch('tc_loadBookTask');
+              dispatch('tc_loadBookTask', 'all');
             });
           dispatch('getConfig', 'custom')
             .then(config => {
@@ -2638,7 +2642,8 @@ export const store = new Vuex.Store({
         return state.loadBookTaskWait;
       }
       let address = state.API_URL + 'tasks';
-      if (bookid) {
+      bookid = bookid || state.currentBookid || null;
+      if (bookid && bookid !== 'all') {
         address+='?bookid=' + bookid
       }
       state.loadBookTaskWait = axios.get(address)
@@ -3860,6 +3865,7 @@ export const store = new Vuex.Store({
                 dispatch('startProcessQueueWatch');
               } else {
                 dispatch('stopProcessQueueWatch');
+                dispatch('tc_loadBookTask');
               }
               //console.log(state.lockedBlocks)
             }
