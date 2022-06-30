@@ -3,7 +3,7 @@
     ref="books_grid"
     :data="booksMeta"
     :columns="headers"
-    :rowsPerPage="100"
+    :rowsPerPage="10"
     @clickRow="rowClick"
     :selected="selectedBooks"
     :idField="idField"
@@ -26,7 +26,8 @@ export default {
   data () {
     return {
       idField: 'bookid',
-      selectedBooks: []
+      selectedBooks: [],
+      filterScrollTimer: null
     }
   },
 
@@ -190,9 +191,29 @@ export default {
     },
     bookFilters: {
       deep: true,
-      handler(val) {
-        if (this.$refs.books_grid) {
-          this.$refs.books_grid.currentPage = 0;
+      handler(newVal, oldVal) {
+        console.log(`bookFilters: `, );
+        if (this.$route.params.hasOwnProperty('bookid')) {
+          const bookid = this.$route.params.bookid;
+          const found = this.books.find((book)=>{
+            return book.bookid === bookid;
+          })
+          if (found) {
+            clearTimeout(this.filterScrollTimer);
+            this.filterScrollTimer = setTimeout(()=>{
+              this.goToBookPage(found.bookid);
+              this.scrollToRow(found.bookid);
+            }, 10)
+          } else {
+            if (this.$refs.books_grid) {
+              this.$refs.books_grid.currentPage = 0;
+              this.$router.replace({ path: '/books' });
+            }
+          }
+        } else {
+          if (this.$refs.books_grid) {
+            this.$refs.books_grid.currentPage = 0;
+          }
         }
       }
     }

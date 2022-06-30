@@ -16,7 +16,7 @@
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
-      <Grid id='books_grid'
+      <Grid id='books_grid_grid'
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
           :columns="headers"
@@ -133,17 +133,20 @@
       },
       computed: {
         ...mapGetters([
-          'bookFilters',
+          'collectionsFilter',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
           'currentCollection',
           'collectionsFilter',
           'allowCollectionsEdit',
-          'adminOrLibrarian'
+          'adminOrLibrarian',
         ]),
         collectionsPage: {
           get() {
+            if (!this.bookCollections || !this.bookCollections.length) {
+              return [];
+            }
             let collections = lodash.cloneDeep(this.bookCollections);
             collections.forEach(c => {
               c.book_match = false;
@@ -182,14 +185,14 @@
                     break;
                   case 'projectTag':
                     collections = collections.filter(item => {
-                      
+
                       item.books_list = item.books_list.filter(b => {
                         if (b.hasOwnProperty('hashTags')){
 
                           let str = `${b.hashTags} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
                           return (str.indexOf(filter) > -1)
                         }
-                      }); 
+                      });
                       let book_match =  item.books_list.length > 0;
                       item.match = book_match;
                       item.book_match = book_match;
@@ -305,6 +308,24 @@
           handler(val, oldVal) {
             if(val._id && !oldVal._id) {
 
+            }
+          }
+        },
+        collectionsFilter: {
+          deep: true,
+          handler(newVal, oldVal) {
+            if (this.$route.params.hasOwnProperty('bookid')) {
+              const bookid = this.$route.params.bookid;
+              const collectionid = this.$route.params.collectionid;
+              const found = this.collectionsPage.find((collection)=>{
+                return collection.bookids.find((book)=>{
+                  return book === bookid;
+                })
+              })
+              if (found) {
+              } else {
+                this.$router.replace({ path: '/collections' });
+              }
             }
           }
         }
