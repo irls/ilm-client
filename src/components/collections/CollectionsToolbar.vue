@@ -8,13 +8,13 @@
 
         <!-- <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input> -->
         <div class="input-group">
-          <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input>
+          <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;  padding-right:30px;" placeholder="Filter by Author or Title"></input>
           <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true"  @click="filterChange('title', {target: {'value': ''}});"></i>
         </div>
 
 
         <div class="input-group">
-          <input v-model="collectionsFilter.projectTag" type="text" @keyup="filterChange('projectTag', $event)"" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input>
+          <input v-model="collectionsFilter.projectTag" type="text" @keyup="filterChange('projectTag', $event)"" class="form-control" style="width: 18em;  padding-right:30px;" placeholder="Filter by Editor or Project tag"></input>
           <i class="fa fa-times-circle-o btn-inside" aria-hidden="true"  @click="filterTag=''; $store.commit('SET_COLLECTIONS_FILTER', {projectTag: ''})"></i>
         </div>
 
