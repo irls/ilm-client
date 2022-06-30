@@ -124,12 +124,12 @@ import UserEditModal from './users/UserEditModal'
 import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
-import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 import { alert } from 'vue-strap'
 import { mapGetters, mapActions } from 'vuex';
 
 const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
+const userActions = require('./../store/userActions')();
 
 export default {
 
@@ -184,9 +184,7 @@ export default {
 
   },
   mounted () {
-    var self = this
-
-    self.updateUsersList()
+    this.updateUsersList()
   },
 
   created () {
@@ -195,32 +193,27 @@ export default {
 
   methods: {
     updateUser(user_id, field, new_value) {
-      var self = this
-      var user = self.users.find(usr => {
-        return usr._id == user_id
-      })
+      let user = this.users.find(usr => {
+        return usr._id === user_id;
+      });
       if (user && !_.isEqual(user[field], new_value)) {
-        var request = {}
-        request[field] = new_value
-        axios.patch(API_ALLUSERS + '/' + user_id, request).then(response => {
-
-          //if (response.data.ok === true) {
-          if (response.status === 200) {
-            user[field] = new_value
-          }
-        })
+        let update = {};
+        update[field] = new_value;
+        return userActions.update(user_id, update)
+          .then(response => {
+            user[field] = new_value;
+          });
       }
     },
 
     updateUsersList() {
-      var self = this
-      axios.get(API_ALLUSERS)
-      .then(response => {
-        self.users = response.data
-      })
-      .catch(err => {
-        console.log('Error: ', err);
-      })
+      return userActions.getAll()
+        .then(response => {
+          this.users = response;
+        })
+        .catch(err => {
+          console.log('Error: ', err);
+        });
     },
 
     addUserModalClose(result) {
@@ -233,7 +226,7 @@ export default {
     userEditModal(user) {
       this.currentUser = Object.assign({}, user)
       this.userEditModalActive = true
-      console.log(this.currentUser, user);
+      //console.log(this.currentUser, user);
     },
 
     userEditModalClose(result) {
@@ -260,17 +253,18 @@ export default {
     },
 
     resetPassword(email) {
-      //console.log({'email': email}, arguments)
-      var self = this
-      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
-        if (response.data.ok === true) {
-          self.passwordChanged = true
-          setTimeout(function(){self.passwordChanged = false}, 5000)
-        } else {
-        }
-      })
-      .catch(function(e){
-      })
+      return userActions.user_passwordreset(email)
+        .then((response) => {
+          if (response.ok === true) {
+            this.passwordChanged = true;
+            setTimeout(() => {
+              this.passwordChanged = false
+            }, 5000);
+          } else {
+          }
+        })
+        .catch(function(e){
+        })
     },
     loginAs(user_id) {
       //console.log(user_id)

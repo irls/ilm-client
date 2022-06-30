@@ -6,41 +6,43 @@
       <!-- Login Form -->
       <div class="form-login" :class="{ 'active': active == 'login' }" id="form-login">
         <h3 class='title'>Login</h3>
-        <div class="error-message" v-text="loginError"></div>
         <input type="text" name="user" placeholder="Email or Username" v-model="loginUser">
         <input type="password" name="password" placeholder="Password" v-model="loginPassword"
           @keyup="keycheck"
         >
+        <div class="error-message" v-text="loginError"></div>
         <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="user_login" value="Login" />
-        <div class="links"> <a @click="active = 'password'">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
+        <div class="links"> <a @click="setActive('password')">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
       </div>
 
       <!-- Password Reset Request -->
       <div class="form-password" :class="{ 'active': active == 'password' }">
-        <h3 class='title'>Request Forgot Password Link</h3>
+        <h3 class='title'>Reset password</h3>
         <div class="error-message" v-text="passwordError"></div>
-        <input type="text" name="email" placeholder="Email" v-model="passwordEmail">
-        <input type="submit" :class="{'disabled': !passwordEmail || hasPasswordResetSuccess}" :disabled="hasPasswordResetSuccess" @click="user_passwordreset(passwordEmail)" value='Send Login Link'>
-        <div class="links"><a @click="active = 'login'"> <i class="fa fa-arrow-left"></i> Back to Login</a></div>
+        <input type="text" name="email" placeholder="Email" v-model="passwordEmail" v-on:input="clearPasswordMessage()">
+        <div class="error-message" v-text="passwordResetError"></div>
+        <div class="success-message" v-text="passwordResetSuccess"></div>
+        <input type="submit" 
+               :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}" 
+               :disabled="passwordResetSuccess.length > 0" 
+          @click="user_passwordreset(passwordEmail)" 
+          value='Send Login Link'>
+        <div class="links">
+          <a @click="setActive('login')"> 
+            <i class="fa fa-arrow-left"></i> Back to Login
+          </a>
+        </div>
       </div>
     </div>
   </div>
-  <alert v-show="hasPasswordResetError" placement="top" :duration="0" type="danger" width="400px">
-    <span class="icon-info-circled alert-icon-float-left"></span>
-    <p>{{passwordResetError}}</p>
-  </alert>
-  <alert v-show="hasPasswordResetSuccess" placement="top" :duration="0" type="success" width="400px">
-    <span class="icon-info-circled alert-icon-float-left"></span>
-    <p>{{passwordResetSuccess}}</p>
-  </alert>
 </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
-import superlogin from 'superlogin-client'
-import axios from 'axios'
-import { alert } from 'vue-strap'
+import { mapActions } from 'vuex';
+import superlogin from 'superlogin-client';
+import axios from 'axios';
+const loginLogout = require('../store/userActions')();
 
 export default {
 
@@ -56,136 +58,76 @@ export default {
       // Modal error messages
       loginError: '',
       passwordError: '',
-      hasPasswordResetError: false,
-      hasPasswordResetSuccess: false,
       passwordResetError: '',
       passwordResetSuccess: '',
-      sessionInterval: null
+      //loginLogout: new userActions()
     }
   },
 
   components: {
-    alert
+    
   },
 
   created () {
-    superlogin.configure({
-      serverUrl: process.env.ILM_API,
-      endpoints: [process.env.ILM_DB],
-      providers: [],
-      checkExpired: true
-    })
-
-    superlogin.removeAllListeners('login');
-    // login event
-    superlogin.once('login', (session) => {
-      if (session && session.expires) {
-        if (this.sessionInterval) {
-          clearInterval(this.sessionInterval);
-        }
-        let interval = (session.expires - Date.now()) / 2;
-        if ((session.expires - Date.now()) / 2 < 0 || interval < 30000) {
-          superlogin.refresh();
-        }
-        if (interval < 30000) {
-          interval = 30000;
-        }
-        if (interval > 1000 * 60 * 60 * 3) {// 3 hours
-          interval = 1000 * 60 * 60 * 3;
-        }
-        this.sessionInterval = setInterval(() => {
-          //console.log(session.token, session.password)
-          //console.log(this.$store.state.auth.getSession())
-          superlogin.refresh()
-            .then(() => {})
-            .catch(err => {
-              superlogin.logout()
-                .then(() => {
-                  location.href = '/';
-                })
-                .catch(() => {
-                  location.href = '/';
-                });
-            });
-        }, interval);
-        //console.log('SET INTERVAL TO', interval)
-      }
-      if (session.token) {
-        //console.log(session.token, session.password, session)
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
-        this.connectDB(session);
-      }
-    });
-
-    // logout event
-    superlogin.on('logout', (message) => {
-      //console.log('logout?');
-      if (this.sessionInterval) {
-        clearInterval(this.sessionInterval);
-      }
-      this.disconnectDB();
-      location.href = '/';
-    })
   },
 
   methods: {
     ...mapActions([
-      'destroyDB', 'connectDB', 'disconnectDB'
+      
     ]),
 
     user_login () {
       if (!(this.loginUser && this.loginPassword)) {
-        this.loginError = 'Both Password and Username are required'
-        return
+        this.loginError = 'Define both password and email or username';
+        return;
       }
 
-      console.log('user_login');
-
-      this.destroyDB()
-      .then(()=>{
-        console.log('do login');
-        superlogin.login({
-          username: this.loginUser,
-          password: this.loginPassword
-        }).catch(error => {
-          this.loginError = error.message
+      loginLogout.user_login(this.loginUser, this.loginPassword)
+        .then(()=>{
+          return Promise.resolve();
         })
-      })
+        .catch(error => {
+          this.loginError = error.message
+        });
 
     },
     user_passwordreset (email) {
-      var self = this
-      if (email.length == 0){
-        self.hasPasswordResetError = true
-        self.passwordResetError = 'Please enter email to send you a password reset link'
-        setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+      this.passwordResetError = '';
+      if (email.length === 0){
+        this.passwordResetError = 'Define email';
       } else {
         if (!/\S+@\S+\.\S+/.test(email)) {
-          self.hasPasswordResetError = true
-          self.passwordResetError = 'Incorrect email format'
-          setTimeout(function(){self.hasPasswordResetError = false}, 5000)
+          this.passwordResetError = 'Incorrect email format';
         } else {
-          axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
-            console.log(response)
-            if (response.data.ok === true) {
-              //self.active = 'login'
-              self.hasPasswordResetSuccess = true
-              self.passwordResetSuccess = 'Link to reset password has been sent to your email'
-              setTimeout(function(){self.hasPasswordResetSuccess = false}, 5000)
-            } else {
-            }
-          })
-          .catch(function(e){
-            self.hasPasswordResetError = true
-            //self.passwordResetError = e.response.data.message
-            self.passwordResetError = 'ILM account for this email is not found'
-            setTimeout(function(){self.hasPasswordResetError = false}, 5000)
-          })
+          return loginLogout.user_passwordreset(email)
+            .then((response) => {
+              if (response.ok === true) {
+                this.passwordResetSuccess = 'New password was sent to your email';
+              } else {
+              }
+            })
+            .catch((e) => {
+              this.passwordResetError = 'ILM account for this email is not found';
+            });
         }
       }
     },
     keycheck (event) {
       if (event.key === 'Enter') this.user_login()
+    },
+    
+    clearPasswordMessage() {
+      this.passwordResetError = '';
+      this.passwordResetSuccess = '';
+    },
+    
+    setActive(value) {
+      this.active = value;
+      this.loginError = '';
+      this.passwordError = '';
+      this.passwordResetError = '';
+      this.passwordResetSuccess = '';
+      this.passwordEmail = '';
     }
 
   }
@@ -278,7 +220,7 @@ export default {
 .user-modal-container input {
   width: 100%;
   padding: 10px;
-  margin-bottom: 10px;
+  margin: 10px 0px 0px 0px;
   border: 1px solid #eeeeee;
 }
 
@@ -315,9 +257,16 @@ a.switchlink {cursor: pointer;}
 a.switchlink.active {cursor: default;}
 a.switchlink.active:hover {text-decoration: none;}
 
-.error-message {color: red; margin: .5em;
+.error-message {
+  color: red;
+  margin: .5em;
   border-radius: 5px;
-  text-shadow: -1px -1px 10px rgba(255, 255, 0, 1);
+  /*text-shadow: -1px -1px 10px rgba(255, 255, 0, 1);*/
+}
+.success-message {
+  color: green;
+  margin: .5em;
+  border-radius: 5px;
 }
 
 .title {margin-bottom: 1em; margin-top:.75em;}
