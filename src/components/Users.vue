@@ -42,12 +42,15 @@
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>Password reset.</p>
     </alert>
-    <div class="users-form-wrapper">
+    <div :class="['users-form-wrapper', {'-wide': isAdmin}]">
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
         <div class="t-box" v-show="$store.state.isAdmin"><span v-on:click="userEditModal(user)"><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box" v-show="!$store.state.isAdmin"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
+        <div class="t-box" v-if="isAdmin">
+          <template v-if="allowLoginAs(user)"><span class="btn btn-primary" v-on:click="loginAs(user.email)">Login as</span></template>
+        </div>
         <div class="t-box">
           <select-roles
             :selected="[...user.roles]"
@@ -124,6 +127,7 @@ import { filteredData, pagedData } from '../filters'
 import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 import { alert } from 'vue-strap'
+import { mapGetters, mapActions } from 'vuex';
 
 const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
 
@@ -175,6 +179,8 @@ export default {
         return filteredData(this.users, this.filterKey, this.filter)
       }
     },
+    
+    ...mapGetters(['adminOrLibrarian', 'isAdmin', 'user'])
 
   },
   mounted () {
@@ -265,7 +271,29 @@ export default {
       })
       .catch(function(e){
       })
-    }
+    },
+    loginAs(user_id) {
+      //console.log(user_id)
+      return this.loginAdminAs([user_id])
+        .then(session => {
+          if (session.token) {
+            //console.log(session.token, session.password, session)
+            session.serverTimeDiff = session.issued - Date.now();
+            superlogin.setSession(session);
+            superlogin._onLogin(session);
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
+            this.connectDB(session);
+            window.location.href = '/books';
+          }
+        });
+    },
+    allowLoginAs(user) {
+      if (!this.isAdmin) {
+        return false;
+      }
+      return user.enable && user._id !== this.user._id;
+    },
+    ...mapActions(['loginAdminAs', 'connectDB'])
   },
 
   watch: {
@@ -286,6 +314,11 @@ export default {
     margin-top: 2px;
     .row {
       margin: 0;
+    }
+    &.-wide {
+      .t-box {
+        min-width: 12%;
+      }
     }
   }
 
@@ -404,5 +437,6 @@ export default {
         width: 150px
         .btn-content
           margin: 2px 0
+  
 
 </style>

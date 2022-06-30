@@ -4760,6 +4760,17 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
+    loginAdminAs({state}, [user_id]) {
+      return axios.post(`${process.env.ILM_API}/auth/login_admin_as`, {
+        user_id: user_id
+      })
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
     
     findNextAudioblock({state}, [blockid]) {
       let crossId = state.storeListO.getOutId(blockid);
