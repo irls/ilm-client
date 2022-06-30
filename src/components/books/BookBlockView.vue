@@ -1,7 +1,13 @@
 <template>
   <div ref="viewBlock" :id="block.blockid"
     :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework]">
-    <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
+    <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
+      <LockedBlockActions
+        :block="block"
+        :lockedType="lockedType"
+        :blockPartIdx="null"
+        />
+    </div>
     <div :class="['table-cell', 'controls-left', {'_-check-green': blockO.checked==true}]">
 
         <!-- <div class="table-row" v-if="meta.numbering !== 'none'">
@@ -625,6 +631,7 @@ import toc_methods        from '../../mixins/toc_methods.js'
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
+import LockedBlockActions from './block/LockedBlockActions';
 //import { tabs, tab } from 'vue-strap';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
@@ -721,7 +728,8 @@ export default {
       //'highlightjs': highlightjs
       //'highlightjs': hljs
       //'VueHighlightJS': VueHighlightJS
-      'codemirror': codemirror
+      'codemirror': codemirror,
+      LockedBlockActions
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access, toc_methods],
