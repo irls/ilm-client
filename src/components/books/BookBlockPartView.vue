@@ -426,7 +426,7 @@ export default {
       //'modal': modal,
       'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -1049,6 +1049,11 @@ export default {
     $(`#content-${this.block.blockid}-part-${this.blockPartIdx}`).off('click', '[data-flag]', this.handleFlagClick);
     if (this.isRecording) {
       this.cancelRecording();
+    }
+    if (!this.meta || !this.meta.bookid || !this.mode || (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].includes(this.$route.name))) {// going out from book or to Display mode
+      if (this.isAudStarted) {
+        this.audStop();
+      }
     }
   },
   destroyed: function () {
@@ -2636,33 +2641,54 @@ export default {
             on_start: ()=>{
                 this.isAudStarted = true;
                 this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
+                this.$root.$emit('playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
                 this.$root.$emit('playBlockFootnote', false);
+                //this.player.audio_element.volume = 0;
+                this.$root.$on('playBlock', this.onAudPlay);
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
+                this.$root.$emit('playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
             },
             on_complete: ()=>{
+                this.$root.$off('playBlock', this.onAudPlay);
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
+            },
+            on_newline: () => {
+              let element = document.getElementById(this.block.blockid);
+              if (element) {
+                let highlighted = element.querySelector('w.audio-highlight');
+                let isVisible = this.checkFullyVisible(highlighted);
+                if (!isVisible) {
+                  let previousId = this.storeListO.getInId(this.block.blockid);
+                  if (previousId) {
+                    let previousBlock = document.getElementById(previousId);
+                    if (previousBlock) {
+                      let lastW = previousBlock.querySelector('w:last-child');
+                      if (lastW && this.checkVisible(lastW)) {
+                        element.scrollIntoView({behavior: 'smooth'});
+                      }
+                    }
+                  }
+                }
+              }
             }
         });
-        var self = this;
-        this.$root.$on('playBlock', function(blockid) {
-          if (blockid !== self.block._id) {
-            if (self.player) {
-              self.audStop();
-            }
+      },
+      onAudPlay(blockid) {
+        if (blockid !== `${this.block.blockid}-${this.blockPartIdx}`) {
+          if (this.player && (this.isAudStarted || this.isAudPaused)) {
+            this.audStop();
           }
-        });
+        }
       },
       reRecord() {
         this._markSelection();
@@ -3100,22 +3126,28 @@ export default {
           });
         }
       },
-      _handleSpacePress(e) {
+      handleAudioControl(e) {
         if (e) {
-          if (e.charCode == 32 && this.isRecording) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
             if (!this.isRecordingPaused) {
               this.pauseRecording();
             } else {
               this.resumeRecording();
             }
           }
-          if (e.charCode == 32 && this.isAudStarted) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isAudStarted) {
             if (!this.isAudPaused) {
               this.audPause();
             } else {
               this.audResume();
             }
+            e.preventDefault();
           }
+          if ((e.keyCode == 27 || (e.code && e.code.toLowerCase() === 'escape')) && this.isAudStarted) {
+            this.audStop(this.block.blockid, e);
+            e.preventDefault();
+          }
+          //console.log(e);
         }
       },
       _saveContent() {
@@ -4028,17 +4060,16 @@ Join subblocks?`,
           if (this.isRecording) {
             this.cancelRecording();
           }
+          if (this.isAudStarted) {
+            this.audStop();
+          }
         }
       },
       'isAudStarted': {
         handler(val) {
-          if (this.mode === 'narrate') {
-            if (val === true) {
-              $('body').off('keypress', this._handleSpacePress);
-              $('body').on('keypress', this._handleSpacePress);
-            } else {
-              $('body').off('keypress', this._handleSpacePress);
-            }
+          document.body.removeEventListener('keydown', this.handleAudioControl);
+          if (val === true) {
+            document.body.addEventListener('keydown', this.handleAudioControl);
           }
         }
       },

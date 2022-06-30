@@ -4759,6 +4759,30 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    findNextAudioblock({state}, [blockid]) {
+      let crossId = state.storeListO.getOutId(blockid);
+      if (crossId) {
+        for (let idx = 0; idx < state.storeList.size; idx++) {
+          let block = state.storeList.get(crossId);
+          if (block) {
+            let hasPart = block.voicework === 'narration' && block.parts.length > 0 ? block.parts.find(p => {
+              return p.audiosrc;
+            }) : false;
+            if ((block.audiosrc || hasPart) && !block.disabled) {
+              return Promise.resolve(block);
+            }
+            crossId = state.storeListO.getOutId(block.blockid);
+            if (!crossId) {
+              break;
+            }
+          } else {
+            break;
+          }
+        }
+      }
+      return Promise.resolve(null);
     }
   }
 })

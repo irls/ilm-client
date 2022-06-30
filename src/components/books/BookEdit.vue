@@ -13,6 +13,7 @@
         :hotkeyScrollTo="hotkeyScrollTo"
         :currentJobInfo="viewCurrentJobInfo"
         @onScroll="smoothHandleScroll"
+        ref="viewBlocks"
       ></SvelteBookPreviewInVue>
 
       <!--
@@ -78,6 +79,9 @@
                 :joinBlocks="joinBlocks"
                 @setRangeSelection="setRangeSelection"
                 @blockUpdated="blockUpdated"
+                :playNextBlock="playNextBlock"
+                :checkVisible="checkVisible"
+                :checkFullyVisible="checkFullyVisible"
             /></BookBlockView>
           </div>
           <!--<div class='col'>-->
@@ -279,7 +283,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections', 'findNextAudioblock']),
 
     test(ev) {
         console.log('test', ev);
@@ -2164,6 +2168,78 @@ export default {
           this.$store.dispatch('loadBookTocSections', []);
           return this.getProcessQueue();
         })
+      },
+      
+      playNextBlock(blockid) {
+        this.findNextAudioblock([blockid])
+          .then(block => {
+            //console.log(block);
+            if (block) {
+              let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
+              if (elementBack && elementBack) {
+                let elementFront = this.$refs.blocks.find(blk => {
+                  return blk.block && blk.block.blockid === block.blockid;
+                });
+                let elementIndex = 0;
+                if (block.voicework === 'narration' && block.parts.length > 0) {
+                  let part = block.parts.find(p => {
+                    return p.audiosrc;
+                  });
+                  if (part) {
+                    elementIndex = block.parts.indexOf(part);
+                  }
+                }
+                if (elementFront) {
+                  let subRef = elementFront.getSubblockRef(elementIndex, false);
+                  if (subRef && subRef.$el) {//#
+                    let lastW = subRef.$el.querySelector('w:first-child');
+                    let visible = lastW && this.checkFullyVisible(lastW);
+                    if (!visible) {
+                      //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
+                      elementBack.scrollIntoView();
+                    }
+                    setTimeout(() => {
+                      subRef.audPlay();
+                    }, block.pause_before * 1000);
+                  }
+                } else {
+                  elementBack.scrollIntoView();
+                  setTimeout(() => {
+                    let checks = 0;
+                    let checkBlockLoaded = setInterval(() => {
+                      let ref = this.$refs.blocks.find(blk => {
+                        return blk.block && blk.block.blockid === block.blockid;
+                      });
+                      ++checks;
+                      try {
+                        if (ref && ref.$el) {
+                          let subRef = ref.getSubblockRef(elementIndex);
+                          if (subRef) {
+                            subRef.audPlay();
+                            clearInterval(checkBlockLoaded);
+                          }
+                        }
+                        if (checks > 10) {
+                          clearInterval(checkBlockLoaded);
+                        }
+                      } catch(e) {
+                        console.log('ERROR', e);
+                        if (checks > 10) {
+                          clearInterval(checkBlockLoaded);
+                        }
+                      }
+                    }, 100);
+                  }, block.pause_before * 1000);
+                }
+              }
+            }
+          });
+      },
+      
+      checkFullyVisible(el) {
+        let rect = el.getBoundingClientRect();
+        let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+        return rect.bottom < viewHeight;
       }
   },
   events: {
