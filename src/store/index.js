@@ -3632,11 +3632,34 @@ export const store = new Vuex.Store({
         });
     },
     blocksJoin({state, commit, dispatch}, data) {
+      let rangeOutId = state.storeListO.getOutId(data.donorBlock_id);
+      let rangeInId = state.storeListO.getInId(data.donorBlock_id);
       return axios.post(state.API_URL + 'book/block_join/', {
           resultBlock_id: data.resultBlock_id,
           donorBlock_id: data.donorBlock_id
         })
         .then(response => {
+          if (state.blockSelection.start && data.donorBlock_id === state.blockSelection.start._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              if (rangeOutId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  start: {_id: rangeOutId}
+                }));
+              }
+            }
+          } else if (state.blockSelection.end && data.donorBlock_id === state.blockSelection.end._id) {
+            if (state.blockSelection.start._id === state.blockSelection.end._id) {
+              commit('set_block_selection', {start: {}, end: {}});
+            } else {
+              if (rangeInId) {
+                commit('set_block_selection', Object.assign(state.blockSelection, {
+                  end: {_id: rangeInId}
+                }));
+              }
+            }
+          }
           return dispatch('getBookAlign')
             .then(() => {
               return dispatch('checkResponse', response);
