@@ -9,13 +9,13 @@
         <!-- <input type="text" @keyup="filterChange('title', $event)" class="form-control" placeholder="Search by author or title" v-model="collectionsFilter['title']"></input> -->
         <div class="input-group">
           <input v-model="collectionsFilter.title" type="text" @keyup="filterChange('title', $event)" class="form-control" style="width: 15em;  padding-right:30px;" placeholder="Filter by Author or Title"></input>
-          <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true"  @click="filterChange('title', {target: {'value': ''}});"></i>
+          <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true"  @click="collectionsFilter.title='';"></i>
         </div>
 
 
         <div class="input-group">
           <input v-model="collectionsFilter.projectTag" type="text" @keyup="filterChange('projectTag', $event)"" class="form-control" style="width: 18em;  padding-right:30px;" placeholder="Filter by Editor or Project tag"></input>
-          <i class="fa fa-times-circle-o btn-inside" aria-hidden="true"  @click="filterTag=''; $store.commit('SET_COLLECTIONS_FILTER', {projectTag: ''})"></i>
+          <i class="fa fa-times-circle-o btn-inside" aria-hidden="true"  @click="collectionsFilter.projectTag='';"></i>
         </div>
 
 
@@ -85,15 +85,15 @@
 
       },
       filterChange(field, event) {
-        if (this.$route.params.hasOwnProperty('collectionid')) {
-          this.$router.replace({ path: '/collections'});
-        }
-        let filter = {};
-        filter[field] = event.target.value;
-        this.$store.commit('SET_COLLECTIONS_FILTER', filter);
+        //if (this.$route.params.hasOwnProperty('collectionid')) {
+        //  this.$router.replace({ path: '/collections'});
+        //}
+        //let filter = {};
+        //filter[field] = event.target.value;
+        //this.$store.commit('SET_COLLECTIONS_FILTER', filter);
       },
       filterTagChange (el) {
-        this.$store.commit('SET_COLLECTIONS_FILTER', {projectTag: el.target.value})
+        //this.$store.commit('SET_COLLECTIONS_FILTER', {projectTag: el.target.value})
       },
 
       addCollection() {
