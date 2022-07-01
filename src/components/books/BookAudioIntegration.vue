@@ -909,15 +909,7 @@
           })
       },
       cancelAlign(force = false) {
-        let api_url = this.API_URL + 'align_queue/' + this.currentBookid;
-
-        let api = this.$store.state.auth.getHttp()
-
-        api.delete(api_url, {}, {}).then((response) => {
-          this.getBookAlign();
-        }).catch((err) => {
-          this.getBookAlign();
-        });
+        return this.cancelAlignment([this.currentBookid]);
       },
       alignTts(warn = 2) {
         if (warn >= 2 && this.currentBookCounters.approved_tts_in_range > 0) {
@@ -1295,7 +1287,7 @@
         return _.upperFirst(text);
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');

@@ -27,6 +27,7 @@ export default {
     return {
       idField: 'bookid',
       selectedBooks: [],
+      openBookClickCounter: 0,
       filterScrollTimer: null
     }
   },
@@ -50,7 +51,7 @@ export default {
           return (str.indexOf(find) > -1)
         })
         .filter(book => {
-          let str = `${book.hashTags} ${book.executors.editor.name} ${book.executors.editor.title}`.toLowerCase()
+          let str = `${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`.toLowerCase()
           let find = this.bookFilters.projectTag.toLowerCase().trim()
           return (str.indexOf(find) > -1)
         })
@@ -224,8 +225,25 @@ export default {
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
       let bookid = ev.bookid
+      console.log('ev.bookid', ev.bookid);
       if (bookid) {
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+
+        this.openBookClickCounter++;
+
+        if(this.openBookClickCounter == 1) {
+          this.timer = setTimeout(() => {
+            this.openBookClickCounter = 0;
+            this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+          }, 300);
+
+          return;
+        }
+        clearTimeout(this.timer);
+        this.openBookClickCounter = 0;
+	    //this.bookFilters.filter = '';
+	    //this.bookFilters.projectTag = '';
+        this.$router.push('/books/' + bookid + '/display')
+
       }
     },
     goToBookPage (bookId) {

@@ -53,7 +53,8 @@
       data() {
         return {
           idField: '_id',
-          selectedBooks: []
+          selectedBooks: [],
+          openBookClickCounter: 0
         }
       },
       methods: {
@@ -67,8 +68,28 @@
           }
         },
         selectBook(book) {
-          this.selectedBooks = [book.bookid];
-          this.$emit('selectBook', book.bookid, book.collection_id);
+          let bookid = book.bookid;
+          if (bookid) {
+
+            this.openBookClickCounter++;
+
+
+            if(this.openBookClickCounter == 1) {
+              this.timer = setTimeout(() => {
+                this.openBookClickCounter = 0;
+                this.selectedBooks = [book.bookid];
+                this.$emit('selectBook', book.bookid, book.collection_id);
+              }, 300);
+
+              return;
+            }
+            clearTimeout(this.timer);
+            //this.bookFilters.filter = '';
+            //this.bookFilters.projectTag = '';
+            this.openBookClickCounter = 0;
+            this.$router.push('/books/' + book.bookid + '/display')
+          }
+
         },
         scrollToRow(bookId) {
           let t = setTimeout(function() {
@@ -198,7 +219,7 @@
                       item.books_list = item.books_list.filter(b => {
                         if (b.hasOwnProperty('hashTags')){
 
-                          let str = `${b.hashTags} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
+                          let str = `${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
                           return (str.indexOf(filter) > -1)
                         }
                       });

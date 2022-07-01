@@ -1,6 +1,6 @@
 <template>
 
-  <modal id="userAddModal" effect="fade" @closed="closed" name="add-user-modal" :clickToClose="false" :resizeable="false" height="auto" width="400" >
+  <modal id="userAddModal" effect="fade" @closed="closed" name="add-user-modal" :clickToClose="false" :resizeable="false" height="auto" width="400" shiftY="0" top="0" >
     <section class="modal-js-dialog">
     <div class="modal-header">
       <button type="button" class="close" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
@@ -9,34 +9,37 @@
     <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
-          <input type="text" class="form-control" placeholder="Username" v-model="username">
+          <input type="text" :class="['form-control', {'-has-error': errors.username}]" placeholder="Username" v-model="username">
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
           <input type="text" class="form-control" placeholder="Real Name" v-model="name">
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-          <input type="text" class="form-control" placeholder="Email" name="email" v-model="email">
+          <input type="text" :class="['form-control', {'-has-error': errors.email}]" placeholder="Email" name="email" v-model="email">
           <div v-if="errors.email" v-for="err in errors.email" class="error-message" v-text="err"></div>
       </div>
-      <div class="form-group"><span class="input-group-addon"></span>
+      <!-- <div class="form-group"><span class="input-group-addon"></span>
           <input type="password" class="form-control" placeholder="Password" v-model="password">
           <div v-if="errors.password" v-for="err in errors.password" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
           <input type="password" class="form-control" placeholder="Confirm Password" v-model="confirmPassword">
           <div v-if="errors.confirmPassword" v-for="err in errors.confirmPassword" class="error-message" v-text="err"></div>
-      </div>
+      </div> -->
       <div class="form-group"><span class="input-group-addon"></span>
         <select-roles
           :selected="roles"
           @select="val => { roles = val }"
+          :inModal="true"
         ></select-roles>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-globe"></i></span>
         <select-languages
+          ref="languagesSelector"
           :selected="languages"
           @select="val => { languages = val }"
+          :inModal="true"
         ></select-languages>
       </div>
     </div>
@@ -57,6 +60,7 @@ Vue.use(v_modal, { dialog: true });
 import SelectRoles from './../generic/SelectRoles'
 import SelectLanguages from './../generic/SelectLanguages'
 import modalMixin from './../../mixins/modal'
+const createEditUser = require('../../store/userActions')();
 
 export default {
 
@@ -79,15 +83,17 @@ export default {
       name: "",
       username: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       roles: [],
       languages: [],
       selecteRoles: [],
       selecteLanguages: [],
       errors: {},
-      error: ''
+      error: '',
     }
+  },
+  
+  mounted() {
+    
   },
 
   watch: {
@@ -96,8 +102,6 @@ export default {
         this.name = ""
         this.username = ""
         this.email = ""
-        this.password = ""
-        this.confirmPassword = ""
         this.roles = []
         this.languages = []
         this.errors = {}
@@ -109,34 +113,24 @@ export default {
 
   methods: {
     ok () {
-      var self = this
-      self.errors = {}
-      self.error = ''
-      let auth = this.$store.state.auth;
-      let confirmed = auth.confirmRole('admin');
-      let api = auth.getHttp();
+      this.errors = {};
+      this.error = '';
       let newUser = {
         name: this.name,
         username: this.username,
         email: this.email,
-        password: this.password,
-        confirmPassword: this.confirmPassword,
         roles: this.roles,
         languages: this.languages,
       };
-      api.post('/api/v1/users', newUser)
-        .then(function(response){
-          if (response.status == 200) {
-            self.$emit('closed', true)
-          } else {
-            self.errors = response.validationErrors
-          }
+      return createEditUser.create(newUser)
+        .then((response) => {
+          this.$emit('closed', true);
         })
-        .catch(function(error){
-          if (error.response && error.response.data) {
-            self.errors = error.response.data.validationErrors
+        .catch((error) => {
+          if (error instanceof Object) {
+            this.errors = error;
           } else {
-            self.error = 'Failed'
+            this.error = error;
           }
         });
     },
@@ -218,12 +212,18 @@ export default {
             margin: 2px 0
     .modal-footer
       width: 370px
+  .v--modal
+    top: 0px !important;
 
 .error-message {
   color: red; margin: .5em;
   border-radius: 5px;
-  text-shadow: -1px -1px 10px rgba(255, 255, 0, 1);
   margin-left: 12%;
+}
+input {
+  &.-has-error {
+    border: 1px solid red;
+  }
 }
 
 </style>

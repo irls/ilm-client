@@ -465,6 +465,9 @@
   
   .couplet {
     white-space: pre-wrap;
+    padding-left: 3ex !important;
+    padding-right: 3ex !important;
+    /*border: 1px solid transparent;*/ 
   }
   
   .content-wrap {
@@ -1366,5 +1369,30 @@ language specific styles, ILM-4019
   }
   .quran, [data-author="quran"] {
     color: @author4_color;
+  }
+}
+
+.-block.-disabled-block, .content-scroll-item.back.-disabled-block {
+  hr {
+    color: #bebebe;
+    filter: opacity(0.5);
+  }
+  .content-wrap, .ilm-block .content-wrap, .ilm-block .header.h2, .content-wrap-preview, .content-wrap-footn {
+    /*color: #bebebe;*/
+    background: inherit;
+    filter: opacity(0.6);
+    -webkit-filter: opacity(0.6);
+  }
+  .illustration-block {
+    img {
+      filter: opacity(0.6);
+      -webkit-filter: opacity(0.6);
+    }
+  }
+  .content-wrap-desc {
+    /*color: #bebebe;*/
+    background: inherit;
+    filter: opacity(0.6);
+    -webkit-filter: opacity(0.6);
   }
 }

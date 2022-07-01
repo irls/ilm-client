@@ -510,7 +510,6 @@ class BookBlocks {
   }
 
   delBlock(block) {
-    //console.log('delBlock', block);
     block.rid = block.rid || block['@rid'];
     block.in = block.in || block.in[0];
     block.out = block.out || block.out[0];
@@ -550,7 +549,7 @@ class BookBlocks {
 
   delExistsBlock(rid) {
     if (this.lookupList.hasOwnProperty(rid)) {
-      console.log('delExistsBlock', this.lookupList[rid]);
+      //console.log('delExistsBlock', this.lookupList[rid]);
       let block = this.lookupList[rid];
       this.delBlock(block);
     }
