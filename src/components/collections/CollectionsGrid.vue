@@ -16,7 +16,7 @@
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
-      <Grid id='books_grid'
+      <Grid id='books_grid_grid'
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
           :columns="headers"
@@ -91,6 +91,14 @@
           }
 
         },
+        scrollToRow(bookId) {
+          let t = setTimeout(function() {
+            let el = document.querySelector(`[data-id="${bookId}"]`);
+            if (el) {
+              el.scrollIntoView();
+            }
+          }, 300);
+        },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
             return this.currentCollection._id === collection._id;
@@ -148,23 +156,27 @@
             });
             if (book) {
               this.selectBook(book);
+              this.scrollToRow(book.bookid);
             }
           }
         }
       },
       computed: {
         ...mapGetters([
-          'bookFilters',
+          'collectionsFilter',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
           'currentCollection',
           'collectionsFilter',
           'allowCollectionsEdit',
-          'adminOrLibrarian'
+          'adminOrLibrarian',
         ]),
         collectionsPage: {
           get() {
+            if (!this.bookCollections || !this.bookCollections.length) {
+              return [];
+            }
             let collections = lodash.cloneDeep(this.bookCollections);
             collections.forEach(c => {
               c.book_match = false;
@@ -326,6 +338,25 @@
           handler(val, oldVal) {
             if(val._id && !oldVal._id) {
 
+            }
+          }
+        },
+        collectionsFilter: {
+          deep: true,
+          handler(newVal, oldVal) {
+            if (this.$route.params.hasOwnProperty('bookid')) {
+              const bookid = this.$route.params.bookid;
+              const collectionid = this.$route.params.collectionid;
+              const found = this.collectionsPage.find((collection)=>{
+                return collection.bookids.find((book)=>{
+                  return book === bookid;
+                })
+              })
+              if (found) {
+                this.scrollToRow(bookid);
+              } else {
+                this.$router.replace({ path: '/collections' });
+              }
             }
           }
         }

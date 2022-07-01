@@ -109,24 +109,23 @@ export default new Router({
       component: Settings
     },
     {
-      name: 'Collections',
       path: '/collections',
       component: Books,
       props: {listing: 'collections'},
       children: [
         {
           path: '',
-          component: Collections,
-          name: 'CollectionsList',
-          props: { mode: 'edit1' }
+          name: 'Collections',
+          component: Collections
         },
         {
           path: '/collections/:collectionid',
+          name: 'Collection',
           component: Collections,
-          name: 'Collection'
         },
         {
-          path: '/collections/:collectionid/:bookid', component: Collections, name: 'CollectionBook'
+          path: '/collections/:collectionid/:bookid',
+          name: 'CollectionBook', component: Collections
         },
         {
           path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',

@@ -1,5 +1,6 @@
 <template>
   <Grid id='books_grid'
+    ref="books_grid"
     :data="booksMeta"
     :columns="headers"
     :rowsPerPage="100"
@@ -26,7 +27,8 @@ export default {
     return {
       idField: 'bookid',
       selectedBooks: [],
-      openBookClickCounter: 0
+      openBookClickCounter: 0,
+      filterScrollTimer: null
     }
   },
 
@@ -165,14 +167,56 @@ export default {
   },
 
   mounted () {
-    this.updateBooksList();
+    this.updateBooksList()
+    .then(()=>{
+      if (this.$route.params.hasOwnProperty('bookid')) {
+        this.goToBookPage(this.$route.params.bookid);
+        this.scrollToRow(this.$route.params.bookid);
+      }
+    })
+    .catch((e)=>{
+      console.error(e)
+    })
   },
 
   watch: {
     '$route' () {
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.selectedBooks = [this.$route.params.bookid]
-      } else this.selectedBooks = [];
+        this.selectedBooks = [this.$route.params.bookid];
+      } else {
+        this.selectedBooks = [];
+        if (this.$refs.books_grid) {
+          this.$refs.books_grid.currentPage = 0;
+        }
+      }
+    },
+    bookFilters: {
+      deep: true,
+      handler(newVal, oldVal) {
+        console.log(`bookFilters: `, );
+        if (this.$route.params.hasOwnProperty('bookid')) {
+          const bookid = this.$route.params.bookid;
+          const found = this.books.find((book)=>{
+            return book.bookid === bookid;
+          })
+          if (found) {
+            clearTimeout(this.filterScrollTimer);
+            this.filterScrollTimer = setTimeout(()=>{
+              this.goToBookPage(found.bookid);
+              this.scrollToRow(found.bookid);
+            }, 10)
+          } else {
+            if (this.$refs.books_grid) {
+              this.$refs.books_grid.currentPage = 0;
+              this.$router.replace({ path: '/books' });
+            }
+          }
+        } else {
+          if (this.$refs.books_grid) {
+            this.$refs.books_grid.currentPage = 0;
+          }
+        }
+      }
     }
   },
 
@@ -201,7 +245,23 @@ export default {
         this.$router.push('/books/' + bookid + '/display')
 
       }
-    }
+    },
+    goToBookPage (bookId) {
+      if (this.$refs.books_grid) {
+        //const index = this.cacheFiltered.findIndex((book)=>book.bookid === bookId);
+        const index = this.$refs.books_grid.filteredData.findIndex((book)=>book.bookid === bookId);
+        const page = Math.trunc(index / this.$refs.books_grid.rowsPerPage);
+        this.$refs.books_grid.currentPage = page;
+      }
+    },
+    scrollToRow(bookId) {
+      let t = setTimeout(function() {
+        let el = document.querySelector(`[data-id="${bookId}"]`);
+        if (el) {
+          el.scrollIntoView();
+        }
+      }, 300);
+    },
   }
 
 }
