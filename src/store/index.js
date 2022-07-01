@@ -4700,7 +4700,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-      
+
     splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
       if (!state.currentBookid) {
         return Promise.resolve();

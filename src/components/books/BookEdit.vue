@@ -512,6 +512,7 @@ export default {
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
           }
+          this.correctCurrentEditHeight(change.doc.blockid);
         }
       }
       if (this.$refs.blocks) this.$refs.blocks.forEach(($ref)=>{
@@ -1036,17 +1037,16 @@ export default {
                 donorBlock_id: block.blockid
               })
               .then((response)=>{
-                //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: blockBefore, force: true});
-                this.clearBlockLock({block: block, force: true});
                 this.getDisabledBlocks();
+
                 if (response.data.ok && response.data.blocks) {
-                  response.data.blocks.forEach((res)=>{
-                    this.refreshBlock({doc: res, deleted: res.deleted});
-                  });
-                }
-                if (response.data.blocks && response.data.blocks[2]) {
-                  this.parlistO.delBlock(response.data.blocks[2]);
+                  if (response.data.blocks.updatedBlock) {
+                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+                  }
+                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+                  }
                 }
 
                 this.putNumBlockOBatchProxy({bookId: block.bookid})
@@ -1141,17 +1141,16 @@ export default {
                 donorBlock_id: blockAfter.blockid
               })
               .then((response)=>{
-                //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: block, force: true});
-                this.clearBlockLock({block: blockAfter, force: true});
                 this.getDisabledBlocks();
+
                 if (response.data.ok && response.data.blocks) {
-                  response.data.blocks.forEach((res)=>{
-                    this.refreshBlock({doc: res, deleted: res.deleted});
-                  });
-                }
-                if (response.data.blocks && response.data.blocks[2]) {
-                  this.parlistO.delBlock(response.data.blocks[2]);
+                  if (response.data.blocks.updatedBlock) {
+                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+                  }
+                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+                  }
                 }
 
                 this.putNumBlockOBatchProxy({bookId: block.bookid})
@@ -2165,7 +2164,7 @@ export default {
           return this.getProcessQueue();
         })
       },
-      
+
       playNextBlock(blockid) {
         this.findNextAudioblock([blockid])
           .then(block => {
@@ -2231,7 +2230,7 @@ export default {
             }
           });
       },
-      
+
       checkFullyVisible(el) {
         let rect = el.getBoundingClientRect();
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
