@@ -70,6 +70,14 @@
           this.selectedBooks = [book.bookid];
           this.$emit('selectBook', book.bookid, book.collection_id);
         },
+        scrollToRow(bookId) {
+          let t = setTimeout(function() {
+            let el = document.querySelector(`[data-id="${bookId}"]`);
+            if (el) {
+              el.scrollIntoView();
+            }
+          }, 300);
+        },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
             return this.currentCollection._id === collection._id;
@@ -127,6 +135,7 @@
             });
             if (book) {
               this.selectBook(book);
+              this.scrollToRow(book.bookid);
             }
           }
         }
@@ -323,6 +332,7 @@
                 })
               })
               if (found) {
+                this.scrollToRow(bookid);
               } else {
                 this.$router.replace({ path: '/collections' });
               }

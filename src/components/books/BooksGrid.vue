@@ -3,7 +3,7 @@
     ref="books_grid"
     :data="booksMeta"
     :columns="headers"
-    :rowsPerPage="10"
+    :rowsPerPage="100"
     @clickRow="rowClick"
     :selected="selectedBooks"
     :idField="idField"
