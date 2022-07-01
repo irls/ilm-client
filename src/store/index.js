@@ -1884,7 +1884,7 @@ export const store = new Vuex.Store({
     updateBookMeta({state, dispatch, commit}, update) {
 
       update.bookid = state.currentBookMeta._id;
-
+      
       let currMeta = state.currentBookMeta;
       if (!currMeta.hasOwnProperty('publishLog')){
         currMeta.publishLog = {publishTime: false, updateTime: false}
@@ -1897,13 +1897,17 @@ export const store = new Vuex.Store({
       } else {
         if (update.major && update.major == true) updateVersion = {major: true}
       }
-
+      
       if (!(Object.keys(update).length === 2 &&
               (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined') &&
               typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
+              //console.log('Update version');          
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
           let versions = currMeta.version.split('.');
-
+          if (update.hasOwnProperty('hashTags')){
+          	versions = false;
+          }
+       
           if (versions && versions.length == 2) {
             if (updateVersion.minor) {
               versions[1] = (parseInt(versions[1]) + 1);
