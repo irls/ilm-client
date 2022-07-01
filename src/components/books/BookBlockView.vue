@@ -2323,6 +2323,7 @@ export default {
               });
             } else {
               updatedFootnotes = this.block.footnotes;
+              update.content = this.block.parts[blockPartIdx].content;
             }
           }
         }
@@ -2973,8 +2974,11 @@ Save text changes and realign the Block?`,
             el.textContent = idx+1;
             if (this.isSplittedBlock && parseInt(el.getAttribute('data-idx')) !== idx + 1) {
               this.block.parts[blk.blockPartIdx].footnote_added = true;
+              el.setAttribute('data-idx', idx+1);
+              this.block.parts[blk.blockPartIdx].content = blk.$refs.blockContent.innerHTML;
+            } else {
+              el.setAttribute('data-idx', idx+1);
             }
-            el.setAttribute('data-idx', idx+1);
             //console.log('iter end:', idx, el.getAttribute('data-idx'));
             ++idx;
           });
