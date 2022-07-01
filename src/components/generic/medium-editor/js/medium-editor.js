@@ -7160,8 +7160,14 @@ MediumEditor.extensions = {};
                     if (containerTwo.childNodes.length === 0 || !containerTwo.innerHTML || !containerTwo.innerHTML.trim()) {
                         //console.log('HERE1', containerTwo);
                         baseNode.replaceChild(partTwo, parentNode);
+                        lastNode = partOne;
                         containerOne.appendChild(partOne);
                         baseNode.insertBefore(containerOne, partTwo);
+                        for (let i = currentIndex - 1; i >=0; --i) {
+                            let currentNode = allChildNodes[i];
+                            containerOne.insertBefore(currentNode, lastNode);
+                            lastNode = currentNode;
+                        }
                     } else {
                         //console.log('HERE2', containerTwo.innerHTML)
                         baseNode.replaceChild(containerTwo, parentNode);
@@ -7172,7 +7178,7 @@ MediumEditor.extensions = {};
                     }
                     let nextSibling = partTwo.nextSibling;
                     //console.log(partTwo, nextSibling);
-                    if ((!nextSibling || nextSibling.nodeType === 3) && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling) {
+                    if ((!nextSibling || nextSibling.nodeType === 3) && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling && parentNode.nodeName !== 'U') {
                         nextSibling = partTwo.parentNode.nextSibling;
                     }
                     let moveTo;
