@@ -42,12 +42,15 @@
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>Password reset.</p>
     </alert>
-    <div class="users-form-wrapper">
+    <div :class="['users-form-wrapper', {'-wide': isAdmin}]">
     <form class="user-form">
       <div v-for="user in pagedUsers" class="user-form-box">
         <div class="t-box" v-show="$store.state.isAdmin"><span v-on:click="userEditModal(user)"><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box" v-show="!$store.state.isAdmin"><span><i class="fa fa-user"></i>{{user.name}}</span></div>
         <div class="t-box"><span>{{user.email}}</span></div>
+        <div class="t-box" v-if="isAdmin">
+          <template v-if="allowLoginAs(user)"><span class="btn btn-primary" v-on:click="loginAs(user.email)">Login as</span></template>
+        </div>
         <div class="t-box">
           <select-roles
             :selected="[...user.roles]"
@@ -121,11 +124,12 @@ import UserEditModal from './users/UserEditModal'
 import WorkHistoryModal from './users/WorkHistoryModal'
 import Pagination from './generic/Pagination'
 import { filteredData, pagedData } from '../filters'
-import PouchDB from 'pouchdb'
 import superlogin from 'superlogin-client'
 import { alert } from 'vue-strap'
+import { mapGetters, mapActions } from 'vuex';
 
 const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
+const userActions = require('./../store/userActions')();
 
 export default {
 
@@ -175,12 +179,12 @@ export default {
         return filteredData(this.users, this.filterKey, this.filter)
       }
     },
+    
+    ...mapGetters(['adminOrLibrarian', 'isAdmin', 'user'])
 
   },
   mounted () {
-    var self = this
-
-    self.updateUsersList()
+    this.updateUsersList()
   },
 
   created () {
@@ -189,32 +193,27 @@ export default {
 
   methods: {
     updateUser(user_id, field, new_value) {
-      var self = this
-      var user = self.users.find(usr => {
-        return usr._id == user_id
-      })
+      let user = this.users.find(usr => {
+        return usr._id === user_id;
+      });
       if (user && !_.isEqual(user[field], new_value)) {
-        var request = {}
-        request[field] = new_value
-        axios.patch(API_ALLUSERS + '/' + user_id, request).then(response => {
-
-          //if (response.data.ok === true) {
-          if (response.status === 200) {
-            user[field] = new_value
-          }
-        })
+        let update = {};
+        update[field] = new_value;
+        return userActions.update(user_id, update)
+          .then(response => {
+            user[field] = new_value;
+          });
       }
     },
 
     updateUsersList() {
-      var self = this
-      axios.get(API_ALLUSERS)
-      .then(response => {
-        self.users = response.data
-      })
-      .catch(err => {
-        console.log('Error: ', err);
-      })
+      return userActions.getAll()
+        .then(response => {
+          this.users = response;
+        })
+        .catch(err => {
+          console.log('Error: ', err);
+        });
     },
 
     addUserModalClose(result) {
@@ -227,7 +226,7 @@ export default {
     userEditModal(user) {
       this.currentUser = Object.assign({}, user)
       this.userEditModalActive = true
-      console.log(this.currentUser, user);
+      //console.log(this.currentUser, user);
     },
 
     userEditModalClose(result) {
@@ -254,18 +253,41 @@ export default {
     },
 
     resetPassword(email) {
-      //console.log({'email': email}, arguments)
-      var self = this
-      axios.post(process.env.ILM_API + '/api/v1/new-password', {'email': email}).then(function(response){
-        if (response.data.ok === true) {
-          self.passwordChanged = true
-          setTimeout(function(){self.passwordChanged = false}, 5000)
-        } else {
-        }
-      })
-      .catch(function(e){
-      })
-    }
+      return userActions.user_passwordreset(email)
+        .then((response) => {
+          if (response.ok === true) {
+            this.passwordChanged = true;
+            setTimeout(() => {
+              this.passwordChanged = false
+            }, 5000);
+          } else {
+          }
+        })
+        .catch(function(e){
+        })
+    },
+    loginAs(user_id) {
+      //console.log(user_id)
+      return this.loginAdminAs([user_id])
+        .then(session => {
+          if (session.token) {
+            //console.log(session.token, session.password, session)
+            session.serverTimeDiff = session.issued - Date.now();
+            superlogin.setSession(session);
+            superlogin._onLogin(session);
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + session.token + ':' + session.password;
+            this.connectDB(session);
+            window.location.href = '/books';
+          }
+        });
+    },
+    allowLoginAs(user) {
+      if (!this.isAdmin) {
+        return false;
+      }
+      return user.enable && user._id !== this.user._id;
+    },
+    ...mapActions(['loginAdminAs', 'connectDB'])
   },
 
   watch: {
@@ -286,6 +308,11 @@ export default {
     margin-top: 2px;
     .row {
       margin: 0;
+    }
+    &.-wide {
+      .t-box {
+        min-width: 12%;
+      }
     }
   }
 
@@ -404,5 +431,6 @@ export default {
         width: 150px
         .btn-content
           margin: 2px 0
+  
 
 </style>

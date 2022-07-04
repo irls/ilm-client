@@ -5,7 +5,6 @@
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title"><i class="fa fa-user"></i>Edit User</h4><i class="fa fa-user user-icon"></i></div>
-    </div>
     <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
@@ -23,12 +22,14 @@
         <select-roles
           :selected="user.roles"
           @select="val => { user.roles = val }"
+          :inModal="true"
         ></select-roles>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-globe"></i></span>
         <select-languages
           :selected="user.languages"
           @select="val => { user.languages = val }"
+          :inModal="true"
         ></select-languages>
       </div>
     </div>
@@ -46,9 +47,10 @@ import Vue from 'vue'
 import v_modal from 'vue-js-modal';
 Vue.use(v_modal, { dialog: true });
 //import { modal } from 'vue-strap'
-import SelectRoles from './../generic/SelectRoles'
-import SelectLanguages from './../generic/SelectLanguages'
-import modalMixin from './../../mixins/modal'
+import SelectRoles from './../generic/SelectRoles';
+import SelectLanguages from './../generic/SelectLanguages';
+import modalMixin from './../../mixins/modal';
+const createEditUser = require('../../store/userActions')();
 
 export default {
 
@@ -72,14 +74,12 @@ export default {
       name: "",
       username: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       roles: [],
       languages: [],
       selecteRoles: [],
       selecteLanguages: [],
       errors: {},
-      error: ''
+      error: '',
     }
   },
 
@@ -95,36 +95,18 @@ export default {
 
   methods: {
     ok () {
-      var self = this
-      self.errors = {}
-      self.error = ''
-      let auth = this.$store.state.auth;
-      let confirmed = auth.confirmRole('admin');
-      let api = auth.getHttp();
+      this.errors = {};
+      this.error = '';
 
-      /* let newUser = {
-        name: this.name,
-        username: this.username,
-        email: this.email,
-        password: this.password,
-        confirmPassword: this.confirmPassword,
-        roles: this.roles,
-        languages: this.languages,
-      };*/
-
-      api.patch('/api/v1/users/'+this.user._id, this.user)
-        .then(function(response){
-          if (response.status == 200) {
-            self.$emit('closed', true)
-          } else {
-            self.errors = response.validationErrors
-          }
+      return createEditUser.update(this.user._id, this.user)
+        .then((response) => {
+          this.$emit('closed', true)
         })
-        .catch(function(error){
-          if (error.response && error.response.data) {
-            self.errors = error.response.data.validationErrors
+        .catch((error) => {
+          if (error instanceof Object) {
+            this.errors = error;
           } else {
-            self.error = 'Failed'
+            this.error = error;
           }
         });
     },
@@ -205,11 +187,12 @@ export default {
             margin: 2px 0
     .modal-footer
       width: 370px
+  .v--modal
+    top: 0px !important;
 
 .error-message {
   color: red; margin: .5em;
   border-radius: 5px;
-  text-shadow: -1px -1px 10px rgba(255, 255, 0, 1);
   margin-left: 12%;
 }
 

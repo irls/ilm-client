@@ -13,14 +13,14 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-    <input v-model="filterAuthorTitle" type="text" @keyup="booksFilterChange" class="form-control" style="width: 15em;" placeholder="Filter by Author or Title"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterAuthorTitle=''; $store.commit('SET_CURRENTBOOK_FILTER', {filter: ''})"></i>
+  <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 15em; padding-right:30px;" placeholder="Filter by Author or Title" @keyup="filterChange()"></input>
+  <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
 
-    <input v-model="filterTag" type="text" @keyup="booksFilterTagChange" class="form-control" style="width: 18em;" placeholder="Filter by Editor or Project tag"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="filterTag=''; $store.commit('SET_CURRENTBOOK_FILTER', {projectTag: ''})"></i>
+  <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 18em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
+  <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
 
   <template v-if="adminOrLibrarian">
-    <select @change="booksTypeChange" v-model="bookFilters.jobStatus">
+    <select v-model="bookFilters.jobStatus" @change="filterChange()">
       <option value="">Not filtered</option>
       <option value="active">Active</option>
       <option value="archived">Archived</option>
@@ -30,7 +30,7 @@
   </template>
 
   <!-- Language Dropdown -->
-  <select @change="booksLanguageChange">
+  <select v-model="bookFilters.language" @change="filterChange()">
     <option value="">Any language</option>
     <option v-for="(name, code) in languages" :value="code">{{name}}</option>
   </select>
@@ -64,8 +64,6 @@ export default {
       filterStr: '',
       showImportBooksModal: false,
       languages: Languages,
-      filterAuthorTitle: '',
-      filterTag: ''
     }
   },
 
@@ -87,18 +85,10 @@ export default {
   ]),
 
   methods: {
-    booksFilterChange (el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {filter: el.target.value})
-    },
-    booksFilterTagChange (el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {projectTag: el.target.value})
-    },
-    booksLanguageChange (el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {language: el.target.value})
-      // console.log("language: "+el.target.value)
-    },
-    booksTypeChange (el) {
-      this.$store.commit('SET_CURRENTBOOK_FILTER', {jobStatus: el.target.value})
+    filterChange () {
+      /*if (this.$route.params.hasOwnProperty('bookid')) {
+        this.$router.replace({ path: '/books'});
+      }*/
     },
     bookCount () {
       if (this.allBooks && this.allBooks.length) {
@@ -112,8 +102,6 @@ export default {
     },
     displayBook () {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
-      this.bookFilters.filter = '';
-      this.bookFilters.projectTag = '';
     },
     importBook () {
       console.log('event ok')

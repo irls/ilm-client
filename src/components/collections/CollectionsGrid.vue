@@ -16,7 +16,7 @@
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
-      <Grid id='books_grid'
+      <Grid id='books_grid_grid'
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
           :columns="headers"
@@ -53,7 +53,8 @@
       data() {
         return {
           idField: '_id',
-          selectedBooks: []
+          selectedBooks: [],
+          openBookClickCounter: 0
         }
       },
       methods: {
@@ -67,8 +68,36 @@
           }
         },
         selectBook(book) {
-          this.selectedBooks = [book.bookid];
-          this.$emit('selectBook', book.bookid, book.collection_id);
+          let bookid = book.bookid;
+          if (bookid) {
+
+            this.openBookClickCounter++;
+
+
+            if(this.openBookClickCounter == 1) {
+              this.timer = setTimeout(() => {
+                this.openBookClickCounter = 0;
+                this.selectedBooks = [book.bookid];
+                this.$emit('selectBook', book.bookid, book.collection_id);
+              }, 300);
+
+              return;
+            }
+            clearTimeout(this.timer);
+            //this.bookFilters.filter = '';
+            //this.bookFilters.projectTag = '';
+            this.openBookClickCounter = 0;
+            this.$router.push('/books/' + book.bookid + '/display')
+          }
+
+        },
+        scrollToRow(bookId) {
+          let t = setTimeout(function() {
+            let el = document.querySelector(`[data-id="${bookId}"]`);
+            if (el) {
+              el.scrollIntoView();
+            }
+          }, 300);
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
@@ -127,23 +156,27 @@
             });
             if (book) {
               this.selectBook(book);
+              this.scrollToRow(book.bookid);
             }
           }
         }
       },
       computed: {
         ...mapGetters([
-          'bookFilters',
+          'collectionsFilter',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
           'currentCollection',
           'collectionsFilter',
           'allowCollectionsEdit',
-          'adminOrLibrarian'
+          'adminOrLibrarian',
         ]),
         collectionsPage: {
           get() {
+            if (!this.bookCollections || !this.bookCollections.length) {
+              return [];
+            }
             let collections = lodash.cloneDeep(this.bookCollections);
             collections.forEach(c => {
               c.book_match = false;
@@ -184,11 +217,8 @@
                     collections = collections.filter(item => {
                       
                       item.books_list = item.books_list.filter(b => {
-                        if (b.hasOwnProperty('hashTags')){
-
-                          let str = `${b.hashTags} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
-                          return (str.indexOf(filter) > -1)
-                        }
+                        let str = `${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
+                        return (str.indexOf(filter) > -1)
                       }); 
                       let book_match =  item.books_list.length > 0;
                       item.match = book_match;
@@ -305,6 +335,25 @@
           handler(val, oldVal) {
             if(val._id && !oldVal._id) {
 
+            }
+          }
+        },
+        collectionsFilter: {
+          deep: true,
+          handler(newVal, oldVal) {
+            if (this.$route.params.hasOwnProperty('bookid')) {
+              const bookid = this.$route.params.bookid;
+              const collectionid = this.$route.params.collectionid;
+              const found = this.collectionsPage.find((collection)=>{
+                return collection.bookids.find((book)=>{
+                  return book === bookid;
+                })
+              })
+              if (found) {
+                this.scrollToRow(bookid);
+              } else {
+                this.$router.replace({ path: '/collections' });
+              }
             }
           }
         }

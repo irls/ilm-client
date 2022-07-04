@@ -135,13 +135,11 @@
     const isScrollToEnd = scrollTo && (scrollTo == items.length - 1);
 
     if (isScrollToEnd) {
-      console.log('IS SCROLL TO END', isScrollToEnd);
       let scrollTop = viewport.scrollTop;
       let checkTop = 0;
       _scrollInterval = setInterval(function(){
         scrollTop += 80;
         viewport.scrollTop = scrollTop;
-        //console.log('interval', count, viewport.scrollTop, checkTop, scrollTop, start, end);
         if (checkTop == viewport.scrollTop || scrollTo < items.length - 1) {
           clearInterval(_scrollInterval);
         }

@@ -121,7 +121,6 @@ export default {
             margin: 2px 0
 .error-message {color: red; margin: .5em;
   border-radius: 5px;
-  text-shadow: -1px -1px 10px rgba(255, 255, 0, 1);
   margin-left: 12%;
 }
 
