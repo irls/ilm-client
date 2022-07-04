@@ -12,6 +12,7 @@ import axios from 'axios'
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
+import tasks from './modules/tasks';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -68,7 +69,8 @@ function defer() {
 export const store = new Vuex.Store({
   modules: {
     uploadImage,
-    testAudioConvert
+    testAudioConvert,
+    tasks
   },
   state: {
     audioRenaming : false,
@@ -3629,7 +3631,10 @@ export const store = new Vuex.Store({
           //console.log(response);
           //return dispatch('getBookAlign')
             //.then(() => {
-              return Promise.resolve(response);
+            return dispatch('tasks/getByBlockid', [data.blockid])
+              .then(() => {
+                return Promise.resolve(response);
+              });
             //});
         })
         .catch(err => {

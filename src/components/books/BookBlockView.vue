@@ -3291,6 +3291,9 @@ Save text changes and realign the Block?`,
                     //self.isAudioChanged = true;
                   }
                   this.reRecordPosition = false;
+                  if (this.isCompleted) {
+                    this.$forceUpdate();
+                  }
                   return resolve();
                 })
                 .catch(err => {
