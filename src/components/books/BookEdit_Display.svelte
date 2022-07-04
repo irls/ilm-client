@@ -1,25 +1,27 @@
 <template>
-<!--{#each intBlocks as block, idx (block.blockRid)}-->
-<div class="bview-container">
-{#if intBlocks.length > 0}
-  <VirtualList items={intBlocks} let:item
-  bind:start={startBlockIdx} bind:end={endBlockIdx}
-  bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-  bind:startReached={startReached} bind:endReached={endReached} >
-  <div class='card'>
-  <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
-  <BookBlockDisplay
-    blockRid="{item.blockRid}"
-    block="{item.blockView}"
-    blockListObj="{item}"
-    lang="{lang}"
-  />
+{#if blocks.length > 0}
+  <!--{#each intBlocks as block, idx (block.blockRid)}-->
+  <div class="bview-container">
+  {#if intBlocks.length > 0}
+    <VirtualList items={intBlocks} let:item
+    bind:start={startBlockIdx} bind:end={endBlockIdx}
+    bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
+    bind:startReached={startReached} bind:endReached={endReached} >
+    <div class='card'>
+    <!--{item.idx}->{item.blockRid}->{item.blockId}<br/>-->
+    <BookBlockDisplay
+      blockRid="{item.blockRid}"
+      block="{item.blockView}"
+      blockListObj="{item}"
+      lang="{lang}"
+    />
+    </div>
+    </VirtualList>
+    <!--{/each}-->
+  {:else}<div class="content-process-run preloader-loading"></div>
+  {/if}
   </div>
-  </VirtualList>
-  <!--{/each}-->
-{:else}<div class="content-process-run preloader-loading"></div>
 {/if}
-</div>
 
 </template>
 
