@@ -215,14 +215,11 @@
                     break;
                   case 'projectTag':
                     collections = collections.filter(item => {
-
+                      
                       item.books_list = item.books_list.filter(b => {
-                        if (b.hasOwnProperty('hashTags')){
-
-                          let str = `${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
-                          return (str.indexOf(filter) > -1)
-                        }
-                      });
+                        let str = `${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
+                        return (str.indexOf(filter) > -1)
+                      }); 
                       let book_match =  item.books_list.length > 0;
                       item.match = book_match;
                       item.book_match = book_match;
