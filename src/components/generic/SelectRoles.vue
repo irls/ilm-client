@@ -53,7 +53,7 @@ export default {
   mounted () {
     this.selectedValue = this.selected
   },
-  
+
   computed: {
     classList: {
       get() {

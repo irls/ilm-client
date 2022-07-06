@@ -1036,7 +1036,6 @@ export default {
               })
               .then((response)=>{
                 this.clearBlockLock({block: blockBefore, force: true});
-                this.clearBlockLock({block: block, force: true});
                 this.getDisabledBlocks();
 
                 if (response.data.ok && response.data.blocks) {
@@ -1140,9 +1139,7 @@ export default {
                 donorBlock_id: blockAfter.blockid
               })
               .then((response)=>{
-                //this.setBlockSelection({start: {}, end: {}});
                 this.clearBlockLock({block: block, force: true});
-                this.clearBlockLock({block: blockAfter, force: true});
                 this.getDisabledBlocks();
 
                 if (response.data.ok && response.data.blocks) {

@@ -7,17 +7,17 @@
 
   <div class="pull-right">
   <!-- Edit Button -->
-  <button v-if="hasBookSelected()"
+  <button v-show="hasBookSelected()"
     @click='displayBook' class='btn btn-default'>
     <i class="fa fa-pencil fa-lg"></i>  Display Book
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-    <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 15em; padding-right:30px;" placeholder="Filter by Author or Title" @keyup="filterChange()"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
+  <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 15em; padding-right:30px;" placeholder="Filter by Author or Title" @keyup="filterChange()"></input>
+  <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
 
-    <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 18em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
+  <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 18em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
+  <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
 
   <template v-if="adminOrLibrarian">
     <select v-model="bookFilters.jobStatus" @change="filterChange()">
@@ -35,7 +35,7 @@
     <option v-for="(name, code) in languages" :value="code">{{name}}</option>
   </select>
 
-  <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
+  <button v-show='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
 

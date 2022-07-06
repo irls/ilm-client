@@ -193,7 +193,6 @@ export default {
     bookFilters: {
       deep: true,
       handler(newVal, oldVal) {
-        console.log(`bookFilters: `, );
         if (this.$route.params.hasOwnProperty('bookid')) {
           const bookid = this.$route.params.bookid;
           const found = this.books.find((book)=>{
@@ -225,7 +224,6 @@ export default {
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
       let bookid = ev.bookid
-      console.log('ev.bookid', ev.bookid);
       if (bookid) {
 
         this.openBookClickCounter++;

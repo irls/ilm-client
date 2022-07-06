@@ -36,7 +36,7 @@
 
 
 
-        <button v-if="hasBookSelected()" @click="displayBook" class='btn btn-default'>
+        <button v-show="hasBookSelected()" @click="displayBook" class='btn btn-default'>
           <i class="fa fa-pencil fa-lg"></i>&nbsp;Display Book
         </button>
 
@@ -45,7 +45,7 @@
           <i class="fa fa-plus"></i>&nbsp;Add Collection
         </button>
 
-        <button v-if='hasItemSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'>
+        <button v-show='hasItemSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'>
           <i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>&nbsp;Details
         </button>
 
