@@ -26,7 +26,7 @@
     "lodash": "^4.17.14",
     "md5": "^2.3.0",
     "medium-editor": "^5.23.1",
-    "moment": "^2.29.1",
+    "moment": "^2.29.4",
     "peaks.js": "^0.10.1",
     "pouchdb": "^7.2.2",
     "pouchdb-hoodie-api": "^2.0.0",
