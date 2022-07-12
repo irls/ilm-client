@@ -415,6 +415,89 @@ class BookBlocks {
     }
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
+  setCheckedAsyncIterator(i,endIdx,bar,resolveCb) {
+
+    if (i < endIdx) {
+      let iRId = this.listRIds[i];
+      if (this.lookupList.hasOwnProperty(iRId)) {
+        this.lookupList[iRId].checked = true;
+      }
+      i++;
+      let width = Math.round(i/(endIdx/100));
+      bar.css('width',`${width}%`)
+      bar.text(`Setting range selection:${i}/${endIdx}`)
+      let mod = this;
+      setTimeout( function() { mod.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },1);
+    }else{
+      resolveCb();
+    }
+
+  }
+
+  async setCheckedAsync(startRId, endRId = false) {
+    let barBlock = $('.progress');
+    let bar = $('.progress .progress-bar');
+
+    barBlock.show();
+    bar.css('width',`0`);
+    bar.text(``)
+    let renderTime = 1000;
+
+    return new Promise((resolve, reject) => {
+      let promises = []
+
+      let result = {start: {}, end: {}};
+      if (endRId && startRId !== endRId) {
+
+        let startIdx = this.listRIds.indexOf(startRId);
+        let endIdx = this.listRIds.indexOf(endRId);
+        if (startIdx < endIdx) {
+          renderTime = 4000;
+          promises.push(new Promise((resolve, reject) => {
+            this.setCheckedAsyncIterator(startIdx,endIdx, bar,resolve);
+            result.start = { _id: this.lookupList[startRId].blockid };
+            result.end = { _id: this.lookupList[endRId].blockid };
+          }))
+
+        }
+
+        if (startIdx > endIdx) {
+          renderTime = 1000;
+          promises.push(new Promise((resolve, reject) => {
+            for (var i=endIdx; i<=startIdx; i++) {
+              let iRId = this.listRIds[i];
+              if (this.lookupList.hasOwnProperty(iRId)) {
+                this.lookupList[iRId].checked = true;
+              }
+              let width = Math.round(i/(startId/100));
+              bar.css('width',`${width}%`)
+              bar.text(`Setting range selection:${i}/${endIdx}`)
+
+            }
+            result.start = { _id: this.lookupList[endRId].blockid };
+            result.end = { _id: this.lookupList[startRId].blockid };
+
+            resolve();
+          }));
+
+        }
+
+      }
+      else if (this.lookupList.hasOwnProperty(startRId)) {
+        this.lookupList[startRId].checked = true;
+        result.start = { _id: this.lookupList[startRId].blockid };
+        result.end = { _id: this.lookupList[startRId].blockid };
+      }
+
+      return Promise.all(promises).then(function() {
+        setTimeout( function() { barBlock.hide() },renderTime);
+        bar.text(`Wait for blocks update`)
+        return result;
+      });
+
+    })
+
+  }
 
   setChecked(startRId, endRId = false) {
     let result = {start: {}, end: {}};

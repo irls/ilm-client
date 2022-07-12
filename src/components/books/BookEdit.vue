@@ -1224,7 +1224,7 @@ export default {
       });
     },
 
-    setRangeSelection(block, type, status, shift = false) {
+    async setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
 
@@ -1273,11 +1273,11 @@ export default {
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = this.parlistO.setChecked(startRId, block.rid);
+                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid);
                   break;
                 case 1:// block below current selection checked
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = this.parlistO.setChecked(block.rid, endRId);
+                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId);
                   break;
                 default:
                   break;
