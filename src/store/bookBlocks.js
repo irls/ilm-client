@@ -433,7 +433,7 @@ class BookBlocks {
 // console.log(`updateI:${updateI}/${Math.round(max/100)}`)
 //       if(updateI >=(max/100)){
         updateI = 0;
-        let width = Math.round(i/(max/100));
+        let width = Math.ceil(i/(max/100));
         bar.css('width',`${width}%`)
         bar.text(`Setting range selection:${i}/${max}`)
       // }
