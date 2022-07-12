@@ -431,12 +431,12 @@ class BookBlocks {
         updateI++;
       // }
 // console.log(`updateI:${updateI}/${Math.round(max/100)}`)
-      if(updateI >=(max/100)){
+//       if(updateI >=(max/100)){
         updateI = 0;
-        let width = Math.round(i/(max/100));
+        let width = Math.ceil(i/(max/100));
         bar.css('width',`${width}%`)
         bar.text(`Setting range selection:${i}/${max}`)
-      }
+      // }
       let mod = this;
 
       setTimeout( function() { mod.setCheckedAsyncIterator(i, endIdx,bar,resolveCb,updateI) },1);
