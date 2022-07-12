@@ -453,7 +453,7 @@ class BookBlocks {
         let startIdx = this.listRIds.indexOf(startRId);
         let endIdx = this.listRIds.indexOf(endRId);
         if (startIdx < endIdx) {
-          renderTime = 4000;
+          renderTime = 3000;
           promises.push(new Promise((resolve, reject) => {
             this.setCheckedAsyncIterator(startIdx,endIdx, bar,resolve);
             result.start = { _id: this.lookupList[startRId].blockid };
@@ -493,8 +493,8 @@ class BookBlocks {
 
       return Promise.all(promises).then(function() {
         barBlock.hide();
-        // setTimeout( function() { barBlock.hide() },renderTime);
-        // bar.text(`Wait for blocks update`)
+        setTimeout( function() { barBlock.hide() },renderTime);
+        bar.text(`Wait for blocks update`)
         return result;
       });
 
