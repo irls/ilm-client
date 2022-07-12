@@ -1,5 +1,10 @@
 <template>
   <div class="top-menu-wrapper">
+      <div class="progress" style="display: none">
+        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+        </div>
+      </div>
+
   <table class="navtable">
     <tr><td class='logo'>
       <router-link to="/"><img src="../assets/ilm-logo.svg"/></router-link>
@@ -31,7 +36,7 @@
 
         <router-link to="/audio_editor" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>AudioEditor</a></router-link>
-        
+
         <router-link to="/test_audio_convert" class="presentation" tag="li"
         v-show="isAdmin || isLibrarian"><a>Test Compression</a></router-link>
 
@@ -126,6 +131,21 @@ export default {
 </style>
 
 <style scoped>
+  .progress .progress-bar{
+    padding-left:10px;
+    text-align:left;
+  }
+  .progress{
+    height: 20px;
+    width: 60%;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 20px;
+    z-index: 5;
+    bottom: 10px;
+    color: black;
+  }
   .top-menu-wrapper {
     /*width: 100%;
     height: 43px;
