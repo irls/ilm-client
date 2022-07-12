@@ -417,7 +417,7 @@ class BookBlocks {
   }
   setCheckedAsyncIterator(i,endIdx,bar,resolveCb) {
 
-    if (i < endIdx) {
+    if (i <= endIdx) {
       let iRId = this.listRIds[i];
       if (this.lookupList.hasOwnProperty(iRId)) {
         this.lookupList[iRId].checked = true;
@@ -490,8 +490,8 @@ class BookBlocks {
       }
 
       return Promise.all(promises).then(function() {
-        setTimeout( function() { barBlock.hide() },renderTime);
-        bar.text(`Wait for blocks update`)
+        // setTimeout( function() { barBlock.hide() },renderTime);
+        // bar.text(`Wait for blocks update`)
         return result;
       });
 
