@@ -419,7 +419,7 @@ class BookBlocks {
     let perIteration = 0;
     let max = endIdx+1;
     if (i <= endIdx ) {
-      while (i <= endIdx && perIteration<10 ) {
+      // while (i <= endIdx && perIteration<10 ) {
         // console.log(perIteration)
         // console.log(i)
         let iRId = this.listRIds[i];
@@ -429,7 +429,7 @@ class BookBlocks {
         i++;
         perIteration++;
         updateI++;
-      }
+      // }
 // console.log(`updateI:${updateI}/${Math.round(max/100)}`)
       if(updateI >=(max/100)){
         updateI = 0;
