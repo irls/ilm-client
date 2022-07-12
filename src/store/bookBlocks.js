@@ -420,12 +420,13 @@ class BookBlocks {
     let max = endIdx+1;
     if (i <= endIdx ) {
       while (i <= endIdx && perIteration<3 ) {
+        console.log(perIteration)
         let iRId = this.listRIds[i];
         if (this.lookupList.hasOwnProperty(iRId)) {
           this.lookupList[iRId].checked = true;
         }
         i++;
-        perIteration++
+        perIteration++;
       }
 
       let width = Math.round(i/(max/100));
