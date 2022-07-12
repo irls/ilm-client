@@ -221,7 +221,7 @@
   import PouchDB from 'pouchdb';
   import v_modal from 'vue-js-modal';
   import api_config from '../mixins/api_config';
-  import {dateFormat} from '../filters';
+  import {dateFormat} from '@src/filters';
   import { select } from 'vue-strap';
   import LANGUAGES from '../../static/languages.json';
   var hat = require('hat');

@@ -40,7 +40,8 @@
   import Vue from 'vue';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
-  import lodash from 'lodash'
+  import lodash from 'lodash';
+  import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
 
   export default {
       name: 'CollectionsGrid',
@@ -183,15 +184,15 @@
             });
             for (var field in this.collectionsFilter) {
               if (this.collectionsFilter[field].length > 0) {
-                let filter = this.collectionsFilter[field].toLowerCase();
+                let filter = prepareForFilter(this.collectionsFilter[field]);
                 switch (field) {
                   case 'title':
                     collections = collections.filter(item => {
-                      let match = item.title.toLowerCase().indexOf(filter) !== -1;
+                      let match = prepareForFilter(item.title).indexOf(filter) !== -1;
                       if (!match) {
                         item.books_list = item.books_list.filter(b => {
-                          return b.title.toLowerCase().indexOf(filter) !== -1 ||
-                                  (b.author && b.author.join('|').toLowerCase().indexOf(filter) !== -1);
+                          return prepareForFilter(b.title).indexOf(filter) !== -1 ||
+                                  (b.author && prepareForFilter(b.author.join('|')).indexOf(filter) !== -1);
                         });
                       }
                       let book_match = !match && item.books_list.length > 0;
@@ -216,7 +217,7 @@
                   case 'projectTag':
                     collections = collections.filter(item => {
                       item.books_list = item.books_list.filter(b => {
-                        let str = `${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
+                        let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
                         return (str.indexOf(filter) > -1)
                       });
                       let book_match =  item.books_list.length > 0;
