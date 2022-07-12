@@ -416,18 +416,23 @@ class BookBlocks {
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
   setCheckedAsyncIterator(i,endIdx,bar,resolveCb) {
-
+    let perIteration = 0;
     let max = endIdx+1;
-    if (i <= endIdx) {
-      let iRId = this.listRIds[i];
-      if (this.lookupList.hasOwnProperty(iRId)) {
-        this.lookupList[iRId].checked = true;
+    if (i <= endIdx ) {
+      while (i <= endIdx && perIteration<3 ) {
+        let iRId = this.listRIds[i];
+        if (this.lookupList.hasOwnProperty(iRId)) {
+          this.lookupList[iRId].checked = true;
+        }
+        i++;
+        perIteration++
       }
-      i++;
+
       let width = Math.round(i/(max/100));
       bar.css('width',`${width}%`)
       bar.text(`Setting range selection:${i}/${max}`)
       let mod = this;
+
       setTimeout( function() { mod.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },1);
     }else{
       resolveCb();
