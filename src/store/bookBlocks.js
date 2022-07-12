@@ -419,8 +419,9 @@ class BookBlocks {
     let perIteration = 0;
     let max = endIdx+1;
     if (i <= endIdx ) {
-      while (i <= endIdx && perIteration<3 ) {
+      while (i <= endIdx && perIteration<2 ) {
         console.log(perIteration)
+        console.log(i)
         let iRId = this.listRIds[i];
         if (this.lookupList.hasOwnProperty(iRId)) {
           this.lookupList[iRId].checked = true;
