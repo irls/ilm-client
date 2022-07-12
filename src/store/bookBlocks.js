@@ -495,6 +495,7 @@ class BookBlocks {
         barBlock.hide();
         setTimeout( function() { barBlock.hide() },renderTime);
         bar.text(`Wait for blocks update`)
+        resolve(result)
         return result;
       });
 
