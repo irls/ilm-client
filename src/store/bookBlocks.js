@@ -417,15 +417,16 @@ class BookBlocks {
   }
   setCheckedAsyncIterator(i,endIdx,bar,resolveCb) {
 
+    let max = endIdx+1;
     if (i <= endIdx) {
       let iRId = this.listRIds[i];
       if (this.lookupList.hasOwnProperty(iRId)) {
         this.lookupList[iRId].checked = true;
       }
       i++;
-      let width = Math.round(i/(endIdx/100));
+      let width = Math.round(i/(max/100));
       bar.css('width',`${width}%`)
-      bar.text(`Setting range selection:${i}/${endIdx}`)
+      bar.text(`Setting range selection:${i}/${max}`)
       let mod = this;
       setTimeout( function() { mod.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },1);
     }else{
@@ -464,14 +465,15 @@ class BookBlocks {
         if (startIdx > endIdx) {
           renderTime = 1000;
           promises.push(new Promise((resolve, reject) => {
+            let max = startIdx+1;
             for (var i=endIdx; i<=startIdx; i++) {
               let iRId = this.listRIds[i];
               if (this.lookupList.hasOwnProperty(iRId)) {
                 this.lookupList[iRId].checked = true;
               }
-              let width = Math.round(i/(startId/100));
+              let width = Math.round(i/(max/100));
               bar.css('width',`${width}%`)
-              bar.text(`Setting range selection:${i}/${endIdx}`)
+              bar.text(`Setting range selection:${i}/${max}`)
 
             }
             result.start = { _id: this.lookupList[endRId].blockid };
@@ -490,6 +492,7 @@ class BookBlocks {
       }
 
       return Promise.all(promises).then(function() {
+        barBlock.hide();
         // setTimeout( function() { barBlock.hide() },renderTime);
         // bar.text(`Wait for blocks update`)
         return result;
