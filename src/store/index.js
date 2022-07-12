@@ -2900,9 +2900,9 @@ export const store = new Vuex.Store({
 
     setBlockSelection({state, commit, dispatch}, selection) {
       if (!_.isEqual(state.blockSelection, selection)) {
-        commit('set_block_selection', selection);
-        dispatch('getAlignCount', selection);
-        dispatch('recountApprovedInRange', selection);
+        // commit('set_block_selection', selection);
+        // dispatch('getAlignCount', selection);
+        // dispatch('recountApprovedInRange', selection);
         //dispatch('recountVoicedBlocks', selection);
       }
     },
