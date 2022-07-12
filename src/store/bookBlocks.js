@@ -420,8 +420,8 @@ class BookBlocks {
     let max = endIdx+1;
     if (i <= endIdx ) {
       while (i <= endIdx && perIteration<10 ) {
-        console.log(perIteration)
-        console.log(i)
+        // console.log(perIteration)
+        // console.log(i)
         let iRId = this.listRIds[i];
         if (this.lookupList.hasOwnProperty(iRId)) {
           this.lookupList[iRId].checked = true;
@@ -430,8 +430,9 @@ class BookBlocks {
         perIteration++;
         updateI++;
       }
-
-      if(updateI % 100){
+// console.log(`updateI:${updateI}/${Math.round(max/100)}`)
+      if(updateI >=(max/100)){
+        updateI = 0;
         let width = Math.round(i/(max/100));
         bar.css('width',`${width}%`)
         bar.text(`Setting range selection:${i}/${max}`)
