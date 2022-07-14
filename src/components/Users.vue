@@ -55,14 +55,14 @@
           <select-roles
             :selected="[...user.roles]"
             :isDisabled="!$store.state.isAdmin"
-            @select="updateUser(user._id, 'roles', $event)"
+            @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
             :selected="user.languages ? [...user.languages] : []"
             :isDisabled="!$store.state.isAdmin"
-            @select="updateUser(user._id, 'languages', $event)"
+            @select="userUpdate(user._id, 'languages', $event)"
           ></select-languages>
         </div>
         <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
@@ -73,7 +73,7 @@
           <i class="fa fa-unlock"></i>  Reset Password
         </button>  &nbsp; -->
 
-        <div class="t-box" @click="updateUser(user._id, 'enable', !user.enable, true)" v-show="$store.state.isAdmin">
+        <div class="t-box" @click="userUpdate(user._id, 'enable', !user.enable, true)" v-show="$store.state.isAdmin">
           <template v-if="user.enable"><span>Active </span><i class="fa fa-toggle-on"></i></template>
           <template v-else><span>Disabled </span><i class="fa fa-toggle-off"></i></template>
         </div>
@@ -129,7 +129,6 @@ import { alert } from 'vue-strap'
 import { mapGetters, mapActions } from 'vuex';
 
 const API_ALLUSERS = process.env.ILM_API + '/api/v1/users'
-const userActions = require('./../store/userActions')();
 
 export default {
 
@@ -192,14 +191,14 @@ export default {
   },
 
   methods: {
-    updateUser(user_id, field, new_value) {
+    userUpdate(user_id, field, new_value) {
       let user = this.users.find(usr => {
         return usr._id === user_id;
       });
       if (user && !_.isEqual(user[field], new_value)) {
         let update = {};
         update[field] = new_value;
-        return userActions.update(user_id, update)
+        return this.updateUser([user_id, update])
           .then(response => {
             user[field] = new_value;
           });
@@ -207,7 +206,7 @@ export default {
     },
 
     updateUsersList() {
-      return userActions.getAll()
+      return this.getAll()
         .then(response => {
           this.users = response;
         })
@@ -253,7 +252,7 @@ export default {
     },
 
     resetPassword(email) {
-      return userActions.user_passwordreset(email)
+      return this.user_passwordreset(email)
         .then((response) => {
           if (response.ok === true) {
             this.passwordChanged = true;
@@ -287,7 +286,8 @@ export default {
       }
       return user.enable && user._id !== this.user._id;
     },
-    ...mapActions(['loginAdminAs', 'connectDB'])
+    ...mapActions(['loginAdminAs', 'connectDB']),
+    ...mapActions('userActions', ['updateUser', 'getAll', 'user_passwordreset'])
   },
 
   watch: {

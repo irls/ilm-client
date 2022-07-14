@@ -14,6 +14,7 @@ import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
 import setBlocksDisabled from './modules/setBlocksDisabled';
 import tasks from './modules/tasks';
+import userActions from './modules/user';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -72,7 +73,8 @@ export const store = new Vuex.Store({
     uploadImage,
     testAudioConvert,
     setBlocksDisabled,
-    tasks
+    tasks,
+    userActions
   },
   state: {
     audioRenaming : false,
@@ -1405,6 +1407,10 @@ export const store = new Vuex.Store({
       } else if (data.block && data.block.blockid) {
         this.commit('set_storeList', new BookBlock(data.block));
       }
+    },
+    
+    set_user(state, user) {
+      state.user = user;
     }
   },
 
