@@ -47,7 +47,8 @@ export default {
         .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
         .filter(book => this.bookFilters.jobStatus ? book.job_status === this.bookFilters.jobStatus : true)
         .filter(book => {
-          let str = prepareForFilter(`${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`);
+          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
           let find = prepareForFilter(this.bookFilters.filter);
           return (str.indexOf(find) > -1)
         })

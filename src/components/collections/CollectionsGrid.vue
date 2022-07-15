@@ -187,42 +187,43 @@
                 let filter = prepareForFilter(this.collectionsFilter[field]);
                 switch (field) {
                   case 'title':
-                    collections = collections.filter(item => {
-                      let match = prepareForFilter(item.title).indexOf(filter) !== -1;
+                    collections = collections.filter(collection => {
+                      let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
                       if (!match) {
-                        item.books_list = item.books_list.filter(b => {
-                          return prepareForFilter(b.title).indexOf(filter) !== -1 ||
-                                  (b.author && prepareForFilter(b.author.join('|')).indexOf(filter) !== -1);
+                        collection.books_list = collection.books_list.filter(book => {
+                          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+                          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+                          return (str.indexOf(filter) > -1)
                         });
                       }
-                      let book_match = !match && item.books_list.length > 0;
-                      item.match = match;
-                      item.book_match = book_match;
-                      return match || book_match;//
+                      let book_match = !match && collection.books_list.length > 0;
+                      collection.match = match;
+                      collection.book_match = book_match;
+                      return match || book_match;
                     });
                     break;
                   case 'language':
-                    collections = collections.filter(item => {
-                      return item.language == filter;
+                    collections = collections.filter(collection => {
+                      return collection.language == filter;
                     });
                     break;
                   case 'jobStatus':
-                    collections = collections.filter(item => {
-                      item.books_list = item.books_list.filter(b => {
+                    collections = collections.filter(collection => {
+                      collection.books_list = collection.books_list.filter(b => {
                         return b.job_status === filter;
                       });
-                      return item.books_list.length > 0;
+                      return collection.books_list.length > 0;
                     });
                     break;
                   case 'projectTag':
-                    collections = collections.filter(item => {
-                      item.books_list = item.books_list.filter(b => {
+                    collections = collections.filter(collection => {
+                      collection.books_list = collection.books_list.filter(b => {
                         let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
                         return (str.indexOf(filter) > -1)
                       });
-                      let book_match =  item.books_list.length > 0;
-                      item.match = book_match;
-                      item.book_match = book_match;
+                      let book_match =  collection.books_list.length > 0;
+                      collection.match = book_match;
+                      collection.book_match = book_match;
                       return book_match;
 
                     });
