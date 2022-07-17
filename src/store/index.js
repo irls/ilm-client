@@ -1448,8 +1448,9 @@ export const store = new Vuex.Store({
       bar.text(`Building blocks graph:${idx}/${size}`)
 
       if(idx<=size && status == 'ok'){
+//ILM-5021
         setTimeout( function() {
-          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,bar,resolve}) },100);
+          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,bar,resolve}) },1);
       }else{
 
         resolve();
@@ -3153,9 +3154,9 @@ export const store = new Vuex.Store({
         bar.css('width',`${width}%`)
         bar.text(`count blocks(tts,narration..):${idx}/${size}`)
 
-
+//ILM-5021
         setTimeout( function() {
-          dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },100);
+          dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },1);
       }else{
 
         resolve(d);
