@@ -427,7 +427,6 @@ class BookBlocks {
         }
         i++;
         iterationCount++;
-        updateI++;
         let width = Math.ceil(i/(max/100));
         width = 0+25*(width/100);
 

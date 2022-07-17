@@ -3396,7 +3396,7 @@ export const store = new Vuex.Store({
           });
       }
     },
-    
+
     cancelAlignment({state, dispatch}, [bookid, blockid = null, partIdx = null]) {
       let api_url = `${state.API_URL}align_queue/${bookid}`;
       if (blockid) {
