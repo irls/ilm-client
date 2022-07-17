@@ -417,7 +417,7 @@ class BookBlocks {
   }
   setCheckedAsyncIterator(i,endIdx,bar,resolveCb ) {
     let iterationCount = 0;
-    let iterationMax = 2;
+    let iterationMax = 50;
     let max = endIdx+1;
     if (i <= endIdx ) {
       while (i <= endIdx && iterationCount<iterationMax ) {
