@@ -1373,7 +1373,6 @@ export const store = new Vuex.Store({
 
   actions: {
     async set_block_selection({ state, commit, dispatch },selection) {
-      console.log('set_block_selection:start')
 
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
@@ -1407,7 +1406,7 @@ export const store = new Vuex.Store({
       let bar = payload.bar;
       let resolve = payload.resolve;
       let iterationCount = 0;
-      let iterationMax = 2;
+      let iterationMax = 50;
       let status = 'ok';
 
       while (iterationCount<iterationMax && idx<=size && status == 'ok'){
@@ -3040,7 +3039,7 @@ export const store = new Vuex.Store({
 
     async recountApprovedInRangeAsyncIteration({state, commit,dispatch}, {crossId,idx,size,d,selection,resolve,bar} ) {
       let iterationCount = 0;
-      let iterationMax = 2;
+      let iterationMax = 50;
       let status = 'ok';
 
       if(!bar)
