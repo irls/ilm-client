@@ -415,31 +415,28 @@ class BookBlocks {
     }
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
-  setCheckedAsyncIterator(i,endIdx,bar,resolveCb, updateI = 0) {
-    let perIteration = 0;
+  setCheckedAsyncIterator(i,endIdx,bar,resolveCb ) {
+    let iterationCount = 0;
+    let iterationMax = 2;
     let max = endIdx+1;
     if (i <= endIdx ) {
-      // while (i <= endIdx && perIteration<10 ) {
-        // console.log(perIteration)
-        // console.log(i)
+      while (i <= endIdx && iterationCount<iterationMax ) {
         let iRId = this.listRIds[i];
         if (this.lookupList.hasOwnProperty(iRId)) {
           this.lookupList[iRId].checked = true;
         }
         i++;
-        perIteration++;
+        iterationCount++;
         updateI++;
-      // }
-// console.log(`updateI:${updateI}/${Math.round(max/100)}`)
-//       if(updateI >=(max/100)){
-        updateI = 0;
         let width = Math.ceil(i/(max/100));
+        width = 0+25*(width/100);
+
         bar.css('width',`${width}%`)
         bar.text(`Setting range selection:${i}/${max}`)
-      // }
-      let mod = this;
-
-      setTimeout( function() { mod.setCheckedAsyncIterator(i, endIdx,bar,resolveCb,updateI) },1);
+      }
+      let this_ = this;
+//ILM-5021
+      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },100);
     }else{
       resolveCb();
     }
@@ -503,11 +500,7 @@ class BookBlocks {
       }
 
       return Promise.all(promises).then(function() {
-        barBlock.hide();
-        setTimeout( function() { barBlock.hide() },renderTime);
-        bar.text(`Wait for blocks update`)
         resolve(result)
-        return result;
       });
 
     })

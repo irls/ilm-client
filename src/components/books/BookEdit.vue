@@ -931,7 +931,7 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
-          this.$store.commit('set_selected_blocks');
+          this.$store.dispatch('set_selected_blocks');
         }
         //this.getCurrentJobInfo();
 
@@ -1056,7 +1056,7 @@ export default {
                 this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
+                this.$store.dispatch('set_selected_blocks');
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -1160,7 +1160,7 @@ export default {
                 //this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
+                this.$store.dispatch('set_selected_blocks');
                 return Promise.resolve();
               })
               .catch((err)=>{
