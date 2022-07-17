@@ -435,7 +435,7 @@ class BookBlocks {
       }
       let this_ = this;
 //ILM-5021
-      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },100);
+      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },1);
     }else{
       resolveCb();
     }
