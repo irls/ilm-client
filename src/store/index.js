@@ -1411,7 +1411,7 @@ export const store = new Vuex.Store({
       // resolve();
     },
     set_selected_blocksAsyncIteration({commit, state, dispatch},payload) {
-
+debugger;
       let idx = payload.idx;
       let size = payload.size;
       let crossId = payload.crossId;
@@ -3075,6 +3075,8 @@ export const store = new Vuex.Store({
     },
 
     async recountApprovedInRangeAsyncIteration({state, commit,dispatch}, {crossId,idx,size,d,selection,resolve,bar} ) {
+      debugger;
+
       let iterationCount = 0;
       let iterationMax = 50;
       let status = 'ok';
