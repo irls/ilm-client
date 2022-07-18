@@ -355,6 +355,8 @@
               } else {
                 this.$router.replace({ path: '/collections' });
               }
+            } else {
+              this.selectedBooks = []; // clean old selection
             }
           }
         }
