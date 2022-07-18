@@ -1333,6 +1333,7 @@ export default {
         //console.log('onSelect');
       },
       onClick: function($event) {
+        return;
 //         $('.medium-editor-toolbar').each(function(){
 //           $(this).css('display', 'inline-block');
 //         });
