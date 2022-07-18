@@ -453,8 +453,8 @@ class BookBlocks {
     let renderTime = 1000;
 
     return new Promise((resolve, reject) => {
-      console.log('ILM-5021')
-      return resolve;
+      console.log('ILM-5021-0')
+      // return resolve;
       let promises = []
 
       let result = {start: {}, end: {}};

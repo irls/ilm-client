@@ -1458,8 +1458,7 @@ debugger;
 
 
     async set_selected_blocksAsync({commit, state, dispatch}) {
-      console.log('ILM-5021')
-      return;
+      console.log('ILM-5021-1')
 
       state.setSelectedBlocksAsyncResult = [];
       let barBlock = $('.progress');
@@ -3167,8 +3166,7 @@ debugger;
     },
 
     async recountApprovedInRangeAsync({state, commit,dispatch}, selection = null) {
-      console.log('ILM-5021')
-      return;
+      console.log('ILM-5021-2')
 
       let barBlock = $('.progress');
       let bar = $('.progress .progress-bar');
