@@ -3962,24 +3962,24 @@ Save text changes and realign the Block?`,
 
       },
       setRangeSelection(type, ev) {
-        if(!this.setRangeSelectionLock){
-
-          let checked;
-          if (ev === true || ev === false) checked = ev;
-          else checked = ev.target && ev.target.checked;
-
-          let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
-          if (ev.shiftKey) {
-            if (this.selectionStart && this.selectionStart != this.block._id) {
-              document.getSelection().removeAllRanges();
-            }
-          }
-          this.setRangeSelectionLock = true;
-          setTimeout( () => {
-            this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
-          }, 500);
-        }
+        // if(!this.setRangeSelectionLock){
+        //
+        //   let checked;
+        //   if (ev === true || ev === false) checked = ev;
+        //   else checked = ev.target && ev.target.checked;
+        //
+        //   let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
+        //   if (ev.shiftKey) {
+        //     if (this.selectionStart && this.selectionStart != this.block._id) {
+        //       document.getSelection().removeAllRanges();
+        //     }
+        //   }
+        //   this.setRangeSelectionLock = true;
+        //   setTimeout( () => {
+        //     this.setRangeSelectionLock = false;
+        //     this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+        //   }, 500);
+        // }
         //this.blockO.checked = checked;
       },
       updateVoicework() {
