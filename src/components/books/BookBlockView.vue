@@ -3980,7 +3980,7 @@ Save text changes and realign the Block?`,
             this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
           }, 500);
         }
-        this.blockO.checked = checked;
+        // this.blockO.checked = checked;
       },
       updateVoicework() {
         if (!this.voiceworkChange) {
