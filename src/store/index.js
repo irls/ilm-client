@@ -1377,7 +1377,7 @@ export const store = new Vuex.Store({
         this.commit('set_storeList', new BookBlock(data.block));
       }
     },
-    
+
     set_user(state, user) {
       state.user = user;
     }
@@ -1458,6 +1458,8 @@ debugger;
 
 
     async set_selected_blocksAsync({commit, state, dispatch}) {
+      console.log('ILM-5021')
+      return;
 
       state.setSelectedBlocksAsyncResult = [];
       let barBlock = $('.progress');
@@ -3165,6 +3167,8 @@ debugger;
     },
 
     async recountApprovedInRangeAsync({state, commit,dispatch}, selection = null) {
+      console.log('ILM-5021')
+      return;
 
       let barBlock = $('.progress');
       let bar = $('.progress .progress-bar');

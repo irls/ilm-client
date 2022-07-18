@@ -1225,7 +1225,6 @@ export default {
     },
 
     async setRangeSelection(block, type, status, shift = false) {
-      return;
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
 
