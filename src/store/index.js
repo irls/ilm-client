@@ -3127,7 +3127,6 @@ export const store = new Vuex.Store({
 
     async recountApprovedInRangeAsync({state, commit,dispatch}, selection = null) {
 
-
       let barBlock = $('.progress');
       let bar = $('.progress .progress-bar');
       bar.text(`count blocks(tts,narration..)`)
@@ -3161,12 +3160,14 @@ export const store = new Vuex.Store({
               return block[1].audiosrc != '';
             }).length;
             resolve(d)
-          }
+          }else
+            resolve(d)
+
         }))
       }
 
       return Promise.all(promises).then(function(result) {
-
+        result = result.pop();
         let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
         if (audio_mastering) {
           result.approved+= result.approved_narration;
