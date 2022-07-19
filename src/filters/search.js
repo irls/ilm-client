@@ -25,14 +25,12 @@ const punctuationRules = (char) => {
 
 const specialRules = (char) => {
   switch (char) {
-    case 'æ': case 'ä':
+    case 'æ':
         return 'ae';
     case 'å':
-        return 'aa';
-    case 'œ': case 'ö':
+       return 'a';
+    case 'œ':
         return 'oe';
-    case 'ü':
-        return 'ue';
     case 'ß':
         return 'ss';
     default:
