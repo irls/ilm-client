@@ -59,11 +59,11 @@ class SuspiciousWordsHighlight {
     }
     if (Array.isArray(block.footnotes)) {
       block.footnotes.forEach((footnote, ftnIdx) => {
-        footnote.content = this.addHihglight(footnote.content);
+        footnote.content = this.addHighlight(footnote.content);
       });
     }
     if (block.description) {
-      block.description = this.addHihglight(block.description);
+      block.description = this.addHighlight(block.description);
     }
     return block;
   }
