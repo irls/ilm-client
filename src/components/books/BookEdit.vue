@@ -1057,6 +1057,9 @@ export default {
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
                 this.$store.dispatch('set_selected_blocks');
+                Vue.nextTick(() => {
+                  elNext.highlightSuspiciousWords();
+                });
                 return Promise.resolve();
               })
               .catch((err)=>{

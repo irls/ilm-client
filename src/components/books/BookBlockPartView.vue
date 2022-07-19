@@ -1801,7 +1801,7 @@ export default {
         if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');
+        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
@@ -4049,7 +4049,7 @@ Join subblocks?`,
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          this.discardBlock();
+          //this.discardBlock();
           if (this.block.voicework === 'narration') {
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
