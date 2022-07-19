@@ -3693,6 +3693,7 @@ Please save or discard your changes before joining.`,
             if (this._isDestroyed) {
               this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
             }
+            this.$parent.highlightSuspiciousWords();
             this.$parent.isSaving = false;
             this.$parent.$parent.refreshTmpl();
             return Promise.resolve();
@@ -3747,7 +3748,11 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToSubblocks([this.block.blockid, update]);
+          return this.splitBlockToSubblocks([this.block.blockid, update])
+            .then(() => {
+              this.$parent.highlightSuspiciousWords();
+              return Promise.resolve();
+            });
         }
       },
       
