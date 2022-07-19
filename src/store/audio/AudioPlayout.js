@@ -4,18 +4,21 @@ var setUpSource = function(playbackRate = 1) {
   const sourcePromise = new Promise(resolve => {
     // keep track of the buffer state.
     this.source.onended = () => {
-      this.source.disconnect();
-      this.fadeGain.disconnect();
-      this.volumeGain.disconnect();
-      this.shouldPlayGain.disconnect();
-      this.panner.disconnect();
-      this.masterGain.disconnect();
-      this.source = undefined;
-      this.fadeGain = undefined;
-      this.volumeGain = undefined;
-      this.shouldPlayGain = undefined;
-      this.panner = undefined;
-      this.masterGain = undefined;
+      /*if (this.source) {
+        this.source.disconnect();
+        this.fadeGain.disconnect();
+        this.volumeGain.disconnect();
+        this.shouldPlayGain.disconnect();
+        this.panner.disconnect();
+        this.masterGain.disconnect();
+        this.source = undefined;
+        this.fadeGain = undefined;
+        this.volumeGain = undefined;
+        this.shouldPlayGain = undefined;
+        this.panner = undefined;
+        this.masterGain = undefined;
+      }*/
+      //onSourceEnded.call(this);
       resolve();
     };
   });
@@ -36,6 +39,24 @@ var setUpSource = function(playbackRate = 1) {
   return sourcePromise;
 }
 
+var onSourceEnded = function() {
+  if (this.source) {
+    this.source.disconnect();
+    this.fadeGain.disconnect();
+    this.volumeGain.disconnect();
+    this.shouldPlayGain.disconnect();
+    this.panner.disconnect();
+    this.masterGain.disconnect();
+    this.source = undefined;
+    this.fadeGain = undefined;
+    this.volumeGain = undefined;
+    this.shouldPlayGain = undefined;
+    this.panner = undefined;
+    this.masterGain = undefined;
+  }
+}
+
 module.exports = {
-  setUpSource
+  setUpSource,
+  onSourceEnded
 }
