@@ -143,7 +143,7 @@
   import Track from 'waveform-playlist/lib/Track';
   import { renderTrack } from '../store/audio/AudioTrackRender.js';
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
-  import { setUpSource } from '../store/audio/AudioPlayout.js';
+  import { setUpSource, onSourceEnded } from '../store/audio/AudioPlayout.js';
   import { updateEditor } from '../store/audio/AudioPlaylist.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
@@ -220,6 +220,7 @@
           calculateTrackPeaks.call(this, samplesPerPixel, sampleRate, SILENCE_VALUE);
         }
         _Playout.prototype.setUpSource = function() {
+          //console.log(self.audiosourceEditor.tracks[0].playout)
           setUpSource.call(this, self.playbackRate);
         }
         this.$root.$on('for-audioeditor:load-and-play', this.load);
@@ -516,6 +517,9 @@
             }
           ])
           .then(() => {
+            //this.audiosourceEditor.tracks[0].playout.setUpSource = function() {
+              //setUpSource.call(self.audiosourceEditor.tracks[0].playout, self.playbackRate);
+            //}
             if (reloadBlockAudio) {
               if (this.pausedAt) {
                 this.audiosourceEditor.pausedAt = this.pausedAt;
@@ -923,6 +927,7 @@
             this.cursorPosition = false;
             return this.audiosourceEditor.stop()
               .then(() => {
+                onSourceEnded.call(this.audiosourceEditor.tracks[0].playout);
                 this.isPlaying = false;
                 this._clearWordSelection();
                 if (go_to_start) {
@@ -944,6 +949,19 @@
           if (this.isPlaying) {
             return this.audiosourceEditor.pause()
               .then(() => {
+                /*this.audiosourceEditor.tracks[0].playout.source.disconnect();
+                this.audiosourceEditor.tracks[0].playout.fadeGain.disconnect();
+                this.audiosourceEditor.tracks[0].playout.volumeGain.disconnect();
+                this.audiosourceEditor.tracks[0].playout.shouldPlayGain.disconnect();
+                this.audiosourceEditor.tracks[0].playout.panner.disconnect();
+                this.audiosourceEditor.tracks[0].playout.masterGain.disconnect();
+                this.audiosourceEditor.tracks[0].playout.source = undefined;
+                this.audiosourceEditor.tracks[0].playout.fadeGain = undefined;
+                this.audiosourceEditor.tracks[0].playout.volumeGain = undefined;
+                this.audiosourceEditor.tracks[0].playout.shouldPlayGain = undefined;
+                this.audiosourceEditor.tracks[0].playout.panner = undefined;
+                this.audiosourceEditor.tracks[0].playout.masterGain = undefined;*/
+                onSourceEnded.call(this.audiosourceEditor.tracks[0].playout);
                 this.isPlaying = false;
                 this.isPaused = true;
                 this.cursorPosition = this.audiosourceEditor.playbackSeconds;
@@ -2245,7 +2263,7 @@
               let replay = this.isPlaying;
               return new Promise((resolve, reject) => {
                 if (replay) {
-                  return this.stop(false)
+                  return this.pause(false)
                     .then(() => {
                       return resolve();
                     })
@@ -2276,29 +2294,33 @@
               if (end == this.selection.end) {
                 return;
               }
+              let setStart = Promise.resolve();
               if (end < this.selection.start) {
                 //this.selection.start = 0;
                 //this.cursorPosition = this.selection.start;
-                this.setSelectionStart(0);
+                setStart = this.setSelectionStart(0);
               }
               this.selection.end = end;
               //this.cursorPosition = this.selection.start;
-              let pause;
-              let replay = this.isPlaying;
-              if (replay) {
-                pause = this.pause();
-              } else {
-                pause = new Promise((res, rej) => {res()});
-              }
-              pause
+              return setStart
                 .then(() => {
-                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                  this._showSelectionBorders();
-                  this.contextPosition = null;
+                  let pause;
+                  let replay = this.isPlaying;
                   if (replay) {
-                    this.play();
+                    pause = this.pause();
+                  } else {
+                    pause = Promise.resolve();
                   }
-                });
+                  pause
+                    .then(() => {
+                      this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                      this._showSelectionBorders();
+                      this.contextPosition = null;
+                      if (replay) {
+                        this.play();
+                      }
+                    });
+                  });
             } else {
               return;
             }
