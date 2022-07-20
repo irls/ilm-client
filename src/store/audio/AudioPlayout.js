@@ -18,7 +18,7 @@ var setUpSource = function(playbackRate = 1) {
         this.panner = undefined;
         this.masterGain = undefined;
       }*/
-      //onSourceEnded.call(this);
+      onSourceEnded.call(this);
       resolve();
     };
   });
@@ -41,6 +41,9 @@ var setUpSource = function(playbackRate = 1) {
 
 var onSourceEnded = function() {
   if (this.source) {
+    this.source.onended = () => {
+      
+    };
     this.source.disconnect();
     this.fadeGain.disconnect();
     this.volumeGain.disconnect();
