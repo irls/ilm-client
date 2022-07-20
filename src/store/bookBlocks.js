@@ -416,7 +416,6 @@ class BookBlocks {
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
   setCheckedAsyncIterator(i,endIdx,bar,resolveCb ) {
-    debugger;
     let iterationCount = 0;
     let iterationMax = 50;
     let max = endIdx+1;
