@@ -3729,7 +3729,11 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToBlocks([this.block.blockid, update]);
+          return this.splitBlockToBlocks([this.block.blockid, update])
+            .then(() => {
+              this.$parent.highlightSuspiciousWords();
+              return Promise.resolve();
+            });
         }
       },
       
@@ -3764,7 +3768,11 @@ Please save or discard your changes before joining.`,
         this.block.isSaving = true;
         this.$parent.isSaving = true;
         this.$parent.$forceUpdate();
-        return this.splitBySubblock([this.block.blockid, this.blockPartIdx]);
+        return this.splitBySubblock([this.block.blockid, this.blockPartIdx])
+          .then(() => {
+            this.$parent.highlightSuspiciousWords();
+            return Promise.resolve();
+          });
       },
       
       mergeAllSubblocks(confirm = true) {

@@ -52,6 +52,9 @@ class SuspiciousWordsHighlight {
   }
   
   setSuspiciousHighlight(block) {
+    if (block.content) {
+      block.content = this.addHighlight(block.content);
+    }
     if (Array.isArray(block.parts)) {
       block.parts.forEach(blk => {
         blk.content = this.addHighlight(blk.content);
@@ -81,6 +84,8 @@ class SuspiciousWordsHighlight {
     if (this.suspiciousTextRegex.test(el.innerText)) {
       el.querySelectorAll('w').forEach(word => {
         if (word.innerText && this.suspiciousTextRegex.test(word.innerText)) {
+          word.classList.add(SUSPICIOUS_WORD_CLASS);
+        } else if (word.nextSibling && word.nextSibling.nodeType === 3 && this.suspiciousTextRegex.test(word.nextSibling.nodeValue)) {
           word.classList.add(SUSPICIOUS_WORD_CLASS);
         }
       });
