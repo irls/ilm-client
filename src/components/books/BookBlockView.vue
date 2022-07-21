@@ -3355,7 +3355,8 @@ Save text changes and realign the Block?`,
         }
 
         playerObj.player = new ReadAlong({
-            forceLineScroll: false
+            forceLineScroll: false,
+            keep_highlight_on_pause: true
         },{
           on_start:   ()=>{},
           on_pause:   ()=>{},

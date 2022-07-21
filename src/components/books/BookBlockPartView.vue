@@ -2629,7 +2629,7 @@ export default {
       onAudPlay(blockid) {
         if (blockid !== `${this.block.blockid}-${this.blockPartIdx}`) {
           if (this.player && (this.isAudStarted || this.isAudPaused)) {
-            this.audStop();
+            this.audStop(this.block.blockid);
           }
         }
       },
