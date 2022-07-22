@@ -1,6 +1,12 @@
 <template>
+
+
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" ><!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
+  <selection-modal
+    :show="selectionModalActive"
+  >
+  </selection-modal>
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
@@ -98,7 +104,7 @@
 </template>
 
 <script>
-
+import SelectionModal from './SelectionModal'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import BookBlockView from './BookBlockView'
 import BookBlockPreview   from './BookBlockPreview';
@@ -119,10 +125,12 @@ Vue.use(VueHotkey);
 
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
+import TaskAddModal from "../tasks/TaskAddModal";
 
 export default {
   data () {
     return {
+      selectionModalActive:false,
       page: 0,
       recorder: false,
       recorderStream: null,
@@ -274,7 +282,8 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider,
+    SelectionModal,
+    BookBlockView, BookBlockPreview, vueSlider,
       SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
   },
   methods: {
@@ -1223,7 +1232,7 @@ export default {
     async setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
-
+// debugger;
       switch (type) {
         case 'start':
           if (status) {
@@ -1266,14 +1275,16 @@ export default {
           this.parlistO.setUnCheckedRange();
           if (status) { // check
             if (shift && this.blockSelection.start._id) {
+              this.selectionModalActive = true;
+
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid);
+                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid,this.$store);
                   break;
                 case 1:// block below current selection checked
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId);
+                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId,this.$store);
                   break;
                 default:
                   break;
@@ -1291,6 +1302,12 @@ export default {
             }
             else this.setBlockSelection({start: {}, end: {}});
           }
+
+          let this_ = this;
+          setTimeout(() => {
+            this_.$store.dispatch('setSelectionModalProgressWidth',100);
+            this_.selectionModalActive = false;
+            },1000)
           break;
       }
       //this.recountApprovedInRange();

@@ -415,7 +415,7 @@ class BookBlocks {
     }
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
-  setCheckedAsyncIterator(i,endIdx,bar,resolveCb ) {
+  setCheckedAsyncIterator(i,endIdx,resolveCb,$store ) {
     let iterationCount = 0;
     let iterationMax = 50;
     let max = endIdx+1;
@@ -427,28 +427,22 @@ class BookBlocks {
         }
         i++;
         iterationCount++;
-        let width = Math.ceil(i/(max/100));
-        width = 0+25*(width/100);
-
-        bar.css('width',`${width}%`)
-        bar.text(`Setting range selection:${i}/${max}`)
       }
+      let width = Math.ceil(i/(max/100));
+      width = 0+25*(width/100);
+      $store.dispatch('setSelectionModalProgressWidth',width)
+
       let this_ = this;
-//ILM-5021
-      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,bar,resolveCb) },1);
+      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,resolveCb,$store) },1);
     }else{
       resolveCb();
     }
 
   }
 
-  async setCheckedAsync(startRId, endRId = false) {
-    let barBlock = $('.progress');
-    let bar = $('.progress .progress-bar');
+  async setCheckedAsync(startRId, endRId = false,$store) {
 
-    barBlock.show();
-    bar.css('width',`0`);
-    bar.text(``)
+    $store.dispatch('setSelectionModalProgressWidth')
     let renderTime = 1000;
 
     return new Promise((resolve, reject) => {
@@ -462,7 +456,7 @@ class BookBlocks {
         if (startIdx < endIdx) {
           renderTime = 3000;
           promises.push(new Promise((resolve, reject) => {
-            this.setCheckedAsyncIterator(startIdx,endIdx, bar,resolve);
+            this.setCheckedAsyncIterator(startIdx,endIdx, resolve, $store);
             result.start = { _id: this.lookupList[startRId].blockid };
             result.end = { _id: this.lookupList[endRId].blockid };
           }))
@@ -479,8 +473,9 @@ class BookBlocks {
                 this.lookupList[iRId].checked = true;
               }
               let width = Math.round(i/(max/100));
-              bar.css('width',`${width}%`)
-              bar.text(`Setting range selection:${i}/${max}`)
+
+              $store.dispatch('setSelectionModalProgressWidth',width)
+
 
             }
             result.start = { _id: this.lookupList[endRId].blockid };

@@ -73,6 +73,7 @@ export const store = new Vuex.Store({
     setBlocksDisabled
   },
   state: {
+    SelectionModalProgress:0,
     audioRenaming : false,
     auth: superlogin,
     isLoggedIn: false,
@@ -256,6 +257,7 @@ export const store = new Vuex.Store({
   },
 
   getters: {
+    getSelectionModalProgress: state=>state.SelectionModalProgress,
     livedbStatus: state => state.livedbStatus,
     livedbEnabled: state => state.livedbEnabled,
     auth: state => state.auth,
@@ -1372,6 +1374,10 @@ export const store = new Vuex.Store({
   },
 
   actions: {
+    async setSelectionModalProgressWidth({ state, commit, dispatch },value = 0 ) {
+      state.SelectionModalProgress = Math.round(value);
+    },
+
     async set_block_selection({ state, commit, dispatch },selection) {
 
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
@@ -1402,7 +1408,6 @@ export const store = new Vuex.Store({
       let idx = payload.idx;
       let size = payload.size;
       let crossId = payload.crossId;
-      let bar = payload.bar;
       let resolve = payload.resolve;
       let iterationCount = 0;
       let iterationMax = 50;
@@ -1430,15 +1435,13 @@ export const store = new Vuex.Store({
 
       let width = Math.ceil(idx/(size/100));
       width = (34*1)+34*(width/100);
-      bar.css('width',`${width}%`)
-      bar.text(`Building blocks graph:${idx}/${size}`)
+
+      dispatch('setSelectionModalProgressWidth',width)
 
       if(idx<=size && status == 'ok'){
-//ILM-5021
         setTimeout( function() {
-          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,bar,resolve}) },1);
+          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,resolve}) },1);
       }else{
-
         resolve();
       }
     },
@@ -1447,12 +1450,8 @@ export const store = new Vuex.Store({
     async set_selected_blocksAsync({commit, state, dispatch}) {
 
       state.setSelectedBlocksAsyncResult = [];
-      let barBlock = $('.progress');
-      let bar = $('.progress .progress-bar');
+      dispatch('setSelectionModalProgressWidth')
 
-      barBlock.show();
-      bar.css('width',`0`);
-      bar.text(``)
       let promises = [];
 
       if (state.blockSelection.start && state.blockSelection.start._id && state.blockSelection.end && state.blockSelection.end._id) {
@@ -1461,14 +1460,11 @@ export const store = new Vuex.Store({
         promises.push(new Promise((resolve, reject) => {
           let size = state.storeList.size;
           let idx = 0;
-          dispatch('set_selected_blocksAsyncIteration',{idx,size, crossId,bar,resolve})
+          dispatch('set_selected_blocksAsyncIteration',{idx,size, crossId,resolve})
         }))
       }
       return Promise.all(promises).then(function() {
         state.selectedBlocks = state.setSelectedBlocksAsyncResult;
-        barBlock.hide();
-        bar.text(``)
-
       });
 
 
@@ -3113,10 +3109,8 @@ export const store = new Vuex.Store({
       if(idx<=size && status == 'ok'){
         let width = Math.ceil(idx/(size/100));
         width = (34*2)+34*(width/100);
-        bar.css('width',`${width}%`)
-        bar.text(`count blocks(tts,narration..):${idx}/${size}`)
+        dispatch('setSelectionModalProgressWidth',width)
 
-//ILM-5021
         setTimeout( function() {
           dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },1);
       }else{
@@ -3127,10 +3121,6 @@ export const store = new Vuex.Store({
 
     async recountApprovedInRangeAsync({state, commit,dispatch}, selection = null) {
 
-      let barBlock = $('.progress');
-      let bar = $('.progress .progress-bar');
-      bar.text(`count blocks(tts,narration..)`)
-      barBlock.show();
       let d = {};
       d.approved = 0;
       d.approved_tts = 0;
@@ -3179,9 +3169,6 @@ export const store = new Vuex.Store({
         commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: result.changed_in_range_tts});
 
         commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: result.voiced_in_range});
-
-        barBlock.hide();
-        bar.text(``)
 
       });
     },
