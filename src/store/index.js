@@ -1471,7 +1471,7 @@ export const store = new Vuex.Store({
       let barBlock = $('.progress');
       let bar = $('.progress .progress-bar');
 
-      barBlock.show();
+//       barBlock.show();
       bar.css('width',`0`);
       bar.text(``)
       let promises = [];
@@ -3179,7 +3179,7 @@ export const store = new Vuex.Store({
       let barBlock = $('.progress');
       let bar = $('.progress .progress-bar');
       bar.text(`count blocks(tts,narration..)`)
-      barBlock.show();
+//       barBlock.show();
       let d = {};
       d.approved = 0;
       d.approved_tts = 0;
