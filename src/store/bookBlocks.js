@@ -431,7 +431,7 @@ class BookBlocks {
       let width = Math.ceil(i/(max/100));
       width = 0+25*(width/100);
       $store.dispatch('setSelectionModalProgressWidth',width)
-
+      console.log(`setCheckedAsyncIterator ${i}`)
       let this_ = this;
       setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,resolveCb,$store) },1);
     }else{
@@ -442,7 +442,7 @@ class BookBlocks {
 
   async setCheckedAsync(startRId, endRId = false,$store) {
 
-    $store.dispatch('setSelectionModalProgressWidth')
+    // $store.dispatch('setSelectionModalProgressWidth')
     let renderTime = 1000;
 
     return new Promise((resolve, reject) => {
@@ -475,7 +475,7 @@ class BookBlocks {
               let width = Math.round(i/(max/100));
 
               $store.dispatch('setSelectionModalProgressWidth',width)
-
+              console.log(`setCheckedAsync inner iteratoin ${i}`)
 
             }
             result.start = { _id: this.lookupList[endRId].blockid };
