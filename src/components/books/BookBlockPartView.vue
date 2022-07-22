@@ -2586,7 +2586,7 @@ export default {
                 this.$root.$emit('playBlockFootnote', false);
                 //this.player.audio_element.volume = 0;
                 this.$root.$on('readalong:playBlock', this.onAudPlay);
-                this.$root.$on('from-audioeditor:play', this.audStop);
+                this.$root.$on('from-audioeditor:play', this.onAudPlay);
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
@@ -2603,7 +2603,7 @@ export default {
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
-                this.$root.$off('from-audioeditor:play', this.audStop);
+                this.$root.$off('from-audioeditor:play', this.onAudPlay);
             },
             on_newline: () => {
               let element = document.getElementById(this.block.blockid);
