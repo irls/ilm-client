@@ -1294,7 +1294,7 @@ export default {
               newSelection = this.parlistO.setChecked(block.rid);
             }
             //console.log('newSelection', newSelection.start._id, newSelection.end._id);
-            this.setBlockSelection(newSelection);
+            await this.setBlockSelection(newSelection);
           }
           else { // uncheck
             if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
