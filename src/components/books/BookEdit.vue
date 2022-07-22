@@ -1283,6 +1283,7 @@ export default {
           if (status) { // check
             if (shift && this.blockSelection.start._id) {
               this.selectionModalActive = true;
+              this.$store.dispatch('setSelectionModalProgressWidth',0);
 
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
@@ -1312,6 +1313,7 @@ export default {
 
           let this_ = this;
           setTimeout(() => {
+            // setSelectionModalProgressWidth
             this_.$store.dispatch('setSelectionModalProgressWidth',100);
             this_.selectionModalActive = false;
             },1000)

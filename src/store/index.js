@@ -1457,6 +1457,7 @@ export const store = new Vuex.Store({
       width = (34*1)+34*(width/100);
 
       dispatch('setSelectionModalProgressWidth',width)
+      console.log(`set_selected_blocksAsyncIteration ${idx}`)
 
       if(idx<=size && status == 'ok'){
         setTimeout( function() {
@@ -1471,7 +1472,7 @@ export const store = new Vuex.Store({
       console.log('ILM-5021-1')
 
       state.setSelectedBlocksAsyncResult = [];
-      dispatch('setSelectionModalProgressWidth')
+      // dispatch('setSelectionModalProgressWidth')
 
       let promises = [];
 
@@ -3158,6 +3159,7 @@ export const store = new Vuex.Store({
         let width = Math.ceil(idx/(size/100));
         width = (34*2)+34*(width/100);
         dispatch('setSelectionModalProgressWidth',width)
+        console.log(`recountApprovedInRangeAsyncIteration ${idx}`)
 
         setTimeout( function() {
           dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },1);
