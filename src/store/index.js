@@ -3130,7 +3130,7 @@ export const store = new Vuex.Store({
       let barBlock = $('.progress');
       let bar = $('.progress .progress-bar');
       bar.text(`count blocks(tts,narration..)`)
-      barBlock.show();
+//       barBlock.show();
       let d = {};
       d.approved = 0;
       d.approved_tts = 0;
