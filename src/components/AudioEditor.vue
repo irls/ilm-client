@@ -1798,6 +1798,7 @@
                   .then(() => {
                     if (autoplay) {
                       this.cursorPosition = false;
+                      this.forceCleanupSource();
                       Vue.nextTick(() => {
                         this.play();
                       });
@@ -1805,6 +1806,11 @@
                   });
               });
             }
+          }
+        },
+        forceCleanupSource() {
+          if (this.audiosourceEditor && this.audiosourceEditor.tracks && this.audiosourceEditor.tracks[0] && this.audiosourceEditor.tracks[0].playout && this.audiosourceEditor.tracks[0].playout.source) {
+            onSourceEnded.call(this.audiosourceEditor.tracks[0].playout);
           }
         },
         _emitSelection(part, field, value) {
