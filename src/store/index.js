@@ -1395,7 +1395,8 @@ export const store = new Vuex.Store({
 
   actions: {
     async setSelectionModalProgressWidth({ state, commit, dispatch },value = 0 ) {
-      state.SelectionModalProgress = Math.round(value);
+      value = Math.round(value);
+      state.SelectionModalProgress = value>=100?100:value;
     },
 
     async set_block_selection({ state, commit, dispatch },selection) {
