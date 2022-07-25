@@ -1207,7 +1207,7 @@ export const store = new Vuex.Store({
 
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
-      this.dispatch('set_selected_blocks');
+      // this.dispatch('set_selected_blocks');
     },
 
     set_taskBlockMap(state) {
@@ -1433,6 +1433,17 @@ export const store = new Vuex.Store({
       let iterationCount = 0;
       let iterationMax = 50;
       let status = 'ok';
+
+      let name = 'SelectionModalProgressIterations';
+      let nameEQ = name + "=";
+      let ca = document.cookie.split(';');
+      for(let i=0;i < ca.length;i++) {
+        let c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) {
+          iterationMax = parseInt(c.substring(nameEQ.length,c.length));
+        }
+      }
 
       while (iterationCount<iterationMax && idx<=size && status == 'ok'){
         let block = state.storeList.get(crossId);
@@ -3087,6 +3098,18 @@ export const store = new Vuex.Store({
       let iterationCount = 0;
       let iterationMax = 50;
       let status = 'ok';
+
+
+      let name = 'SelectionModalProgressIterations';
+      let nameEQ = name + "=";
+      let ca = document.cookie.split(';');
+      for(let i=0;i < ca.length;i++) {
+        let c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) {
+          iterationMax = parseInt(c.substring(nameEQ.length,c.length));
+        }
+      }
 
       if(!bar)
         bar = $('.progress .progress-bar');

@@ -1,3 +1,4 @@
+
 const _ = require('lodash');
 const _id = require('uniqid');
 import superlogin from 'superlogin-client';
@@ -417,8 +418,21 @@ class BookBlocks {
   }
   setCheckedAsyncIterator(i,endIdx,resolveCb,$store ) {
     let iterationCount = 0;
-    let iterationMax = 50;
+    let iterationMax = 10;
     let max = endIdx+1;
+
+    let name = 'SelectionModalProgressIterations';
+    let nameEQ = name + "=";
+    let ca = document.cookie.split(';');
+    for(let i=0;i < ca.length;i++) {
+      let c = ca[i];
+      while (c.charAt(0)==' ') c = c.substring(1,c.length);
+      if (c.indexOf(nameEQ) == 0) {
+        iterationMax = parseInt(c.substring(nameEQ.length,c.length));
+      }
+    }
+
+
     if (i <= endIdx ) {
       while (i <= endIdx && iterationCount<iterationMax ) {
         let iRId = this.listRIds[i];
