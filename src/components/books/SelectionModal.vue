@@ -64,7 +64,6 @@ export default {
       }
       let name = 'SelectionModalProgressIterations';
       document.cookie = name + "=" + (this.SelectionModalProgressIterations || "")  + expires + "; path=/";
-      this.$store.dispatch('setSelectionModalProgressIterations',this.SelectionModalProgressIterations);
     },
 
 
