@@ -13,7 +13,7 @@
       </div>
       <div class="form-group">
         <label>Speed {{SelectionModalProgressIterations}}</label>
-        <input type="range" id="volume" v-model="SelectionModalProgressIterations"  @change="SelectionModalProgressIterationsChanged()" min="10" max="1000">
+        <input type="range" id="volume" v-model="SelectionModalProgressIterations"  @change="SelectionModalProgressIterationsChanged()" min="10" max="250">
       </div>
     </div>
 
