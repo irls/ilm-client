@@ -11,6 +11,10 @@
       <div class="form-group">
         <label>Setting range...{{SelectionModalProgress}}%</label> <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
       </div>
+      <div class="form-group">
+        <label>Speed {{SelectionModalProgressIterations}}</label>
+        <input type="range" id="volume" v-model="SelectionModalProgressIterations"  @change="SelectionModalProgressIterationsChanged()" min="10" max="1000">
+      </div>
     </div>
 
     <div slot="modal-footer" class="modal-footer">
@@ -31,18 +35,45 @@ export default {
   },
   data() {
     return {
-      // progress: 0,
+      SelectionModalProgressIterations:10
     }
   },
   mounted() {
+    this.SelectionModalProgressIterations = 10;
+
+    let name = 'SelectionModalProgressIterations';
+    let nameEQ = name + "=";
+    let ca = document.cookie.split(';');
+    for(let i=0;i < ca.length;i++) {
+      let c = ca[i];
+      while (c.charAt(0)==' ') c = c.substring(1,c.length);
+      if (c.indexOf(nameEQ) == 0) {
+        this.SelectionModalProgressIterations = parseInt(c.substring(nameEQ.length,c.length));
+      }
+    }
+
   },
   methods: {
+    SelectionModalProgressIterationsChanged () {
+      let days = 30;
+      let expires = "";
+      if (days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+      }
+      let name = 'SelectionModalProgressIterations';
+      document.cookie = name + "=" + (this.SelectionModalProgressIterations || "")  + expires + "; path=/";
+      this.$store.dispatch('setSelectionModalProgressIterations',this.SelectionModalProgressIterations);
+    },
+
+
     ...mapActions([
     ]),
   },
   computed: {
     ...mapGetters({
-      SelectionModalProgress: 'getSelectionModalProgress'
+      SelectionModalProgress: 'getSelectionModalProgress',
     })
     // progress () {
     //   return basket.state.fruits.length
