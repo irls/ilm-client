@@ -1473,7 +1473,7 @@ export const store = new Vuex.Store({
 
       if(idx<=size && status == 'ok'){
         setTimeout( function() {
-          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,resolve}) },100);
+          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,resolve}) },50);
       }else{
         resolve();
       }
@@ -3186,7 +3186,7 @@ export const store = new Vuex.Store({
         console.log(`recountApprovedInRangeAsyncIteration ${idx}`)
 
         setTimeout( function() {
-          dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },100);
+          dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },50);
       }else{
 
         resolve(d);
