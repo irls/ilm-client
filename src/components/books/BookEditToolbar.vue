@@ -22,6 +22,20 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
+    <button v-if='hasBookSelected()' class='btn btn-default' @click='toggleSearchVisible'><i class="fa fa-lg fa-search"></i></button>
+    <OverlayPanel ref="searchPanel">
+      <div class="search-box">
+        <div class="search pull-left">
+          <input v-model="model" type="text" class="form-control search-in-book" placeholder="Search"></input>
+        </div>
+        <div class="buttons right">
+          <i class="fa fa-chevron-down" aria-hidden="true"></i>
+          <i class="fa fa-chevron-up" aria-hidden="true"></i>
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </div>
+      </div>
+    </OverlayPanel>
+
     <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
@@ -35,6 +49,7 @@ import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
+import OverlayPanel from 'primevue/overlaypanel';
 
 export default {
   data () {
@@ -44,7 +59,7 @@ export default {
         //'BookNarrate': 'Narrate',
         //'BookProofread': 'Proofread',
         //'BookEditDisplay': 'Display'
-      }
+      }, model
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -137,11 +152,15 @@ export default {
         }
       }
     },
+    toggleSearchVisible(ev) {
+      this.$refs.searchPanel.toggle(ev);
+    },
     ...mapActions(['setBlockSelection'])
   },
   components: {
     ButtonRadioGroup,
-    dropdown
+    dropdown,
+    OverlayPanel,
   },
   // watch: {
   //   'this.editMode' () {
@@ -245,6 +264,28 @@ h3.title i {
     line-height: 27pt;
     padding-left: 2px;
     width: 27px;
+  }
+}
+
+.search-box {
+  width: 400px;
+  height: 33px;
+
+  .search {
+    width: 80%;
+  }
+  .buttons {
+    &.right {
+      float: right;
+    }
+    .fa {
+      margin-left: 3px;
+      padding-top: 8px;
+
+      &.fa-times {
+        margin-left: 7px;
+      }
+    }
   }
 }
 
