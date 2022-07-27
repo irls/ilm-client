@@ -111,6 +111,7 @@ import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
+import { prepareForFilter } from '@src/filters/search.js';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -151,7 +152,10 @@ export default {
       scrollBarBlockHeight: 150,
       scrollBarBlockTimer: null,
 
-      scrollToId: null
+      scrollToId: null,
+
+      searchPointer: 0,
+      searchResultArray: []
     }
   },
   props: ['mode'],
@@ -171,7 +175,8 @@ export default {
           audioTasksQueue: 'audioTasksQueue',
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
-          isAudioEditAligning: 'isAudioEditAligning'
+          isAudioEditAligning: 'isAudioEditAligning',
+          bookSearch: 'bookSearch'
       }),
       metaStyles: function () {
           let result = '';
@@ -2229,6 +2234,44 @@ export default {
         let rect = el.getBoundingClientRect();
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         return rect.bottom < viewHeight;
+      },
+
+      searchInBlocks(bookSearch) {
+        this.searchResultArray = [];
+        if(bookSearch.string && bookSearch.string.length > 2) {
+          const searchArr = prepareForFilter(bookSearch.string).split(' ');
+          console.log(`searchArr: `, searchArr);
+
+          for (let blockId of this.parlistO.idsArray()) {
+            const block = this.parlist.get(blockId);
+            const result = block.findInText(searchArr);
+            if (result) this.searchResultArray.push(blockId);
+          }
+
+          console.log(`this.searchResultArray: `, this.searchResultArray);
+        }
+      },
+
+      scrollSearchDown() {
+        if (this.searchResultArray.length) {
+          if (this.searchPointer < this.searchResultArray.length - 1) {
+            this.searchPointer++;
+            this.scrollToBlock(this.searchResultArray[this.searchPointer]);
+          }
+          console.log(`startId: `, this.startId);
+          console.log(`scrollSearchDown: `, this.searchPointer, this.searchResultArray[this.searchPointer]);
+        }
+      },
+
+      scrollSearchUp() {
+        if (this.searchResultArray.length) {
+          if (this.searchPointer > 0) {
+            this.searchPointer--;
+            this.scrollToBlock(this.searchResultArray[this.searchPointer]);
+          }
+          console.log(`startId: `, this.startId);
+          console.log(`scrollSearchUp: `, this.searchPointer, this.searchResultArray[this.searchPointer]);
+        }
       }
   },
   events: {
@@ -2288,6 +2331,9 @@ export default {
         e.preventDefault();
       });
 
+      this.$root.$on('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
+      this.$root.$on('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
+
       //this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
   },
 
@@ -2308,6 +2354,9 @@ export default {
     this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
     this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
     this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
+
+    this.$root.$off('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
+    this.$root.$off('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
   },
   watch: {
     'meta._id': {
@@ -2325,11 +2374,11 @@ export default {
 //         }
       }
     },
-    'allBooks': {
-      handler() {
-
-      }
-    },
+//     'allBooks': {
+//       handler() {
+//
+//       }
+//     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
@@ -2456,6 +2505,12 @@ export default {
           this.$root.$emit('for-audioeditor:load-and-play', block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx || 0), loadBlock);
         }
       }
+    },
+    bookSearch: {
+      handler(bookSearch, oldVal) {
+        this.searchInBlocks(bookSearch);
+      },
+      deep: true
     }
   }
 }

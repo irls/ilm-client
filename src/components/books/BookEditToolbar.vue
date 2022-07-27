@@ -26,11 +26,11 @@
     <OverlayPanel ref="searchPanel">
       <div class="search-box">
         <div class="search pull-left">
-          <input v-model="model" type="text" class="form-control search-in-book" placeholder="Search"></input>
+          <input v-model="bookSearch.string" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
         <div class="buttons right">
-          <i class="fa fa-chevron-down" aria-hidden="true"></i>
-          <i class="fa fa-chevron-up" aria-hidden="true"></i>
+          <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
+          <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
           <i class="fa fa-times" aria-hidden="true"></i>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default {
         //'BookNarrate': 'Narrate',
         //'BookProofread': 'Proofread',
         //'BookEditDisplay': 'Display'
-      }, model
+      },
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -114,7 +114,16 @@ export default {
         return modes;
       }
     },
-    ...mapGetters(['currentBookMeta', 'currentBookid', 'currentBook', 'storeListO', 'isBlocked', 'blockSelection', 'adminOrLibrarian'])
+    ...mapGetters([
+      'currentBookMeta',
+      'currentBookid',
+      'currentBook',
+      'storeListO',
+      'isBlocked',
+      'blockSelection',
+      'adminOrLibrarian',
+      'bookSearch'
+    ])
   },
   methods: {
 
@@ -154,6 +163,12 @@ export default {
     },
     toggleSearchVisible(ev) {
       this.$refs.searchPanel.toggle(ev);
+    },
+    scrollSearchDown(ev) {
+      this.$root.$emit('from-book-edit-toolbar:scroll-search-down');
+    },
+    scrollSearchUp(ev) {
+      this.$root.$emit('from-book-edit-toolbar:scroll-search-up');
     },
     ...mapActions(['setBlockSelection'])
   },

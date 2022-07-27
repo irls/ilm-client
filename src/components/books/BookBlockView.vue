@@ -4313,11 +4313,11 @@ Save text changes and realign the Block?`,
       checkAllowNarrateUnassigned() {
         return this.checkNarratorUnassignedAction('narrate');
       },
-      
+
       checkAllowUpdateUnassigned() {
         return this.checkNarratorUnassignedAction('update');
       },
-      
+
       checkNarratorUnassignedAction(type = 'narrate') {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
@@ -5483,6 +5483,10 @@ Save text changes and realign the Block?`,
               transparent 70%
           );
       }
+  }
+
+  w[data-in-search] {
+    background: red !important;
   }
 
   [data-author] {

@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const _id = require('uniqid');
 const moment = require('moment');
+import { prepareForFilter, replaceParsing } from '@src/filters/search.js';
 import superlogin from 'superlogin-client';
 import Vue from 'vue';
 
@@ -928,7 +929,7 @@ class BookBlock {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
   }
-  
+
   hasClass(type, val) {
     if (!Array.isArray(val)) {
       return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
@@ -1036,7 +1037,7 @@ class BookBlock {
   setChanged(val) {
     this.isChanged = val;
   }
-  
+
   hasChangedPart() {
     if (Array.isArray(this.parts) && this.parts.length > 0) {
       let p = this.parts.find(p => {
@@ -1084,9 +1085,35 @@ class BookBlock {
     }
     return true;
   }
-  
+
   setIsSaving(value = true) {
     this.isSaving = value;
+  }
+
+  findInText(strArr) {
+    //console.log(`content: `, replaceParsing(this.content));
+    let backContent = this.content;
+    const contentArr = replaceParsing(backContent);
+
+    let found = contentArr.filter((content)=>{
+      let isFound = false;
+      for (let str of strArr) {
+        //console.log(`content[1]: `, content[1], str, content[1].indexOf(str));
+        if (content[1].indexOf(str) > -1) {
+          isFound = true;
+          break;
+        }
+      }
+      return isFound
+    })
+    if (found.length) {
+      console.log(`found: `, found);
+      found.forEach((el)=>{
+        backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search="">'))
+      })
+      this.content = backContent;
+    }
+    return found.length;
   }
 }
 
@@ -1104,9 +1131,9 @@ class FlagPart {
     this.creator_role = init.creator_role || null;
   }
 }
-  
+
 const allFootnoteAttributes = ["voicework", "wordsRange", "language", "content", "audiosrc", "audiosrc_ver"];
-  
+
 
 class FootNote {
   constructor(init) {
@@ -1114,7 +1141,7 @@ class FootNote {
     this.voicework = init.voicework || 'no_audio';
     this.language = init.language || '';
   }
-  
+
   hasAttribute(attribute) {
     return allFootnoteAttributes.includes(attribute);
   }
