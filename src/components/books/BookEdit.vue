@@ -505,6 +505,11 @@ export default {
               this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
+            if (el) {
+              Vue.nextTick(() => {
+                el.highlightSuspiciousWords();
+              });
+            }
           }
           this.correctCurrentEditHeight(change.doc.blockid);
         }
