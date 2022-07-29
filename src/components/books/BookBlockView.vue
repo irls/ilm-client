@@ -6116,7 +6116,7 @@ div.-content.editing  div.content-wrap {
       display: inline-block;
       font-style: normal;
       font-weight: bolder;
-      left: -70px;
+      left: -80px;
     }
   }
 }
