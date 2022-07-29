@@ -6099,6 +6099,7 @@ div.-content.editing  div.content-wrap {
    width: 17px;
    display: inline-block;
    margin-left: -10px;
+   font-style: normal;
 }
 .title {
   .suspicious-word:before {
