@@ -35,38 +35,26 @@ export default {
   },
   data() {
     return {
-      // SelectionModalProgressIterations:50
     }
   },
   mounted() {
-    // this.SelectionModalProgressIterations = 50;
+    $('#SelectionModal .modal-dialog')
+      .css('position','relative')
+      .css('height','100%')
+      .css('margin','0 auto')
+      .css('padding','0');
 
-    // let name = 'SelectionModalProgressIterations';
-    // let nameEQ = name + "=";
-    // let ca = document.cookie.split(';');
-    // for(let i=0;i < ca.length;i++) {
-    //   let c = ca[i];
-    //   while (c.charAt(0)==' ') c = c.substring(1,c.length);
-    //   if (c.indexOf(nameEQ) == 0) {
-    //     this.SelectionModalProgressIterations = parseInt(c.substring(nameEQ.length,c.length));
-    //   }
-    // }
+    $('#SelectionModal .modal-content')
+      .css('margin','0')
+      .css('position','absolute')
+      .css('top','50%')
+      .css('-ms-transform','translateY(-50%)')
+      .css('transform','translateY(-50%)')
+      .css('height', '100px')
+      .css('width', '500px');
 
   },
   methods: {
-    // SelectionModalProgressIterationsChanged () {
-    //   let days = 30;
-    //   let expires = "";
-    //   if (days) {
-    //     let date = new Date();
-    //     date.setTime(date.getTime() + (days*24*60*60*1000));
-    //     expires = "; expires=" + date.toUTCString();
-    //   }
-    //   let name = 'SelectionModalProgressIterations';
-    //   document.cookie = name + "=" + (this.SelectionModalProgressIterations || "")  + expires + "; path=/";
-    // },
-
-
     ...mapActions([
     ]),
   },
@@ -74,21 +62,9 @@ export default {
     ...mapGetters({
       SelectionModalProgress: 'getSelectionModalProgress',
     })
-    // progress () {
-    //   return basket.state.fruits.length
-    //   // Or return basket.getters.fruitsCount
-    //   // (depends on your design decisions).
-    // }
   },
   watch: {
-    // 'SelectionModalProgress': function() {
-    //   console.log(this.$store.state.SelectionModalProgress)
-    // }
-  }
-  //   progress (newCount, oldCount) {
-  //     console.log(`We have ${newCount} progress now, yay!`)
-  //   }
-  // }
+
 }
 </script>
 <style scoped>
@@ -99,27 +75,18 @@ export default {
   display: none;
 }
 #SelectionModal .form-group{
-  font-size: 26px;
   text-align: center;
   padding-top: 13px;
+}
+#SelectionModal .form-group label{
+  font-size: 24pt;
+  color: black;
+  font-weight: lighter;
 }
 
 #SelectionModal .fa {
   font-size: 30px;
 }
-/*#SelectionModal .preloader {*/
-/*  background: url(/static/preloader-snake-transparent-small.gif);*/
-/*  width: 34px;*/
-/*  height: 34px;*/
-/*  display: inline-block;*/
-/*  background-repeat: no-repeat;*/
-/*  text-align: center;*/
-/*  background-position: 0 0;*/
-/*  !*background-size: 83%;*!*/
-/*  margin-bottom: -3px;*/
-/*  margin-right: -1px;*/
-/*}*/
-
 
 .error-message {
   margin-left: 0%;
