@@ -85,6 +85,11 @@ class SuspiciousWordsHighlight {
       el.querySelectorAll('w').forEach(word => {
         if (word.innerText && this.suspiciousTextRegex.test(word.innerText)) {
           word.classList.add(SUSPICIOUS_WORD_CLASS);
+        } else {
+          let textSibling = this.getTextSibling(word);
+          if (textSibling && this.suspiciousTextRegex.test(textSibling.nodeValue)) {
+            word.classList.add(SUSPICIOUS_WORD_CLASS);
+          }
         }
       });
       el.querySelectorAll('sup, i, b, u').forEach(word => {
