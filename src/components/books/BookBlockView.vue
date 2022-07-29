@@ -6051,36 +6051,39 @@ div.-content.editing  div.content-wrap {
   color: gray;
 }
 .suspicious-word:before {
-   content: ' \2757';
+   content: ' \01C3';
    color: red;
-   width: 17px;
+   /*width: 17px;*/
    display: inline-block;
-   margin-left: -10px;
+   /*margin-left: -10px;*/
+   font-style: normal;
+   font-weight: bolder;
+   /*margin: 2px 0px 2px 0px;*/
 }
-.title {
+/*.title {
   .suspicious-word:before {
     width: 50px;
     margin-left: -35px;
   }
-}
-.header {
+}*/
+/*.header {
   .suspicious-word:before {
     width: 25px;
     margin-left: -15px;
   }
-}
-.footnote {
+}*/
+/*.footnote {
   .suspicious-word:before {
     width: 15px;
     margin-left: -5px;
   }
-}
-.content-wrap-desc {
+}*/
+/*.content-wrap-desc {
   .suspicious-word:before {
     width: 17px;
     margin-left: -15px;
   }
-}
+}*/
 
 
 /*
