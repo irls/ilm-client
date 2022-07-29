@@ -6103,6 +6103,23 @@ div.-content.editing  div.content-wrap {
    font-weight: bolder;
    /*margin: 2px 0px 2px 0px;*/
 }
+.content-wrap.dropcap {
+  >.suspicious-word:first-child {
+    position: relative;
+    &:before {
+      content: none;
+    }
+    &:after {
+      content: ' \01C3';
+      position: absolute;
+      color: red;
+      display: inline-block;
+      font-style: normal;
+      font-weight: bolder;
+      left: -70px;
+    }
+  }
+}
 /*.title {
   .suspicious-word:before {
     width: 50px;
