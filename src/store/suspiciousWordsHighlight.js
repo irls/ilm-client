@@ -85,8 +85,22 @@ class SuspiciousWordsHighlight {
       el.querySelectorAll('w').forEach(word => {
         if (word.innerText && this.suspiciousTextRegex.test(word.innerText)) {
           word.classList.add(SUSPICIOUS_WORD_CLASS);
-        } else if (word.nextSibling && word.nextSibling.nodeType === 3 && this.suspiciousTextRegex.test(word.nextSibling.nodeValue)) {
-          word.classList.add(SUSPICIOUS_WORD_CLASS);
+        }
+      });
+      el.querySelectorAll('sup, i, b, u').forEach(word => {
+        let textSibling = this.getTextSibling(word);
+        if (textSibling && this.suspiciousTextRegex.test(textSibling.nodeValue)) {
+          if (word.nodeName === 'SUP') {
+            if (word.previousElementSibling) {
+              word.previousElementSibling.classList.add(SUSPICIOUS_WORD_CLASS);
+            }
+          } else {
+            let words = word.querySelectorAll('w');
+            if (words.length > 0) {
+              let wordEl = words[words.length - 1];
+              wordEl.classList.add(SUSPICIOUS_WORD_CLASS);
+            }
+          }
         }
       });
     }
@@ -96,6 +110,13 @@ class SuspiciousWordsHighlight {
   clearElementHighlight(el) {
     el.innerHTML = this.clearText(el.innerHTML);
     return el;
+  }
+  
+  getTextSibling(el) {
+    if (el.nextSibling && el.nextSibling.nodeType === 3) {
+      return el.nextSibling;
+    }
+    return null;
   }
 }
 
