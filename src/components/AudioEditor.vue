@@ -260,7 +260,7 @@
         this.$root.$off('readalong:playBlock', this.stop);
       },
       methods: {
-        select (block_id, start, end, selectElement = false) {
+        select (block_id, start, end, selectElement = false, startElementIndex = null) {
           if (block_id && this.blockId === block_id) {
             this.pause()
               .then(() => {
@@ -273,16 +273,10 @@
                 this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                 this._showSelectionBorders(true);
                 if (selectElement) {
-                  let index = this.contentContainer.find('w[data-map]:not([data-map=""])').index($(selectElement));
-                  if (typeof index =='undefined' || index === false || index < 0) {
-                    let index_no_data = this.contentContainer.find('w:not([data-map])').index($(selectElement));
-                    let total_index = this.contentContainer.find('w').index($(selectElement));
-                    index = total_index - index_no_data;
-                  }
-                  if (index >= 0) {
+                  if (startElementIndex >= 0) {
                     Vue.nextTick(() => {
-                      this.wordSelectionMode = index;
-                      this._setWordSelection(index, true, true);
+                      this.wordSelectionMode = startElementIndex;
+                      this._setWordSelection(startElementIndex, true, true);
                     });
                   }
                 }
@@ -1773,7 +1767,7 @@
         },
         _clearWordSelection() {
           if (this.wordSelectionMode === false) {
-            $(this.contentContainer).find('w').removeClass('selected');
+            this.$root.$emit('from-audioeditor:select', this.blockId, []);
             $('.annotations-boxes .annotation-box').removeClass('selected');
           }
         },
@@ -1787,10 +1781,7 @@
           if (annotations[index]) {
             $(annotations[index]).addClass('selected');
           }
-          let words = this.contentContainer.find('w[data-map]:not([data-map=""])');
-          if (words[index]) {
-            $(words[index]).addClass('selected');
-          }
+          this.$root.$emit('from-audioeditor:select', this.blockId, [index]);
           if (select_range) {
             let word = this.words.find(_w => {
               return _w.alignedIndex == index;

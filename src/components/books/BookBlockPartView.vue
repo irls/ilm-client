@@ -2838,6 +2838,10 @@ export default {
               });
               //this.$forceUpdate();
             }
+          } else {
+            this.$refs.blockContent.querySelectorAll('w.selected').forEach(el => {
+              el.classList.remove('selected');
+            });
           }
         }
       },
@@ -3062,7 +3066,11 @@ export default {
           }
           if (startRange && endRange && this.isAudioEditing) {
             //console.log(startRange[0], endRange[0] + endRange[1])
-            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
+            let startElementIndex = null;
+            if (startElement.parentNode) {
+              startElementIndex = Array.prototype.indexOf.call(startElement.parentNode.querySelectorAll('w[data-map]:not([data-map=""])'), startElement);
+            }
+            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null, startElementIndex);
           }
           //console.log(startElement, endElement, startRange, endRange)
         }
