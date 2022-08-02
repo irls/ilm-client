@@ -3261,7 +3261,7 @@ Save text changes and realign the Block?`,
                 this.stopRecordingAndNext(partIdx);
               }
               this.saveNarrated({
-                'audio': dataURL.split(',').pop(),
+                'audio': dataURL,
                 'position': reRecordPosition,
                 'isTemp': false,
                 'blockid': this.block.blockid,
