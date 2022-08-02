@@ -1728,7 +1728,7 @@
         },
         _clearWordSelection() {
           if (this.wordSelectionMode === false) {
-            $(this.contentContainer).find('w').removeClass('selected');
+            this.$root.$emit('from-audioeditor:select', this.blockId, []);
             $('.annotations-boxes .annotation-box').removeClass('selected');
           }
         },
@@ -1742,10 +1742,7 @@
           if (annotations[index]) {
             $(annotations[index]).addClass('selected');
           }
-          let words = this.contentContainer.find('w[data-map]:not([data-map=""])');
-          if (words[index]) {
-            $(words[index]).addClass('selected');
-          }
+          this.$root.$emit('from-audioeditor:select', this.blockId, [index]);
           if (select_range) {
             let word = this.words.find(_w => {
               return _w.alignedIndex == index;

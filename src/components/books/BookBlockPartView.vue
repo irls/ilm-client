@@ -2891,6 +2891,10 @@ export default {
               });
               //this.$forceUpdate();
             }
+          } else {
+            this.$refs.blockContent.querySelectorAll('w.selected').forEach(el => {
+              el.classList.remove('selected');
+            });
           }
         }
       },
