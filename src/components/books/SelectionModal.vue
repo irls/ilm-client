@@ -9,7 +9,7 @@
 
     <div slot="modal-body" class="modal-body">
       <div class="form-group">
-        <label>Setting range...{{SelectionModalProgress}}%</label> <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
+        <label>Setting range... {{SelectionModalProgress}}%</label> <i style="margin-left: 20px" class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
       </div>
 <!--      <div class="form-group">-->
 <!--        <label>Speed {{SelectionModalProgressIterations}}</label>-->
@@ -64,7 +64,7 @@ export default {
     })
   },
   watch: {
-    
+
   }
 
 }
