@@ -3408,7 +3408,9 @@ export const store = new Vuex.Store({
                               });
                             }
                           }
-                          block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
+                          if (state.bookMode === 'edit') {
+                            block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
+                          }
                           store.commit('set_storeList', new BookBlock(block));
                           dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
                           return Promise.resolve();
