@@ -5498,9 +5498,6 @@ Save text changes and realign the Block?`,
             transparent
         );
       }
-      w.pinned-word {
-        background: linear-gradient(to bottom, transparent 0%, rgba(0, 255, 0, 0.3) 30%, rgba(0, 255, 0, 0.3) 90%, transparent 100%);
-      }
 
       [data-idx], [data-pg] {
         w:not([data-map]) {
@@ -5539,13 +5536,6 @@ Save text changes and realign the Block?`,
           content: '\f1c7\00A0\f061';
           left: -50px;
       }
-      w.audio-highlight, w.selected {
-          background: linear-gradient(
-              transparent 20%,
-              rgba(255,255,0,.8) 55%,
-              transparent 80%
-          );
-      }
       w.audio-trail {
           background: linear-gradient(
               transparent 30%,
@@ -5568,10 +5558,6 @@ Save text changes and realign the Block?`,
 
   [data-author] {
     color: teal;
-  }
-
-  [data-suggestion] {
-    background: yellow;
   }
 
   [data-flag] {
