@@ -154,7 +154,7 @@ export default {
 
       scrollToId: null,
 
-      searchPointer: 0,
+      searchDebounce: null,
       searchResultArray: []
     }
   },
@@ -2239,8 +2239,9 @@ export default {
       searchInBlocks(bookSearch) {
         this.searchResultArray = [];
         if(bookSearch.string && bookSearch.string.length > 2) {
+          console.time('Search');
           const searchArr = prepareForFilter(bookSearch.string).split(' ');
-          console.log(`searchArr: `, searchArr);
+          //console.log(`searchArr: `, searchArr);
 
           for (let blockId of this.parlistO.idsArray()) {
             const block = this.parlist.get(blockId);
@@ -2248,29 +2249,46 @@ export default {
             if (result) this.searchResultArray.push(blockId);
           }
 
-          console.log(`this.searchResultArray: `, this.searchResultArray);
+          //console.log(`this.searchResultArray: `, this.searchResultArray);
+          console.timeEnd('Search');
+        } else {
+          for (let blockId of this.parlistO.idsArray()) {
+            const block = this.parlist.get(blockId);
+            block.cleanFindMarks();
+          }
         }
+
+        bookSearch.resultCounter = this.searchResultArray.length;
+        bookSearch.searchPointer = 0;
+
+        if (this.searchResultArray.length) {
+          Vue.nextTick(()=>{
+            bookSearch.searchPointer = -1;
+            this.scrollSearchDown();
+          });
+        }
+
       },
 
       scrollSearchDown() {
         if (this.searchResultArray.length) {
-          if (this.searchPointer < this.searchResultArray.length - 1) {
-            this.searchPointer++;
-            this.scrollToBlock(this.searchResultArray[this.searchPointer]);
+          if (this.bookSearch.searchPointer < this.searchResultArray.length - 1) {
+            this.bookSearch.searchPointer++;
+            this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
           }
           console.log(`startId: `, this.startId);
-          console.log(`scrollSearchDown: `, this.searchPointer, this.searchResultArray[this.searchPointer]);
+          console.log(`scrollSearchDown: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       },
 
       scrollSearchUp() {
         if (this.searchResultArray.length) {
-          if (this.searchPointer > 0) {
-            this.searchPointer--;
-            this.scrollToBlock(this.searchResultArray[this.searchPointer]);
+          if (this.bookSearch.searchPointer > 0) {
+            this.bookSearch.searchPointer--;
+            this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
           }
           console.log(`startId: `, this.startId);
-          console.log(`scrollSearchUp: `, this.searchPointer, this.searchResultArray[this.searchPointer]);
+          console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       }
   },
@@ -2506,11 +2524,14 @@ export default {
         }
       }
     },
-    bookSearch: {
+    'bookSearch.string': {
       handler(bookSearch, oldVal) {
-        this.searchInBlocks(bookSearch);
+        clearTimeout(this.searchDebounce);
+        this.searchDebounce = setTimeout(()=>{
+          this.searchInBlocks(this.bookSearch);
+        }, 300);
       },
-      deep: true
+      //deep: true
     }
   }
 }

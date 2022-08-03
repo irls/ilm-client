@@ -116,7 +116,7 @@ export const store = new Vuex.Store({
     currentAudiobook: {},
 
     bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
-    bookSearch: {string: ''},
+    bookSearch: {string: '', resultCounter: 0, searchPointer: 0},
     defaultBookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,

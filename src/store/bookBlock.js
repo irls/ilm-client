@@ -1092,6 +1092,7 @@ class BookBlock {
 
   findInText(strArr) {
     //console.log(`content: `, replaceParsing(this.content));
+    this.cleanFindMarks();
     let backContent = this.content;
     const contentArr = replaceParsing(backContent);
 
@@ -1107,13 +1108,17 @@ class BookBlock {
       return isFound
     })
     if (found.length) {
-      console.log(`found: `, found);
+      //console.log(`found: `, found);
       found.forEach((el)=>{
-        backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search="">'))
+        backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search>'))
       })
       this.content = backContent;
     }
     return found.length;
+  }
+
+  cleanFindMarks() {
+    this.content = this.content.replace(/data-in-search/g, '')
   }
 }
 

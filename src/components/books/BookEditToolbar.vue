@@ -23,15 +23,16 @@
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
     <button v-if='hasBookSelected()' class='btn btn-default' @click='toggleSearchVisible'><i class="fa fa-lg fa-search"></i></button>
-    <OverlayPanel ref="searchPanel">
+    <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search pull-left">
           <input v-model="bookSearch.string" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
+        <div class="results pull-left"><span v-show="bookSearch.string.length > 3">{{bookSearch.searchPointer +1}}/{{bookSearch.resultCounter}}</span></div>
         <div class="buttons right">
           <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
           <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
-          <i class="fa fa-times" aria-hidden="true"></i>
+          <i class="fa fa-times" aria-hidden="true" @click='bookSearch.string = ""'></i>
         </div>
       </div>
     </OverlayPanel>
@@ -283,11 +284,15 @@ h3.title i {
 }
 
 .search-box {
-  width: 400px;
+  min-width: 400px;
   height: 33px;
 
   .search {
-    width: 80%;
+    width: 70%;
+  }
+  .results {
+    min-width: 30px;
+    padding-top: 8px;
   }
   .buttons {
     &.right {
