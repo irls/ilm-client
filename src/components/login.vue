@@ -26,7 +26,7 @@
                :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}" 
                :disabled="passwordResetSuccess.length > 0" 
           @click="user_passwordreset(passwordEmail)" 
-          value='Send Login Link'>
+          value='Send new password'>
         <div class="links">
           <a @click="setActive('login')"> 
             <i class="fa fa-arrow-left"></i> Back to Login
