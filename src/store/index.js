@@ -1326,7 +1326,7 @@ export const store = new Vuex.Store({
     set_liveDB_block_update(state, data) {
       //console.log(`set_liveDB_block_update.data: `, data);
       if (state.bookMode === 'edit') {
-        state.suspiciousWordsHighlight.setSuspiciousHighlight(data);
+        state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
       }
       let blockStore = state.storeList.get(data.block.blockid);
       if (data.block.blockid
