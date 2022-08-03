@@ -22,7 +22,7 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if='hasBookSelected()' class='btn btn-default' @click='toggleSearchVisible'><i class="fa fa-lg fa-search"></i></button>
+    <button v-if='currRoute == "BookEdit" && hasBookSelected()' class='btn btn-default' @click='toggleSearchVisible'><i class="fa fa-lg fa-search"></i></button>
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search pull-left">

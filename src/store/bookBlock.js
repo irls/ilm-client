@@ -1127,7 +1127,8 @@ class BookBlock {
   }
 
   cleanFindMarks() {
-    this.content = this.content.replace(/data-in-search/g, '')
+    this.content = this.content.replace(/data-in-search/g, '');
+    this.description = this.description.replace(/data-in-search/g, '')
   }
 }
 
