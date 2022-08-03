@@ -409,6 +409,8 @@ class BookBlock {
       this.classes = this.classes[0];
     //if (this.parnum!==false) this.parnum = '';
 
+    this.cleanFindMarks();
+
     this.content = this.content.replace(/data-(.*?)="(.*?)"/gim, function(
       match,
       $1,
@@ -1094,6 +1096,9 @@ class BookBlock {
     //console.log(`content: `, replaceParsing(this.content));
     this.cleanFindMarks();
     let backContent = this.content;
+    if (this.type == 'illustration') {
+      backContent = this.description;
+    }
     const contentArr = replaceParsing(backContent);
 
     let found = contentArr.filter((content)=>{
@@ -1112,7 +1117,11 @@ class BookBlock {
       found.forEach((el)=>{
         backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search>'))
       })
-      this.content = backContent;
+      if (this.type == 'illustration') {
+        this.description = backContent;
+      } else {
+        this.content = backContent;
+      }
     }
     return found.length;
   }
