@@ -117,6 +117,7 @@ import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
+import { prepareForFilter } from '@src/filters/search.js';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -162,7 +163,9 @@ export default {
       scrollToId: null,
 
       voiceworkUpdating: false,
-      subscribeOnVoiceworkBlocker: null
+      subscribeOnVoiceworkBlocker: null,
+      searchDebounce: null,
+      searchResultArray: []
     }
   },
   props: ['mode'],
@@ -182,7 +185,8 @@ export default {
           audioTasksQueue: 'audioTasksQueue',
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
-          isAudioEditAligning: 'isAudioEditAligning'
+          isAudioEditAligning: 'isAudioEditAligning',
+          bookSearch: 'bookSearch'
       }),
       metaStyles: function () {
           let result = '';
@@ -2260,6 +2264,62 @@ export default {
         let rect = el.getBoundingClientRect();
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         return rect.bottom < viewHeight;
+      },
+
+      searchInBlocks(bookSearch) {
+        this.searchResultArray = [];
+        if(bookSearch.string && bookSearch.string.length > 2) {
+          console.time('Search');
+          const searchArr = prepareForFilter(bookSearch.string).split(' ');
+          //console.log(`searchArr: `, searchArr);
+
+          for (let blockId of this.parlistO.idsArray()) {
+            const block = this.parlist.get(blockId);
+            const result = block.findInText(searchArr);
+            if (result) this.searchResultArray.push(blockId);
+          }
+
+          //console.log(`this.searchResultArray: `, this.searchResultArray);
+          console.timeEnd('Search');
+        } else {
+          for (let blockId of this.parlistO.idsArray()) {
+            const block = this.parlist.get(blockId);
+            block.cleanFindMarks();
+          }
+        }
+
+        bookSearch.resultCounter = this.searchResultArray.length;
+        bookSearch.searchPointer = 0;
+
+        if (this.searchResultArray.length) {
+          Vue.nextTick(()=>{
+            bookSearch.searchPointer = -1;
+            this.scrollSearchDown();
+          });
+        }
+
+      },
+
+      scrollSearchDown() {
+        if (this.searchResultArray.length) {
+          if (this.bookSearch.searchPointer < this.searchResultArray.length - 1) {
+            this.bookSearch.searchPointer++;
+            this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
+          }
+          console.log(`startId: `, this.startId);
+          console.log(`scrollSearchDown: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+        }
+      },
+
+      scrollSearchUp() {
+        if (this.searchResultArray.length) {
+          if (this.bookSearch.searchPointer > 0) {
+            this.bookSearch.searchPointer--;
+            this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
+          }
+          console.log(`startId: `, this.startId);
+          console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+        }
       }
   },
   events: {
@@ -2319,6 +2379,9 @@ export default {
         e.preventDefault();
       });
 
+      this.$root.$on('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
+      this.$root.$on('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
+
       //this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
 
       this.subscribeOnVoiceworkBlocker = this.$store.subscribeAction((action, state) => {
@@ -2377,6 +2440,8 @@ export default {
     this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
     this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
     this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
+    this.$root.$off('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
+    this.$root.$off('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
 
     // unsubscribe
     this.subscribeOnVoiceworkBlocker();
@@ -2397,11 +2462,11 @@ export default {
 //         }
       }
     },
-    'allBooks': {
-      handler() {
-
-      }
-    },
+//     'allBooks': {
+//       handler() {
+//
+//       }
+//     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
@@ -2528,6 +2593,15 @@ export default {
           this.$root.$emit('for-audioeditor:load-and-play', block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx || 0), loadBlock);
         }
       }
+    },
+    'bookSearch.string': {
+      handler(bookSearch, oldVal) {
+        clearTimeout(this.searchDebounce);
+        this.searchDebounce = setTimeout(()=>{
+          this.searchInBlocks(this.bookSearch);
+        }, 300);
+      },
+      //deep: true
     }
   }
 }

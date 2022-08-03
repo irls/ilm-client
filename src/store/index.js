@@ -122,6 +122,7 @@ export const store = new Vuex.Store({
     currentAudiobook: {},
 
     bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
+    bookSearch: {string: '', resultCounter: 0, searchPointer: 0},
     defaultBookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
     editMode: 'Editor',
     allowBookEditMode: false,
@@ -328,6 +329,7 @@ export const store = new Vuex.Store({
       return state.books_meta;
     },
     bookFilters: state => state.bookFilters,
+    bookSearch: state => state.bookSearch,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
     currentBookMeta: state => state.currentBookMeta,

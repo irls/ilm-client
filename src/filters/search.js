@@ -5,7 +5,7 @@ const cleanDiacritics = (str) => {
 };
 
 const punctuationRules = (char) => {
-  const replaceWithNone1 = /['`´’'ªº\s]/i;
+  const replaceWithNone1 = /['`´’'ªº]/i; //\s
   const replaceWithNone2 = /[.,:;\/\|\\=+\-*~_#!¡?¿$%^&{}()„‟"‚‘‛«»‹›]/i;
   const replaceWithNone3 = /[\u300c\u300d\u300e\u300f\u301d\u301e\u301f\ufE41\ufE42\ufE43\ufE44\uff02\uff07\uff62\uff63]/i;
 //  const replaceWithSpace = /[]/i;
@@ -47,8 +47,33 @@ const replaceSpecials = (str) => {
   return result.trim(); //.replace(/\s\s+/g, ' ')
 };
 
+const replaceParsing = (str) => {
+  let result = '', i, l;
+
+  //console.log(`str: `, str);
+//   str = str
+//     .replace(/[\n\r]/g, ' ')
+//     .replace(/<br\/*>/g, ' ');
+
+  let strArray = str.split('</w>');
+
+  strArray = strArray.reduce((acc, string)=>{
+    const split = string.split(/(<w[^<>]+>)/i);
+    if (split.length > 2) {
+      acc.push([
+        split[1],
+        replaceSpecials(split[2]).replace(/\s\s+/g, ' ')
+      ])
+    }
+    return acc;
+  }, []);
+
+  //console.log(`strArray: `, strArray);
+  return strArray;
+};
+
 const prepareForFilter = (str) => {
   return cleanDiacritics(replaceSpecials(str));
 }
 
-export { prepareForFilter, cleanDiacritics, replaceSpecials }
+export { prepareForFilter, cleanDiacritics, replaceSpecials, replaceParsing }

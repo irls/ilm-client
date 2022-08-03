@@ -22,6 +22,21 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
+    <button v-if='hasBookSelected()' class='btn btn-default' @click='toggleSearchVisible'><i class="fa fa-lg fa-search"></i></button>
+    <OverlayPanel ref="searchPanel" :dismissable="false">
+      <div class="search-box">
+        <div class="search pull-left">
+          <input v-model="bookSearch.string" type="text" class="form-control search-in-book" placeholder="Search"></input>
+        </div>
+        <div class="results pull-left"><span v-show="bookSearch.string.length > 3">{{bookSearch.searchPointer +1}}/{{bookSearch.resultCounter}}</span></div>
+        <div class="buttons right">
+          <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
+          <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
+          <i class="fa fa-times" aria-hidden="true" @click='bookSearch.string = ""'></i>
+        </div>
+      </div>
+    </OverlayPanel>
+
     <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
@@ -35,6 +50,7 @@ import taskControls from '../../mixins/task_controls.js';
 import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
+import OverlayPanel from 'primevue/overlaypanel';
 
 export default {
   data () {
@@ -44,7 +60,7 @@ export default {
         //'BookNarrate': 'Narrate',
         //'BookProofread': 'Proofread',
         //'BookEditDisplay': 'Display'
-      }
+      },
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -99,7 +115,16 @@ export default {
         return modes;
       }
     },
-    ...mapGetters(['currentBookMeta', 'currentBookid', 'currentBook', 'storeListO', 'isBlocked', 'blockSelection', 'adminOrLibrarian'])
+    ...mapGetters([
+      'currentBookMeta',
+      'currentBookid',
+      'currentBook',
+      'storeListO',
+      'isBlocked',
+      'blockSelection',
+      'adminOrLibrarian',
+      'bookSearch'
+    ])
   },
   methods: {
 
@@ -137,11 +162,21 @@ export default {
         }
       }
     },
+    toggleSearchVisible(ev) {
+      this.$refs.searchPanel.toggle(ev);
+    },
+    scrollSearchDown(ev) {
+      this.$root.$emit('from-book-edit-toolbar:scroll-search-down');
+    },
+    scrollSearchUp(ev) {
+      this.$root.$emit('from-book-edit-toolbar:scroll-search-up');
+    },
     ...mapActions(['setBlockSelection'])
   },
   components: {
     ButtonRadioGroup,
-    dropdown
+    dropdown,
+    OverlayPanel,
   },
   // watch: {
   //   'this.editMode' () {
@@ -245,6 +280,32 @@ h3.title i {
     line-height: 27pt;
     padding-left: 2px;
     width: 27px;
+  }
+}
+
+.search-box {
+  min-width: 400px;
+  height: 33px;
+
+  .search {
+    width: 70%;
+  }
+  .results {
+    min-width: 30px;
+    padding-top: 8px;
+  }
+  .buttons {
+    &.right {
+      float: right;
+    }
+    .fa {
+      margin-left: 3px;
+      padding-top: 8px;
+
+      &.fa-times {
+        margin-left: 7px;
+      }
+    }
   }
 }
 
