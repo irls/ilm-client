@@ -25,11 +25,11 @@
     <button v-if="currRoute === 'BookEdit' && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
-        <div class="search pull-left">
+        <div class="search">
           <input v-model="bookSearch.string" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
-        <div class="results pull-left"><span v-show="bookSearch.string.length > 3">{{bookSearch.searchPointer +1}}/{{bookSearch.resultCounter}}</span></div>
-        <div class="buttons right">
+        <div class="results"><span v-show="bookSearch.string.length > 2">{{getSearchCounters}}</span></div>
+        <div class="buttons">
           <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
           <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
           <i class="fa fa-times" aria-hidden="true" @click='closeSearchBox'></i>
@@ -75,6 +75,12 @@ export default {
     currRoute: function () {
       let result = ''
       return this.$route.name;
+    },
+
+    getSearchCounters: function () {
+      let searchPointer = this.bookSearch.searchPointer;
+      if (this.bookSearch.resultCounter > 0) searchPointer += 1;
+      return `${searchPointer}/${this.bookSearch.resultCounter}`;
     },
 
     editModesAvailable: {
@@ -204,8 +210,10 @@ export default {
   watch: {
     '$route' (toRoute, fromRoute) {
       this.setSelectedRoute();
-      console.log(`toRoute: `, toRoute);
-      console.log(`fromRoute: `, fromRoute);
+      if (toRoute.name !== 'BookEdit') {
+        this.bookSearch.string = "";
+        this.$refs.searchPanel.hide();
+      }
     },
     'editModesAvailable': {
       handler(val) {
@@ -294,6 +302,33 @@ h3.title i {
 }
 
 .search-box {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  height: 33px;
+
+  .search {
+    width: 300px;
+    padding-right: 1rem;
+  }
+
+  .results {
+    padding-top: 8px;
+    padding-right: 1rem;
+  }
+
+  .buttons {
+    .fa {
+      margin-left: 3px;
+      padding-top: 8px;
+
+      &.fa-times {
+        margin-left: 7px;
+      }
+    }
+  }
+}
+/*.search-box {
   min-width: 400px;
   height: 33px;
 
@@ -317,6 +352,6 @@ h3.title i {
       }
     }
   }
-}
+}*/
 
 </style>

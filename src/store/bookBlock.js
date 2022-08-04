@@ -1095,40 +1095,64 @@ class BookBlock {
   findInText(strArr) {
     //console.log(`content: `, replaceParsing(this.content));
     this.cleanFindMarks();
-    let backContent = this.content;
-    if (this.type == 'illustration') {
-      backContent = this.description;
-    }
-    const contentArr = replaceParsing(backContent);
 
-    let found = contentArr.filter((content)=>{
+    const filterContent = function(content) {
+      let backContent = content;
+      const contentArr = replaceParsing(backContent);
+      let found = contentArr.filter((content)=>{
+        let isFound = false;
+        for (let str of strArr) {
+          if (content[1].indexOf(str) > -1) {
+            isFound = true;
+            break;
+          }
+        }
+        return isFound
+      });
+      if (found.length) {
+        found.forEach((el)=>{
+          backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search>'))
+        })
+        return backContent;
+      }
+      return false;
+    }
+
+    if (this.type == 'illustration') {
+      const foundContent = filterContent(this.description);
+      if (foundContent) {
+        this.description = foundContent;
+      }
+      return foundContent ? true : false;
+    }
+
+    if (this.parts && this.parts.length) {
       let isFound = false;
-      for (let str of strArr) {
-        //console.log(`content[1]: `, content[1], str, content[1].indexOf(str));
-        if (content[1].indexOf(str) > -1) {
+      for (let part of this.parts) {
+        const foundContent = filterContent(part.content);
+        if (foundContent) {
+          part.content = foundContent;
           isFound = true;
-          break;
         }
       }
-      return isFound
-    })
-    if (found.length) {
-      //console.log(`found: `, found);
-      found.forEach((el)=>{
-        backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search>'))
-      })
-      if (this.type == 'illustration') {
-        this.description = backContent;
-      } else {
-        this.content = backContent;
-      }
+      return isFound;
     }
-    return found.length;
+
+    const foundContent = filterContent(this.content);
+    if (foundContent) {
+      this.content = foundContent;
+    }
+    return foundContent ? true : false;
   }
 
   cleanFindMarks() {
     this.content = this.content.replace(/data-in-search/g, '');
-    this.description = this.description.replace(/data-in-search/g, '')
+    this.description = this.description.replace(/data-in-search/g, '');
+    if (this.parts && this.parts.length) {
+      for (let part of this.parts) {
+        part.content = part.content.replace(/data-in-search/g, '');
+      }
+    }
   }
 }
 
