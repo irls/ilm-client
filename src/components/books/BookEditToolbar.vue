@@ -318,6 +318,7 @@ h3.title i {
   }
 
   .buttons {
+    user-select: none;
     .fa {
       margin-left: 3px;
       padding-top: 8px;
