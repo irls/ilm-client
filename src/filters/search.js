@@ -57,7 +57,7 @@ const replaceParsing = (str) => {
     if (split.length > 2) {
       acc.push([
         split[1],
-        prepareForFilter(split[2]).replace(/\s\s+/g, ' ')
+        prepareForFilter(split[2].replace(/(<([^>]+)>)/gi, '')).replace(/\s\s+/g, ' ')
       ])
     }
     return acc;
