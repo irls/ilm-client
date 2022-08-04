@@ -101,13 +101,14 @@ export default {
     .p-component {
       font-size: 1.4rem;
     }
-    .p-component {
-      .p-tooltip-text {
-        font-size: 1.4rem;
-      }
-    }
     .p-component .vue-codemirror * {
       box-sizing: initial;
+    }
+  }
+
+  .p-component.p-tooltip {
+    .p-tooltip-text {
+      font-size: 1.4rem;
     }
   }
 
