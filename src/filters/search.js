@@ -50,11 +50,6 @@ const replaceSpecials = (str) => {
 const replaceParsing = (str) => {
   let result = '', i, l;
 
-  //console.log(`str: `, str);
-//   str = str
-//     .replace(/[\n\r]/g, ' ')
-//     .replace(/<br\/*>/g, ' ');
-
   let strArray = str.split('</w>');
 
   strArray = strArray.reduce((acc, string)=>{
@@ -62,7 +57,7 @@ const replaceParsing = (str) => {
     if (split.length > 2) {
       acc.push([
         split[1],
-        replaceSpecials(split[2]).replace(/\s\s+/g, ' ')
+        prepareForFilter(split[2]).replace(/\s\s+/g, ' ')
       ])
     }
     return acc;

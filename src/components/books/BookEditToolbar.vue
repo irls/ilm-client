@@ -22,7 +22,7 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if="currRoute === 'BookEdit' && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible'><i class="fa fa-lg fa-search"></i></button>
+    <button v-if="currRoute === 'BookEdit' && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search pull-left">
@@ -32,7 +32,7 @@
         <div class="buttons right">
           <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
           <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
-          <i class="fa fa-times" aria-hidden="true" @click='bookSearch.string = ""'></i>
+          <i class="fa fa-times" aria-hidden="true" @click='closeSearchBox'></i>
         </div>
       </div>
     </OverlayPanel>
@@ -51,6 +51,7 @@ import apiConfig from '../../mixins/api_config.js'
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';
+import Tooltip from 'primevue/tooltip';
 
 export default {
   data () {
@@ -171,12 +172,19 @@ export default {
     scrollSearchUp(ev) {
       this.$root.$emit('from-book-edit-toolbar:scroll-search-up');
     },
+    closeSearchBox(ev) {
+      this.bookSearch.string = "";
+      this.$refs.searchPanel.hide(ev);
+    },
     ...mapActions(['setBlockSelection'])
   },
   components: {
     ButtonRadioGroup,
     dropdown,
     OverlayPanel,
+  },
+  directives: {
+    'tooltip': Tooltip
   },
   // watch: {
   //   'this.editMode' () {
@@ -196,6 +204,8 @@ export default {
   watch: {
     '$route' (toRoute, fromRoute) {
       this.setSelectedRoute();
+      console.log(`toRoute: `, toRoute);
+      console.log(`fromRoute: `, fromRoute);
     },
     'editModesAvailable': {
       handler(val) {
