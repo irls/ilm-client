@@ -1096,32 +1096,32 @@ class BookBlock {
     //console.log(`content: `, replaceParsing(this.content));
     this.cleanFindMarks();
 
-    const filterContent = function(content) {
-      let backContent = content;
-      const contentArr = replaceParsing(backContent);
+    const filterContent = function(contentArr, searchStrArr, isFullPhrase = true) {
+      //console.log(`contentArr: `, contentArr);
+      //console.log(`searchStrArr: `, searchStrArr);
       let found = [];
-      if (fullPhrase) {
+      if (isFullPhrase) {
         let wordIdx = 0;
-        const firstSeWoLen = strArr[0].length;
+        const firstSeWoLen = searchStrArr[0].length;
         while (wordIdx < contentArr.length) {
           const content = contentArr[wordIdx];
-          const indexOfStart = content[1].indexOf(strArr[0]);
-          if (indexOfStart > -1 && (indexOfStart+firstSeWoLen == content[1].length || strArr.length == 1)) {
+          const indexOfStart = content[1].indexOf(searchStrArr[0]);
+          if (indexOfStart > -1 && (indexOfStart+firstSeWoLen == content[1].length || searchStrArr.length == 1)) {
             // first incoming of search is the full word or going to end
 
             let preFound = [content], searchIdx = 1;
-            while (searchIdx < strArr.length && wordIdx < contentArr.length) {
+            while (searchIdx < searchStrArr.length && wordIdx < contentArr.length) {
               const middleContent = contentArr[wordIdx+searchIdx];
               if (!middleContent) break;
 
-              const indexOfMiddle = middleContent[1].indexOf(strArr[searchIdx]);
+              const indexOfMiddle = middleContent[1].indexOf(searchStrArr[searchIdx]);
               if (indexOfMiddle === 0) {
                 preFound.push(middleContent)
               }
 
               searchIdx++;
             }
-            if (preFound.length === strArr.length) {
+            if (preFound.length === searchStrArr.length) {
               found = [...found, ...preFound];
               wordIdx += preFound.length;
             }
@@ -1131,13 +1131,18 @@ class BookBlock {
       } else {
         found = contentArr.filter((content)=>{
           let isFound = false;
-          //for (let str of strArr) {
-          if (content[1].indexOf(strArr[0]) > -1) {
+          if (content[1].indexOf(searchStrArr[0]) > -1) {
             isFound = true;
           }
           return isFound;
         });
       }
+      if (found.length) return found;
+      return false;
+    }
+
+    const updateContent = function(content, found) {
+      let backContent = content;
       if (found.length) {
         //console.log(`found: `, found);
         found.forEach((el)=>{
@@ -1145,13 +1150,18 @@ class BookBlock {
         })
         return backContent;
       }
-      return false;
     }
 
     if (this.type == 'illustration') {
-      const foundContent = filterContent(this.description);
+      const contentArr = replaceParsing(this.description);
+      let foundContent = filterContent(contentArr, strArr, fullPhrase);
       if (foundContent) {
-        this.description = foundContent;
+        this.description = updateContent(this.description, foundContent);
+      } else {
+        foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+        if (foundContent) {
+          this.description = updateContent(this.description, foundContent);
+        }
       }
       return foundContent ? true : false;
     }
@@ -1159,28 +1169,64 @@ class BookBlock {
     if (this.parts && this.parts.length) {
       let isFound = false;
       for (let part of this.parts) {
-        const foundContent = filterContent(part.content);
+        const contentArr = replaceParsing(part.content);
+        let foundContent = filterContent(contentArr, strArr, fullPhrase);
         if (foundContent) {
-          part.content = foundContent;
+          part.content = updateContent(part.content, foundContent);
           isFound = true;
+        } else {
+          foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+          if (foundContent) {
+            this.content = updateContent(part.content, foundContent);
+            isFound = true;
+          }
         }
       }
       return isFound;
     }
 
-    const foundContent = filterContent(this.content);
-    if (foundContent) {
-      this.content = foundContent;
+    let isFound = false;
+    if (this.footnotes && this.footnotes.length) {
+      for (let footnote of this.footnotes) {
+        const contentArr = replaceParsing(footnote.content);
+        let foundContent = filterContent(contentArr, strArr, fullPhrase);
+        if (foundContent) {
+          footnote.content = updateContent(footnote.content, foundContent);
+          isFound = true;
+        } else {
+          foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+          if (foundContent) {
+            footnote.content = updateContent(footnote.content, foundContent);
+            isFound = true;
+          }
+        }
+      }
     }
-    return foundContent ? true : false;
+
+    const contentArr = replaceParsing(this.content);
+    let foundContent = filterContent(contentArr, strArr, fullPhrase);
+    if (foundContent) {
+      this.content = updateContent(this.content, foundContent);
+    } else {
+      foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+      if (foundContent) {
+        this.content = updateContent(this.content, foundContent);
+      }
+    }
+    return isFound || (foundContent ? true : false);
   }
 
   cleanFindMarks() {
-    this.content = this.content.replace(/data-in-search/g, '');
-    this.description = this.description.replace(/data-in-search/g, '');
+    this.content = this.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+    this.description = this.description.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
     if (this.parts && this.parts.length) {
       for (let part of this.parts) {
-        part.content = part.content.replace(/data-in-search/g, '');
+        part.content = part.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+      }
+    }
+    if (this.footnotes && this.footnotes.length) {
+      for (let footnote of this.footnotes) {
+        footnote.content = footnote.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
       }
     }
   }
