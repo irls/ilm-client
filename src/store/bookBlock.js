@@ -1092,24 +1092,54 @@ class BookBlock {
     this.isSaving = value;
   }
 
-  findInText(strArr) {
+  findInText(strArr, fullPhrase = true) {
     //console.log(`content: `, replaceParsing(this.content));
     this.cleanFindMarks();
 
     const filterContent = function(content) {
       let backContent = content;
       const contentArr = replaceParsing(backContent);
-      let found = contentArr.filter((content)=>{
-        let isFound = false;
-        for (let str of strArr) {
-          if (content[1].indexOf(str) > -1) {
-            isFound = true;
-            break;
+      let found = [];
+      if (fullPhrase) {
+        let wordIdx = 0;
+        const firstSeWoLen = strArr[0].length;
+        while (wordIdx < contentArr.length) {
+          const content = contentArr[wordIdx];
+          const indexOfStart = content[1].indexOf(strArr[0]);
+          if (indexOfStart > -1 && (indexOfStart+firstSeWoLen == content[1].length || strArr.length == 1)) {
+            // first incoming of search is the full word or going to end
+
+            let preFound = [content], searchIdx = 1;
+            while (searchIdx < strArr.length && wordIdx < contentArr.length) {
+              const middleContent = contentArr[wordIdx+searchIdx];
+              if (!middleContent) break;
+
+              const indexOfMiddle = middleContent[1].indexOf(strArr[searchIdx]);
+              if (indexOfMiddle === 0) {
+                preFound.push(middleContent)
+              }
+
+              searchIdx++;
+            }
+            if (preFound.length === strArr.length) {
+              found = [...found, ...preFound];
+              wordIdx += preFound.length;
+            }
           }
+          wordIdx++;
         }
-        return isFound
-      });
+      } else {
+        found = contentArr.filter((content)=>{
+          let isFound = false;
+          //for (let str of strArr) {
+          if (content[1].indexOf(strArr[0]) > -1) {
+            isFound = true;
+          }
+          return isFound;
+        });
+      }
       if (found.length) {
+        //console.log(`found: `, found);
         found.forEach((el)=>{
           backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search>'))
         })
