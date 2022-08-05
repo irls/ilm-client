@@ -15,11 +15,11 @@ export default {
                 rootState.tc_tasksByBlock[blockid] = task;
               }
               if (rootState.user && rootState.user._id === task.executor) {
-                let _task = state.tc_currentBookTasks.tasks.find(t => {
+                let _task = rootState.tc_currentBookTasks.tasks.find(t => {
                   return t.id === task.id;
                 });
                 if (!_task) {
-                  state.tc_currentBookTasks.tasks.push(task);
+                  rootState.tc_currentBookTasks.tasks.push(task);
                 }
               }
               //console.log(rootState.tc_tasksByBlock);
