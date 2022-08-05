@@ -170,6 +170,7 @@ export default {
       }
     },
     toggleSearchVisible(ev) {
+      this.bookSearch.string = "";
       this.$refs.searchPanel.toggle(ev);
     },
     scrollSearchDown(ev) {
