@@ -2270,7 +2270,10 @@ export default {
         this.searchResultArray = [];
         if(bookSearch.string && bookSearch.string.length > 2) {
           console.time('Search');
-          const searchArr = prepareForFilter(bookSearch.string).split(' ');
+          let searchArr = prepareForFilter(bookSearch.string, true).split(' ');
+          searchArr = searchArr.filter((sEl)=>{
+            return sEl.trim().length > 0;
+          })
           //console.log(`searchArr: `, searchArr);
 
           for (let blockId of this.parlistO.idsArray()) {
