@@ -3389,7 +3389,7 @@ Save text changes and realign the Block?`,
                 return false;
               }
             }
-            if (!isMac && this.range.startOffset < this.range.endOffset) {// do not display menu for range
+            if (this.range.startOffset < this.range.endOffset) {// do not display menu for range
               return false;
             }
             // Do not allow split point inside superscript or subscript
