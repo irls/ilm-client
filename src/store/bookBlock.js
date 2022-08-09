@@ -1118,6 +1118,7 @@ class BookBlock {
         const firstSeWoLen = searchStrArr[0].length;
         while (wordIdx < contentArr.length) {
           const content = contentArr[wordIdx];
+          //console.log(`content: `, content[1]);
           const indexOfStart = content[1].indexOf(searchStrArr[0]);
           //console.log(`indexOfStart: `, indexOfStart, searchStrArr[0], content[1]);
 
@@ -1138,15 +1139,15 @@ class BookBlock {
                 if (!middleContent) break;
                 if (reduceSearchArr(middleContent, tmpSearchArr)) {
                   preFound.push(middleContent);
+                  searchIdx++;
                 } else {
                   preFound = [];
                   break;
                 }
-                searchIdx++;
               }
               if (preFound.length && !tmpSearchArr.length) {
                 found = [...found, ...preFound];
-                wordIdx += searchIdx;
+                wordIdx += searchIdx - 1;
               }
             }
 

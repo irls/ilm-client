@@ -41,6 +41,21 @@ const specialRules = (char) => {
   }
 };
 
+
+const specialHTMLRules = [
+    [new RegExp('&amp;', 'mig'), '&'],
+    [new RegExp('&lt;', 'mig'), '<'],
+    [new RegExp('&gt;', 'mig'), '>']
+  ]
+
+const replaceHTMLSpecials = (str) => {
+  let result = str;
+  specialHTMLRules.forEach((rule)=>{
+    result = result.replace(rule[0], rule[1])
+  });
+  return result.trim();
+};
+
 const replaceSpecials = (str, isWithSpace = false) => {
   let result = '', i, l;
   str = str.toLocaleLowerCase();
@@ -71,7 +86,7 @@ const replaceParsing = (str, isWithSpace = false) => {
 };
 
 const prepareForFilter = (str, isWithSpace = false) => {
-  return cleanDiacritics(replaceSpecials(str, isWithSpace));
+  return cleanDiacritics(replaceSpecials(replaceHTMLSpecials(str), isWithSpace));
 }
 
 export { prepareForFilter, cleanDiacritics, replaceSpecials, replaceParsing }
