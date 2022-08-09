@@ -22,7 +22,7 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if="currRoute === 'BookEdit' && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
+    <button v-if="(currRoute === 'BookEdit' || currRoute === 'CollectionBookEdit') && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search">
@@ -211,7 +211,7 @@ export default {
   watch: {
     '$route' (toRoute, fromRoute) {
       this.setSelectedRoute();
-      if (toRoute.name !== 'BookEdit') {
+      if (['BookEdit', 'CollectionBookEdit'].indexOf(toRoute.name) == -1) {
         this.bookSearch.string = "";
         this.$refs.searchPanel.hide();
       }
@@ -223,7 +223,7 @@ export default {
     }
   },
   mounted() {
-
+    this.bookSearch.string = "";
   },
   destroyed: function () {
 
