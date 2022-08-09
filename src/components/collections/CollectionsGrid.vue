@@ -209,6 +209,7 @@
                     break;
                   case 'jobStatus':
                     collections = collections.filter(collection => {
+                      if (!collection.books_list) return false;
                       collection.books_list = collection.books_list.filter(b => {
                         return b.job_status === filter;
                       });

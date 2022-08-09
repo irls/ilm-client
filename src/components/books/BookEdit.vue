@@ -2365,6 +2365,12 @@ export default {
   },
 
   beforeDestroy:  function() {
+
+    for (let blockId of this.parlistO.idsArray()) {
+      const block = this.parlist.get(blockId);
+      block.cleanFindMarks();
+    }
+
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     //console.log('BookEdit beforeDestroy');
@@ -2538,7 +2544,7 @@ export default {
         clearTimeout(this.searchDebounce);
         this.searchDebounce = setTimeout(()=>{
           this.searchInBlocks(this.bookSearch);
-        }, 300);
+        }, 400);
       },
       //deep: true
     }
