@@ -2268,17 +2268,23 @@ export default {
 
       searchInBlocks(bookSearch) {
         this.searchResultArray = [];
-        if(bookSearch.string && bookSearch.string.length > 2) {
+        if(bookSearch.string && bookSearch.string.trim().length > 2) {
           console.time('Search');
-          let searchArr = prepareForFilter(bookSearch.string, true).split(' ');
-          searchArr = searchArr.filter((sEl)=>{
+          let parserSearchArr = prepareForFilter(bookSearch.string, true).split(' ');
+          parserSearchArr = parserSearchArr.filter((sEl)=>{
             return sEl.trim().length > 0;
           })
-          //console.log(`searchArr: `, searchArr);
+          let filterSearchArr = prepareForFilter(bookSearch.string, false)
+          console.log(`parserSearchArr: `, parserSearchArr);
+          //console.log(`filterSearchArr: `, filterSearchArr);
 
           for (let blockId of this.parlistO.idsArray()) {
             const block = this.parlist.get(blockId);
-            const result = block.findInText(searchArr);
+            const result = block.findInText({
+              parserSearchArr,
+              filterSearchArr,
+              fullPhrase : true
+            });
             if (result) this.searchResultArray.push(blockId);
           }
 

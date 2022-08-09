@@ -1092,9 +1092,22 @@ class BookBlock {
     this.isSaving = value;
   }
 
-  findInText(strArr, fullPhrase = true) {
+  findInText({parserSearchArr, filterSearchArr, fullPhrase = true} = {}) {
     //console.log(`content: `, replaceParsing(this.content));
     this.cleanFindMarks();
+
+    const reduceSearchArr = function(content, searchStrArr) {
+      let tmpSearchStr = searchStrArr.shift();
+      const indexOfStart = content[1].indexOf(tmpSearchStr);
+
+
+      while(content[1].indexOf(tmpSearchStr) >-1 && indexOfStart + tmpSearchStr.length < content[1].length && searchStrArr.length) {
+        tmpSearchStr += searchStrArr.shift();
+      }
+
+      return content[1].indexOf(tmpSearchStr) > -1 && (indexOfStart + tmpSearchStr.length == content[1].length || searchStrArr.length == 0);
+
+    }
 
     const filterContent = function(contentArr, searchStrArr, isFullPhrase = true) {
       //console.log(`contentArr: `, contentArr);
@@ -1106,27 +1119,40 @@ class BookBlock {
         while (wordIdx < contentArr.length) {
           const content = contentArr[wordIdx];
           const indexOfStart = content[1].indexOf(searchStrArr[0]);
-          if (indexOfStart > -1 && (indexOfStart+firstSeWoLen == content[1].length || searchStrArr.length == 1)) {
-            // first incoming of search is the full word or going to end
+          //console.log(`indexOfStart: `, indexOfStart, searchStrArr[0], content[1]);
 
-            let preFound = [content], searchIdx = 1;
-            while (searchIdx < searchStrArr.length && wordIdx < contentArr.length) {
-              const middleContent = contentArr[wordIdx+searchIdx];
-              if (!middleContent) break;
+          if (indexOfStart > -1) {
+            if (searchStrArr.length == 1) {
+              found.push(content);
+              wordIdx++;
+              continue;
+            }
 
-              const indexOfMiddle = middleContent[1].indexOf(searchStrArr[searchIdx]);
-              if (indexOfMiddle === 0) {
-                preFound.push(middleContent)
+            let searchIdx = 0;
+            let currSearchLength = searchStrArr[searchIdx].length;
+            let tmpSearchArr = [...searchStrArr];
+            if (reduceSearchArr(content, tmpSearchArr)) {
+              let preFound = [content], searchIdx = 1;
+              while (searchIdx <= searchStrArr.length && tmpSearchArr.length && wordIdx < contentArr.length) {
+                const middleContent = contentArr[wordIdx+searchIdx];
+                if (!middleContent) break;
+                if (reduceSearchArr(middleContent, tmpSearchArr)) {
+                  preFound.push(middleContent);
+                } else {
+                  preFound = [];
+                  break;
+                }
+                searchIdx++;
               }
+              if (preFound.length && !tmpSearchArr.length) {
+                found = [...found, ...preFound];
+                wordIdx += searchIdx;
+              }
+            }
 
-              searchIdx++;
-            }
-            if (preFound.length === searchStrArr.length) {
-              found = [...found, ...preFound];
-              wordIdx += preFound.length;
-            }
           }
           wordIdx++;
+
         }
       } else {
         found = contentArr.filter((content)=>{
@@ -1137,7 +1163,38 @@ class BookBlock {
           return isFound;
         });
       }
+      if (found.length) console.log(`found: `, found);
       if (found.length) return found;
+      return false;
+    }
+
+    const filterMergedContent = function(contentArr, searchStr, isFullPhrase = true) {
+//       //console.log(`contentArr: `, contentArr);
+//       console.log(`filterMergedContent.searchStrArr: `, searchStr);
+//       if (searchStr.length < 2) return false;
+//       const startLetters = searchStr.substring(0, searchStr.length - (searchStr.length > 2 ? 2: 1));
+//       console.log(`startLetters: `, startLetters);
+//       let found = [];
+//       if (isFullPhrase) {
+//         let wordIdx = 0;
+//         while (wordIdx < contentArr.length) {
+//
+//           const content = contentArr[wordIdx];
+//           const indexOfStartA = content[1].indexOf(startLetters);
+//           //const indexOfStartB = searchStr.indexOf(content[1]);
+//
+//           if (indexOfStartA > -1) {
+//             //console.log(`content[1]: `, content);
+// //             let preFound = [content], searchIdx = 1;
+// //             while (searchStr.indexOf(content) > -1 && (wordIdx + searchIdx) < contentArr.length) {
+// //               content += contentArr[wordIdx + searchIdx]
+// //             }
+//           }
+//           wordIdx++;
+//         }
+//       } else {
+//
+//       }
       return false;
     }
 
@@ -1154,11 +1211,11 @@ class BookBlock {
 
     if (this.type == 'illustration') {
       const contentArr = replaceParsing(this.description);
-      let foundContent = filterContent(contentArr, strArr, fullPhrase);
+      let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
       if (foundContent) {
         this.description = updateContent(this.description, foundContent);
       } else {
-        foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+        foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
         if (foundContent) {
           this.description = updateContent(this.description, foundContent);
         }
@@ -1170,12 +1227,12 @@ class BookBlock {
       let isFound = false;
       for (let part of this.parts) {
         const contentArr = replaceParsing(part.content);
-        let foundContent = filterContent(contentArr, strArr, fullPhrase);
+        let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
         if (foundContent) {
           part.content = updateContent(part.content, foundContent);
           isFound = true;
         } else {
-          foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+          foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
           if (foundContent) {
             this.content = updateContent(part.content, foundContent);
             isFound = true;
@@ -1189,12 +1246,12 @@ class BookBlock {
     if (this.footnotes && this.footnotes.length) {
       for (let footnote of this.footnotes) {
         const contentArr = replaceParsing(footnote.content);
-        let foundContent = filterContent(contentArr, strArr, fullPhrase);
+        let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
         if (foundContent) {
           footnote.content = updateContent(footnote.content, foundContent);
           isFound = true;
         } else {
-          foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+          foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
           if (foundContent) {
             footnote.content = updateContent(footnote.content, foundContent);
             isFound = true;
@@ -1204,11 +1261,11 @@ class BookBlock {
     }
 
     const contentArr = replaceParsing(this.content);
-    let foundContent = filterContent(contentArr, strArr, fullPhrase);
+    let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
     if (foundContent) {
       this.content = updateContent(this.content, foundContent);
     } else {
-      foundContent = filterContent(contentArr, [strArr.join('')], fullPhrase);
+      foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
       if (foundContent) {
         this.content = updateContent(this.content, foundContent);
       }
