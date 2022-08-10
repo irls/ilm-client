@@ -45,7 +45,8 @@ const specialRules = (char) => {
 const specialHTMLRules = [
     [new RegExp('&amp;', 'mig'), '&'],
     [new RegExp('&lt;', 'mig'), '<'],
-    [new RegExp('&gt;', 'mig'), '>']
+    [new RegExp('&gt;', 'mig'), '>'],
+    [new RegExp('&#[a-zA-Z0-9]{3,5};', 'mig'), '']
   ]
 
 const replaceHTMLSpecials = (str) => {
