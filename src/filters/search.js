@@ -6,11 +6,11 @@ const cleanDiacritics = (str) => {
 
 const punctuationRules = (char, isWithSpace = false) => {
   const replaceWithNone1 = /['`´’'ªº\s]/i;
-  const replaceWithNone2 = /[….,:;\/\|\\=+\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]]/i;
+  const replaceWithNone2 = /[….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]]/i;
   const replaceWithNone3 = /[\u300c\u300d\u300e\u300f\u301d\u301e\u301f\ufE41\ufE42\ufE43\ufE44\uff02\uff07\uff62\uff63]/i;
   let replaceWithSpace = {test: (char)=>false};
   if (isWithSpace) {
-    replaceWithSpace = /[\s….,:;\/\|\\=+\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]]/i;
+    replaceWithSpace = /[\s….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]]/i;
   }
   switch (true) {
     case replaceWithSpace.test(char):
