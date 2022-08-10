@@ -1137,6 +1137,10 @@ class BookBlock {
               while (searchIdx <= searchStrArr.length && tmpSearchArr.length && wordIdx < contentArr.length) {
                 const middleContent = contentArr[wordIdx+searchIdx];
                 if (!middleContent) break;
+                if (middleContent[1].trim().length == 0) {
+                  searchIdx++;
+                  continue;
+                }
                 if (reduceSearchArr(middleContent, tmpSearchArr)) {
                   preFound.push(middleContent);
                   searchIdx++;
