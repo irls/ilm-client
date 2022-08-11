@@ -3855,6 +3855,9 @@ Join subblocks?`,
             if (this.$refs.blockContent) {
               this.addContentListeners();
             }
+            if (this.isAudPaused || this.isAudStarted) {
+              this.player.regenerateAndHighlight();
+            }
           });
         }
       },
