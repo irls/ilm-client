@@ -26,7 +26,7 @@
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search">
-          <input v-model="bookSearch.string" type="text" class="form-control search-in-book" placeholder="Search"></input>
+          <input v-model="bookSearch.string" v-on:paste.prevent="onPaste" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
         <div class="results"><span v-show="bookSearch.string.length > 2">{{getSearchCounters}}</span></div>
         <div class="buttons">
@@ -182,6 +182,13 @@ export default {
     closeSearchBox(ev) {
       this.bookSearch.string = "";
       this.$refs.searchPanel.hide(ev);
+    },
+    onPaste(ev) {
+      const clipboard = (event.clipboardData || window.clipboardData)
+      let paste = clipboard.getData('text/html');
+      paste = paste.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*<\/sup>/mig, '');
+      paste = paste.replace(/(<([^>]+)>)/gi, '');
+      this.bookSearch.string = paste;
     },
     ...mapActions(['setBlockSelection'])
   },
