@@ -223,6 +223,7 @@
         this.$root.$on('for-audioeditor:set-process-run', this.setProcessRun);
         this.$root.$on('for-audioeditor:flush', this.flush);
         this.$root.$on('for-audioeditor:lock-editing', this.setEditingLocked);
+        this.$root.$on('readalong:playBlock', this.stop);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -240,6 +241,7 @@
         this.$root.$off('for-audioeditor:set-process-run', this.setProcessRun);
         this.$root.$off('for-audioeditor:flush', this.flush);
         this.$root.$off('for-audioeditor:lock-editing', this.setEditingLocked);
+        this.$root.$off('readalong:playBlock', this.stop);
       },
       methods: {
         select (block_id, start, end, selectElement = false) {

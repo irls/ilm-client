@@ -1323,9 +1323,6 @@ export default {
       //this.initEditor();
       //console.log('mounted', this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
-      if (!this.player && this.blockAudio.src) {
-          this.initPlayer();
-      }
 
       if (this.block.footnotes && this.block.footnotes.length) {
         this.block.footnotes.forEach((footnote, footnoteIdx)=>{
@@ -1433,6 +1430,11 @@ export default {
             }
           });
         }
+    }
+    if (this.FtnAudio) {
+      if (this.FtnAudio.isStarted || this.FtnAudio.isPaused) {
+        this.FtnAudio.audStop();
+      }
     }
   },
   destroyed: function () {
@@ -2778,72 +2780,6 @@ Save text changes and realign the Block?`,
         this.$root.$emit('closeFlagPopup', true);
       },
 
-      audPlay: function(block_id, ev) {
-        if (this.player) {
-          this.audCleanClasses(block_id, ev);
-          this.player.playBlock('content-'+block_id);
-        }
-      },
-      audPlayFromSelection() {
-        if (this.player) {
-          this.player.loadBlock(this.block._id);
-          let startElement = this._getParent(this.range.startContainer, 'w');
-          if (startElement) {
-            this.isAudStarted = true;
-            this.player.playFromWordElement(startElement, 'content-'+this.block._id);
-          }
-        }
-      },
-      audPlaySelection() {
-        if (this.player) {
-          this.audStop(this.block._id);
-          this.player.loadBlock(this.block._id);
-          let startElement = this._getParent(this.range.startContainer, 'w');
-          let endElement = this._getParent(this.range.endContainer, 'w');
-          let startRange = this._getClosestAligned(startElement, 1);
-          if (!startRange) {
-            startRange = [0, 0];
-          }
-          let endRange = this._getClosestAligned(endElement, 0);
-          if (!endRange) {
-            endRange = this._getClosestAligned(endElement, 1)
-          }
-
-          this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
-          this.isAudStarted = true;
-          this.$root.$emit('playBlock', this.block._id);
-        }
-      },
-      audPause: function(block_id, ev) {
-        if (this.player) {
-          this.player.pause();
-        }
-      },
-      audResume: function(block_id, ev) {
-        if (this.player) {
-          this.audCleanClasses(block_id, ev);
-          this.player.resume();
-        }
-      },
-      audStop: function(block_id, ev) {
-        if (this.player) {
-          this.player.pause();
-          this.isAudStarted = false;
-          this.isAudPaused = false;
-          this.audCleanClasses(block_id, ev);
-        }
-      },
-      audCleanClasses: function(block_id, ev) {
-        let reading_class = this.player.config.reading_class
-        $('#'+block_id).find('.'+reading_class).each(function(){
-          $(this).removeClass(reading_class);
-        });
-        let trail_class = this.player.config.trail_class
-        $('#'+block_id).find('.'+trail_class).each(function(){
-          $(this).removeClass(trail_class);
-        });
-      },
-
       audFootnoteCleanClasses: function(ftnId) {
         let reading_class = this.FtnAudio.player.config.reading_class
         $(`#${ftnId}`).find('.'+reading_class).each(function(){
@@ -3393,10 +3329,12 @@ Save text changes and realign the Block?`,
       initFootnotePlayer(playerObj) {
         let parent = this;
         playerObj.audPlay = function (blockId, ftnIdx) {
-          parent.$root.$emit('playBlockFootnote', `${blockId}_${ftnIdx}`);
-          parent.$root.$emit('playBlock', false);
+          //parent.$root.$emit('playBlockFootnote', `${blockId}_${ftnIdx}`);
+          parent.$root.$emit('readalong:playBlock', `footnote:${blockId}_${ftnIdx}`);
           this.isStarted = `${blockId}_${ftnIdx}`;
           this.player.playBlock(`${blockId}_${ftnIdx}`);
+          parent.$root.$on('readalong:playBlock', parent.onAudPlay);
+          parent.$root.$on('from-audioeditor:play', parent.onAudPlay);
         }
 
         playerObj.audPause = function (blockId, ftnIdx) {
@@ -3417,7 +3355,8 @@ Save text changes and realign the Block?`,
         }
 
         playerObj.player = new ReadAlong({
-            forceLineScroll: false
+            forceLineScroll: false,
+            keep_highlight_on_pause: true
         },{
           on_start:   ()=>{},
           on_pause:   ()=>{},
@@ -3426,10 +3365,12 @@ Save text changes and realign the Block?`,
             playerObj.isStarted = false;
             playerObj.isPaused = false;
             parent.audFootnoteCleanClasses(playerObj.isStarted);
+            parent.$root.$off('readalong:playBlock', parent.onAudPlay);
+            parent.$root.$off('from-audioeditor:play', parent.onAudPlay);
           }
         });
 
-        parent.$root.$on('playBlockFootnote', (ftnId)=>{
+        /*parent.$root.$on('playBlockFootnote', (ftnId)=>{
           if (playerObj.isStarted !== ftnId) {
             if (playerObj.player) {
               playerObj.player.pause();
@@ -3446,39 +3387,12 @@ Save text changes and realign the Block?`,
             playerObj.isStarted = false;
             playerObj.isPaused = false;
           }
-        });
+        });*/
       },
-      initPlayer() {
-        this.player = new ReadAlong({
-            forceLineScroll: false
-        },{
-            on_start: ()=>{
-                this.isAudStarted = true;
-                this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
-                this.$root.$emit('playBlockFootnote', false);
-            },
-            on_pause: ()=>{
-                this.isAudPaused = true;
-            },
-            on_resume: ()=>{
-                this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
-            },
-            on_complete: ()=>{
-                this.isAudStarted = false;
-                this.isAudPaused = false;
-                this.audCleanClasses(this.block._id, {});
-            }
-        });
-        var self = this;
-        this.$root.$on('playBlock', function(blockid) {
-          if (blockid !== self.block._id) {
-            if (self.player) {
-              self.audStop();
-            }
-          }
-        });
+      onAudPlay(blockid) {
+        if (this.FtnAudio && this.FtnAudio.player && (this.FtnAudio.isStarted || this.FtnAudio.isPaused)) {
+          this.FtnAudio.audStop();
+        }
       },
       reRecord() {
         this._markSelection();
@@ -4548,9 +4462,6 @@ Save text changes and realign the Block?`,
       'blockAudio.src' (newVal) {
         if (newVal) {
           //console.log('Book audio', newVal, this.block._id);
-          if (!this.player) {
-            this.initPlayer();
-          }
           if (newVal.indexOf('?') === -1) {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
@@ -4696,6 +4607,11 @@ Save text changes and realign the Block?`,
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
               this.initEditor(true);
+            }
+          }
+          if (this.FtnAudio) {
+            if (this.FtnAudio.isStarted || this.FtnAudio.isPaused) {
+              this.FtnAudio.audStop();
             }
           }
         }
