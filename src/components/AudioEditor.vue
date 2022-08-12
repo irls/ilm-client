@@ -20,6 +20,12 @@
           <div class="hidden">cursorPosition: {{cursorPosition}}</div>
           <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
+          <div class="speed-controls" v-if="mode === 'block'">
+            <span>Speed</span>
+            <input type="number" v-model="playbackRate" min="0.75" max="1.25" step="0.05" />
+          </div>
+        </div>
+        <div :class="['play-controls', '-' + mode]">
           <i class="fa fa-step-backward" v-on:click="goToStart()"></i>
           <i class="fa fa-step-forward" v-on:click="goToEnd()"></i>
         </div>
@@ -137,6 +143,8 @@
   import Track from 'waveform-playlist/lib/Track';
   import { renderTrack } from '../store/audio/AudioTrackRender.js';
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
+  import { setUpSource } from '../store/audio/AudioPlayout.js';
+  import { updateEditor } from '../store/audio/AudioPlaylist.js';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
   Vue.use(v_modal, { dialog: true });
@@ -200,12 +208,17 @@
           wordRepositioning: false,
           editingLocked: false,
           editingLockedReason: '',
-          pausedAt: null
+          pausedAt: null,
+          playbackRate: 1
         }
       },
       mounted() {
+        let self = this;
         Track.prototype.calculatePeaks = function(samplesPerPixel, sampleRate) {
           calculateTrackPeaks.call(this, samplesPerPixel, sampleRate, SILENCE_VALUE);
+        }
+        _Playout.prototype.setUpSource = function() {
+          setUpSource.call(this, self.playbackRate);
         }
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
@@ -408,6 +421,13 @@
           this.currentWord = null;
           this.contextPosition = null;
           this.mode = mode;
+          
+          this.playbackRate = 1;
+          if (this.currentBookMeta && this.currentBookMeta.bookid && mode === 'block') {
+            if (this.user.bookPlaybackRate && this.user.bookPlaybackRate[this.currentBookMeta.bookid]) {
+              this.playbackRate = this.user.bookPlaybackRate[this.currentBookMeta.bookid];
+            }
+          }
 
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.close();
@@ -476,6 +496,9 @@
             }
           } catch(e) {}*/
           this._setText(text, block);
+          this.audiosourceEditor.updateEditor = function(cursor) {
+            updateEditor.call(this, cursor, self.playbackRate);
+          };
           this.audiosourceEditor.load([
             {
               src: this.audiofile,
@@ -2765,7 +2788,8 @@ Revert to original block audio?`,
             return false;
           }
         },
-        ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId'])
+        ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
+        ...mapActions('userActions', ['updateUser'])
 
       },
       computed: {
@@ -2955,7 +2979,9 @@ Revert to original block audio?`,
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
           coupletSeparator: 'coupletSeparator',
-          allowAlignBlocksLimit: 'allowAlignBlocksLimit'})
+          allowAlignBlocksLimit: 'allowAlignBlocksLimit',
+          user: 'user'
+        })
       },
       watch: {
         'cursorPosition': {
@@ -3080,6 +3106,25 @@ Revert to original block audio?`,
           handler(val) {
             if (val === false) {
               this._clearWordSelection();
+            }
+          }
+        },
+        'playbackRate': {
+          handler(val) {
+            if (this.isPlaying) {
+              this.pause()
+                .then(() => {
+                  setTimeout(() => {
+                    this.play();
+                  }, 200)
+                });
+            }
+            if (this.currentBookMeta && this.currentBookMeta.bookid && this.mode === 'block') {
+              let bookPlaybackRate = {};
+              if (!this.user.bookPlaybackRate || !this.user.bookPlaybackRate[this.currentBookMeta.bookid] || this.user.bookPlaybackRate[this.currentBookMeta.bookid] !== this.playbackRate) {
+                bookPlaybackRate[this.currentBookMeta.bookid] = parseFloat(parseFloat(this.playbackRate).toFixed(2));
+                this.updateUser([this.user._id, {bookPlaybackRate: bookPlaybackRate}]);
+              }
             }
           }
         }
@@ -3262,6 +3307,18 @@ Revert to original block audio?`,
         color: #0089ff;
         display: inline-block;
         margin: 0px 5px;
+      }
+      .speed-controls {
+        display: inline-block;
+        width: 50px;
+        margin: -13px 2px -3px 5px;
+        span {
+          display: block;
+          text-align: center;
+        }
+        input {
+          width: 50px;
+        }
       }
     }
     .zoom-controls {

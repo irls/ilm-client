@@ -50,7 +50,7 @@ Vue.use(v_modal, { dialog: true });
 import SelectRoles from './../generic/SelectRoles';
 import SelectLanguages from './../generic/SelectLanguages';
 import modalMixin from './../../mixins/modal';
-const createEditUser = require('../../store/userActions')();
+import { mapActions } from 'vuex';
 
 export default {
 
@@ -98,7 +98,7 @@ export default {
       this.errors = {};
       this.error = '';
 
-      return createEditUser.update(this.user._id, this.user)
+      return this.updateUser([this.user._id, this.user])
         .then((response) => {
           this.$emit('closed', true)
         })
@@ -112,7 +112,8 @@ export default {
     },
     cancel () {
       this.$emit('closed', false)
-    }
+    },
+    ...mapActions('userActions', ['updateUser'])
   }
 
 }
