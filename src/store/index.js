@@ -7,6 +7,7 @@ import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
 import { Collection } from './collection'
+import { SuspiciousWordsHighlight } from './suspiciousWordsHighlight';
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -254,6 +255,7 @@ export const store = new Vuex.Store({
     watched:{
       'metaV':null
     },
+    suspiciousWordsHighlight: new SuspiciousWordsHighlight()
   },
 
   getters: {
@@ -597,6 +599,9 @@ export const store = new Vuex.Store({
           break;
       }
       return [];
+    },
+    suspiciousWordsHighlight: state => {
+      return state.suspiciousWordsHighlight;
     }
   },
 
@@ -1322,6 +1327,9 @@ export const store = new Vuex.Store({
 
     set_liveDB_block_update(state, data) {
       //console.log(`set_liveDB_block_update.data: `, data);
+      if (state.bookMode === 'edit') {
+        state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
+      }
       let blockStore = state.storeList.get(data.block.blockid);
       if (data.block.blockid
         && state.audioTasksQueue.block.blockId
@@ -1571,6 +1579,7 @@ export const store = new Vuex.Store({
               }
             }
           });
+      dispatch('getSuspiciousWordsCharacters');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -2276,7 +2285,7 @@ export const store = new Vuex.Store({
     },
 
     putBlock ({commit, state, dispatch}, [block, realign = false]) {
-      let cleanBlock = Object.assign({}, block);
+      let cleanBlock = _.cloneDeep(block);
       if (typeof block.clean === 'function') {
         cleanBlock = block.clean();
       }
@@ -2291,6 +2300,7 @@ export const store = new Vuex.Store({
       let currentBlockO = state.storeListO.get(cleanBlock.blockid);
       // let's update update time in meta:
       //dispatch('updateBookMeta', {})
+      cleanBlock = state.suspiciousWordsHighlight.clearSuspiciousHighlight(cleanBlock);
       return axios.put(url,
         {
           'block': cleanBlock,
@@ -3103,6 +3113,9 @@ export const store = new Vuex.Store({
                               });
                             }
                           }
+                          if (state.bookMode === 'edit') {
+                            block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
+                          }
                           store.commit('set_storeList', new BookBlock(block));
                           dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
                           return Promise.resolve();
@@ -3755,6 +3768,7 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
+      update = state.suspiciousWordsHighlight.clearSuspiciousHighlight(update);
 
       return axios.put(state.API_URL + url, update)
         .then((response) => {
@@ -3786,6 +3800,9 @@ export const store = new Vuex.Store({
                 response.data.parts[pIdx] = p;
               }
             });
+          }
+          if (state.bookMode === 'edit') {
+            state.suspiciousWordsHighlight.setSuspiciousHighlight(response.data);
           }
           commit('set_storeList', new BookBlock(response.data));
           state.storeListO.refresh();
@@ -4885,6 +4902,15 @@ export const store = new Vuex.Store({
         }
       }
       return Promise.resolve(null);
+    },
+    
+    getSuspiciousWordsCharacters({state}) {
+      return axios.get(`${state.API_URL}suspicious_words_characters`)
+        .then(response => {
+          if (response.status === 200) {
+            state.suspiciousWordsHighlight.setSuspiciousWordsCharacters(response.data);
+          }
+        });
     }
   }
 })

@@ -1159,7 +1159,8 @@ export default {
           audioTasksQueue: 'audioTasksQueue',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
           blockLockedSimultaneous: 'blockLockedSimultaneous',
-          updatingNumeration: 'updatingNumeration'
+          updatingNumeration: 'updatingNumeration',
+          suspiciousWordsHighlight: 'suspiciousWordsHighlight'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1390,9 +1391,9 @@ export default {
       //if (!this.block.language) this.block.language = this.meta.language;
       this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
-//       Vue.nextTick(() => {
-//
-//       });
+      Vue.nextTick(() => {
+        this.highlightSuspiciousWords();
+      });
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -1800,7 +1801,7 @@ export default {
       discardBlock: function(ev) {
 
         let checked = this.block.checked;
-        this.getBlock(this.block._id)
+        return this.getBlock(this.block._id)
         .then((block)=>{
           this.isChanged = false;
           this.isIllustrationChanged = false;
@@ -1849,6 +1850,7 @@ export default {
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
+              this.highlightSuspiciousWords();
             }
           });
 
@@ -1865,6 +1867,7 @@ export default {
             // emit for virtual scroll correction
             this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
           }
+          return Promise.resolve();
         });
       },
 
@@ -2199,6 +2202,7 @@ export default {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
             this.loadBookTocSections([]);
           }
+          this.highlightSuspiciousWords();
 
           /*this.blockO.status = Object.assign(this.blockO.status, {
             marked: this.block.markedAsDone,
@@ -2271,6 +2275,7 @@ export default {
               }
             }
             this.isChanged = false;
+            this.highlightSuspiciousWords();
             return Promise.resolve();
           });
       },
@@ -2340,6 +2345,7 @@ export default {
             if (this.block.parts[blockPartIdx]) {
               this.block.parts[blockPartIdx].isSaving = false;
             }
+            this.highlightSuspiciousWords();
             return Promise.resolve(response);
           })
           .catch(err => {
@@ -2448,7 +2454,7 @@ export default {
           return content;
         }
         //console.log(content)
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');
+        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
@@ -2770,6 +2776,9 @@ Save text changes and realign the Block?`,
             if (this.isChecked) {// block approval can change block styles, e.g. pause_before
               this.$root.$emit('from-block-edit:set-style');
             }
+            Vue.nextTick(() => {
+              this.highlightSuspiciousWords();
+            })
           }
         })
         .catch(err => {
@@ -3520,6 +3529,7 @@ Save text changes and realign the Block?`,
         .then(()=>{
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
+            this.highlightSuspiciousWords();
         })
         .catch(()=>{})
       },
@@ -3528,6 +3538,7 @@ Save text changes and realign the Block?`,
         .then(()=>{
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
+            this.highlightSuspiciousWords();
         })
         .catch(()=>{})
       },
@@ -4287,10 +4298,13 @@ Save text changes and realign the Block?`,
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
           let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
-          if (this.$refs.blocks[0].$refs.blockContent.innerHTML !== blockValue) {
+          if (this.suspiciousWordsHighlight.clearText(this.$refs.blocks[0].$refs.blockContent.innerHTML) !== blockValue) {
             this.block.content = blockValue;
-            this.$refs.blocks[0].$refs.blockContent.innerHTML = this.block.content;
+            this.$refs.blocks[0].$refs.blockContent.innerHTML = this.suspiciousWordsHighlight.addHighlight(this.block.content);
             this.pushChange('content');
+            Vue.nextTick(() => {
+              this.highlightSuspiciousWords();
+            })
           }
         } else {
           this.block.parts.forEach((p, pIdx) => {
@@ -4300,9 +4314,12 @@ Save text changes and realign the Block?`,
             let partValue = this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.getValue();
             if (ref && ref.$refs.blockContent.innerHTML !== partValue) {
               p.content = partValue;
-              ref.$refs.blockContent.innerHTML = p.content;
+              ref.$refs.blockContent.innerHTML = this.suspiciousWordsHighlight.addHighlight(p.content);
               ref.pushChange('content');
               ref.isChanged = true;
+              Vue.nextTick(() => {
+                this.highlightSuspiciousWords();
+              });
             }
           });
         }
@@ -4366,6 +4383,91 @@ Save text changes and realign the Block?`,
           return this.$refs.blocks[index];
         }
         return null;
+      },
+      highlightSuspiciousWords() {
+        //if (this.block.blockid === 'greater_than_basics_1657271323905_en-bl33') {
+          //console.time(`greater_than_basics_1657271323905_en-bl33 highlight`);
+        //}
+        if (this.mode !== 'edit') {
+          return;
+        }
+        let suspiciousTextRegex = this.suspiciousWordsHighlight.getSuspiciousTextRegex();
+        if (this.$refs.blocks) {
+          this.$refs.blocks.forEach(blk => {
+            if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
+              this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent);
+            }
+          });
+        }
+        if (this.block.footnotes.length > 0) {
+          this.block.footnotes.forEach((footnote, ftnIdx) => {
+            if (this.$refs['footnoteContent_' + ftnIdx] && this.$refs['footnoteContent_' + ftnIdx][0]) {
+              this.suspiciousWordsHighlight.addElementHighlight(this.$refs['footnoteContent_' + ftnIdx][0]);
+            }
+          });
+        }
+        if (this.block.type === 'illustration') {
+          if (suspiciousTextRegex.test(this.block.description)) {
+            if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockDescription) {
+              this.suspiciousWordsHighlight.addElementHighlight(this.$refs.blocks[0].$refs.blockDescription);
+            }
+          }
+        }
+        //if (this.block.blockid === 'greater_than_basics_1657271323905_en-bl33') {
+          //console.timeEnd(`greater_than_basics_1657271323905_en-bl33 highlight`);
+        //}
+      },
+      clearSuspiciousWords(inText = true) {
+        let SUSPICIOUS_WORD_CLASS = this.suspiciousWordsHighlight.getSuspiciousWordClass();
+        let suspiciousTextRegex = this.suspiciousWordsHighlight.getSuspiciousTextRegex();
+        let clearRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}`, 'img');
+        let checkRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}`, 'im');
+        if (inText) {
+          if (this.$refs.blocks) {
+            this.$refs.blocks.forEach(blk => {
+              if (blk.$refs.blockContent) {
+                this.suspiciousWordsHighlight.clearElementHighlight(blk.$refs.blockContent);
+              }
+            });
+          }
+          if (this.block.footnotes.length > 0) {
+            this.block.footnotes.forEach((footnote, ftnIdx) => {
+              if (this.$refs['footnoteContent_' + ftnIdx][0]) {
+                this.suspiciousWordsHighlight.clearElementHighlight(this.$refs['footnoteContent_' + ftnIdx][0]);
+              }
+            });
+          }
+          if (this.block.type === 'illustration') {
+            if (this.block.description) {
+              if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockDescription) {
+                this.suspiciousWordsHighlight.clearElementHighlight(this.$refs.blocks[0].$refs.blockDescription);
+              }
+            }
+          }
+        } else {
+          if (checkRegex.test(this.block.content)) {
+            this.block.content = this.block.content.replace(clearRegex, '$1');
+          }
+          if (this.block.parts) {
+            this.block.parts.forEach(p => {
+              if (checkRegex.test(p.content)) {
+                p.content = p.content.replace(clearRegex, '$1');
+              }
+            });
+          }
+          if (this.block.footnotes) {
+            this.block.footnotes.forEach(ftn => {
+              if (checkRegex.test(ftn.content)) {
+                ftn.content = ftn.content.replace(clearRegex, '$1');
+              }
+            });
+          }
+          if (this.block.type === 'illustration') {
+            if (this.block.description && checkRegex.test(this.block.description)) {
+              this.block.description = this.block.description.replace(clearRegex, '$1');
+            }
+          }
+        }
       }
   },
   watch: {
@@ -4602,7 +4704,18 @@ Save text changes and realign the Block?`,
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          this.discardBlock();
+          this.discardBlock()
+            .then(() => {
+              if (val === 'edit') {
+                Vue.nextTick(() => {
+                  //setTimeout(() => {
+                    this.highlightSuspiciousWords();
+                  //}, 1000);
+                });
+              } else {
+                this.clearSuspiciousWords();
+              }
+            });
           if (this.block.voicework === 'narration') {
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
@@ -5882,6 +5995,57 @@ div.-content.editing  div.content-wrap {
 .blocked-editing {
   color: gray;
 }
+.suspicious-word:before {
+   content: ' \01C3';
+   color: red;
+   /*width: 17px;*/
+   display: inline-block;
+   /*margin-left: -10px;*/
+   font-style: normal;
+   font-weight: bolder;
+   /*margin: 2px 0px 2px 0px;*/
+}
+.content-wrap.dropcap {
+  >.suspicious-word:first-child {
+    position: relative;
+    &:before {
+      content: none;
+    }
+    &:after {
+      content: ' \01C3';
+      position: absolute;
+      color: red;
+      display: inline-block;
+      font-style: normal;
+      font-weight: bolder;
+      left: -80px;
+    }
+  }
+}
+/*.title {
+  .suspicious-word:before {
+    width: 50px;
+    margin-left: -35px;
+  }
+}*/
+/*.header {
+  .suspicious-word:before {
+    width: 25px;
+    margin-left: -15px;
+  }
+}*/
+/*.footnote {
+  .suspicious-word:before {
+    width: 15px;
+    margin-left: -5px;
+  }
+}*/
+/*.content-wrap-desc {
+  .suspicious-word:before {
+    width: 17px;
+    margin-left: -15px;
+  }
+}*/
 
 
 /*

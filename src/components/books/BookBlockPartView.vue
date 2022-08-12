@@ -1801,7 +1801,7 @@ export default {
         if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');
+        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
@@ -3636,6 +3636,7 @@ Please save or discard your changes before joining.`,
             if (this._isDestroyed) {
               this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
             }
+            this.$parent.highlightSuspiciousWords();
             this.$parent.isSaving = false;
             this.$parent.$parent.refreshTmpl();
             return Promise.resolve();
@@ -3671,7 +3672,11 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToBlocks([this.block.blockid, update]);
+          return this.splitBlockToBlocks([this.block.blockid, update])
+            .then(() => {
+              this.$parent.highlightSuspiciousWords();
+              return Promise.resolve();
+            });
         }
       },
       
@@ -3690,7 +3695,11 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToSubblocks([this.block.blockid, update]);
+          return this.splitBlockToSubblocks([this.block.blockid, update])
+            .then(() => {
+              this.$parent.highlightSuspiciousWords();
+              return Promise.resolve();
+            });
         }
       },
       
@@ -3702,7 +3711,11 @@ Please save or discard your changes before joining.`,
         this.block.isSaving = true;
         this.$parent.isSaving = true;
         this.$parent.$forceUpdate();
-        return this.splitBySubblock([this.block.blockid, this.blockPartIdx]);
+        return this.splitBySubblock([this.block.blockid, this.blockPartIdx])
+          .then(() => {
+            this.$parent.highlightSuspiciousWords();
+            return Promise.resolve();
+          });
       },
       
       mergeAllSubblocks(confirm = true) {
@@ -3991,7 +4004,7 @@ Join subblocks?`,
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          this.discardBlock();
+          //this.discardBlock();
           if (this.block.voicework === 'narration') {
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
