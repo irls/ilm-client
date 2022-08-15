@@ -40,7 +40,8 @@
   import Vue from 'vue';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
-  import lodash from 'lodash'
+  import lodash from 'lodash';
+  import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
 
   export default {
       name: 'CollectionsGrid',
@@ -183,46 +184,46 @@
             });
             for (var field in this.collectionsFilter) {
               if (this.collectionsFilter[field].length > 0) {
-                let filter = this.collectionsFilter[field].toLowerCase();
+                let filter = prepareForFilter(this.collectionsFilter[field]);
                 switch (field) {
                   case 'title':
-                    collections = collections.filter(item => {
-                      let match = item.title.toLowerCase().indexOf(filter) !== -1;
+                    collections = collections.filter(collection => {
+                      let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
                       if (!match) {
-                        item.books_list = item.books_list.filter(b => {
-                          return b.title.toLowerCase().indexOf(filter) !== -1 ||
-                                  (b.author && b.author.join('|').toLowerCase().indexOf(filter) !== -1);
+                        collection.books_list = collection.books_list.filter(book => {
+                          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+                          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+                          return (str.indexOf(filter) > -1)
                         });
                       }
-                      let book_match = !match && item.books_list.length > 0;
-                      item.match = match;
-                      item.book_match = book_match;
-                      return match || book_match;//
+                      let book_match = !match && collection.books_list.length > 0;
+                      collection.match = match;
+                      collection.book_match = book_match;
+                      return match || book_match;
                     });
                     break;
                   case 'language':
-                    collections = collections.filter(item => {
-                      return item.language == filter;
+                    collections = collections.filter(collection => {
+                      return collection.language == filter;
                     });
                     break;
                   case 'jobStatus':
-                    collections = collections.filter(item => {
-                      item.books_list = item.books_list.filter(b => {
+                    collections = collections.filter(collection => {
+                      collection.books_list = collection.books_list.filter(b => {
                         return b.job_status === filter;
                       });
-                      return item.books_list.length > 0;
+                      return collection.books_list.length > 0;
                     });
                     break;
                   case 'projectTag':
-                    collections = collections.filter(item => {
-                      
-                      item.books_list = item.books_list.filter(b => {
-                        let str = `${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`.toLowerCase()
+                    collections = collections.filter(collection => {
+                      collection.books_list = collection.books_list.filter(b => {
+                        let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
                         return (str.indexOf(filter) > -1)
-                      }); 
-                      let book_match =  item.books_list.length > 0;
-                      item.match = book_match;
-                      item.book_match = book_match;
+                      });
+                      let book_match =  collection.books_list.length > 0;
+                      collection.match = book_match;
+                      collection.book_match = book_match;
                       return book_match;
 
                     });
@@ -354,6 +355,8 @@
               } else {
                 this.$router.replace({ path: '/collections' });
               }
+            } else {
+              this.selectedBooks = []; // clean old selection
             }
           }
         }

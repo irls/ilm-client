@@ -13,10 +13,10 @@
   </button>  &nbsp;
 
   <!-- Meta Filter -->
-  <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 15em; padding-right:30px;" placeholder="Filter by Author or Title" @keyup="filterChange()"></input>
+  <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange()"></input>
   <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
 
-  <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 18em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
+  <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
   <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
 
   <template v-if="adminOrLibrarian">
