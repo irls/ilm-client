@@ -2245,7 +2245,7 @@ export default {
             return sEl.trim().length > 0;
           })
           let filterSearchArr = prepareForFilter(bookSearch.string, false)
-          console.log(`parserSearchArr: `, parserSearchArr);
+          //console.log(`parserSearchArr: `, parserSearchArr);
           //console.log(`filterSearchArr: `, filterSearchArr);
 
           for (let blockId of this.parlistO.idsArray()) {
@@ -2270,6 +2270,8 @@ export default {
         bookSearch.resultCounter = this.searchResultArray.length;
         bookSearch.searchPointer = 0;
 
+        //console.log(`this.searchResultArray: `, this.searchResultArray);
+
         if (this.searchResultArray.length) {
           Vue.nextTick(()=>{
             bookSearch.searchPointer = -1;
@@ -2285,6 +2287,9 @@ export default {
             this.bookSearch.searchPointer++;
             this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
           }
+          if (this.searchResultArray.length == 1) {
+            this.scrollToBlock(this.searchResultArray[0]);
+          }
           console.log(`startId: `, this.startId);
           console.log(`scrollSearchDown: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
@@ -2295,6 +2300,9 @@ export default {
           if (this.bookSearch.searchPointer > 0) {
             this.bookSearch.searchPointer--;
             this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
+          }
+          if (this.searchResultArray.length == 1) {
+            this.scrollToBlock(this.searchResultArray[0]);
           }
           console.log(`startId: `, this.startId);
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);

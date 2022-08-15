@@ -26,7 +26,7 @@
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search">
-          <input v-model="bookSearch.string" v-on:paste.prevent="onPaste" type="text" class="form-control search-in-book" placeholder="Search"></input>
+          <input ref="searchInBookInput" v-model="bookSearch.string" v-on:paste.prevent="onPaste" v-on:keyup.enter="scrollSearchDown" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
         <div class="results"><span v-show="bookSearch.string.length > 2">{{getSearchCounters}}</span></div>
         <div class="buttons">
@@ -44,10 +44,11 @@
 </template>
 
 <script>
-import ButtonRadioGroup from '../generic/ButtonRadioGroup'
-import access from "../../mixins/access.js"
+import Vue from 'vue';
+import ButtonRadioGroup from '../generic/ButtonRadioGroup';
+import access from "../../mixins/access.js";
 import taskControls from '../../mixins/task_controls.js';
-import apiConfig from '../../mixins/api_config.js'
+import apiConfig from '../../mixins/api_config.js';
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';
@@ -172,6 +173,11 @@ export default {
     toggleSearchVisible(ev) {
       this.bookSearch.string = "";
       this.$refs.searchPanel.toggle(ev);
+      Vue.nextTick(()=>{
+        if (this.$refs.searchInBookInput && this.$refs.searchPanel.visible) {
+          this.$refs.searchInBookInput.focus();
+        }
+      });
     },
     scrollSearchDown(ev) {
       this.$root.$emit('from-book-edit-toolbar:scroll-search-down');
