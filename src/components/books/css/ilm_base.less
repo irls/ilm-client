@@ -1423,7 +1423,7 @@ language specific styles, ILM-4019
   }
 }
 
-[data-suggestion] {
+[data-suggestion], .table-body.-mode-narrate:not(.-voicework-narration) .content-wrap[data-audiosrc].playing [data-suggestion] {
   w {
     background: @suggestion_word_color;
   }
@@ -1436,5 +1436,13 @@ w {
 .recording-text {
   sg {
     background: @suggestion_word_color;
+  }
+}
+/* display mode */
+.ilm-block.ilm-display {
+  [data-suggestion] {
+    w {
+      background: inherit;
+    }
   }
 }
