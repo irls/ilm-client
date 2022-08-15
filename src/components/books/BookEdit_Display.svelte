@@ -227,6 +227,7 @@
           return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
         }
       );
+      viewObj.content = viewObj.content.replace(/(<[^>]+)(suspicious-word)/g, '$1');
 
       viewObj.viewOutPaddings = getOutPaddings(block);
       viewObj.viewIllustration = getIllustration(block);
