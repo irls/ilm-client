@@ -536,8 +536,6 @@
           </div>
           <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
           <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
-          <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
-          <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
         </section>
         <section v-else> <!--!isAllowBatchVoiceworkNarration-->
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
@@ -703,6 +701,7 @@ export default {
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       voiceworkUpdating: false,
+      voiceworkBlockType: false,
       changes: [],
       deletePending: false,
       audioEditFootnote: {footnote: {}, isAudioChanged: false},
@@ -715,6 +714,7 @@ export default {
       //isSaving: false
       editingLocked: false,
       editingLockedReason: ''
+
     }
   },
   components: {
@@ -1178,6 +1178,9 @@ export default {
       },
       blockTypeLabel: {
         get() {
+          if (this.voiceworkBlockType) {
+            return this.voiceworkBlockType === 'par' ? 'paragraph' : this.voiceworkBlockType;
+          }
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
       },
@@ -3885,13 +3888,13 @@ Save text changes and realign the Block?`,
 //                   return;
 //                 }
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 300) {
-                  this.$store.state.liveDB.onBookReimport();
-                  this.$store.state.liveDB.stopWatch('metaV');
-                  this.$store.state.liveDB.stopWatch('job');
-                  this.$root.$emit('book-reloaded');
-                }
-                else {
+                //if (response.data.blocks.length > 300) {
+                //  this.$store.state.liveDB.onBookReimport();
+                //  this.$store.state.liveDB.stopWatch('metaV');
+                //  this.$store.state.liveDB.stopWatch('job');
+                //  this.$root.$emit('book-reloaded');
+                //}
+                //else {
                   this.$root.$emit('from-bookblockview:voicework-type-changed');
 
                   if (this.isCompleted) {
@@ -3904,13 +3907,14 @@ Save text changes and realign the Block?`,
                   if (this.isChecked) {
                     this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
                   }
-                  this.setCurrentBookBlocksLeft(this.block.bookid);
-                }
+                  //this.setCurrentBookBlocksLeft(this.block.bookid);
+                //}
               }
             }
             //this.voiceworkChange = false;
           })
           .catch(err => {
+            console.error(`err: `, err);
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
           });
@@ -4238,11 +4242,11 @@ Save text changes and realign the Block?`,
       checkAllowNarrateUnassigned() {
         return this.checkNarratorUnassignedAction('narrate');
       },
-      
+
       checkAllowUpdateUnassigned() {
         return this.checkNarratorUnassignedAction('update');
       },
-      
+
       checkNarratorUnassignedAction(type = 'narrate') {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
@@ -5916,7 +5920,7 @@ Save text changes and realign the Block?`,
     text-align: center;
     background-position: center;
     background-color: #8080807d;
-    z-index: 999;
+    z-index: 998;
     &.preloader-audio-positioning {
       z-index: 890;/* this one not covering audio editor */
     }
