@@ -69,6 +69,7 @@ const replaceSpecials = (str, isWithSpace = false) => {
 const replaceParsing = (str, isWithSpace = false) => {
   let result = '', i, l;
 
+  str = str.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*<\/sup>/mig, '');
   let strArray = str.split('</w>');
 
   strArray = strArray.reduce((acc, string)=>{

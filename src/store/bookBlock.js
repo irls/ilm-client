@@ -1168,38 +1168,12 @@ class BookBlock {
           return isFound;
         });
       }
-      if (found.length) console.log(`found: `, found);
+      //if (found.length) console.log(`found: `, found);
       if (found.length) return found;
       return false;
     }
 
     const filterMergedContent = function(contentArr, searchStr, isFullPhrase = true) {
-//       //console.log(`contentArr: `, contentArr);
-//       console.log(`filterMergedContent.searchStrArr: `, searchStr);
-//       if (searchStr.length < 2) return false;
-//       const startLetters = searchStr.substring(0, searchStr.length - (searchStr.length > 2 ? 2: 1));
-//       console.log(`startLetters: `, startLetters);
-//       let found = [];
-//       if (isFullPhrase) {
-//         let wordIdx = 0;
-//         while (wordIdx < contentArr.length) {
-//
-//           const content = contentArr[wordIdx];
-//           const indexOfStartA = content[1].indexOf(startLetters);
-//           //const indexOfStartB = searchStr.indexOf(content[1]);
-//
-//           if (indexOfStartA > -1) {
-//             //console.log(`content[1]: `, content);
-// //             let preFound = [content], searchIdx = 1;
-// //             while (searchStr.indexOf(content) > -1 && (wordIdx + searchIdx) < contentArr.length) {
-// //               content += contentArr[wordIdx + searchIdx]
-// //             }
-//           }
-//           wordIdx++;
-//         }
-//       } else {
-//
-//       }
       return false;
     }
 
