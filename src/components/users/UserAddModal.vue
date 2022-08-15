@@ -59,8 +59,8 @@ Vue.use(v_modal, { dialog: true });
 //import { modal } from 'vue-strap'
 import SelectRoles from './../generic/SelectRoles'
 import SelectLanguages from './../generic/SelectLanguages'
-import modalMixin from './../../mixins/modal'
-const createEditUser = require('../../store/userActions')();
+import modalMixin from './../../mixins/modal';
+import { mapActions } from 'vuex';
 
 export default {
 
@@ -122,7 +122,7 @@ export default {
         roles: this.roles,
         languages: this.languages,
       };
-      return createEditUser.create(newUser)
+      return this.createUser(newUser)
         .then((response) => {
           this.$emit('closed', true);
         })
@@ -137,7 +137,8 @@ export default {
     cancel () {
       //this.$modal.hide('add-user-modal');
       this.$emit('closed', false)
-    }
+    },
+    ...mapActions('userActions', ['createUser'])
   }
 
 }

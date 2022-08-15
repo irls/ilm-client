@@ -508,6 +508,11 @@ export default {
               this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
+            if (el) {
+              Vue.nextTick(() => {
+                el.highlightSuspiciousWords();
+              });
+            }
           }
           this.correctCurrentEditHeight(change.doc.blockid);
         }
@@ -1056,6 +1061,9 @@ export default {
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
                 this.$store.commit('set_selected_blocks');
+                Vue.nextTick(() => {
+                  elNext.highlightSuspiciousWords();
+                });
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -2677,11 +2685,6 @@ export default {
       height: 6px;
       background-color: #999;
       border-radius: 50%;
-    }
-  }
-  sg[data-suggestion=""] {
-    w {
-        background: yellow !important;
     }
   }
 
