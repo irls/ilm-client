@@ -26,7 +26,7 @@
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search">
-          <input ref="searchInBookInput" v-model="bookSearch.string" v-on:paste.prevent="onPaste" v-on:keyup.enter="scrollSearchDown" type="text" class="form-control search-in-book" placeholder="Search"></input>
+          <input ref="searchInBookInput" v-model="bookSearch.string" v-on:paste.prevent="onPaste" v-on:keyup.enter="scrollSearchDown" v-on:keyup.escape="toggleSearchVisible" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
         <div class="results"><span v-show="bookSearch.string.length > 2">{{getSearchCounters}}</span></div>
         <div class="buttons">
