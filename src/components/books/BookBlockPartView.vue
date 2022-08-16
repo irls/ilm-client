@@ -485,10 +485,7 @@ export default {
 
       get: function () {
           if (this.mode === 'narrate') {
-            if (!this.parnum) {
-              return '';
-            }
-            return this.isSplittedBlock ? `${this.parnum}_${this.blockPartIdx+1}` : this.parnum;
+            return this.isSplittedBlock ? (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx + 1) : this.parnum;
           }
           return (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
       }},
