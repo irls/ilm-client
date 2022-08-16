@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const _id = require('uniqid');
 const moment = require('moment');
+import { prepareForFilter, replaceParsing } from '@src/filters/search.js';
 import superlogin from 'superlogin-client';
 import Vue from 'vue';
 
@@ -407,6 +408,8 @@ class BookBlock {
     if (Array.isArray(this.classes) && this.classes.length)
       this.classes = this.classes[0];
     //if (this.parnum!==false) this.parnum = '';
+
+    this.cleanFindMarks();
 
     this.content = this.content.replace(/data-(.*?)="(.*?)"/gim, function(
       match,
@@ -928,7 +931,7 @@ class BookBlock {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
   }
-  
+
   hasClass(type, val) {
     if (!Array.isArray(val)) {
       return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
@@ -1036,7 +1039,7 @@ class BookBlock {
   setChanged(val) {
     this.isChanged = val;
   }
-  
+
   hasChangedPart() {
     if (Array.isArray(this.parts) && this.parts.length > 0) {
       let p = this.parts.find(p => {
@@ -1084,9 +1087,184 @@ class BookBlock {
     }
     return true;
   }
-  
+
   setIsSaving(value = true) {
     this.isSaving = value;
+  }
+
+  findInText({parserSearchArr, filterSearchArr, fullPhrase = true} = {}) {
+    //console.log(`content: `, replaceParsing(this.content));
+    this.cleanFindMarks();
+
+    const reduceSearchArr = function(content, searchStrArr) {
+      let tmpSearchStr = searchStrArr.shift();
+      const indexOfStart = content[1].indexOf(tmpSearchStr);
+
+
+      while(content[1].indexOf(tmpSearchStr) >-1 && indexOfStart + tmpSearchStr.length < content[1].length && searchStrArr.length) {
+        tmpSearchStr += searchStrArr.shift();
+      }
+
+      return content[1].indexOf(tmpSearchStr) > -1 && (indexOfStart + tmpSearchStr.length == content[1].length || searchStrArr.length == 0);
+
+    }
+
+    const filterContent = function(contentArr, searchStrArr, isFullPhrase = true) {
+      //console.log(`contentArr: `, contentArr);
+      //console.log(`searchStrArr: `, searchStrArr);
+      let found = [];
+      if (isFullPhrase) {
+        let wordIdx = 0;
+        const firstSeWoLen = searchStrArr[0].length;
+        while (wordIdx < contentArr.length) {
+          const content = contentArr[wordIdx];
+          //console.log(`content: `, content[1]);
+          const indexOfStart = content[1].indexOf(searchStrArr[0]);
+          //console.log(`indexOfStart: `, indexOfStart, searchStrArr[0], content[1]);
+
+          if (indexOfStart > -1) {
+            if (searchStrArr.length == 1) {
+              found.push(content);
+              wordIdx++;
+              continue;
+            }
+
+            let searchIdx = 0;
+            let currSearchLength = searchStrArr[searchIdx].length;
+            let tmpSearchArr = [...searchStrArr];
+            if (reduceSearchArr(content, tmpSearchArr)) {
+              let preFound = [content], searchIdx = 1;
+              while (searchIdx <= searchStrArr.length && tmpSearchArr.length && wordIdx < contentArr.length) {
+                const middleContent = contentArr[wordIdx+searchIdx];
+                if (!middleContent) break;
+                if (middleContent[1].trim().length == 0) {
+                  searchIdx++;
+                  continue;
+                }
+                if (reduceSearchArr(middleContent, tmpSearchArr)) {
+                  preFound.push(middleContent);
+                  searchIdx++;
+                } else {
+                  preFound = [];
+                  break;
+                }
+              }
+              if (preFound.length && !tmpSearchArr.length) {
+                found = [...found, ...preFound];
+                wordIdx += searchIdx - 1;
+              }
+            }
+
+          }
+          wordIdx++;
+
+        }
+      } else {
+        found = contentArr.filter((content)=>{
+          let isFound = false;
+          if (content[1].indexOf(searchStrArr[0]) > -1) {
+            isFound = true;
+          }
+          return isFound;
+        });
+      }
+      //if (found.length) console.log(`found: `, found);
+      if (found.length) return found;
+      return false;
+    }
+
+    const filterMergedContent = function(contentArr, searchStr, isFullPhrase = true) {
+      return false;
+    }
+
+    const updateContent = function(content, found) {
+      let backContent = content;
+      if (found.length) {
+        //console.log(`found: `, found);
+        found.forEach((el)=>{
+          backContent = backContent.replace(el[0], el[0].replace(/(.*)\>$/g, '$1 data-in-search>'))
+        })
+        return backContent;
+      }
+    }
+
+    if (this.type == 'illustration') {
+      const contentArr = replaceParsing(this.description);
+      let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
+      if (foundContent) {
+        this.description = updateContent(this.description, foundContent);
+      } else {
+        foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
+        if (foundContent) {
+          this.description = updateContent(this.description, foundContent);
+        }
+      }
+      return foundContent ? true : false;
+    }
+
+    if (this.parts && this.parts.length) {
+      let isFound = false;
+      for (let part of this.parts) {
+        const contentArr = replaceParsing(part.content);
+        let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
+        if (foundContent) {
+          part.content = updateContent(part.content, foundContent);
+          isFound = true;
+        } else {
+          foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
+          if (foundContent) {
+            this.content = updateContent(part.content, foundContent);
+            isFound = true;
+          }
+        }
+      }
+      return isFound;
+    }
+
+    let isFound = false;
+    if (this.footnotes && this.footnotes.length) {
+      for (let footnote of this.footnotes) {
+        const contentArr = replaceParsing(footnote.content);
+        let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
+        if (foundContent) {
+          footnote.content = updateContent(footnote.content, foundContent);
+          isFound = true;
+        } else {
+          foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
+          if (foundContent) {
+            footnote.content = updateContent(footnote.content, foundContent);
+            isFound = true;
+          }
+        }
+      }
+    }
+
+    const contentArr = replaceParsing(this.content);
+    let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
+    if (foundContent) {
+      this.content = updateContent(this.content, foundContent);
+    } else {
+      foundContent = filterMergedContent(contentArr, filterSearchArr, fullPhrase);
+      if (foundContent) {
+        this.content = updateContent(this.content, foundContent);
+      }
+    }
+    return isFound || (foundContent ? true : false);
+  }
+
+  cleanFindMarks() {
+    this.content = this.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+    this.description = this.description.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+    if (this.parts && this.parts.length) {
+      for (let part of this.parts) {
+        part.content = part.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+      }
+    }
+    if (this.footnotes && this.footnotes.length) {
+      for (let footnote of this.footnotes) {
+        footnote.content = footnote.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+      }
+    }
   }
 }
 
@@ -1104,9 +1282,9 @@ class FlagPart {
     this.creator_role = init.creator_role || null;
   }
 }
-  
+
 const allFootnoteAttributes = ["voicework", "wordsRange", "language", "content", "audiosrc", "audiosrc_ver"];
-  
+
 
 class FootNote {
   constructor(init) {
@@ -1114,7 +1292,7 @@ class FootNote {
     this.voicework = init.voicework || 'no_audio';
     this.language = init.language || '';
   }
-  
+
   hasAttribute(attribute) {
     return allFootnoteAttributes.includes(attribute);
   }

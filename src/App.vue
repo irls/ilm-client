@@ -112,4 +112,10 @@ export default {
     }
   }
 
+  .p-component.p-tooltip {
+    .p-tooltip-text {
+      font-size: 1.4rem;
+    }
+  }
+
 </style>

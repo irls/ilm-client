@@ -5539,6 +5539,17 @@ Save text changes and realign the Block?`,
       }
   }
 
+  w[data-in-search] {
+    /*background: red !important;*/
+    background: linear-gradient(
+      transparent,
+      transparent 50%,
+      rgba(255,171,0,1.0) 83%,
+      transparent 70%,
+      transparent
+    ) !important;
+  }
+
   [data-author] {
     color: teal;
   }
