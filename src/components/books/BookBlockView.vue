@@ -2297,6 +2297,8 @@ export default {
           //});
         //}
         let updateTask;
+        let delCount = 0;// footnotes to delete
+        let updatedFootnotes = [];
         if (this.mode !== 'narrate') {
           if (this.block.footnotes && this.block.footnotes.length) {
             let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
@@ -2305,7 +2307,7 @@ export default {
             } else {
               footnotesInText = 0;
             }
-            let delCount = this.block.footnotes.length - footnotesInText;
+            delCount = this.block.footnotes.length - footnotesInText;
             if (this.block.footnotes.length > footnotesInText && this.$refs.blocks) {
               let delIdxList = [];
               let contentMerged = '';
@@ -2325,6 +2327,9 @@ export default {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
               });
+            } else {
+              updatedFootnotes = this.block.footnotes;
+              update.content = this.block.parts[blockPartIdx].content;
             }
           }
         }
@@ -2337,7 +2342,30 @@ export default {
             updateTask = this.assembleBlock(update, realign);
           }
         } else {
-          updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
+          updateTask = new Promise((resolve, reject) => {
+            let updFootnotes = new Promise((res, rej) => {
+              if (delCount) {
+                return this.assembleBlock({
+                  footnotes: updatedFootnotes,
+                  blockid: this.block.blockid,
+                  bookid: this.block.bookid,
+                  parts: this.block.parts
+                }, realign)
+                  .then(() => {
+                    return res();
+                  });
+              } else {
+                return res();
+              }
+            });
+            return updFootnotes
+              .then(() => {
+                this.updateBlockPart([this.block._rid, update, blockPartIdx, realign])
+                  .then((updated) => {
+                    return resolve(updated);
+                  });
+              });
+            });
         }
         return updateTask
           .then((response) => {
@@ -2890,8 +2918,11 @@ Save text changes and realign the Block?`,
             el.textContent = idx+1;
             if (this.isSplittedBlock && parseInt(el.getAttribute('data-idx')) !== idx + 1) {
               this.block.parts[blk.blockPartIdx].footnote_added = true;
+              el.setAttribute('data-idx', idx+1);
+              this.block.parts[blk.blockPartIdx].content = blk.$refs.blockContent.innerHTML;
+            } else {
+              el.setAttribute('data-idx', idx+1);
             }
-            el.setAttribute('data-idx', idx+1);
             //console.log('iter end:', idx, el.getAttribute('data-idx'));
             ++idx;
           });
