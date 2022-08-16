@@ -1920,7 +1920,7 @@ export const store = new Vuex.Store({
       }
       
       if (!(Object.keys(update).length === 2 &&
-              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined') &&
+              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined') &&
               typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
               //console.log('Update version');          
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
