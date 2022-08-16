@@ -1,6 +1,12 @@
 <template>
+
+
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" ><!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
+  <selection-modal
+    :show="selectionModalActive"
+  >
+  </selection-modal>
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
@@ -98,7 +104,7 @@
 </template>
 
 <script>
-
+import SelectionModal from './SelectionModal'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import BookBlockView from './BookBlockView'
 import BookBlockPreview   from './BookBlockPreview';
@@ -120,6 +126,7 @@ Vue.use(VueHotkey);
 
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
+import TaskAddModal from "../tasks/TaskAddModal";
 
 export default {
   data () {
@@ -166,6 +173,7 @@ export default {
   computed: {
       // --- From store --- //
       ...mapGetters({
+          selectionModalActive:'selectionModalActive',
           book: 'currentBook',
           meta: 'currentBookMeta',
           allBooks: 'allBooks',
@@ -283,7 +291,8 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider,
+    SelectionModal,
+    BookBlockView, BookBlockPreview, vueSlider,
       SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
   },
   methods: {
@@ -941,7 +950,7 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
-          this.$store.commit('set_selected_blocks');
+          this.$store.dispatch('set_selected_blocks');
         }
         //this.getCurrentJobInfo();
 
@@ -1173,7 +1182,7 @@ export default {
                 //this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
+                this.$store.dispatch('set_selected_blocks');
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -1237,10 +1246,10 @@ export default {
       });
     },
 
-    setRangeSelection(block, type, status, shift = false) {
+    async setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
-
+// debugger;
       switch (type) {
         case 'start':
           if (status) {
@@ -1286,11 +1295,13 @@ export default {
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = this.parlistO.setChecked(startRId, block.rid);
+                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid,this.$store);
                   break;
                 case 1:// block below current selection checked
+                  // this.selectionModalActive = true;
+                  this.$store.dispatch('setSelectionModalProgressWidth',0);
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = this.parlistO.setChecked(block.rid, endRId);
+                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId,this.$store);
                   break;
                 default:
                   break;
@@ -1299,7 +1310,7 @@ export default {
               newSelection = this.parlistO.setChecked(block.rid);
             }
             //console.log('newSelection', newSelection.start._id, newSelection.end._id);
-            this.setBlockSelection(newSelection);
+            await this.setBlockSelection(newSelection);
           }
           else { // uncheck
             if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
@@ -1308,6 +1319,13 @@ export default {
             }
             else this.setBlockSelection({start: {}, end: {}});
           }
+
+          let this_ = this;
+          setTimeout(() => {
+            this_.$store.dispatch('setSelectionModalProgressWidth',100);
+            this_.$store.dispatch('selectionModalDisable');
+            },1000)
+
           break;
       }
       //this.recountApprovedInRange();
@@ -2447,7 +2465,7 @@ export default {
     this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
     this.$root.$off('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
     this.$root.$off('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
-    
+
     // unsubscribe
     this.subscribeOnVoiceworkBlocker();
   },

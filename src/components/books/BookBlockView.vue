@@ -680,6 +680,7 @@ export default {
       isRecordingPaused: false,
       //isAudioChanged: false,
       isIllustrationChanged: false,
+      setRangeSelectionLock: false,
       blockAudio: {
         src: '',
         map: ''
@@ -3882,18 +3883,25 @@ Save text changes and realign the Block?`,
 
       },
       setRangeSelection(type, ev) {
-        let checked;
-        if (ev === true || ev === false) checked = ev;
-        else checked = ev.target && ev.target.checked;
+        if(!this.setRangeSelectionLock){
 
-        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
-        if (ev.shiftKey) {
-          if (this.selectionStart && this.selectionStart != this.block._id) {
-            document.getSelection().removeAllRanges();
+          let checked;
+          if (ev === true || ev === false) checked = ev;
+          else checked = ev.target && ev.target.checked;
+
+          let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
+          if (ev.shiftKey) {
+            if (this.selectionStart && this.selectionStart != this.block._id) {
+              document.getSelection().removeAllRanges();
+            }
           }
+          this.setRangeSelectionLock = true;
+          setTimeout( () => {
+            this.setRangeSelectionLock = false;
+            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+          }, 500);
         }
         //this.blockO.checked = checked;
-        this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
       },
       updateVoicework() {
         if (!this.voiceworkChange) {
