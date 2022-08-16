@@ -1398,8 +1398,11 @@ export const store = new Vuex.Store({
   },
 
   actions: {
-    async selectionModalDisable({ state, commit, dispatch },value = 0 ) {
+    async selectionModalDisable({ state, commit, dispatch }) {
       state.selectionModalActive = false;
+    },
+    async selectionModalDisableShow({ state, commit, dispatch }) {
+      state.selectionModalActive = true;
     },
     async setSelectionModalProgressWidth({ state, commit, dispatch },value = 0 ) {
       value = Math.round(value);
@@ -1454,9 +1457,6 @@ export const store = new Vuex.Store({
 
       while (iterationCount<iterationMax && idx<=size && status == 'ok'){
 
-        if(iterationCount==10 && !state.selectionModalActive){
-          state.selectionModalActive = true;
-        }
 
         let block = state.storeList.get(crossId);
         if (block) {

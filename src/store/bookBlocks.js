@@ -435,6 +435,9 @@ class BookBlocks {
 
     if (i <= endIdx ) {
       while (i <= endIdx && iterationCount<iterationMax ) {
+        if(i==10){
+          $store.dispatch('selectionModalDisableShow')
+        }
         let iRId = this.listRIds[i];
         if (this.lookupList.hasOwnProperty(iRId)) {
           this.lookupList[iRId].checked = true;
@@ -463,7 +466,6 @@ class BookBlocks {
       console.log('ILM-5021-0')
       // return resolve;
       let promises = []
-
       let result = {start: {}, end: {}};
       if (endRId && startRId !== endRId) {
 
@@ -488,6 +490,10 @@ class BookBlocks {
               if (this.lookupList.hasOwnProperty(iRId)) {
                 this.lookupList[iRId].checked = true;
               }
+              if(i==10){
+                $store.dispatch('selectionModalDisableShow')
+              }
+
               let width = Math.round(i/(max/100));
 
               $store.dispatch('setSelectionModalProgressWidth',width)
