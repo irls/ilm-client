@@ -127,6 +127,16 @@ let QuoteButton = MediumEditor.Extension.extend({
             let prevParent = next.parentNode;
             prevParent.removeChild(next);
           }
+          if (quote.nextElementSibling && quote.nextElementSibling.nodeName === 'SUP') {
+            if (quote.childNodes.length > 0) {// when qq is set for word with superscript, user agent creates empty duplicate of superscript after qq
+              let sup = Array.from(quote.childNodes).find(cel => {
+                return cel.nodeName === 'SUP';
+              });
+              if (sup && (!quote.nextElementSibling.textContent || quote.nextElementSibling.textContent.trim().length === 0)) {
+                quote.nextElementSibling.parentNode.removeChild(quote.nextElementSibling);
+              }
+            }
+          }
         }
       }
 
