@@ -1453,6 +1453,11 @@ export const store = new Vuex.Store({
       // }
 
       while (iterationCount<iterationMax && idx<=size && status == 'ok'){
+
+        if(iterationCount==10 && !state.selectionModalActive){
+          state.selectionModalActive = true;
+        }
+
         let block = state.storeList.get(crossId);
         if (block) {
           state.setSelectedBlocksAsyncResult.push(block);
@@ -1480,7 +1485,6 @@ export const store = new Vuex.Store({
 
       if(idx<=size && status == 'ok'){
         setTimeout( function() {
-          state.selectionModalActive = true;
           dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,resolve}) },50);
       }else{
         resolve();
