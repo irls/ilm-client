@@ -106,6 +106,7 @@ export const store = new Vuex.Store({
 
     currentBookid: '',
     currentBook: {},
+    selectionModalActive:false,
     currentBookMeta: {},
 //     currentBook_dirty: false,
 //     currentBookMeta_dirty: false,
@@ -324,6 +325,7 @@ export const store = new Vuex.Store({
     bookFilters: state => state.bookFilters,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
+    selectionModalActive: state => state.selectionModalActive,
     currentBookMeta: state => state.currentBookMeta,
     currentBookFiles: state => state.currentBookFiles,
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
@@ -1374,6 +1376,9 @@ export const store = new Vuex.Store({
   },
 
   actions: {
+    async selectionModalDisable({ state, commit, dispatch },value = 0 ) {
+      state.selectionModalActive = false;
+    },
     async setSelectionModalProgressWidth({ state, commit, dispatch },value = 0 ) {
       value = Math.round(value);
       state.SelectionModalProgress = value>=100?100:value;
@@ -1453,6 +1458,7 @@ export const store = new Vuex.Store({
 
       if(idx<=size && status == 'ok'){
         setTimeout( function() {
+          state.selectionModalActive = true;
           dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,resolve}) },50);
       }else{
         resolve();

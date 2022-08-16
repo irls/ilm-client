@@ -130,7 +130,6 @@ import TaskAddModal from "../tasks/TaskAddModal";
 export default {
   data () {
     return {
-      selectionModalActive:false,
       page: 0,
       recorder: false,
       recorderStream: null,
@@ -166,6 +165,7 @@ export default {
   computed: {
       // --- From store --- //
       ...mapGetters({
+          selectionModalActive:'selectionModalActive',
           book: 'currentBook',
           meta: 'currentBookMeta',
           allBooks: 'allBooks',
@@ -1275,15 +1275,14 @@ export default {
           this.parlistO.setUnCheckedRange();
           if (status) { // check
             if (shift && this.blockSelection.start._id) {
-              this.selectionModalActive = true;
-              this.$store.dispatch('setSelectionModalProgressWidth',0);
-
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
                   newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid,this.$store);
                   break;
                 case 1:// block below current selection checked
+                  // this.selectionModalActive = true;
+                  this.$store.dispatch('setSelectionModalProgressWidth',0);
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
                   newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId,this.$store);
                   break;
@@ -1304,12 +1303,9 @@ export default {
             else this.setBlockSelection({start: {}, end: {}});
           }
 
-          let this_ = this;
-          setTimeout(() => {
-            // setSelectionModalProgressWidth
-            this_.$store.dispatch('setSelectionModalProgressWidth',100);
-            this_.selectionModalActive = false;
-            },1000)
+          this.$store.dispatch('setSelectionModalProgressWidth',100);
+          this.$store.dispatch('selectionModalDisable');
+
           break;
       }
       //this.recountApprovedInRange();
