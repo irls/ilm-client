@@ -1319,8 +1319,11 @@ export default {
             else this.setBlockSelection({start: {}, end: {}});
           }
 
-          this.$store.dispatch('setSelectionModalProgressWidth',100);
-          this.$store.dispatch('selectionModalDisable');
+          let this_ = this;
+          setTimeout(() => {
+            this_.$store.dispatch('setSelectionModalProgressWidth',100);
+            this_.$store.dispatch('selectionModalDisable');
+            },1000)
 
           break;
       }
