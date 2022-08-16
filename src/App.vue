@@ -29,6 +29,9 @@ export default {
     '$route' () {
       this.$root.$emit('for-audioeditor:force-close');
       let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
+      if (this.$route.name === 'BookEditDisplay') {
+        mode = 'display';
+      }
       this.$store.commit('set_book_mode', mode);
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.loadBook(this.$route.params.bookid)
@@ -53,6 +56,9 @@ export default {
   created () {
     window.addEventListener('beforeunload', this.stopWatchLiveQueries)
     let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
+    if (this.$route.name === 'BookEditDisplay') {
+      mode = 'display';
+    }
     this.$store.commit('set_book_mode', mode);
   },
 

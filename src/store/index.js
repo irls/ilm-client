@@ -7,12 +7,14 @@ import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
 import { Collection } from './collection'
+import { SuspiciousWordsHighlight } from './suspiciousWordsHighlight';
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
 import setBlocksDisabled from './modules/setBlocksDisabled';
+import userActions from './modules/user';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -70,7 +72,8 @@ export const store = new Vuex.Store({
   modules: {
     uploadImage,
     testAudioConvert,
-    setBlocksDisabled
+    setBlocksDisabled,
+    userActions
   },
   state: {
     audioRenaming : false,
@@ -253,6 +256,7 @@ export const store = new Vuex.Store({
     watched:{
       'metaV':null
     },
+    suspiciousWordsHighlight: new SuspiciousWordsHighlight()
   },
 
   getters: {
@@ -597,6 +601,9 @@ export const store = new Vuex.Store({
           break;
       }
       return [];
+    },
+    suspiciousWordsHighlight: state => {
+      return state.suspiciousWordsHighlight;
     }
   },
 
@@ -1322,6 +1329,9 @@ export const store = new Vuex.Store({
 
     set_liveDB_block_update(state, data) {
       //console.log(`set_liveDB_block_update.data: `, data);
+      if (state.bookMode === 'edit') {
+        state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
+      }
       let blockStore = state.storeList.get(data.block.blockid);
       if (data.block.blockid
         && state.audioTasksQueue.block.blockId
@@ -1401,6 +1411,10 @@ export const store = new Vuex.Store({
       } else if (data.block && data.block.blockid) {
         this.commit('set_storeList', new BookBlock(data.block));
       }
+    },
+    
+    set_user(state, user) {
+      state.user = user;
     }
   },
 
@@ -1567,6 +1581,7 @@ export const store = new Vuex.Store({
               }
             }
           });
+      dispatch('getSuspiciousWordsCharacters');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -1907,7 +1922,7 @@ export const store = new Vuex.Store({
       }
 
       if (!(Object.keys(update).length === 2 &&
-              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined') &&
+              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined') &&
               typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
               //console.log('Update version');
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
@@ -2162,15 +2177,33 @@ export const store = new Vuex.Store({
       if (!blocksIds) {
         return Promise.resolve([]);
       }
-      return axios.get(state.API_URL + 'books/blocks_data/' + state.currentBookid + '?ids=' + blocksIds.join(','))
+
+      const chunkSize = 100;
+      let chunks = [];
+      for (let i = 0; i < blocksIds.length; i += chunkSize) {
+        chunks.push(blocksIds.slice(i, i + chunkSize));
+      }
+
+      let result = [];
+      const chunksPromiseArr = chunks.map((chunk)=>{
+        return axios.get(state.API_URL + 'books/blocks_data/' + state.currentBookid + '?ids=' + chunk.join(','))
         .then(res => {
-          let result = [];
           res.data.forEach(b => {
             result.push(b);
           });
           return result;
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+      })
+
+      return Promise.all(chunksPromiseArr).
+      then(()=>{
+        return result
+      })
+      .catch(err => err);
     },
 
     loopBlocksChain ({commit, state, dispatch}, params) {
@@ -2272,7 +2305,7 @@ export const store = new Vuex.Store({
     },
 
     putBlock ({commit, state, dispatch}, [block, realign = false]) {
-      let cleanBlock = Object.assign({}, block);
+      let cleanBlock = _.cloneDeep(block);
       if (typeof block.clean === 'function') {
         cleanBlock = block.clean();
       }
@@ -2287,6 +2320,7 @@ export const store = new Vuex.Store({
       let currentBlockO = state.storeListO.get(cleanBlock.blockid);
       // let's update update time in meta:
       //dispatch('updateBookMeta', {})
+      cleanBlock = state.suspiciousWordsHighlight.clearSuspiciousHighlight(cleanBlock);
       return axios.put(url,
         {
           'block': cleanBlock,
@@ -3099,6 +3133,9 @@ export const store = new Vuex.Store({
                               });
                             }
                           }
+                          if (state.bookMode === 'edit') {
+                            block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
+                          }
                           store.commit('set_storeList', new BookBlock(block));
                           dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
                           return Promise.resolve();
@@ -3751,6 +3788,7 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
+      update = state.suspiciousWordsHighlight.clearSuspiciousHighlight(update);
 
       return axios.put(state.API_URL + url, update)
         .then((response) => {
@@ -3783,6 +3821,9 @@ export const store = new Vuex.Store({
               }
             });
           }
+          if (state.bookMode === 'edit') {
+            state.suspiciousWordsHighlight.setSuspiciousHighlight(response.data);
+          }
           commit('set_storeList', new BookBlock(response.data));
           state.storeListO.refresh();
           return Promise.all([
@@ -3800,7 +3841,6 @@ export const store = new Vuex.Store({
         return axios.get(state.API_URL + 'process_queue/' + state.currentBookMeta.bookid)
           .then(response => {
             //locks
-            //console.log(response.data);
             let oldIds = [];
             if (typeof response.data !== 'undefined' && Array.isArray(response.data)) {
               state.lockedBlocks.forEach(b => {
@@ -3809,11 +3849,6 @@ export const store = new Vuex.Store({
                 });
                 if (!r) {
                   oldIds.push(b._id);
-                  /*dispatch('getBlock', b._id)
-                    .then(block => {
-                      store.commit('set_storeList', new BookBlock(block));
-                      return Promise.resolve();
-                    });*/
                 }
               });
               if (oldIds.length > 0) {
@@ -3827,8 +3862,19 @@ export const store = new Vuex.Store({
               }
               if (response.data.length > 0) {
                 response.data.forEach(r => {
+                  let voicework, updateType, blockType;
+                  if (r.taskType === 'changeVoiceWork') {
+                    ({updateType, voicework, blockType} = JSON.parse(r.content));
+                  }
                   delete r.content;
-                  dispatch('addBlockLock', {block: r, type: r.taskType, inProcess: true});
+                  dispatch('addBlockLock', {
+                    block: r,
+                    type: r.taskType,
+                    inProcess: true,
+                    blockType,
+                    updateType,
+                    voicework
+                  });
                 });
                 dispatch('startProcessQueueWatch');
               } else {
@@ -4403,6 +4449,7 @@ export const store = new Vuex.Store({
         });
     },
     changeBlocksVoicework({state, dispatch, commit}, [block, voicework, updateType]) {
+      dispatch('startProcessQueueWatch');
       return axios.post(`${state.API_URL}book/block/${state.currentBookid}/${block._uRid}/set_voicework`, {
         voicework: voicework,
         updateType: updateType
@@ -4410,7 +4457,7 @@ export const store = new Vuex.Store({
         .then(response => {
           if (response.status === 200) {
             if (response && response.data && response.data.blocks) {
-              if (response.data.blocks.length <= 300) {
+              //if (response.data.blocks.length <= 300) {
                 response.data.blocks.forEach(block => {
                   state.storeListO.updBlockByRid(block.rid, {
                     status: block.status
@@ -4430,7 +4477,7 @@ export const store = new Vuex.Store({
                   state.blockSelection.refresh = Date.now();
                   commit('set_selected_blocks');
                 }
-              }
+              //}
             }
           }
           state.currentBookCounters.voiceworks_for_remove = 0;
@@ -4881,6 +4928,15 @@ export const store = new Vuex.Store({
         }
       }
       return Promise.resolve(null);
+    },
+    
+    getSuspiciousWordsCharacters({state}) {
+      return axios.get(`${state.API_URL}suspicious_words_characters`)
+        .then(response => {
+          if (response.status === 200) {
+            state.suspiciousWordsHighlight.setSuspiciousWordsCharacters(response.data);
+          }
+        });
     }
   }
 })
