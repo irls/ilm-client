@@ -226,7 +226,6 @@ export default {
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
       let bookid = ev.bookid
-      console.log('ev.bookid', ev.bookid);
       if (bookid) {
 
         this.openBookClickCounter++;

@@ -7,7 +7,7 @@
 
   <div class="pull-right">
   <!-- Edit Button -->
-  <button v-if="hasBookSelected()"
+  <button v-show="hasBookSelected()"
     @click='displayBook' class='btn btn-default'>
     <i class="fa fa-pencil fa-lg"></i>  Display Book
   </button>  &nbsp;
@@ -35,7 +35,7 @@
     <option v-for="(name, code) in languages" :value="code">{{name}}</option>
   </select>
 
-  <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
+  <button v-show='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
 
