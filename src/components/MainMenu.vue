@@ -31,7 +31,7 @@
 
         <router-link to="/audio_editor" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>AudioEditor</a></router-link>
-        
+
         <router-link to="/test_audio_convert" class="presentation" tag="li"
         v-show="isAdmin || isLibrarian"><a>Test Compression</a></router-link>
 

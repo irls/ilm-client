@@ -1,6 +1,12 @@
 <template>
+
+
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" ><!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
+  <selection-modal
+    :show="selectionModalActive"
+  >
+  </selection-modal>
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
@@ -98,7 +104,7 @@
 </template>
 
 <script>
-
+import SelectionModal from './SelectionModal'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import BookBlockView from './BookBlockView'
 import BookBlockPreview   from './BookBlockPreview';
@@ -111,6 +117,7 @@ import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
+import { prepareForFilter } from '@src/filters/search.js';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -119,6 +126,7 @@ Vue.use(VueHotkey);
 
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
+import TaskAddModal from "../tasks/TaskAddModal";
 
 export default {
   data () {
@@ -151,13 +159,21 @@ export default {
       scrollBarBlockHeight: 150,
       scrollBarBlockTimer: null,
 
-      scrollToId: null
+      scrollToId: null,
+
+      searchDebounce: null,
+      searchResultArray: [],
+
+      voiceworkUpdating: false,
+      subscribeOnVoiceworkBlocker: null
+
     }
   },
   props: ['mode'],
   computed: {
       // --- From store --- //
       ...mapGetters({
+          selectionModalActive:'selectionModalActive',
           book: 'currentBook',
           meta: 'currentBookMeta',
           allBooks: 'allBooks',
@@ -171,7 +187,8 @@ export default {
           audioTasksQueue: 'audioTasksQueue',
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
-          isAudioEditAligning: 'isAudioEditAligning'
+          isAudioEditAligning: 'isAudioEditAligning',
+          bookSearch: 'bookSearch'
       }),
       metaStyles: function () {
           let result = '';
@@ -274,7 +291,8 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider,
+    SelectionModal,
+    BookBlockView, BookBlockPreview, vueSlider,
       SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
   },
   methods: {
@@ -456,7 +474,7 @@ export default {
     },
 
     refreshBlock (change) {
-      console.log('refreshBlock', change);
+      //console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -504,6 +522,11 @@ export default {
               this.$store.commit('set_storeList', newBlock);
               this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
+            }
+            if (el) {
+              Vue.nextTick(() => {
+                el.highlightSuspiciousWords();
+              });
             }
           }
           this.correctCurrentEditHeight(change.doc.blockid);
@@ -927,7 +950,7 @@ export default {
             this.parlistO.setStartId(newStartId);
           } //else this.refreshTmpl();
           this.parlist.delete(block._id);
-          this.$store.commit('set_selected_blocks');
+          this.$store.dispatch('set_selected_blocks');
         }
         //this.getCurrentJobInfo();
 
@@ -1053,6 +1076,9 @@ export default {
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
                 this.$store.commit('set_selected_blocks');
+                Vue.nextTick(() => {
+                  elNext.highlightSuspiciousWords();
+                });
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -1156,7 +1182,7 @@ export default {
                 //this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
+                this.$store.dispatch('set_selected_blocks');
                 return Promise.resolve();
               })
               .catch((err)=>{
@@ -1220,10 +1246,10 @@ export default {
       });
     },
 
-    setRangeSelection(block, type, status, shift = false) {
+    async setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
-
+// debugger;
       switch (type) {
         case 'start':
           if (status) {
@@ -1269,11 +1295,13 @@ export default {
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = this.parlistO.setChecked(startRId, block.rid);
+                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid,this.$store);
                   break;
                 case 1:// block below current selection checked
+                  // this.selectionModalActive = true;
+                  this.$store.dispatch('setSelectionModalProgressWidth',0);
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = this.parlistO.setChecked(block.rid, endRId);
+                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId,this.$store);
                   break;
                 default:
                   break;
@@ -1282,7 +1310,7 @@ export default {
               newSelection = this.parlistO.setChecked(block.rid);
             }
             //console.log('newSelection', newSelection.start._id, newSelection.end._id);
-            this.setBlockSelection(newSelection);
+            await this.setBlockSelection(newSelection);
           }
           else { // uncheck
             if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
@@ -1291,6 +1319,13 @@ export default {
             }
             else this.setBlockSelection({start: {}, end: {}});
           }
+
+          let this_ = this;
+          setTimeout(() => {
+            this_.$store.dispatch('setSelectionModalProgressWidth',100);
+            this_.$store.dispatch('selectionModalDisable');
+            },1000)
+
           break;
       }
       //this.recountApprovedInRange();
@@ -2149,13 +2184,13 @@ export default {
       },
 
       processOpenedBook() {
+        this.$store.dispatch('getProcessQueue');
         return this.tc_loadBookTask()
         .then(()=>{
           this.checkMode();
           this.$store.commit('set_taskBlockMap');
           this.$store.dispatch('loadBookToc', {bookId: this.meta._id, isWait: true});
-          this.$store.dispatch('loadBookTocSections', []);
-          return this.getProcessQueue();
+          return this.$store.dispatch('loadBookTocSections', []);
         })
       },
 
@@ -2229,6 +2264,79 @@ export default {
         let rect = el.getBoundingClientRect();
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         return rect.bottom < viewHeight;
+      },
+
+      searchInBlocks(bookSearch) {
+        this.searchResultArray = [];
+        if(bookSearch.string && bookSearch.string.trim().length > 2) {
+          console.time('Search');
+          let parserSearchArr = prepareForFilter(bookSearch.string, true).split(' ');
+          parserSearchArr = parserSearchArr.filter((sEl)=>{
+            return sEl.trim().length > 0;
+          })
+          let filterSearchArr = prepareForFilter(bookSearch.string, false)
+          //console.log(`parserSearchArr: `, parserSearchArr);
+          //console.log(`filterSearchArr: `, filterSearchArr);
+
+          for (let blockId of this.parlistO.idsArray()) {
+            const block = this.parlist.get(blockId);
+            const result = block.findInText({
+              parserSearchArr,
+              filterSearchArr,
+              fullPhrase : true
+            });
+            if (result) this.searchResultArray.push(blockId);
+          }
+
+          //console.log(`this.searchResultArray: `, this.searchResultArray);
+          console.timeEnd('Search');
+        } else {
+          for (let blockId of this.parlistO.idsArray()) {
+            const block = this.parlist.get(blockId);
+            block.cleanFindMarks();
+          }
+        }
+
+        bookSearch.resultCounter = this.searchResultArray.length;
+        bookSearch.searchPointer = 0;
+
+        //console.log(`this.searchResultArray: `, this.searchResultArray);
+
+        if (this.searchResultArray.length) {
+          Vue.nextTick(()=>{
+            bookSearch.searchPointer = -1;
+            this.scrollSearchDown();
+          });
+        }
+
+      },
+
+      scrollSearchDown() {
+        if (this.searchResultArray.length) {
+          if (this.bookSearch.searchPointer < this.searchResultArray.length - 1) {
+            this.bookSearch.searchPointer++;
+            this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
+          }
+          if (this.searchResultArray.length == 1) {
+            this.scrollToBlock(this.searchResultArray[0]);
+          }
+          console.log(`startId: `, this.startId);
+          console.log(`scrollSearchDown: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+        }
+      },
+
+      scrollSearchUp() {
+        if (this.searchResultArray.length) {
+          if (this.bookSearch.searchPointer > 0) {
+            this.bookSearch.searchPointer--;
+            this.scrollToBlock(this.searchResultArray[this.bookSearch.searchPointer]);
+          }
+          if (this.searchResultArray.length == 1) {
+            this.scrollToBlock(this.searchResultArray[0]);
+          }
+          console.log(`startId: `, this.startId);
+          console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+        }
       }
   },
   events: {
@@ -2288,10 +2396,57 @@ export default {
         e.preventDefault();
       });
 
+      this.$root.$on('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
+      this.$root.$on('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
+
       //this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
+
+      this.subscribeOnVoiceworkBlocker = this.$store.subscribeAction((action, state) => {
+
+        switch(action.type) {
+          case 'addBlockLock' : {
+            //console.log(`action.payload: `, action.payload);
+            if (!this.voiceworkUpdating && action.payload.type === 'changeVoiceWork') {
+              this.voiceworkUpdating = true;
+              Vue.nextTick(()=>{
+                if (this.$refs.blocks && this.$refs.blocks.length) {
+                  this.$refs.blocks[0].voiceworkUpdating = true;
+                  this.$refs.blocks[0].voiceworkChange = action.payload.voicework;
+                  this.$refs.blocks[0].voiceworkUpdateType = action.payload.updateType;
+                  this.$refs.blocks[0].voiceworkBlockType = action.payload.blockType;
+                  this.$refs.blocks[0].showModal('voicework-change');
+                }
+              });
+            }
+          } break;
+          case 'clearBlockLock' : {
+            if (this.voiceworkUpdating && this.$store.state.lockedBlocks.length <= 1) {
+              this.voiceworkUpdating = false;
+              if (this.$refs.blocks && this.$refs.blocks.length) {
+                this.$refs.blocks[0].voiceworkUpdating = false;
+                this.$refs.blocks[0].voiceworkBlockType = false;
+                this.$refs.blocks[0].hideModal('voicework-change');
+              } else {
+                this.$store.state.liveDB.onBookReimport();
+                this.$store.state.liveDB.stopWatch('metaV');
+                this.$store.state.liveDB.stopWatch('job');
+                this.$root.$emit('book-reloaded');
+              }
+            }
+          } break;
+          default : {
+          } break;
+        };
+      });
   },
 
   beforeDestroy:  function() {
+
+    for (let blockId of this.parlistO.idsArray()) {
+      const block = this.parlist.get(blockId);
+      block.cleanFindMarks();
+    }
+
     this.$root.$emit('for-audioeditor:force-close');
     window.removeEventListener('keydown', this.eventKeyDown);
     //console.log('BookEdit beforeDestroy');
@@ -2308,6 +2463,11 @@ export default {
     this.$root.$off('from-audioeditor:undo', this.evFromAudioeditorUndo);
     this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
     this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
+    this.$root.$off('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
+    this.$root.$off('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
+
+    // unsubscribe
+    this.subscribeOnVoiceworkBlocker();
   },
   watch: {
     'meta._id': {
@@ -2325,11 +2485,11 @@ export default {
 //         }
       }
     },
-    'allBooks': {
-      handler() {
-
-      }
-    },
+//     'allBooks': {
+//       handler() {
+//
+//       }
+//     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
@@ -2456,6 +2616,15 @@ export default {
           this.$root.$emit('for-audioeditor:load-and-play', block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx || 0), loadBlock);
         }
       }
+    },
+    'bookSearch.string': {
+      handler(bookSearch, oldVal) {
+        clearTimeout(this.searchDebounce);
+        this.searchDebounce = setTimeout(()=>{
+          this.searchInBlocks(this.bookSearch);
+        }, 400);
+      },
+      //deep: true
     }
   }
 }
@@ -2633,11 +2802,6 @@ export default {
       height: 6px;
       background-color: #999;
       border-radius: 50%;
-    }
-  }
-  sg[data-suggestion=""] {
-    w {
-        background: yellow !important;
     }
   }
 

@@ -11,7 +11,7 @@
           @keyup="keycheck"
         >
         <div class="error-message" v-text="loginError"></div>
-        <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="user_login" value="Login" />
+        <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="login" value="Login" />
         <div class="links"> <a @click="setActive('password')">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
       </div>
 
@@ -25,8 +25,8 @@
         <input type="submit" 
                :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}" 
                :disabled="passwordResetSuccess.length > 0" 
-          @click="user_passwordreset(passwordEmail)" 
-          value='Send Login Link'>
+          @click="passwordreset(passwordEmail)" 
+          value='Send new password'>
         <div class="links">
           <a @click="setActive('login')"> 
             <i class="fa fa-arrow-left"></i> Back to Login
@@ -42,7 +42,6 @@
 import { mapActions } from 'vuex';
 import superlogin from 'superlogin-client';
 import axios from 'axios';
-const loginLogout = require('../store/userActions')();
 
 export default {
 
@@ -72,17 +71,17 @@ export default {
   },
 
   methods: {
-    ...mapActions([
-      
+    ...mapActions('userActions', [
+      'user_login', 'user_passwordreset'
     ]),
 
-    user_login () {
+    login () {
       if (!(this.loginUser && this.loginPassword)) {
         this.loginError = 'Define both password and email or username';
         return;
       }
 
-      loginLogout.user_login(this.loginUser, this.loginPassword)
+      this.user_login([this.loginUser, this.loginPassword])
         .then(()=>{
           return Promise.resolve();
         })
@@ -91,7 +90,7 @@ export default {
         });
 
     },
-    user_passwordreset (email) {
+    passwordreset (email) {
       this.passwordResetError = '';
       if (email.length === 0){
         this.passwordResetError = 'Define email';
@@ -99,7 +98,7 @@ export default {
         if (!/\S+@\S+\.\S+/.test(email)) {
           this.passwordResetError = 'Incorrect email format';
         } else {
-          return loginLogout.user_passwordreset(email)
+          return this.user_passwordreset(email)
             .then((response) => {
               if (response.ok === true) {
                 this.passwordResetSuccess = 'New password was sent to your email';
@@ -113,7 +112,7 @@ export default {
       }
     },
     keycheck (event) {
-      if (event.key === 'Enter') this.user_login()
+      if (event.key === 'Enter') this.login()
     },
     
     clearPasswordMessage() {

@@ -485,10 +485,7 @@ export default {
 
       get: function () {
           if (this.mode === 'narrate') {
-            if (!this.parnum) {
-              return '';
-            }
-            return this.isSplittedBlock ? `${this.parnum}_${this.blockPartIdx+1}` : this.parnum;
+            return this.isSplittedBlock ? (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx + 1) : this.parnum;
           }
           return (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
       }},
@@ -1050,10 +1047,8 @@ export default {
     if (this.isRecording) {
       this.cancelRecording();
     }
-    if (!this.meta || !this.meta.bookid || !this.mode || (this.$route && ['BookEditDisplay', 'CollectionBookEditDisplay'].includes(this.$route.name))) {// going out from book or to Display mode
-      if (this.isAudStarted) {
+    if (this.isAudStarted || this.isAudPaused) {
         this.audStop();
-      }
     }
   },
   destroyed: function () {
@@ -1803,7 +1798,7 @@ export default {
         if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');
+        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
@@ -2576,91 +2571,36 @@ export default {
         this.isRecordingPaused = false;
         this.recorder.resumeRecording();
       },
-      initFootnotePlayer(playerObj) {
-        let parent = this;
-        playerObj.audPlay = function (blockId, ftnIdx) {
-          parent.$root.$emit('playBlockFootnote', `${blockId}_${ftnIdx}`);
-          parent.$root.$emit('playBlock', false);
-          this.isStarted = `${blockId}_${ftnIdx}`;
-          this.player.playBlock(`${blockId}_${ftnIdx}`);
-        }
-
-        playerObj.audPause = function (blockId, ftnIdx) {
-          this.isPaused = true;
-          this.player.pause();
-        }
-
-        playerObj.audResume = function (blockId, ftnIdx) {
-          this.isPaused = false;
-          this.player.resume();
-        }
-
-        playerObj.audStop = function (blockId, ftnIdx) {
-          this.player.pause();
-          parent.audFootnoteCleanClasses(this.isStarted);
-          this.isStarted = false;
-          this.isPaused = false;
-        }
-
-        playerObj.player = new ReadAlong({
-            forceLineScroll: false
-        },{
-          on_start:   ()=>{},
-          on_pause:   ()=>{},
-          on_resume:  ()=>{},
-          on_complete:()=>{
-            playerObj.isStarted = false;
-            playerObj.isPaused = false;
-            parent.audFootnoteCleanClasses(playerObj.isStarted);
-          }
-        });
-
-        parent.$root.$on('playBlockFootnote', (ftnId)=>{
-          if (playerObj.isStarted !== ftnId) {
-            if (playerObj.player) {
-              playerObj.player.pause();
-              parent.audFootnoteCleanClasses(playerObj.isStarted);
-              playerObj.isStarted = false;
-              playerObj.isPaused = false;
-            }
-          }
-        });
-        parent.$root.$on('playBlock', (blockid)=>{
-          if (playerObj.player) {
-            playerObj.player.pause();
-            parent.audFootnoteCleanClasses(playerObj.isStarted);
-            playerObj.isStarted = false;
-            playerObj.isPaused = false;
-          }
-        });
-      },
       initPlayer() {
         this.player = new ReadAlong({
-            forceLineScroll: false
+            forceLineScroll: false,
+            keep_highlight_on_pause: true
         },{
             on_start: ()=>{
                 this.isAudStarted = true;
                 this.isAudPaused = false;
-                this.$root.$emit('playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
+                this.$root.$emit('readalong:playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
                 this.$root.$emit('playBlockFootnote', false);
                 //this.player.audio_element.volume = 0;
-                this.$root.$on('playBlock', this.onAudPlay);
+                this.$root.$on('readalong:playBlock', this.onAudPlay);
+                this.$root.$on('from-audioeditor:play', this.onAudPlay);
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
-                this.$root.$emit('playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
+                this.$root.$emit('readalong:playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
             },
             on_complete: ()=>{
-                this.$root.$off('playBlock', this.onAudPlay);
+                this.$root.$off('readalong:playBlock', this.onAudPlay);
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
+                this.$root.$off('from-audioeditor:play', this.onAudPlay);
             },
             on_newline: () => {
               let element = document.getElementById(this.block.blockid);
@@ -2686,7 +2626,7 @@ export default {
       onAudPlay(blockid) {
         if (blockid !== `${this.block.blockid}-${this.blockPartIdx}`) {
           if (this.player && (this.isAudStarted || this.isAudPaused)) {
-            this.audStop();
+            this.audStop(this.block.blockid);
           }
         }
       },
@@ -2891,6 +2831,10 @@ export default {
               });
               //this.$forceUpdate();
             }
+          } else {
+            this.$refs.blockContent.querySelectorAll('w.selected').forEach(el => {
+              el.classList.remove('selected');
+            });
           }
         }
       },
@@ -3115,7 +3059,11 @@ export default {
           }
           if (startRange && endRange && this.isAudioEditing) {
             //console.log(startRange[0], endRange[0] + endRange[1])
-            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
+            let startElementIndex = null;
+            if (this.$refs.blockContent) {
+              startElementIndex = Array.prototype.indexOf.call(this.$refs.blockContent.querySelectorAll('w[data-map]:not([data-map=""])'), startElement);
+            }
+            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null, startElementIndex);
           }
           //console.log(startElement, endElement, startRange, endRange)
         }
@@ -3434,7 +3382,7 @@ Save text changes and realign the Block?`,
                 return false;
               }
             }
-            if (!isMac && this.range.startOffset < this.range.endOffset) {// do not display menu for range
+            if (this.range.startOffset < this.range.endOffset) {// do not display menu for range
               return false;
             }
             // Do not allow split point inside superscript or subscript
@@ -3693,6 +3641,7 @@ Please save or discard your changes before joining.`,
             if (this._isDestroyed) {
               this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
             }
+            this.$parent.highlightSuspiciousWords();
             this.$parent.isSaving = false;
             this.$parent.$parent.refreshTmpl();
             return Promise.resolve();
@@ -3728,7 +3677,11 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToBlocks([this.block.blockid, update]);
+          return this.splitBlockToBlocks([this.block.blockid, update])
+            .then(() => {
+              this.$parent.highlightSuspiciousWords();
+              return Promise.resolve();
+            });
         }
       },
       
@@ -3747,7 +3700,11 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToSubblocks([this.block.blockid, update]);
+          return this.splitBlockToSubblocks([this.block.blockid, update])
+            .then(() => {
+              this.$parent.highlightSuspiciousWords();
+              return Promise.resolve();
+            });
         }
       },
       
@@ -3759,7 +3716,11 @@ Please save or discard your changes before joining.`,
         this.block.isSaving = true;
         this.$parent.isSaving = true;
         this.$parent.$forceUpdate();
-        return this.splitBySubblock([this.block.blockid, this.blockPartIdx]);
+        return this.splitBySubblock([this.block.blockid, this.blockPartIdx])
+          .then(() => {
+            this.$parent.highlightSuspiciousWords();
+            return Promise.resolve();
+          });
       },
       
       mergeAllSubblocks(confirm = true) {
@@ -3912,6 +3873,9 @@ Join subblocks?`,
             if (this.$refs.blockContent) {
               this.addContentListeners();
             }
+            if (this.isAudPaused || this.isAudStarted) {
+              this.player.regenerateAndHighlight();
+            }
           });
         }
       },
@@ -4045,7 +4009,7 @@ Join subblocks?`,
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          this.discardBlock();
+          //this.discardBlock();
           if (this.block.voicework === 'narration') {
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
@@ -4055,7 +4019,7 @@ Join subblocks?`,
           if (this.isRecording) {
             this.cancelRecording();
           }
-          if (this.isAudStarted) {
+          if (this.isAudStarted || this.isAudPaused) {
             this.audStop();
           }
         }

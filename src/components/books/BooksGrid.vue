@@ -14,6 +14,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import Grid from '../generic/Grid'
+import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
 
 export default {
 
@@ -46,13 +47,14 @@ export default {
         .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
         .filter(book => this.bookFilters.jobStatus ? book.job_status === this.bookFilters.jobStatus : true)
         .filter(book => {
-          let str = `${book.title} ${book.bookid} ${book.category} ${book.description} ${book.subtitle} ${book.author}`.toLowerCase()
-          let find = this.bookFilters.filter.toLowerCase().trim()
+          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+          let find = prepareForFilter(this.bookFilters.filter);
           return (str.indexOf(find) > -1)
         })
         .filter(book => {
-          let str = `${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`.toLowerCase()
-          let find = this.bookFilters.projectTag.toLowerCase().trim()
+          let str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+          let find = prepareForFilter(this.bookFilters.projectTag);
           return (str.indexOf(find) > -1)
         })
         .filter(book => !book.collection_id)
@@ -193,7 +195,6 @@ export default {
     bookFilters: {
       deep: true,
       handler(newVal, oldVal) {
-        console.log(`bookFilters: `, );
         if (this.$route.params.hasOwnProperty('bookid')) {
           const bookid = this.$route.params.bookid;
           const found = this.books.find((book)=>{
@@ -225,7 +226,6 @@ export default {
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
       let bookid = ev.bookid
-      console.log('ev.bookid', ev.bookid);
       if (bookid) {
 
         this.openBookClickCounter++;

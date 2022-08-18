@@ -22,6 +22,21 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
+    <button v-if="(currRoute === 'BookEdit' || currRoute === 'CollectionBookEdit') && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
+    <OverlayPanel ref="searchPanel" :dismissable="false">
+      <div class="search-box">
+        <div class="search">
+          <input ref="searchInBookInput" v-model="bookSearch.string" v-on:paste.prevent="onPaste" v-on:keyup.enter="scrollSearchDown" v-on:keyup.escape="toggleSearchVisible" type="text" class="form-control search-in-book" placeholder="Search"></input>
+        </div>
+        <div class="results"><span v-show="bookSearch.string.length > 2">{{getSearchCounters}}</span></div>
+        <div class="buttons">
+          <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
+          <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
+          <i class="fa fa-times" aria-hidden="true" @click='closeSearchBox'></i>
+        </div>
+      </div>
+    </OverlayPanel>
+
     <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
@@ -29,12 +44,15 @@
 </template>
 
 <script>
-import ButtonRadioGroup from '../generic/ButtonRadioGroup'
-import access from "../../mixins/access.js"
+import Vue from 'vue';
+import ButtonRadioGroup from '../generic/ButtonRadioGroup';
+import access from "../../mixins/access.js";
 import taskControls from '../../mixins/task_controls.js';
-import apiConfig from '../../mixins/api_config.js'
+import apiConfig from '../../mixins/api_config.js';
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
+import OverlayPanel from 'primevue/overlaypanel';
+import Tooltip from 'primevue/tooltip';
 
 export default {
   data () {
@@ -44,7 +62,7 @@ export default {
         //'BookNarrate': 'Narrate',
         //'BookProofread': 'Proofread',
         //'BookEditDisplay': 'Display'
-      }
+      },
     }
   },
   mixins: [access, taskControls, apiConfig],
@@ -58,6 +76,12 @@ export default {
     currRoute: function () {
       let result = ''
       return this.$route.name;
+    },
+
+    getSearchCounters: function () {
+      let searchPointer = this.bookSearch.searchPointer;
+      if (this.bookSearch.resultCounter > 0) searchPointer += 1;
+      return `${searchPointer}/${this.bookSearch.resultCounter}`;
     },
 
     editModesAvailable: {
@@ -99,7 +123,16 @@ export default {
         return modes;
       }
     },
-    ...mapGetters(['currentBookMeta', 'currentBookid', 'currentBook', 'storeListO', 'isBlocked', 'blockSelection', 'adminOrLibrarian'])
+    ...mapGetters([
+      'currentBookMeta',
+      'currentBookid',
+      'currentBook',
+      'storeListO',
+      'isBlocked',
+      'blockSelection',
+      'adminOrLibrarian',
+      'bookSearch'
+    ])
   },
   methods: {
 
@@ -137,11 +170,41 @@ export default {
         }
       }
     },
+    toggleSearchVisible(ev) {
+      this.bookSearch.string = "";
+      this.$refs.searchPanel.toggle(ev);
+      Vue.nextTick(()=>{
+        if (this.$refs.searchInBookInput && this.$refs.searchPanel.visible) {
+          this.$refs.searchInBookInput.focus();
+        }
+      });
+    },
+    scrollSearchDown(ev) {
+      this.$root.$emit('from-book-edit-toolbar:scroll-search-down');
+    },
+    scrollSearchUp(ev) {
+      this.$root.$emit('from-book-edit-toolbar:scroll-search-up');
+    },
+    closeSearchBox(ev) {
+      this.bookSearch.string = "";
+      this.$refs.searchPanel.hide(ev);
+    },
+    onPaste(ev) {
+      const clipboard = (event.clipboardData || window.clipboardData)
+      let paste = clipboard.getData('text/html');
+      paste = paste.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*<\/sup>/mig, '');
+      paste = paste.replace(/(<([^>]+)>)/gi, '');
+      this.bookSearch.string = paste;
+    },
     ...mapActions(['setBlockSelection'])
   },
   components: {
     ButtonRadioGroup,
-    dropdown
+    dropdown,
+    OverlayPanel,
+  },
+  directives: {
+    'tooltip': Tooltip
   },
   // watch: {
   //   'this.editMode' () {
@@ -161,6 +224,10 @@ export default {
   watch: {
     '$route' (toRoute, fromRoute) {
       this.setSelectedRoute();
+      if (['BookEdit', 'CollectionBookEdit'].indexOf(toRoute.name) == -1) {
+        this.bookSearch.string = "";
+        this.$refs.searchPanel.hide();
+      }
     },
     'editModesAvailable': {
       handler(val) {
@@ -169,7 +236,7 @@ export default {
     }
   },
   mounted() {
-
+    this.bookSearch.string = "";
   },
   destroyed: function () {
 
@@ -247,5 +314,59 @@ h3.title i {
     width: 27px;
   }
 }
+
+.search-box {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  height: 33px;
+
+  .search {
+    width: 300px;
+    padding-right: 1rem;
+  }
+
+  .results {
+    padding-top: 8px;
+    padding-right: 1rem;
+  }
+
+  .buttons {
+    user-select: none;
+    .fa {
+      margin-left: 3px;
+      padding-top: 8px;
+
+      &.fa-times {
+        margin-left: 7px;
+      }
+    }
+  }
+}
+/*.search-box {
+  min-width: 400px;
+  height: 33px;
+
+  .search {
+    width: 70%;
+  }
+  .results {
+    min-width: 30px;
+    padding-top: 8px;
+  }
+  .buttons {
+    &.right {
+      float: right;
+    }
+    .fa {
+      margin-left: 3px;
+      padding-top: 8px;
+
+      &.fa-times {
+        margin-left: 7px;
+      }
+    }
+  }
+}*/
 
 </style>

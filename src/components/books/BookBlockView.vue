@@ -536,8 +536,6 @@
           </div>
           <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
           <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
-          <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
-          <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
         </section>
         <section v-else> <!--!isAllowBatchVoiceworkNarration-->
           <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
@@ -682,6 +680,7 @@ export default {
       isRecordingPaused: false,
       //isAudioChanged: false,
       isIllustrationChanged: false,
+      setRangeSelectionLock: false,
       blockAudio: {
         src: '',
         map: ''
@@ -703,6 +702,7 @@ export default {
       voiceworkChange: false,
       voiceworkUpdateType: 'single',
       voiceworkUpdating: false,
+      voiceworkBlockType: false,
       changes: [],
       deletePending: false,
       audioEditFootnote: {footnote: {}, isAudioChanged: false},
@@ -715,6 +715,7 @@ export default {
       //isSaving: false
       editingLocked: false,
       editingLockedReason: ''
+
     }
   },
   components: {
@@ -1159,7 +1160,8 @@ export default {
           audioTasksQueue: 'audioTasksQueue',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
           blockLockedSimultaneous: 'blockLockedSimultaneous',
-          updatingNumeration: 'updatingNumeration'
+          updatingNumeration: 'updatingNumeration',
+          suspiciousWordsHighlight: 'suspiciousWordsHighlight'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1177,6 +1179,9 @@ export default {
       },
       blockTypeLabel: {
         get() {
+          if (this.voiceworkBlockType) {
+            return this.voiceworkBlockType === 'par' ? 'paragraph' : this.voiceworkBlockType;
+          }
           return this.block.type === 'par' ? 'paragraph' : this.block.type;
         }
       },
@@ -1323,9 +1328,6 @@ export default {
       //this.initEditor();
       //console.log('mounted', this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
-      if (!this.player && this.blockAudio.src) {
-          this.initPlayer();
-      }
 
       if (this.block.footnotes && this.block.footnotes.length) {
         this.block.footnotes.forEach((footnote, footnoteIdx)=>{
@@ -1393,9 +1395,9 @@ export default {
       //if (!this.block.language) this.block.language = this.meta.language;
       this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
-//       Vue.nextTick(() => {
-//
-//       });
+      Vue.nextTick(() => {
+        this.highlightSuspiciousWords();
+      });
   },
   beforeDestroy: function () {
 //     console.log('beforeDestroy', this.block._id);
@@ -1433,6 +1435,11 @@ export default {
             }
           });
         }
+    }
+    if (this.FtnAudio) {
+      if (this.FtnAudio.isStarted || this.FtnAudio.isPaused) {
+        this.FtnAudio.audStop();
+      }
     }
   },
   destroyed: function () {
@@ -1798,7 +1805,7 @@ export default {
       discardBlock: function(ev) {
 
         let checked = this.block.checked;
-        this.getBlock(this.block._id)
+        return this.getBlock(this.block._id)
         .then((block)=>{
           this.isChanged = false;
           this.isIllustrationChanged = false;
@@ -1847,6 +1854,7 @@ export default {
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
               this.addContentListeners();
+              this.highlightSuspiciousWords();
             }
           });
 
@@ -1863,6 +1871,7 @@ export default {
             // emit for virtual scroll correction
             this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
           }
+          return Promise.resolve();
         });
       },
 
@@ -2197,6 +2206,7 @@ export default {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
             this.loadBookTocSections([]);
           }
+          this.highlightSuspiciousWords();
 
           /*this.blockO.status = Object.assign(this.blockO.status, {
             marked: this.block.markedAsDone,
@@ -2269,6 +2279,7 @@ export default {
               }
             }
             this.isChanged = false;
+            this.highlightSuspiciousWords();
             return Promise.resolve();
           });
       },
@@ -2287,6 +2298,8 @@ export default {
           //});
         //}
         let updateTask;
+        let delCount = 0;// footnotes to delete
+        let updatedFootnotes = [];
         if (this.mode !== 'narrate') {
           if (this.block.footnotes && this.block.footnotes.length) {
             let footnotesInText = document.getElementById(this.block.blockid).querySelectorAll(`sup[data-idx]`);
@@ -2295,7 +2308,7 @@ export default {
             } else {
               footnotesInText = 0;
             }
-            let delCount = this.block.footnotes.length - footnotesInText;
+            delCount = this.block.footnotes.length - footnotesInText;
             if (this.block.footnotes.length > footnotesInText && this.$refs.blocks) {
               let delIdxList = [];
               let contentMerged = '';
@@ -2315,6 +2328,9 @@ export default {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
                 this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
               });
+            } else {
+              updatedFootnotes = this.block.footnotes;
+              update.content = this.block.parts[blockPartIdx].content;
             }
           }
         }
@@ -2327,7 +2343,30 @@ export default {
             updateTask = this.assembleBlock(update, realign);
           }
         } else {
-          updateTask = this.updateBlockPart([this.block._rid, update, blockPartIdx, realign]);
+          updateTask = new Promise((resolve, reject) => {
+            let updFootnotes = new Promise((res, rej) => {
+              if (delCount) {
+                return this.assembleBlock({
+                  footnotes: updatedFootnotes,
+                  blockid: this.block.blockid,
+                  bookid: this.block.bookid,
+                  parts: this.block.parts
+                }, realign)
+                  .then(() => {
+                    return res();
+                  });
+              } else {
+                return res();
+              }
+            });
+            return updFootnotes
+              .then(() => {
+                this.updateBlockPart([this.block._rid, update, blockPartIdx, realign])
+                  .then((updated) => {
+                    return resolve(updated);
+                  });
+              });
+            });
         }
         return updateTask
           .then((response) => {
@@ -2338,6 +2377,7 @@ export default {
             if (this.block.parts[blockPartIdx]) {
               this.block.parts[blockPartIdx].isSaving = false;
             }
+            this.highlightSuspiciousWords();
             return Promise.resolve(response);
           })
           .catch(err => {
@@ -2446,7 +2486,7 @@ export default {
           return content;
         }
         //console.log(content)
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');
+        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
         content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
@@ -2768,6 +2808,9 @@ Save text changes and realign the Block?`,
             if (this.isChecked) {// block approval can change block styles, e.g. pause_before
               this.$root.$emit('from-block-edit:set-style');
             }
+            Vue.nextTick(() => {
+              this.highlightSuspiciousWords();
+            })
           }
         })
         .catch(err => {
@@ -2776,72 +2819,6 @@ Save text changes and realign the Block?`,
         });
 
         this.$root.$emit('closeFlagPopup', true);
-      },
-
-      audPlay: function(block_id, ev) {
-        if (this.player) {
-          this.audCleanClasses(block_id, ev);
-          this.player.playBlock('content-'+block_id);
-        }
-      },
-      audPlayFromSelection() {
-        if (this.player) {
-          this.player.loadBlock(this.block._id);
-          let startElement = this._getParent(this.range.startContainer, 'w');
-          if (startElement) {
-            this.isAudStarted = true;
-            this.player.playFromWordElement(startElement, 'content-'+this.block._id);
-          }
-        }
-      },
-      audPlaySelection() {
-        if (this.player) {
-          this.audStop(this.block._id);
-          this.player.loadBlock(this.block._id);
-          let startElement = this._getParent(this.range.startContainer, 'w');
-          let endElement = this._getParent(this.range.endContainer, 'w');
-          let startRange = this._getClosestAligned(startElement, 1);
-          if (!startRange) {
-            startRange = [0, 0];
-          }
-          let endRange = this._getClosestAligned(endElement, 0);
-          if (!endRange) {
-            endRange = this._getClosestAligned(endElement, 1)
-          }
-
-          this.player.playRange('content-' + this.block._id, startRange[0], endRange[0] + endRange[1]);
-          this.isAudStarted = true;
-          this.$root.$emit('playBlock', this.block._id);
-        }
-      },
-      audPause: function(block_id, ev) {
-        if (this.player) {
-          this.player.pause();
-        }
-      },
-      audResume: function(block_id, ev) {
-        if (this.player) {
-          this.audCleanClasses(block_id, ev);
-          this.player.resume();
-        }
-      },
-      audStop: function(block_id, ev) {
-        if (this.player) {
-          this.player.pause();
-          this.isAudStarted = false;
-          this.isAudPaused = false;
-          this.audCleanClasses(block_id, ev);
-        }
-      },
-      audCleanClasses: function(block_id, ev) {
-        let reading_class = this.player.config.reading_class
-        $('#'+block_id).find('.'+reading_class).each(function(){
-          $(this).removeClass(reading_class);
-        });
-        let trail_class = this.player.config.trail_class
-        $('#'+block_id).find('.'+trail_class).each(function(){
-          $(this).removeClass(trail_class);
-        });
       },
 
       audFootnoteCleanClasses: function(ftnId) {
@@ -2942,8 +2919,11 @@ Save text changes and realign the Block?`,
             el.textContent = idx+1;
             if (this.isSplittedBlock && parseInt(el.getAttribute('data-idx')) !== idx + 1) {
               this.block.parts[blk.blockPartIdx].footnote_added = true;
+              el.setAttribute('data-idx', idx+1);
+              this.block.parts[blk.blockPartIdx].content = blk.$refs.blockContent.innerHTML;
+            } else {
+              el.setAttribute('data-idx', idx+1);
             }
-            el.setAttribute('data-idx', idx+1);
             //console.log('iter end:', idx, el.getAttribute('data-idx'));
             ++idx;
           });
@@ -3280,7 +3260,7 @@ Save text changes and realign the Block?`,
                 this.stopRecordingAndNext(partIdx);
               }
               this.saveNarrated({
-                'audio': dataURL.split(',').pop(),
+                'audio': dataURL,
                 'position': reRecordPosition,
                 'isTemp': false,
                 'blockid': this.block.blockid,
@@ -3393,10 +3373,12 @@ Save text changes and realign the Block?`,
       initFootnotePlayer(playerObj) {
         let parent = this;
         playerObj.audPlay = function (blockId, ftnIdx) {
-          parent.$root.$emit('playBlockFootnote', `${blockId}_${ftnIdx}`);
-          parent.$root.$emit('playBlock', false);
+          //parent.$root.$emit('playBlockFootnote', `${blockId}_${ftnIdx}`);
+          parent.$root.$emit('readalong:playBlock', `footnote:${blockId}_${ftnIdx}`);
           this.isStarted = `${blockId}_${ftnIdx}`;
           this.player.playBlock(`${blockId}_${ftnIdx}`);
+          parent.$root.$on('readalong:playBlock', parent.onAudPlay);
+          parent.$root.$on('from-audioeditor:play', parent.onAudPlay);
         }
 
         playerObj.audPause = function (blockId, ftnIdx) {
@@ -3417,7 +3399,8 @@ Save text changes and realign the Block?`,
         }
 
         playerObj.player = new ReadAlong({
-            forceLineScroll: false
+            forceLineScroll: false,
+            keep_highlight_on_pause: true
         },{
           on_start:   ()=>{},
           on_pause:   ()=>{},
@@ -3426,10 +3409,12 @@ Save text changes and realign the Block?`,
             playerObj.isStarted = false;
             playerObj.isPaused = false;
             parent.audFootnoteCleanClasses(playerObj.isStarted);
+            parent.$root.$off('readalong:playBlock', parent.onAudPlay);
+            parent.$root.$off('from-audioeditor:play', parent.onAudPlay);
           }
         });
 
-        parent.$root.$on('playBlockFootnote', (ftnId)=>{
+        /*parent.$root.$on('playBlockFootnote', (ftnId)=>{
           if (playerObj.isStarted !== ftnId) {
             if (playerObj.player) {
               playerObj.player.pause();
@@ -3446,39 +3431,12 @@ Save text changes and realign the Block?`,
             playerObj.isStarted = false;
             playerObj.isPaused = false;
           }
-        });
+        });*/
       },
-      initPlayer() {
-        this.player = new ReadAlong({
-            forceLineScroll: false
-        },{
-            on_start: ()=>{
-                this.isAudStarted = true;
-                this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
-                this.$root.$emit('playBlockFootnote', false);
-            },
-            on_pause: ()=>{
-                this.isAudPaused = true;
-            },
-            on_resume: ()=>{
-                this.isAudPaused = false;
-                this.$root.$emit('playBlock', this.block._id);
-            },
-            on_complete: ()=>{
-                this.isAudStarted = false;
-                this.isAudPaused = false;
-                this.audCleanClasses(this.block._id, {});
-            }
-        });
-        var self = this;
-        this.$root.$on('playBlock', function(blockid) {
-          if (blockid !== self.block._id) {
-            if (self.player) {
-              self.audStop();
-            }
-          }
-        });
+      onAudPlay(blockid) {
+        if (this.FtnAudio && this.FtnAudio.player && (this.FtnAudio.isStarted || this.FtnAudio.isPaused)) {
+          this.FtnAudio.audStop();
+        }
       },
       reRecord() {
         this._markSelection();
@@ -3606,6 +3564,7 @@ Save text changes and realign the Block?`,
         .then(()=>{
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
+            this.highlightSuspiciousWords();
         })
         .catch(()=>{})
       },
@@ -3614,6 +3573,7 @@ Save text changes and realign the Block?`,
         .then(()=>{
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
+            this.highlightSuspiciousWords();
         })
         .catch(()=>{})
       },
@@ -3923,18 +3883,25 @@ Save text changes and realign the Block?`,
 
       },
       setRangeSelection(type, ev) {
-        let checked;
-        if (ev === true || ev === false) checked = ev;
-        else checked = ev.target && ev.target.checked;
+        if(!this.setRangeSelectionLock){
 
-        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
-        if (ev.shiftKey) {
-          if (this.selectionStart && this.selectionStart != this.block._id) {
-            document.getSelection().removeAllRanges();
+          let checked;
+          if (ev === true || ev === false) checked = ev;
+          else checked = ev.target && ev.target.checked;
+
+          let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
+          if (ev.shiftKey) {
+            if (this.selectionStart && this.selectionStart != this.block._id) {
+              document.getSelection().removeAllRanges();
+            }
           }
+          this.setRangeSelectionLock = true;
+          setTimeout( () => {
+            this.setRangeSelectionLock = false;
+            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+          }, 500);
         }
         //this.blockO.checked = checked;
-        this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
       },
       updateVoicework() {
         if (!this.voiceworkChange) {
@@ -3960,13 +3927,13 @@ Save text changes and realign the Block?`,
 //                   return;
 //                 }
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 300) {
-                  this.$store.state.liveDB.onBookReimport();
-                  this.$store.state.liveDB.stopWatch('metaV');
-                  this.$store.state.liveDB.stopWatch('job');
-                  this.$root.$emit('book-reloaded');
-                }
-                else {
+                //if (response.data.blocks.length > 300) {
+                //  this.$store.state.liveDB.onBookReimport();
+                //  this.$store.state.liveDB.stopWatch('metaV');
+                //  this.$store.state.liveDB.stopWatch('job');
+                //  this.$root.$emit('book-reloaded');
+                //}
+                //else {
                   this.$root.$emit('from-bookblockview:voicework-type-changed');
 
                   if (this.isCompleted) {
@@ -3979,13 +3946,14 @@ Save text changes and realign the Block?`,
                   if (this.isChecked) {
                     this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
                   }
-                  this.setCurrentBookBlocksLeft(this.block.bookid);
-                }
+                  //this.setCurrentBookBlocksLeft(this.block.bookid);
+                //}
               }
             }
             //this.voiceworkChange = false;
           })
           .catch(err => {
+            console.error(`err: `, err);
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
           });
@@ -4313,11 +4281,11 @@ Save text changes and realign the Block?`,
       checkAllowNarrateUnassigned() {
         return this.checkNarratorUnassignedAction('narrate');
       },
-      
+
       checkAllowUpdateUnassigned() {
         return this.checkNarratorUnassignedAction('update');
       },
-      
+
       checkNarratorUnassignedAction(type = 'narrate') {
         if (!this.tc_allowNarrateUnassigned(this.block)) {
           this.$root.$emit('closeFlagPopup', null);
@@ -4373,10 +4341,13 @@ Save text changes and realign the Block?`,
       setPartsHtml() {
         if (!this.block.getIsSplittedBlock()) {
           let blockValue = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
-          if (this.$refs.blocks[0].$refs.blockContent.innerHTML !== blockValue) {
+          if (this.suspiciousWordsHighlight.clearText(this.$refs.blocks[0].$refs.blockContent.innerHTML) !== blockValue) {
             this.block.content = blockValue;
-            this.$refs.blocks[0].$refs.blockContent.innerHTML = this.block.content;
+            this.$refs.blocks[0].$refs.blockContent.innerHTML = this.suspiciousWordsHighlight.addHighlight(this.block.content);
             this.pushChange('content');
+            Vue.nextTick(() => {
+              this.highlightSuspiciousWords();
+            })
           }
         } else {
           this.block.parts.forEach((p, pIdx) => {
@@ -4386,9 +4357,12 @@ Save text changes and realign the Block?`,
             let partValue = this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.getValue();
             if (ref && ref.$refs.blockContent.innerHTML !== partValue) {
               p.content = partValue;
-              ref.$refs.blockContent.innerHTML = p.content;
+              ref.$refs.blockContent.innerHTML = this.suspiciousWordsHighlight.addHighlight(p.content);
               ref.pushChange('content');
               ref.isChanged = true;
+              Vue.nextTick(() => {
+                this.highlightSuspiciousWords();
+              });
             }
           });
         }
@@ -4452,6 +4426,91 @@ Save text changes and realign the Block?`,
           return this.$refs.blocks[index];
         }
         return null;
+      },
+      highlightSuspiciousWords() {
+        //if (this.block.blockid === 'greater_than_basics_1657271323905_en-bl33') {
+          //console.time(`greater_than_basics_1657271323905_en-bl33 highlight`);
+        //}
+        if (this.mode !== 'edit') {
+          return;
+        }
+        let suspiciousTextRegex = this.suspiciousWordsHighlight.getSuspiciousTextRegex();
+        if (this.$refs.blocks) {
+          this.$refs.blocks.forEach(blk => {
+            if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
+              this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent);
+            }
+          });
+        }
+        if (this.block.footnotes.length > 0) {
+          this.block.footnotes.forEach((footnote, ftnIdx) => {
+            if (this.$refs['footnoteContent_' + ftnIdx] && this.$refs['footnoteContent_' + ftnIdx][0]) {
+              this.suspiciousWordsHighlight.addElementHighlight(this.$refs['footnoteContent_' + ftnIdx][0]);
+            }
+          });
+        }
+        if (this.block.type === 'illustration') {
+          if (suspiciousTextRegex.test(this.block.description)) {
+            if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockDescription) {
+              this.suspiciousWordsHighlight.addElementHighlight(this.$refs.blocks[0].$refs.blockDescription);
+            }
+          }
+        }
+        //if (this.block.blockid === 'greater_than_basics_1657271323905_en-bl33') {
+          //console.timeEnd(`greater_than_basics_1657271323905_en-bl33 highlight`);
+        //}
+      },
+      clearSuspiciousWords(inText = true) {
+        let SUSPICIOUS_WORD_CLASS = this.suspiciousWordsHighlight.getSuspiciousWordClass();
+        let suspiciousTextRegex = this.suspiciousWordsHighlight.getSuspiciousTextRegex();
+        let clearRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}`, 'img');
+        let checkRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}`, 'im');
+        if (inText) {
+          if (this.$refs.blocks) {
+            this.$refs.blocks.forEach(blk => {
+              if (blk.$refs.blockContent) {
+                this.suspiciousWordsHighlight.clearElementHighlight(blk.$refs.blockContent);
+              }
+            });
+          }
+          if (this.block.footnotes.length > 0) {
+            this.block.footnotes.forEach((footnote, ftnIdx) => {
+              if (this.$refs['footnoteContent_' + ftnIdx][0]) {
+                this.suspiciousWordsHighlight.clearElementHighlight(this.$refs['footnoteContent_' + ftnIdx][0]);
+              }
+            });
+          }
+          if (this.block.type === 'illustration') {
+            if (this.block.description) {
+              if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockDescription) {
+                this.suspiciousWordsHighlight.clearElementHighlight(this.$refs.blocks[0].$refs.blockDescription);
+              }
+            }
+          }
+        } else {
+          if (checkRegex.test(this.block.content)) {
+            this.block.content = this.block.content.replace(clearRegex, '$1');
+          }
+          if (this.block.parts) {
+            this.block.parts.forEach(p => {
+              if (checkRegex.test(p.content)) {
+                p.content = p.content.replace(clearRegex, '$1');
+              }
+            });
+          }
+          if (this.block.footnotes) {
+            this.block.footnotes.forEach(ftn => {
+              if (checkRegex.test(ftn.content)) {
+                ftn.content = ftn.content.replace(clearRegex, '$1');
+              }
+            });
+          }
+          if (this.block.type === 'illustration') {
+            if (this.block.description && checkRegex.test(this.block.description)) {
+              this.block.description = this.block.description.replace(clearRegex, '$1');
+            }
+          }
+        }
       }
   },
   watch: {
@@ -4548,9 +4607,6 @@ Save text changes and realign the Block?`,
       'blockAudio.src' (newVal) {
         if (newVal) {
           //console.log('Book audio', newVal, this.block._id);
-          if (!this.player) {
-            this.initPlayer();
-          }
           if (newVal.indexOf('?') === -1) {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
@@ -4691,11 +4747,27 @@ Save text changes and realign the Block?`,
         handler(val, oldVal) {
           //if (val === 'narrate') {
             //this.destroyEditor();
-          this.discardBlock();
+          this.discardBlock()
+            .then(() => {
+              if (val === 'edit') {
+                Vue.nextTick(() => {
+                  //setTimeout(() => {
+                    this.highlightSuspiciousWords();
+                  //}, 1000);
+                });
+              } else {
+                this.clearSuspiciousWords();
+              }
+            });
           if (this.block.voicework === 'narration') {
             if ((oldVal === 'narrate' && val === 'edit') || (oldVal === 'edit' && val === 'narrate')) {
               this.destroyEditor();
               this.initEditor(true);
+            }
+          }
+          if (this.FtnAudio) {
+            if (this.FtnAudio.isStarted || this.FtnAudio.isPaused) {
+              this.FtnAudio.audStop();
             }
           }
         }
@@ -5428,9 +5500,6 @@ Save text changes and realign the Block?`,
             transparent
         );
       }
-      w.pinned-word {
-        background: linear-gradient(to bottom, transparent 0%, rgba(0, 255, 0, 0.3) 30%, rgba(0, 255, 0, 0.3) 90%, transparent 100%);
-      }
 
       [data-idx], [data-pg] {
         w:not([data-map]) {
@@ -5469,13 +5538,6 @@ Save text changes and realign the Block?`,
           content: '\f1c7\00A0\f061';
           left: -50px;
       }
-      w.audio-highlight, w.selected {
-          background: linear-gradient(
-              transparent 20%,
-              rgba(255,255,0,.8) 55%,
-              transparent 80%
-          );
-      }
       w.audio-trail {
           background: linear-gradient(
               transparent 30%,
@@ -5485,12 +5547,19 @@ Save text changes and realign the Block?`,
       }
   }
 
-  [data-author] {
-    color: teal;
+  w[data-in-search] {
+    /*background: red !important;*/
+    background: linear-gradient(
+      transparent,
+      transparent 50%,
+      rgba(255,171,0,1.0) 83%,
+      transparent 70%,
+      transparent
+    ) !important;
   }
 
-  [data-suggestion] {
-    background: yellow;
+  [data-author] {
+    color: teal;
   }
 
   [data-flag] {
@@ -5901,7 +5970,7 @@ Save text changes and realign the Block?`,
     text-align: center;
     background-position: center;
     background-color: #8080807d;
-    z-index: 999;
+    z-index: 998;
     &.preloader-audio-positioning {
       z-index: 890;/* this one not covering audio editor */
     }
@@ -5980,6 +6049,57 @@ div.-content.editing  div.content-wrap {
 .blocked-editing {
   color: gray;
 }
+.suspicious-word:before {
+   content: ' \01C3';
+   color: red;
+   /*width: 17px;*/
+   display: inline-block;
+   /*margin-left: -10px;*/
+   font-style: normal;
+   font-weight: bolder;
+   /*margin: 2px 0px 2px 0px;*/
+}
+.content-wrap.dropcap {
+  >.suspicious-word:first-child {
+    position: relative;
+    &:before {
+      content: none;
+    }
+    &:after {
+      content: ' \01C3';
+      position: absolute;
+      color: red;
+      display: inline-block;
+      font-style: normal;
+      font-weight: bolder;
+      left: -80px;
+    }
+  }
+}
+/*.title {
+  .suspicious-word:before {
+    width: 50px;
+    margin-left: -35px;
+  }
+}*/
+/*.header {
+  .suspicious-word:before {
+    width: 25px;
+    margin-left: -15px;
+  }
+}*/
+/*.footnote {
+  .suspicious-word:before {
+    width: 15px;
+    margin-left: -5px;
+  }
+}*/
+/*.content-wrap-desc {
+  .suspicious-word:before {
+    width: 17px;
+    margin-left: -15px;
+  }
+}*/
 
 
 /*
