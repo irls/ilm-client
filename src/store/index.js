@@ -5220,7 +5220,7 @@ export const store = new Vuex.Store({
       }
       return Promise.resolve(null);
     },
-    
+
     getSuspiciousWordsCharacters({state}) {
       return axios.get(`${state.API_URL}suspicious_words_characters`)
         .then(response => {

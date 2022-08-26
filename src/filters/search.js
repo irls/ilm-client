@@ -66,10 +66,17 @@ const replaceSpecials = (str, isWithSpace = false) => {
   return result.trim(); //.replace(/\s\s+/g, ' ')
 };
 
+const replaceSuperscript = (str = '') => {
+  return str.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*?<\/sup>/mig, '')
+            .replace(/<sup\s+data-pg=\"[^\"]+\"[^>]*>.*?<\/sup>/mig, '')
+            .replace(/<sup>.*?<\/sup>/mig, '')
+            .replace(/<sub>.*?<\/sub>/mig, '');
+};
+
 const replaceParsing = (str, isWithSpace = false) => {
   let result = '', i, l;
 
-  str = str.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*<\/sup>/mig, '');
+  str = replaceSuperscript(str)
   let strArray = str.split('</w>');
 
   strArray = strArray.reduce((acc, string)=>{
@@ -91,4 +98,4 @@ const prepareForFilter = (str, isWithSpace = false) => {
   return cleanDiacritics(replaceSpecials(replaceHTMLSpecials(str), isWithSpace));
 }
 
-export { prepareForFilter, cleanDiacritics, replaceSpecials, replaceParsing }
+export { prepareForFilter, cleanDiacritics, replaceSpecials, replaceParsing, replaceSuperscript }

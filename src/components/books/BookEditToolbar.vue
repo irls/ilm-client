@@ -53,6 +53,7 @@ import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';
 import Tooltip from 'primevue/tooltip';
+import { replaceSuperscript } from '@src/filters/search.js';
 
 export default {
   data () {
@@ -192,9 +193,15 @@ export default {
     onPaste(ev) {
       const clipboard = (event.clipboardData || window.clipboardData)
       let paste = clipboard.getData('text/html');
-      paste = paste.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*<\/sup>/mig, '');
+      paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
+      //console.log(`paste000: `, paste);
+      paste = paste.replace(/<\/*\s*span>/mig, '');
+      //console.log(`paste111: `, paste);
+      paste = replaceSuperscript(paste);
+      //console.log(`paste222: `, paste);
       paste = paste.replace(/(<([^>]+)>)/gi, '');
-      this.bookSearch.string = paste;
+      console.log(`paste: `, paste);
+      this.bookSearch.string += paste;
     },
     ...mapActions(['setBlockSelection'])
   },
