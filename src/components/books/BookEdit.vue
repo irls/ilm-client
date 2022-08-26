@@ -648,6 +648,9 @@ export default {
           res.checked = oldBlock.checked;
         }
         let block = new BookBlock(res);
+        if (oldBlock && oldBlock.audiosrc_config) {// stored only locally
+          block.audiosrc_config = oldBlock.audiosrc_config;
+        }
         if (Array.isArray(block.parts) && Array.isArray(oldBlock.parts) && block.parts.length === oldBlock.parts.length) {
           oldBlock.parts.forEach((p, pIdx) => {
             block.parts[pIdx].inid = p.inid;
