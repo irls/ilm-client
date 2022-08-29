@@ -3078,9 +3078,12 @@ export const store = new Vuex.Store({
                               });
                             }
                           }
-                          store.commit('set_storeList', new BookBlock(block));
-                          dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
-                          return Promise.resolve();
+                          return dispatch('tasks/getByBlockid', [block.blockid])
+                          .then(() => {
+                            store.commit('set_storeList', new BookBlock(block));
+                            dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
+                            return Promise.resolve();
+                          })
                         })
                         .catch(err => {
                           console.log(err);
