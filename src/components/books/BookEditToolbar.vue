@@ -191,8 +191,10 @@ export default {
       this.$refs.searchPanel.hide(ev);
     },
     onPaste(ev) {
-      const clipboard = (event.clipboardData || window.clipboardData)
+      const clipboard = (ev.clipboardData || window.clipboardData)
       let paste = clipboard.getData('text/html');
+      paste = paste.length ? paste : clipboard.getData('text/plain');
+      //console.log(`paste000: `, paste);
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //console.log(`paste000: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
@@ -201,7 +203,20 @@ export default {
       //console.log(`paste222: `, paste);
       paste = paste.replace(/(<([^>]+)>)/gi, '');
       console.log(`paste: `, paste);
-      this.bookSearch.string += paste;
+
+      const start = ev.target.selectionStart;
+      const finish = ev.target.selectionEnd;
+
+      if (start || finish) {
+        const splitArray = [
+          this.bookSearch.string.slice(0, start), this.bookSearch.string.slice(finish)
+        ]
+        this.bookSearch.string = splitArray[0]+paste+splitArray[1]
+      }
+      else {
+        this.bookSearch.string = paste;
+      }
+
     },
     ...mapActions(['setBlockSelection'])
   },
