@@ -3014,7 +3014,7 @@ export const store = new Vuex.Store({
       }
     },
     getBookAlign({state, commit, dispatch}, {watchId = false, repeat = false} = {}) {
-      //console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
+      console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
       if (state.currentBookid && (!watchId || watchId === state.currentBookid)) {
         //console.log(state.API_URL + 'align_queue/' + state.currentBookid);
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
@@ -4056,8 +4056,6 @@ export const store = new Vuex.Store({
         .then((res) => {
           state.audioTasksQueue.queue.splice(0, runSize);
           state.audioTasksQueue.running = null;
-          //return dispatch('getBookAlign')
-            //.then(() => {
           let data = [];
           if (Array.isArray(res.data)) {
             data = res.data.filter(r => {
@@ -4098,7 +4096,6 @@ export const store = new Vuex.Store({
             dispatch('applyTasksQueue', [null]);
           }
           return Promise.resolve(data);
-            //});
 
         })
         .catch(err => {
@@ -4167,7 +4164,7 @@ export const store = new Vuex.Store({
               if (Array.isArray(response.data.parts) && response.data.parts.length !== block.parts.length) {
                 block.parts = response.data.parts;
               }
-              return Promise.resolve(response);
+              //return Promise.resolve(response);
             } else {
               //if (this.isCompleted) {
                 //this.tc_loadBookTask();
@@ -4197,8 +4194,9 @@ export const store = new Vuex.Store({
                 }
               })*/
               //return this.putBlock(this.block);
-              return Promise.resolve(response);
+              //return Promise.resolve(response);
             }
+            return dispatch('tasks/getByBlockid', [block.blockid]).then(() => response);
           }
         })
         .catch(err => {
