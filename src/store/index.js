@@ -3014,7 +3014,7 @@ export const store = new Vuex.Store({
       }
     },
     getBookAlign({state, commit, dispatch}, {watchId = false, repeat = false} = {}) {
-      console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
+      //console.log('getBookAlign', 'state.currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
       if (state.currentBookid && (!watchId || watchId === state.currentBookid)) {
         //console.log(state.API_URL + 'align_queue/' + state.currentBookid);
         let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
