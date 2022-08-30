@@ -4,7 +4,7 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
-      
+
       <LockedBlockActions
         :lockedType="lockedType"
         :block="block"
@@ -3076,6 +3076,8 @@ export default {
       },
       handleAudioControl(e) {
         if (e) {
+          console.log(`handleAudioControl: `, this.isAudStarted, this.isAudPaused);
+
           if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
             if (!this.isRecordingPaused) {
               this.pauseRecording();
@@ -3097,6 +3099,11 @@ export default {
           }
           //console.log(e);
         }
+      },
+      clickAwayFromAudioControl(e){
+        console.log(`e.target: `, e.target);
+        const mouseOn = e.target.closest(`#${this.block.blockid}`);
+        console.log(`mouseOn: `, mouseOn);
       },
       _saveContent() {
         if (this.$refs.blockContent && this.isSplittedBlock && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
@@ -3661,7 +3668,7 @@ Please save or discard your changes before joining.`,
           });
         }
       },
-      
+
       splitIntoBlocks(ev) {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3684,7 +3691,7 @@ Please save or discard your changes before joining.`,
             });
         }
       },
-      
+
       splitIntoSubblocks(ev) {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3707,7 +3714,7 @@ Please save or discard your changes before joining.`,
             });
         }
       },
-      
+
       splitSubblock() {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3722,7 +3729,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       mergeAllSubblocks(confirm = true) {
         let hasChanged = this.block.parts.find(p => {
           return p.isChanged;
@@ -3789,7 +3796,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       splitUnsavedCheck() {
         let hasChanges = this.isChanged || this.isAudioChanged;
         if (!hasChanges || this.block.getIsSplittedBlock()) {
@@ -3806,7 +3813,7 @@ Please save or discard your changes before joining.`,
         }
         return true;
       },
-      
+
       splitUnsavedWarning() {
         this.$root.$emit('show-modal', {
           title: 'Unsaved Changes',
@@ -3824,7 +3831,7 @@ Save or discard your changes before splitting`,
           class: ['align-modal']
         });
       },
-      
+
       closeAudioEditor() {
         let isAudioEditorOpened = this.isAudioEditing;
         if (!isAudioEditorOpened) {
@@ -3836,7 +3843,7 @@ Save or discard your changes before splitting`,
           this.$root.$emit('for-audioeditor:force-close');
         }
       },
-      
+
       joinAndRemoveAudioWarning(callback) {
         this.$root.$emit('show-modal', {
           title: 'Join subblocks',
@@ -4027,8 +4034,10 @@ Join subblocks?`,
       'isAudStarted': {
         handler(val) {
           document.body.removeEventListener('keydown', this.handleAudioControl);
+          document.body.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
             document.body.addEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
