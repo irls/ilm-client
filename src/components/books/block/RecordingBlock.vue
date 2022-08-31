@@ -25,6 +25,8 @@
                 </span>
               </span>
           </div>
+        </div>
+        <div class="table-cell -left">
           <div class="table-cell resume-recording" @click="_resumeRecording" v-else>
               <span class="btn btn-default">
                 <span class="icon"></span>
@@ -223,31 +225,36 @@
   position: relative;
 }
 .recording-in-progress .icon{
-  height: 24px;
-  width: 24px;
+  height: 37px;
+  width: 37px;
   display: inline-block;
-  top: 7px;
+  //top: 7px;
   background-image: url(/static/RecordingBlock/RecordingInProgress.png);
   position: relative;
-  background-size:24px;
+  background-size:37px;
   animation: recording-in-progress-animation 1s;
   animation-iteration-count: infinite;
 }
 @keyframes recording-in-progress-animation {
   from {opacity: 20%;}
-  to {opacity: 100%;}
+  to {opacity: 120%;}
 }
 .recording-on-pause .icon{
-  height: 24px;
-  width: 24px;
+  height: 37px;
+  width: 37px;
   display: inline-block;
-  top: 7px;
+  //top: 7px;
   background-image: url(/static/RecordingBlock/RecordingPaused.png);
   position: relative;
-  background-size:24px;
+  background-size:37px;
 }
 .recording-in-progress .text{
   color: #C51216;
+  padding-left: 5px;
+  top: -13px;
+  position: relative;
+  display: inline-block;
+  padding-top: 0px;
 }
 .recording-on-pause .text{
   color: #828282;
