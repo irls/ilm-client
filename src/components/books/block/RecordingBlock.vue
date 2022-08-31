@@ -34,15 +34,14 @@
                 </span>
               </span>
           </div>
-
-          <div class="table-cell recording-in-progress"  v-if="!isPaused">
+          <div class="table-cell recording-in-progress recordStartCounterDep"  v-if="!isPaused">
             <span class="icon"></span>
 
             <span class="text">
               Recording in progress
             </span>
           </div>
-          <div class="table-cell recording-on-pause"  v-else>
+          <div class="table-cell recording-on-pause recordStartCounterDep" v-else>
             <span class="icon"></span>
 
             <span class="text">
