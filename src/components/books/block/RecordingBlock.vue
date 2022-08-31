@@ -7,6 +7,7 @@
     <!-- </div> -->
     <div class="table-body">
       <div class="table-row">
+
         <div class="table-cell cancel-recording -left">
           <span class="btn btn-default" @click="_cancelRecording">
             <span class="icon"></span>
@@ -14,45 +15,41 @@
             Cancel
             </span>
           </span>
-
         </div>
-        <div class="table-cell -left">
-          <div class="table-cell pause-recording" @click="_pauseRecording" v-if="!isPaused">
-              <span class="btn btn-default">
-                <span class="icon"></span>
-                <span class="text">
-                  Pause
-                </span>
+
+        <div class="table-cell pause-recording -left" @click="_pauseRecording" v-if="!isPaused">
+            <span class="btn btn-default">
+              <span class="icon"></span>
+              <span class="text">
+                Pause
               </span>
-          </div>
+            </span>
         </div>
-        <div class="table-cell -left">
-          <div class="table-cell resume-recording" @click="_resumeRecording" v-else>
-              <span class="btn btn-default">
-                <span class="icon"></span>
 
-                <span class="text">
-                  Resume
-                </span>
+        <div class="table-cell resume-recording -left" @click="_resumeRecording" v-else>
+            <span class="btn btn-default">
+              <span class="icon"></span>
+
+              <span class="text">
+                Resume
               </span>
-          </div>
-          <div class="table-cell recording-in-progress recordStartCounterDep"  style="display: none;" v-if="!isPaused">
-            <span class="icon"></span>
-
-            <span class="text">
-              Recording in progress
             </span>
-          </div>
-          <div class="table-cell recording-on-pause recordStartCounterDep"  style="display: none;"  v-else>
-            <span class="icon"></span>
+        </div>
 
-            <span class="text">
-              Recording paused
-            </span>
-          </div>
+        <div class="table-cell recording-in-progress recordStartCounterDep  -left"  style="display: none;" v-if="!isPaused">
+          <span class="icon"></span>
 
+          <span class="text">
+            Recording in progress
+          </span>
+        </div>
 
+        <div class="table-cell recording-on-pause recordStartCounterDep  -left"  style="display: none;"  v-else>
+          <span class="icon"></span>
 
+          <span class="text">
+            Recording paused
+          </span>
         </div>
 
         <div class="table-cell">
@@ -74,6 +71,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
     <div id="recording-block-toolbar" class="toolbar-container"></div>
@@ -237,7 +235,7 @@
 }
 @keyframes recording-in-progress-animation {
   from {opacity: 20%;}
-  to {opacity: 120%;}
+  to {opacity: 100%;}
 }
 .recording-on-pause .icon{
   height: 37px;
