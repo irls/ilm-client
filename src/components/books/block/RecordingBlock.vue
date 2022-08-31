@@ -34,14 +34,14 @@
                 </span>
               </span>
           </div>
-          <div class="table-cell recording-in-progress recordStartCounterDep"  v-if="!isPaused">
+          <div class="table-cell recording-in-progress recordStartCounterDep"  style="display: none;" v-if="!isPaused">
             <span class="icon"></span>
 
             <span class="text">
               Recording in progress
             </span>
           </div>
-          <div class="table-cell recording-on-pause recordStartCounterDep" v-else>
+          <div class="table-cell recording-on-pause recordStartCounterDep"  style="display: none;"  v-else>
             <span class="icon"></span>
 
             <span class="text">
@@ -230,6 +230,12 @@
   background-image: url(/static/RecordingBlock/RecordingInProgress.png);
   position: relative;
   background-size:24px;
+  animation: recording-in-progress-animation 1s;
+  animation-iteration-count: infinite;
+}
+@keyframes recording-in-progress-animation {
+  from {opacity: 20%;}
+  to {opacity: 100%;}
 }
 .recording-on-pause .icon{
   height: 24px;
