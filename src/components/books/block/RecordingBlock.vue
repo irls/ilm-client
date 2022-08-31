@@ -256,6 +256,11 @@
 }
 .recording-on-pause .text{
   color: #828282;
+  padding-left: 5px;
+  top: -13px;
+  position: relative;
+  display: inline-block;
+  padding-top: 0px;
 }
 
 .recording-in-progress{
