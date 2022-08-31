@@ -3229,6 +3229,7 @@ Save text changes and realign the Block?`,
       recordTimer() {
         let self = this;
         return new BPromise(function(resolve, reject) {
+          $('.recordStartCounterDep').hide();
           self.recordStartCounter = 3;
           $('#narrateStartCountdown strong').html(self.recordStartCounter);
           $('body').addClass('modal-open');
@@ -3239,6 +3240,8 @@ Save text changes and realign the Block?`,
               clearTimeout(timer)
               $('body').removeClass('modal-open');
               $('#narrateStartCountdown').hide();
+              $('.recordStartCounterDep').show();
+
               resolve()
             } else {
               //console.log(self.recordStartCounter);
