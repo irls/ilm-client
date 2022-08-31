@@ -1442,6 +1442,9 @@ export default {
         this.FtnAudio.audStop();
       }
     }
+    if (this.$route && this.$route.meta && !this.$route.meta.mode) {// out of book edit
+      this.resetListenCompressed();
+    }
   },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
@@ -4509,6 +4512,10 @@ Save text changes and realign the Block?`,
             }
           }
         }
+      },
+      
+      resetListenCompressed() {
+        this.block.resetAudiosrcConfig();
       }
   },
   watch: {

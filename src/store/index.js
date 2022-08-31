@@ -16,6 +16,7 @@ import testAudioConvert from './modules/testAudioConvert';
 import setBlocksDisabled from './modules/setBlocksDisabled';
 import tasks from './modules/tasks';
 import userActions from './modules/user';
+import alignActions from './modules/align';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -75,7 +76,8 @@ export const store = new Vuex.Store({
     testAudioConvert,
     setBlocksDisabled,
     tasks,
-    userActions
+    userActions,
+    alignActions
   },
   state: {
     SelectionModalProgress:0,
@@ -261,7 +263,10 @@ export const store = new Vuex.Store({
       'metaV':null
     },
     setSelectedBlocksAsyncResult : [],
-    suspiciousWordsHighlight: new SuspiciousWordsHighlight()
+    suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
+    blockAudiosrcConfig: {
+      
+    }
   },
 
   getters: {
@@ -611,6 +616,9 @@ export const store = new Vuex.Store({
     },
     suspiciousWordsHighlight: state => {
       return state.suspiciousWordsHighlight;
+    },
+    blockAudiosrcConfig: state => {
+      return state.blockAudiosrcConfig;
     }
   },
 
@@ -1394,6 +1402,10 @@ export const store = new Vuex.Store({
 
     set_user(state, user) {
       state.user = user;
+    },
+    
+    set_blockAudiosrcConfig(state, audiosrc_config) {
+      state.blockAudiosrcConfig = audiosrc_config;
     }
   },
 
@@ -1665,6 +1677,7 @@ export const store = new Vuex.Store({
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
               commit('set_couplet_separator', config.couplet_separator);
+              commit('set_blockAudiosrcConfig', config.block_audiosrc_config);
             })
           dispatch('getBookCategories');
           dispatch('getCollections');
@@ -2488,6 +2501,7 @@ export const store = new Vuex.Store({
               oldBlock.type = response.data.type;
               oldBlock.language = response.data.language;
               oldBlock.classes = response.data.classes;
+              response.data.audiosrc_config = oldBlock.audiosrc_config;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();
 
@@ -3423,6 +3437,9 @@ export const store = new Vuex.Store({
 
                           if (state.bookMode === 'edit') {
                             block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
+                          }
+                          if (blockStore.audiosrc_config) {
+                            block.audiosrc_config = blockStore.audiosrc_config;
                           }
 
                           return dispatch('tasks/getByBlockid', [block.blockid])
