@@ -207,7 +207,8 @@ export default {
       paste = replaceHTMLSpecials(paste);
       paste = replaceSuperscript(paste);
       //console.log(`paste222: `, paste);
-      paste = paste.replace(/(<([^>]+)>)/gi, '');
+      paste = paste.replace(/(<([^>]+)>)/ig, '');
+      paste = paste.replace(/[\r\n]+/mig, ' ');
       console.log(`paste: `, paste);
 
       const start = ev.target.selectionStart;
