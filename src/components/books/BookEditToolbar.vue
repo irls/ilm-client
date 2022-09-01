@@ -194,7 +194,8 @@ export default {
       const clipboard = (ev.clipboardData || window.clipboardData)
       let paste = clipboard.getData('text/html');
       paste = paste.length ? paste : clipboard.getData('text/plain');
-      //console.log(`paste000: `, paste);
+      console.log(`paste000: `, paste);
+      paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //console.log(`paste000: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
