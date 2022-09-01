@@ -46,6 +46,7 @@ const specialHTMLRules = [
     [new RegExp('&amp;', 'mig'), '&'],
     [new RegExp('&lt;', 'mig'), '<'],
     [new RegExp('&gt;', 'mig'), '>'],
+    [new RegExp('&quot;', 'mig'), '"'],
     [new RegExp('&#[a-zA-Z0-9]{3,5};', 'mig'), '']
   ]
 
@@ -98,4 +99,11 @@ const prepareForFilter = (str, isWithSpace = false) => {
   return cleanDiacritics(replaceSpecials(replaceHTMLSpecials(str), isWithSpace));
 }
 
-export { prepareForFilter, cleanDiacritics, replaceSpecials, replaceParsing, replaceSuperscript }
+export {
+  prepareForFilter,
+  cleanDiacritics,
+  replaceSpecials,
+  replaceParsing,
+  replaceSuperscript,
+  replaceHTMLSpecials
+}
