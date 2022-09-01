@@ -2276,7 +2276,7 @@ export default {
           })
           let filterSearchArr = prepareForFilter(bookSearch.string, false)
           console.log(`parserSearchArr: `, parserSearchArr);
-          console.log(`filterSearchArr: `, filterSearchArr);
+          //console.log(`filterSearchArr: `, filterSearchArr);
 
           //let stop = 3;
           for (let blockId of this.parlistO.idsArray()) {
