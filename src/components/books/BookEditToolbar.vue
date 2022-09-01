@@ -53,7 +53,7 @@ import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';
 import Tooltip from 'primevue/tooltip';
-import { replaceSuperscript } from '@src/filters/search.js';
+import { replaceSuperscript, replaceHTMLSpecials } from '@src/filters/search.js';
 
 export default {
   data () {
@@ -194,12 +194,17 @@ export default {
       const clipboard = (ev.clipboardData || window.clipboardData)
       let paste = clipboard.getData('text/html');
       paste = paste.length ? paste : clipboard.getData('text/plain');
+      const wordXreg = new RegExp("<body[\\s\\S]+<\\/body>", 'mi');
+      if (wordXreg.test(paste)) {
+        paste = wordXreg.exec(paste)[0];
+      }
       console.log(`paste000: `, paste);
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //console.log(`paste000: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
       //console.log(`paste111: `, paste);
+      paste = replaceHTMLSpecials(paste);
       paste = replaceSuperscript(paste);
       //console.log(`paste222: `, paste);
       paste = paste.replace(/(<([^>]+)>)/gi, '');
