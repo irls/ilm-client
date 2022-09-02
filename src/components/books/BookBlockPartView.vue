@@ -1111,15 +1111,16 @@ export default {
     this.$root.$off('playBlock');
 
     if(this.block) {
-
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-
     }
 
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
     this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
+
+    document.body.removeEventListener('keydown', this.handleAudioControl);
+    document.body.removeEventListener('click', this.clickAwayFromAudioControl);
   },
   updated: function() {
     this.showPinnedInText();
@@ -3139,6 +3140,8 @@ export default {
       },
       handleAudioControl(e) {
         if (e) {
+          console.log(`handleAudioControl: `, this.isAudStarted, this.isAudPaused);
+
           if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
             if (!this.isRecordingPaused) {
               this.pauseRecording();
@@ -3159,6 +3162,17 @@ export default {
             e.preventDefault();
           }
           //console.log(e);
+        }
+      },
+      clickAwayFromAudioControl(e){
+        const mouseOnContainer = e.target.closest('.par-ctrl.-audio');//`#${this.block.blockid}`);
+        //console.log(`mouseOn: `, this.block.blockid, mouseOnContainer);
+        if (!mouseOnContainer) {
+          if (!this.isAudPaused) {
+            this.audPause();
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            //window.removeEventListener('click', this.clickAwayFromAudioControl);
+          }
         }
       },
       _saveContent() {
@@ -4114,9 +4128,12 @@ Join subblocks?`,
       },
       'isAudStarted': {
         handler(val) {
+          //console.log(`isAudStarted: `, this.block.blockid, val);
           document.body.removeEventListener('keydown', this.handleAudioControl);
+          document.body.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
             document.body.addEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
