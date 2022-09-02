@@ -1056,15 +1056,16 @@ export default {
     this.$root.$off('playBlock');
 
     if(this.block) {
-
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-
     }
 
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
     this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
+
+    document.body.removeEventListener('keydown', this.handleAudioControl);
+    document.body.removeEventListener('click', this.clickAwayFromAudioControl);
   },
   updated: function() {
     this.showPinnedInText();
@@ -3101,7 +3102,6 @@ export default {
         }
       },
       clickAwayFromAudioControl(e){
-        //console.log(`e.target: `, this.block.blockid, e.target);
         const mouseOnContainer = e.target.closest('.par-ctrl.-audio');//`#${this.block.blockid}`);
         //console.log(`mouseOn: `, this.block.blockid, mouseOnContainer);
         if (!mouseOnContainer) {
@@ -4040,12 +4040,12 @@ Join subblocks?`,
       },
       'isAudStarted': {
         handler(val) {
-          console.log(`isAudStarted: `, this.block.blockid, val);
+          //console.log(`isAudStarted: `, this.block.blockid, val);
           document.body.removeEventListener('keydown', this.handleAudioControl);
-          window.removeEventListener('click', this.clickAwayFromAudioControl);
+          document.body.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
             document.body.addEventListener('keydown', this.handleAudioControl);
-            window.addEventListener('click', this.clickAwayFromAudioControl);
+            document.body.addEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
