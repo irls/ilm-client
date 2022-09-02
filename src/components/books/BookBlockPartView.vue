@@ -3101,9 +3101,16 @@ export default {
         }
       },
       clickAwayFromAudioControl(e){
-        console.log(`e.target: `, e.target);
-        const mouseOn = e.target.closest(`#${this.block.blockid}`);
-        console.log(`mouseOn: `, mouseOn);
+        //console.log(`e.target: `, this.block.blockid, e.target);
+        const mouseOnContainer = e.target.closest('.par-ctrl.-audio');//`#${this.block.blockid}`);
+        //console.log(`mouseOn: `, this.block.blockid, mouseOnContainer);
+        if (!mouseOnContainer) {
+          if (!this.isAudPaused) {
+            this.audPause();
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            //window.removeEventListener('click', this.clickAwayFromAudioControl);
+          }
+        }
       },
       _saveContent() {
         if (this.$refs.blockContent && this.isSplittedBlock && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
@@ -4033,11 +4040,12 @@ Join subblocks?`,
       },
       'isAudStarted': {
         handler(val) {
+          console.log(`isAudStarted: `, this.block.blockid, val);
           document.body.removeEventListener('keydown', this.handleAudioControl);
-          document.body.removeEventListener('click', this.clickAwayFromAudioControl);
+          window.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
             document.body.addEventListener('keydown', this.handleAudioControl);
-            document.body.addEventListener('click', this.clickAwayFromAudioControl);
+            window.addEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
