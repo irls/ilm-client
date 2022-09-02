@@ -47,6 +47,7 @@ const specialHTMLRules = [
     [new RegExp('&lt;', 'mig'), '<'],
     [new RegExp('&gt;', 'mig'), '>'],
     [new RegExp('&quot;', 'mig'), '"'],
+    [new RegExp('&nbsp;', 'mig'), ' '],
     [new RegExp('&#[a-zA-Z0-9]{3,5};', 'mig'), '']
   ]
 
