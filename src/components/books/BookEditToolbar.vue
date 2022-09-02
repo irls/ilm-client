@@ -202,10 +202,10 @@ export default {
       //-- Gutenberg -- { --//
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
       paste = paste.replace(/<span\sclass="pagenum".*?<\/span>/mig, '');
+      paste = paste.replace(/(<\/p>)(<p)/mig, '$1 $2');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
-      paste = paste.replace(/(<\/p>)(<p\s)/mig, '$1 $2');
       //-- } -- end -- Gutenberg --//
-      //console.log(`paste000: `, paste);
+      //console.log(`paste001: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
       //console.log(`paste111: `, paste);
       paste = replaceHTMLSpecials(paste);
