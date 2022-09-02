@@ -194,11 +194,15 @@ export default {
       const clipboard = (ev.clipboardData || window.clipboardData)
       let paste = clipboard.getData('text/html');
       paste = paste.length ? paste : clipboard.getData('text/plain');
+      //-- MSOffice -- { --//
       const wordXreg = new RegExp("<body[\\s\\S]+<\\/body>", 'mi');
       if (wordXreg.test(paste)) {
         paste = wordXreg.exec(paste)[0];
-      }
-      console.log(`paste000: `, paste);
+        console.log(`paste000: `, paste);
+        paste = paste.replace(/<!\[if[^\]]*\]>[\s\S]*?<!\[endif\]>/mig, '');
+        paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
+      } else console.log(`paste000: `, paste);
+      //-- } -- end -- MSOffice --//
       //-- Gutenberg -- { --//
       paste = paste.replace(/<a name=\"[^"]*\"[^>]*?>([\S\s]*?)<\/a>/mig, '$1');
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
