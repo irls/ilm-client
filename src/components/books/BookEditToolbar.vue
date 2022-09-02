@@ -200,6 +200,7 @@ export default {
         paste = wordXreg.exec(paste)[0];
         console.log(`paste000: `, paste);
         paste = paste.replace(/<!\[if[^\]]*\]>[\s\S]*?<!\[endif\]>/mig, '');
+        paste = paste.replace(/<div\sstyle=['"]*mso-element:footnote['"]*[\s\S]*?<\/div>/mig, '');
         paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
       } else console.log(`paste000: `, paste);
       //-- } -- end -- MSOffice --//
