@@ -4829,7 +4829,7 @@ Save text changes and realign the Block?`,
           //console.log(val);
           if (Array.isArray(val) && val.length > 0 && this.isChecked) {
             let recollect = val.some((el) => {
-              return ['pause_before', 'classes'].indexOf(el) !== -1;
+              return ['pause_after', 'classes'].indexOf(el) !== -1;
             });
             if (recollect) {
               this.$root.$emit('from-block-edit:set-style');

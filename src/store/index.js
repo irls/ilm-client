@@ -1341,7 +1341,7 @@ export const store = new Vuex.Store({
             return;
           }
           let changes = [];// collect changes
-          ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+          ['classes', 'pause_after']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
             if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
               changes.push(k);
             }
@@ -4666,9 +4666,9 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    setPauseBefore({state}, [blockType, value]) {
+    setPauseAfter({state}, [blockType, value]) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
-        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_before`, {
+        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_after`, {
           range: {start_id: state.blockSelection.start._id,
           end_id: state.blockSelection.end._id},
           block_type: blockType,
@@ -4681,7 +4681,7 @@ export const store = new Vuex.Store({
                 let block = state.storeList.get(b.blockid);
                 if (block) {
                   block.setUpdated(b.updated);
-                  block.setPauseBefore(b.pause_before);
+                  block.setPauseAfter(b.pause_after);
                   block.status.marked = b.status.marked;
                 }
               });

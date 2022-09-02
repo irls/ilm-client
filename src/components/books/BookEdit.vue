@@ -2195,6 +2195,7 @@ export default {
       },
 
       playNextBlock(blockid) {
+        let currentBlock = this.parlist.get(blockid);
         this.findNextAudioblock([blockid])
           .then(block => {
             //console.log(block);
@@ -2224,7 +2225,7 @@ export default {
                     }
                     setTimeout(() => {
                       subRef.audPlay();
-                    }, block.pause_before * 1000);
+                    }, currentBlock.pause_after * 1000);
                   }
                 } else {
                   elementBack.scrollIntoView();
@@ -2253,7 +2254,7 @@ export default {
                         }
                       }
                     }, 100);
-                  }, block.pause_before * 1000);
+                  }, currentBlock.pause_after * 1000);
                 }
               }
             }
