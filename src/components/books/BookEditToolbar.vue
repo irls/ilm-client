@@ -199,9 +199,12 @@ export default {
         paste = wordXreg.exec(paste)[0];
       }
       console.log(`paste000: `, paste);
+      //-- Gutenberg -- { --//
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
       paste = paste.replace(/<span\sclass="pagenum".*?<\/span>/mig, '');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
+      paste = paste.replace(/(<\/p>)(<p\s)/mig, '$1 $2');
+      //-- } -- end -- Gutenberg --//
       //console.log(`paste000: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
       //console.log(`paste111: `, paste);
