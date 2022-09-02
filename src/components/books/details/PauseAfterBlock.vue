@@ -311,6 +311,10 @@
                             this.stopAudio();
                           }
                         };
+                        this.player.onended = () => {
+                          //this.player.src = null;
+                          this.stopAudio();
+                        }
                         this.player.onloadedmetadata = () => {
                           this.player.play();
                         };
@@ -439,7 +443,7 @@
           let audiosrc;
           if (this.selectedBlock) {
             if (this.selectedBlock.getIsSplittedBlock()) {
-              audiosrc = this.selectedBlock.getPartAudiosrc(0, 'm4a');
+              audiosrc = this.selectedBlock.getPartAudiosrc(this.selectedBlock.parts.length - 1, 'm4a');
             } else {
               audiosrc = this.selectedBlock.getAudiosrc('m4a');
             }
