@@ -200,6 +200,7 @@ export default {
       }
       console.log(`paste000: `, paste);
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
+      paste = paste.replace(/<span\sclass="pagenum">.*?<\/span>/mig, '');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //console.log(`paste000: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
@@ -218,10 +219,10 @@ export default {
         const splitArray = [
           this.bookSearch.string.slice(0, start), this.bookSearch.string.slice(finish)
         ]
-        this.bookSearch.string = splitArray[0]+paste+splitArray[1]
+        this.bookSearch.string = (splitArray[0]+paste+splitArray[1]).trim();
       }
       else {
-        this.bookSearch.string = paste;
+        this.bookSearch.string = paste.trim();
       }
 
     },
