@@ -200,7 +200,7 @@ export default {
       }
       console.log(`paste000: `, paste);
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
-      paste = paste.replace(/<span\sclass="pagenum">.*?<\/span>/mig, '');
+      paste = paste.replace(/<span\sclass="pagenum".*?<\/span>/mig, '');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //console.log(`paste000: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
