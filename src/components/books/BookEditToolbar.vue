@@ -200,14 +200,14 @@ export default {
       }
       console.log(`paste000: `, paste);
       //-- Gutenberg -- { --//
+      paste = paste.replace(/<a name=\"[^"]*\"[^>]*?>([\S\s]*?)<\/a>/mig, '$1');
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
-      paste = paste.replace(/<span\sclass="pagenum".*?<\/span>/mig, '');
+      paste = paste.replace(/<span\sclass="(?:pagenum|marginal)".*?<\/span>/mig, '');
       paste = paste.replace(/(<\/p>)(<p)/mig, '$1 $2');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //-- } -- end -- Gutenberg --//
       //console.log(`paste001: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
-      //console.log(`paste111: `, paste);
       paste = replaceHTMLSpecials(paste);
       paste = replaceSuperscript(paste);
       //console.log(`paste222: `, paste);
