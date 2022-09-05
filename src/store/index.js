@@ -1347,6 +1347,9 @@ export const store = new Vuex.Store({
         }
       } else if (data.action === 'change' && data.block) {
         if (blockStore) {
+          if (blockStore.audiosrc_config) {// stored only locally
+            data.block.audiosrc_config = blockStore.audiosrc_config;
+          }
           /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
             return p.isChanged;
           }) : false;*/
@@ -4105,6 +4108,9 @@ export const store = new Vuex.Store({
       return axios.put(state.API_URL + url, update)
         .then((response) => {
           let storeBlock = state.storeList.get(response.data.blockid);
+          if (storeBlock.audiosrc_config) {// stored only locally
+            response.data.audiosrc_config = storeBlock.audiosrc_config;
+          }
           if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
             /*response.data.parts.forEach((p, pIdx) => {
               if (pIdx < blockIdx || pIdx > blockIdx + isSplitting) {
