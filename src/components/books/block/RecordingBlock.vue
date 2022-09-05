@@ -287,13 +287,13 @@
       padding: 20px;
     }
     .cancel-recording {
-      color: red;
+      color: #C51216;
       .btn.btn-default {
-        border-color: red;
-        color: red;
+        border-color: #C51216;
+        color: #C51216;
       }
       .fa {
-        color: red;
+        color: #C51216;
       }
     }
     /*br {
