@@ -40,7 +40,8 @@ let defBlock = [
   'trimmed_silence',
   'pause_before',
   'audio_quality',
-  'disabled'
+  'disabled',
+  'pause_after'
 ];
 
 let BlockTypes = {
@@ -364,6 +365,7 @@ class BookBlock {
     }
     this.disabled = init.disabled || false;
     this.audiosrc_config = init.audiosrc_config || {};
+    this.pause_after = init.pause_after;
   }
 
   clean() {
@@ -1027,6 +1029,10 @@ class BookBlock {
 
   setPauseBefore(val) {
     this.pause_before = val;
+  }
+  
+  setPauseAfter(val) {
+    this.pause_after = val;
   }
   setPartContentChanged(partIdx, value) {
     if (Array.isArray(this.parts) && this.parts[partIdx]) {
