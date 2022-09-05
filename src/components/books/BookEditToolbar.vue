@@ -202,6 +202,7 @@ export default {
         paste = paste.replace(/<!\[if[^\]]*\]>[\s\S]*?<!\[endif\]>/mig, '');
         paste = paste.replace(/\[pg\s*\d+\]/mig, '');
         paste = paste.replace(/<div\sstyle=['"]*mso-element:footnote['"]*[\s\S]*?<\/div>/mig, '');
+        paste = paste.replace(/<div\sid=['"]{1}sdfootnote\d+['"]{1}[\s\S]*?<\/div>/mig, '');
         paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
       } else console.log(`paste000: `, paste);
       //-- } -- end -- MSOffice --//
