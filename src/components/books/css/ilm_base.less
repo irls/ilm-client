@@ -1422,6 +1422,11 @@ language specific styles, ILM-4019
     }
   }
 }
+w.selected {
+  [data-suggestion] {
+    background: inherit;
+  }
+}
 
 [data-suggestion], .table-body.-mode-narrate:not(.-voicework-narration) .content-wrap[data-audiosrc].playing [data-suggestion] {
   w {
@@ -1437,6 +1442,9 @@ w {
   sg {
     background: @suggestion_word_color;
   }
+}
+.content-wrap[data-audiosrc].playing w[data-sugg], .content-wrap[data-audiosrc].playing w[data-sugg].pinned-word {
+  background: inherit;
 }
 /* display mode */
 .ilm-block.ilm-display {

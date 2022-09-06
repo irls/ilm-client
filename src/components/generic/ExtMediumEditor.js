@@ -642,6 +642,9 @@ let SuggestButton = MediumEditor.Extension.extend({
             let prevParent = next.parentNode;
             prevParent.removeChild(next);
           }
+          if (node.parentNode) {
+            node.parentNode.dataset.sugg = value;
+          }
         }
       }
 
