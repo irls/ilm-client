@@ -2684,6 +2684,7 @@ export const store = new Vuex.Store({
         url+= '?realign=true';
       }
       let currentBlockO = state.storeListO.get(cleanBlock.blockid);
+      let currentBlock = state.storeList.get(cleanBlock.blockid);
       return axios.put(url,
         {
           'block': cleanBlock,
@@ -2699,6 +2700,9 @@ export const store = new Vuex.Store({
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
+            if (currentBlock.audiosrc_config) {// stored only locally
+              response.data.audiosrc_config = currentBlock.audiosrc_config;
+            }
             if (!keep_block) {
               commit('set_storeList', new BookBlock(response.data));
             }
