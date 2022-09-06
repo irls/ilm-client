@@ -262,23 +262,25 @@
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
                       <i class="icon-menu -split-to-sub"></i>Split for narration
                     </li>
-                    <li class="separator"></li>
                     <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
                       <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
                     </li>
                   </template>
                   <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
+                    <li class="separator"></li>
                     <li @click="addFootnote" class="icon-menu-item">
                       <i class="fa fa-asterisk icon-menu -add-footnote"></i>Add footnote
                     </li>
                     <li class="separator"></li>
                   </template>
-                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')" class="icon-menu-item">
-                    <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Editing
-                  </li>
-                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')" class="icon-menu-item">
-                    <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Narration
-                  </li>
+                  <template v-if="!range.collapsed">
+                    <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')" class="icon-menu-item">
+                      <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Editing
+                    </li>
+                    <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')" class="icon-menu-item">
+                      <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Narration
+                    </li>
+                  </template>
                   <template v-if="range.collapsed && blockAudio.src">
                     <li class="separator"></li>
                     <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
@@ -288,14 +290,16 @@
                       <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
                     </li>
                   </template>
-                  <template v-if="!range.collapsed && blockAudio.src">
+                  <template v-if="blockAudio.src">
                     <li class="separator"></li>
                     <li @click="audPlayFromSelection()" class="icon-menu-item">
                       <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
                     </li>
-                    <li @click="audPlaySelection()" class="icon-menu-item">
-                      <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
-                    </li>
+                    <template v-if="!range.collapsed">
+                      <li @click="audPlaySelection()" class="icon-menu-item">
+                        <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
+                      </li>
+                    </template>
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -4260,6 +4264,7 @@ Join subblocks?`,
         }
         &.-play-from {
           background-color: transparent;
+          margin: 0px 4px 4px 0px;
         }
      }
     }
