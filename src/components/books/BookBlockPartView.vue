@@ -273,8 +273,12 @@
                     </li>
                     <li class="separator"></li>
                   </template>
-                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
-                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
+                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')" class="icon-menu-item">
+                    <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Editing
+                  </li>
+                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')" class="icon-menu-item">
+                    <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Narration
+                  </li>
                   <template v-if="range.collapsed && blockAudio.src">
                     <li class="separator"></li>
                     <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
@@ -286,8 +290,12 @@
                   </template>
                   <template v-if="!range.collapsed && blockAudio.src">
                     <li class="separator"></li>
-                    <li @click="audPlayFromSelection()">Play from here</li>
-                    <li @click="audPlaySelection()">Play selection</li>
+                    <li @click="audPlayFromSelection()" class="icon-menu-item">
+                      <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
+                    </li>
+                    <li @click="audPlaySelection()" class="icon-menu-item">
+                      <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
+                    </li>
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -4245,6 +4253,13 @@ Join subblocks?`,
         &.-listen-uncompressed {
           background: url(/static/listen-uncompressed.png);
           background-size: 15px;
+        }
+        &.-add-flag {
+          background-color: transparent;
+          margin: 0px 6px 0px -2px;
+        }
+        &.-play-from {
+          background-color: transparent;
         }
      }
     }
