@@ -1443,8 +1443,17 @@ w {
     background: @suggestion_word_color;
   }
 }
+/* suggestion set, not saved  */
 .content-wrap[data-audiosrc].playing w[data-sugg], .content-wrap[data-audiosrc].playing w[data-sugg].pinned-word {
   background: inherit;
+}
+/* suggestion set and saved */
+.content-wrap[data-audiosrc].playing {
+  [data-suggestion] {
+    w.pinned-word {
+      background: @suggestion_word_color;
+    }
+  }
 }
 /* display mode */
 .ilm-block.ilm-display {
