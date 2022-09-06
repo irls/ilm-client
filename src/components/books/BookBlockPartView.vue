@@ -4268,6 +4268,14 @@ Join subblocks?`,
         padding-left: 135px;
         .message-text {
           position: absolute;
+          top: -20px;
+        }
+      }
+    }
+    .meta-visible {
+      .-mode-narrate {
+        .uncompressed-audio-message {
+          display: table-cell;
         }
       }
     }
