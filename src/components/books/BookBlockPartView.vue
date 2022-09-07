@@ -292,11 +292,11 @@
                   </template>
                   <template v-if="blockAudio.src">
                     <li class="separator"></li>
-                    <li @click="audPlayFromSelection()" class="icon-menu-item">
+                    <li @click.stop="audPlayFromSelection()" class="icon-menu-item">
                       <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
                     </li>
                     <template v-if="!range.collapsed">
-                      <li @click="audPlaySelection()" class="icon-menu-item">
+                      <li @click.stop="audPlaySelection()" class="icon-menu-item">
                         <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
                       </li>
                     </template>
@@ -1975,6 +1975,7 @@ export default {
             this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
           }
         }
+        this.$refs.blockCntx.close();
       },
       audPlaySelection() {
         console.log('audPlaySelection')
@@ -1997,6 +1998,7 @@ export default {
           this.isAudPartStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
+        this.$refs.blockCntx.close();
       },
       audPause: function(block_id, ev) {
         console.log('audPause')
@@ -3178,12 +3180,11 @@ export default {
       },
       clickAwayFromAudioControl(e){
         const mouseOnContainer = e.target.closest('.par-ctrl.-audio');//`#${this.block.blockid}`);
-        //console.log(`mouseOn: `, this.block.blockid, mouseOnContainer);
+        console.log(`mouseOn: `, this.block.blockid, mouseOnContainer, this.isAudStarted, this.isAudPaused);
         if (!mouseOnContainer) {
           if (!this.isAudPaused) {
             this.audPause();
             document.body.removeEventListener('keydown', this.handleAudioControl);
-            //window.removeEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
