@@ -264,8 +264,8 @@
                   <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
                   <template v-if="!range.collapsed && blockAudio.src">
                     <li class="separator"></li>
-                    <li @click="audPlayFromSelection()">Play from here</li>
-                    <li @click="audPlaySelection()">Play selection</li>
+                    <li @click.stop="audPlayFromSelection()">Play from here</li>
+                    <li @click.stop="audPlaySelection()">Play selection</li>
                   </template>
                   <template v-if="isSplitPointAllowed()">
                     <li class="separator"></li>
@@ -1905,6 +1905,7 @@ export default {
             this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
           }
         }
+        this.$refs.blockCntx.close();
       },
       audPlaySelection() {
         if (this.player) {
@@ -1926,6 +1927,7 @@ export default {
           this.isAudPartStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
+        this.$refs.blockCntx.close();
       },
       audPause: function(block_id, ev) {
         if (this.player) {
@@ -3103,12 +3105,11 @@ export default {
       },
       clickAwayFromAudioControl(e){
         const mouseOnContainer = e.target.closest('.par-ctrl.-audio');//`#${this.block.blockid}`);
-        //console.log(`mouseOn: `, this.block.blockid, mouseOnContainer);
+        console.log(`mouseOn: `, this.block.blockid, mouseOnContainer, this.isAudStarted, this.isAudPaused);
         if (!mouseOnContainer) {
           if (!this.isAudPaused) {
             this.audPause();
             document.body.removeEventListener('keydown', this.handleAudioControl);
-            //window.removeEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
