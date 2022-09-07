@@ -29,7 +29,7 @@
               <div class="par-ctrl">
                 <span v-if="parnumComp.length && isSplittedBlock" class="sub-parnum">{{parnumComp}}</span>
               </div>
-              <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
+              <div class="par-ctrl -audio -hidden" data-audio-controls v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
@@ -59,7 +59,7 @@
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
-                  <div class="table-row">
+                  <div class="table-row" data-audio-controls >
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
                     </div>
@@ -3179,7 +3179,7 @@ export default {
         }
       },
       clickAwayFromAudioControl(e){
-        const mouseOnContainer = e.target.closest('.par-ctrl.-audio');//`#${this.block.blockid}`);
+        const mouseOnContainer = e.target.closest('[data-audio-controls]');//`#${this.block.blockid}`);
         console.log(`mouseOn: `, this.block.blockid, mouseOnContainer, this.isAudStarted, this.isAudPaused);
         if (!mouseOnContainer) {
           if (!this.isAudPaused) {
