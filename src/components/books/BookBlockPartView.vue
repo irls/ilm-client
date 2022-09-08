@@ -19,9 +19,6 @@
       </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}">
-      <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
-        <div class="message-text">{{uncompressedAudioMessage}}</div>
-      </div>
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
@@ -90,6 +87,9 @@
                 </div>
               </div>
               <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !((!this.$parent.isChanged && !isChanged) && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
+                <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
+                  <div class="message-text">{{uncompressedAudioMessage}}</div>
+                </div>
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -4253,31 +4253,23 @@ Join subblocks?`,
    }
    .uncompressed-audio-message {
       position: absolute;
-      &.-splitted {
-        margin-left: 45px;
-      }
+      font-size: 14px;
+      color: gray;
+      top: 5px;
+      padding: 0px 0px 0px 10px;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     }
     .-mode-narrate {
       .uncompressed-audio-message {
-        margin-right: auto;
-        width: 785px;
-        margin-left: auto;
-        display: table;
-        /* left: 390px; */
-        position: relative;
-        padding-left: 135px;
-        .message-text {
-          position: absolute;
-          top: -20px;
-        }
+        top: -23px;
       }
     }
-    .meta-visible {
+    /* .meta-visible {
       .-mode-narrate {
         .uncompressed-audio-message {
           display: table-cell;
         }
       }
-    }
+    } */
 
 </style>
