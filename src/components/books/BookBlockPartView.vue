@@ -53,6 +53,10 @@
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
 
+            <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
+              <div></div>
+              <div class="message-text">{{uncompressedAudioMessage}}</div>
+            </div>
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
@@ -87,9 +91,6 @@
                 </div>
               </div>
               <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !((!this.$parent.isChanged && !isChanged) && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
-                <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
-                  <div class="message-text">{{uncompressedAudioMessage}}</div>
-                </div>
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -4254,14 +4255,22 @@ Join subblocks?`,
    .uncompressed-audio-message {
       position: absolute;
       font-size: 14px;
+      top: 4px;
+      /* padding: 0px 0px 0px 10px;*/
       color: gray;
-      top: 5px;
-      padding: 0px 0px 0px 10px;
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      &.-splitted {
+        left: 25px;
+      }
     }
     .-mode-narrate {
       .uncompressed-audio-message {
-        top: -23px;
+        display: table-row;
+        position: inherit;
+        &>div {
+          display: table-cell;
+          padding: 0px 0px 0px 3px;
+        }
       }
     }
     /* .meta-visible {
