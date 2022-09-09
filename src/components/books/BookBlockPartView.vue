@@ -4,7 +4,7 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
-      
+
       <LockedBlockActions
         :lockedType="lockedType"
         :block="block"
@@ -2775,7 +2775,6 @@ export default {
                   });
                 });
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
@@ -3661,7 +3660,7 @@ Please save or discard your changes before joining.`,
           });
         }
       },
-      
+
       splitIntoBlocks(ev) {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3684,7 +3683,7 @@ Please save or discard your changes before joining.`,
             });
         }
       },
-      
+
       splitIntoSubblocks(ev) {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3707,7 +3706,7 @@ Please save or discard your changes before joining.`,
             });
         }
       },
-      
+
       splitSubblock() {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3722,7 +3721,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       mergeAllSubblocks(confirm = true) {
         let hasChanged = this.block.parts.find(p => {
           return p.isChanged;
@@ -3789,7 +3788,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       splitUnsavedCheck() {
         let hasChanges = this.isChanged || this.isAudioChanged;
         if (!hasChanges || this.block.getIsSplittedBlock()) {
@@ -3806,7 +3805,7 @@ Please save or discard your changes before joining.`,
         }
         return true;
       },
-      
+
       splitUnsavedWarning() {
         this.$root.$emit('show-modal', {
           title: 'Unsaved Changes',
@@ -3824,7 +3823,7 @@ Save or discard your changes before splitting`,
           class: ['align-modal']
         });
       },
-      
+
       closeAudioEditor() {
         let isAudioEditorOpened = this.isAudioEditing;
         if (!isAudioEditorOpened) {
@@ -3836,7 +3835,7 @@ Save or discard your changes before splitting`,
           this.$root.$emit('for-audioeditor:force-close');
         }
       },
-      
+
       joinAndRemoveAudioWarning(callback) {
         this.$root.$emit('show-modal', {
           title: 'Join subblocks',

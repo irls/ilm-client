@@ -3586,7 +3586,6 @@ Save text changes and realign the Block?`,
 
         //this.$root.$emit('for-audioeditor:load-and-play', this.block.getAudiosrcFootnote(ftnIdx, 'm4a', true), this.FtnAudio.map, `${this.block._id}_${ftnIdx}`);
 
-        //$('nav.fixed-bottom').removeClass('hidden');
         this.audioEditFootnote.footnote = footnote;
         this.showAudioEditor(ftnIdx, footnote);
       },
@@ -3619,7 +3618,6 @@ Save text changes and realign the Block?`,
           if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
