@@ -2198,8 +2198,13 @@
             });
 
             if (start !== false && end !== false && start < end) {
-              this.selection.start = this._round(start, 2);
-              this.selection.end = this._round(end, 2);
+              start = this._round(start, 2);
+              end = this._round(end, 2);
+              if (this.selection.start === start && this.selection.end === end) {
+                return false;
+              }
+              this.selection.start = start;
+              this.selection.end = end;
               let replay = this.isPlaying;
               let wait = this.isPlaying ? [this.pause()] : [];
               Promise.all(wait)
