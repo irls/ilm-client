@@ -1962,6 +1962,8 @@ export default {
           this.isAudPartStarted = false;
           this.audCleanClasses(this.block.blockid, ev);
           this.player.playBlock('content-'+this.block.blockid+'-part-'+this.blockPartIdx);
+        } else {
+          this.$emit('partAudioComplete', this.blockPartIdx);
         }
       },
       audPlayFromSelection() {
