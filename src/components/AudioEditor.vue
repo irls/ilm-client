@@ -129,8 +129,6 @@
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
   import BlockContextMenu from './generic/BlockContextMenu';
-  //import { modal } from 'vue-strap'
-  import v_modal from 'vue-js-modal';
   import {mapActions, mapGetters} from 'vuex'
   import _ from 'lodash';
   import unescape from 'lodash/unescape';
@@ -149,12 +147,10 @@
   const SILENCE_VALUE = 0.005;
   const closeBracketsRegex = /[\)\]\}\﴿]/mg;
   const closeQuotesRegex = /[\”\’\»]/mg;
-  Vue.use(v_modal, { dialog: true });
 
   export default {
       name: 'AudioEditor',
       components: {
-        //'modal': modal,
         'cntx-menu': BlockContextMenu
       },
       mixins: [api_config, task_controls],
@@ -1104,9 +1100,6 @@
                 this.play();
               }
             })
-        },
-        isEmpty() {
-          return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
@@ -2996,6 +2989,12 @@ Revert to original block audio?`,
             } else {
               return false;
             }
+          },
+          cache: false
+        },
+        isEmpty: {
+          get() {
+               return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
           },
           cache: false
         },

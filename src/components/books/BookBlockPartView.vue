@@ -2856,7 +2856,6 @@ export default {
                   });
                 });
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
