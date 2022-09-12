@@ -38,6 +38,7 @@
 
     <v-dialog :clickToClose="false"/>
     <modals-container/>
+
     <alert :show="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{errorAlert}}</p>
@@ -267,6 +268,8 @@ export default {
     },
     reimportBookClose() {
       this.showBookReimport = false;
+    },
+    bookImportFinished() {
     },
     evOnReimportModal() {
       if (this.tc_allowEditingComplete()) {

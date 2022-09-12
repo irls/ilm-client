@@ -129,8 +129,6 @@
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
   import BlockContextMenu from './generic/BlockContextMenu';
-  //import { modal } from 'vue-strap'
-  import v_modal from 'vue-js-modal';
   import {mapActions, mapGetters} from 'vuex'
   import _ from 'lodash';
   import unescape from 'lodash/unescape';
@@ -149,12 +147,10 @@
   const SILENCE_VALUE = 0.005;
   const closeBracketsRegex = /[\)\]\}\﴿]/mg;
   const closeQuotesRegex = /[\”\’\»]/mg;
-  Vue.use(v_modal, { dialog: true });
 
   export default {
       name: 'AudioEditor',
       components: {
-        //'modal': modal,
         'cntx-menu': BlockContextMenu
       },
       mixins: [api_config, task_controls],

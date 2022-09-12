@@ -113,12 +113,11 @@ export default {
     flex-direction: column;
 
     .fixed-bottom {
-      /*position: fixed;*/
-      /*width: 99%;*/
-      bottom: 0px;
+      position: relative;
       border: 1px solid black;
       border-radius: 0px;
-      min-height: 205px;
+      width: 100%;
+      min-height: 215px;
       height: auto;
       margin-bottom: 0px;
       z-index: 990;
