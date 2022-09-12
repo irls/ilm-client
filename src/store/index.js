@@ -5187,7 +5187,7 @@ export const store = new Vuex.Store({
             let hasPart = block.voicework === 'narration' && block.parts.length > 0 ? block.parts.find(p => {
               return p.audiosrc;
             }) : false;
-            if ((block.audiosrc || hasPart) && !block.disabled) {
+            if ((block.audiosrc || hasPart || block.type === 'hr') && !block.disabled) {
               return Promise.resolve(block);
             }
             crossId = state.storeListO.getOutId(block.blockid);
