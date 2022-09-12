@@ -418,7 +418,7 @@
           this.currentWord = null;
           this.contextPosition = null;
           this.mode = mode;
-          
+
           this.playbackRate = 1;
           if (this.currentBookMeta && this.currentBookMeta.bookid && mode === 'block') {
             if (this.user.bookPlaybackRate && this.user.bookPlaybackRate[this.currentBookMeta.bookid]) {
@@ -465,7 +465,7 @@
 
               return timeScale.render();
             }
-            
+
             //this.audiosourceEditor.load = trackLoad;
 //             var _this15 = this.audiosourceEditor;
 //             this.audiosourceEditor.drawRequest = function (){
@@ -1105,9 +1105,6 @@
               }
             })
         },
-        isEmpty() {
-          return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
-        },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
           return this.pause()
@@ -1529,7 +1526,7 @@
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
               let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
-              
+
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
@@ -2993,6 +2990,11 @@ Revert to original block audio?`,
             }
           },
           cache: false
+        },
+        isEmpty: {
+          get() {
+            return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
+          }
         },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',

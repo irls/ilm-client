@@ -36,11 +36,6 @@
       <book-meta-edit v-if='metaVisible'></book-meta-edit>
     </div>
 
-    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
-      <div v-if="preloader" :class="['audio-process-run', 'preloader-' + preloaderType]"></div>
-      <AudioEditor ref="audioEditor"></AudioEditor>
-    </nav>
-
     <v-dialog :clickToClose="false"/>
     <modals-container/>
     <alert :show="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
@@ -65,7 +60,6 @@ import BookEditJson from './books/BookEdit_JSON'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
 import api_config from '../mixins/api_config.js'
-import AudioEditor from './AudioEditor'
 import task_controls from '../mixins/task_controls.js'
 import BookReimport from './books/BookReimport'
 import Vue from 'vue';
@@ -91,9 +85,7 @@ export default {
       hasErrorAlert: false,
       errorAlert: '',
       hasAlert: false,
-      messageAlert: '',
-      preloader: false,
-      preloaderType: ''
+      messageAlert: ''
     }
   },
 
@@ -103,7 +95,6 @@ export default {
     BookEditToolbar,
     axios,
     superlogin,
-    AudioEditor,
     BookReimport,
     alert
   },
@@ -266,22 +257,6 @@ export default {
       return this.$route.matched.some(record => {
         return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
       })
-    },
-//     recountRows () {
-//       let count = 1
-//       if (this.hasBookSelected()) count++
-//       if (this.metaVisible) count++
-//       this.colCount = count
-//     },
-    bookImportFinished(result) {
-
-    },
-
-    showAudioeditor() {
-      return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
-    },
-    audioeditorMode() {
-      return '-mode-' + (this.$refs.audioEditor ? this.$refs.audioEditor.mode : '');
     },
 
     showModal(params) {

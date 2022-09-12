@@ -3,6 +3,11 @@
     <MainMenu v-if="isLoggedIn"></MainMenu>
     <router-view v-if="isLoggedIn"></router-view>
     <Login v-if="!isLoggedIn"></Login>
+
+    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor}, audioeditorMode]" >
+      <div v-if="preloader" :class="['audio-process-run', 'preloader-' + preloaderType]"></div>
+      <AudioEditor ref="audioEditor"></AudioEditor>
+    </nav>
     <!-- <CanvasAbsolute/> -->
   </div>
 </template>
@@ -11,18 +16,38 @@
 import { mapGetters, mapActions } from 'vuex'
 import MainMenu from './components/MainMenu'
 import Login from './components/login'
+import AudioEditor from './components/AudioEditor'
 
 export default {
 
   name: 'App',
 
+  data() {
+    return {
+      preloader: false,
+      preloaderType: ''
+    }
+  },
+
   components: {
-    MainMenu, Login
+    MainMenu, Login, AudioEditor
     // , CanvasAbsolute
   },
 
   computed: {
-      ...mapGetters(['isLoggedIn', 'currentCollectionId']),
+    showAudioeditor: {
+      get() {
+        return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty;
+      },
+      cache: false
+    },
+    audioeditorMode: {
+      get() {
+        return '-mode-' + (this.$refs.audioEditor ? this.$refs.audioEditor.mode : '');
+      },
+      cache: false
+    },
+    ...mapGetters(['isLoggedIn', 'currentCollectionId']),
   },
 
   watch: {
@@ -86,19 +111,32 @@ export default {
   #app {
     display:flex;
     flex-direction: column;
+
+    .fixed-bottom {
+      /*position: fixed;*/
+      /*width: 99%;*/
+      bottom: 0px;
+      border: 1px solid black;
+      border-radius: 0px;
+      min-height: 205px;
+      height: auto;
+      margin-bottom: 0px;
+      z-index: 990;
+      &.-mode-file {
+          min-height: 183px;
+      }
+    }
   }
 
   .area-wrapper {
     flex-grow: 2;
-
-/*    display:flex;
-    flex-direction: row;*/
     overflow-y:auto;
 
     padding-top: 0px;
 
     margin-bottom: 0px;
     padding-bottom: 0px;
+
   }
 
 

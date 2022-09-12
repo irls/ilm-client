@@ -2654,22 +2654,7 @@ export default {
   .infinite-status-prompt {
     margin-bottom: 175px;
   }
-  .fixed-bottom {
-    /*display: none;*/
-    position: fixed;
-    /*margin-left: -10px;*/
-    width: 99%;
-    bottom: 0px;
-    border: 1px solid black;
-    border-radius: 0px;
-    min-height: 205px;
-    height: auto;
-    margin-bottom: 0px;
-    z-index: 990;
-    &.-mode-file {
-        min-height: 183px;
-    }
-  }
+
   a.go-to-block {
     cursor: pointer;
   }

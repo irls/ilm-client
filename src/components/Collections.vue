@@ -35,9 +35,6 @@
         :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
     </div>
 
-    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}]" >
-      <AudioEditor ref="audioEditor"></AudioEditor>
-    </nav>
     <v-dialog :clickToClose="false"/>
   </div>
 </template>
@@ -48,7 +45,6 @@
   import CollectionTabs from './collections/CollectionTabs';
   import BookMetaEdit from './books/BookMetaEdit';
   import { mapGetters, mapActions } from 'vuex';
-  import AudioEditor from './AudioEditor';
   import BookEdit from './books/BookEdit'
   import Vue from 'vue';
   import api_config from '../mixins/api_config.js'
@@ -64,7 +60,6 @@
         CollectionsGrid: CollectionsGrid,
         CollectionTabs: CollectionTabs,
         BookMetaEdit: BookMetaEdit,
-        AudioEditor: AudioEditor,
         BookEdit: BookEdit
       },
       mixins: [api_config, task_controls],
@@ -129,9 +124,6 @@
         },
         collectionRemoved() {
           this.collectionMetaVisible = false;
-        },
-        showAudioeditor() {
-          return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
         },
         scrollToRow(id) {
           let t = setTimeout(function() {
