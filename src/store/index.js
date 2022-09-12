@@ -2539,11 +2539,15 @@ export const store = new Vuex.Store({
       if (typeof block.content !== 'undefined') {
         update.block.content = block.content;
       }
+      let storeBlock = state.storeList.get(block.blockid);
       return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
           dispatch('getCurrentJobInfo');
+          if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
+            response.data.audiosrc_config = storeBlock.audiosrc_config;
+          }
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -2590,6 +2594,9 @@ export const store = new Vuex.Store({
         .then((response) => {
 
           let storeBlock = state.storeList.get(response.data.blockid);
+          if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
+            response.data.audiosrc_config = storeBlock.audiosrc_config;
+          }
           if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
             /*response.data.parts.forEach((p, pIdx) => {
               if (pIdx < blockIdx || pIdx > blockIdx + isSplitting) {
