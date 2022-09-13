@@ -195,7 +195,7 @@
                 <template v-else >
 
                 </template>
-                <template v-if="editingLocked">
+                <template v-if="editingLocked && mode !== 'narrate'">
                   <div class="par-ctrl-divider"></div>
                   <label class="blocked-editing">{{editingLockedReason}}</label>
                 </template>
@@ -282,6 +282,7 @@
               :splitPointRemoved="splitPointRemoved"
               :checkVisible="checkVisible"
               :checkFullyVisible="checkFullyVisible"
+              :editingLockedReason="editingLockedReason"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
