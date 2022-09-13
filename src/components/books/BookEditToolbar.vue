@@ -211,6 +211,7 @@ export default {
       paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
       paste = paste.replace(/<span\sclass="(?:pagenum|marginal)".*?<\/span>/mig, '');
       paste = paste.replace(/(<\/p>)(<p)/mig, '$1 $2');
+      paste = paste.replace(/<br[^>]*?>[^<]*?/mig, ' ');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //-- } -- end -- Gutenberg --//
       //console.log(`paste001: `, paste);
