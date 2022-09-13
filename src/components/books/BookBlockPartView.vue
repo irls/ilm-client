@@ -29,7 +29,7 @@
               <div class="par-ctrl -audio -hidden" data-audio-controls v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
+                      <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -58,7 +58,7 @@
                 <div class="table-body">
                   <div class="table-row" data-audio-controls >
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+                      <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()"></i>
                     </div>
                     <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
@@ -3106,7 +3106,8 @@ export default {
       clickAwayFromAudioControl(e){
         const mouseOnContainer = e.target.closest('[data-audio-controls]');//`#${this.block.blockid}`);
         console.log(`mouseOn: `, this.block.blockid, mouseOnContainer, this.isAudStarted, this.isAudPaused);
-        if (!mouseOnContainer) {
+        console.log(`e.target: `, e.target, e.target.hasAttribute('data-show-editor'));
+        if (!mouseOnContainer || e.target.hasAttribute('data-show-editor')) {
           if (!this.isAudPaused) {
             this.audPause();
             document.body.removeEventListener('keydown', this.handleAudioControl);
