@@ -414,7 +414,7 @@
           this.currentWord = null;
           this.contextPosition = null;
           this.mode = mode;
-
+          
           this.playbackRate = 1;
           if (this.currentBookMeta && this.currentBookMeta.bookid && mode === 'block') {
             if (this.user.bookPlaybackRate && this.user.bookPlaybackRate[this.currentBookMeta.bookid]) {
@@ -461,7 +461,7 @@
 
               return timeScale.render();
             }
-
+            
             //this.audiosourceEditor.load = trackLoad;
 //             var _this15 = this.audiosourceEditor;
 //             this.audiosourceEditor.drawRequest = function (){
@@ -1522,7 +1522,7 @@
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
               let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
-
+              
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
@@ -2191,8 +2191,13 @@
             });
 
             if (start !== false && end !== false && start < end) {
-              this.selection.start = this._round(start, 2);
-              this.selection.end = this._round(end, 2);
+              start = this._round(start, 2);
+              end = this._round(end, 2);
+              if (this.selection.start === start && this.selection.end === end) {
+                return false;
+              }
+              this.selection.start = start;
+              this.selection.end = end;
               let replay = this.isPlaying;
               let wait = this.isPlaying ? [this.pause()] : [];
               Promise.all(wait)
@@ -2989,8 +2994,9 @@ Revert to original block audio?`,
         },
         isEmpty: {
           get() {
-            return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
-          }
+               return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
+          },
+          cache: false
         },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',
