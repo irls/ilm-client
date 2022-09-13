@@ -25,6 +25,10 @@
             <div class="table-row-flex controls-top" v-if="mode !== 'narrate'">
               <div class="par-ctrl">
                 <span v-if="parnumComp.length && isSplittedBlock" class="sub-parnum">{{parnumComp}}</span>
+                <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
+                  <div></div>
+                  <div class="message-text">{{uncompressedAudioMessage}}</div>
+                </div>
               </div>
               <div class="par-ctrl -audio -hidden" data-audio-controls v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
@@ -52,8 +56,13 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-
-            <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
+            <template v-if="editingLocked && mode === 'narrate' && blockPartIdx === 0">
+              <div class="-hidden-subblock editing-locked-narrate">
+                <div></div>
+                <label class="blocked-editing">{{editingLockedReason}}</label>
+              </div>
+            </template>
+            <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig && mode === 'narrate'">
               <div></div>
               <div class="message-text">{{uncompressedAudioMessage}}</div>
             </div>
@@ -451,7 +460,7 @@ export default {
       //'modal': modal,
       'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -4297,24 +4306,32 @@ Join subblocks?`,
      display: none;
    }
    .uncompressed-audio-message {
-      position: absolute;
       font-size: 14px;
-      top: 4px;
-      /* padding: 0px 0px 0px 10px;*/
+      padding: 0px 0px 0px 10px;
       color: gray;
       font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-      &.-splitted {
-        left: 25px;
-      }
     }
     .-mode-narrate {
       .uncompressed-audio-message {
+        position: absolute;
+        top: 4px;
         display: table-row;
         position: inherit;
         &>div {
           display: table-cell;
           padding: 0px 0px 0px 3px;
         }
+      }
+    }
+    .editing-locked-narrate {
+      display: table-row;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      div {
+        display: table-cell;
+      }
+      .blocked-editing {
+        padding: 0px 0px 0px 3px;
+        font-weight: normal;
       }
     }
     /* .meta-visible {
