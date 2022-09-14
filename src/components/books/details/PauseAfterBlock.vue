@@ -319,7 +319,11 @@
                           this.player.play();
                         };
                         this.player.src = audiosrc;
+                      } else {
+                        this.nowPlaying = false;
                       }
+                    } else {
+                      this.nowPlaying = false;
                     }
                   }, this.pause * 1000);
                 });
