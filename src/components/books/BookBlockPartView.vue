@@ -1065,24 +1065,18 @@ export default {
         this.footnoteIdx = this.block.footnoteIdx;
         delete this.block.footnoteIdx;
       }
-      //console.log('mounted isChecked', this.blockO);
-      //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
 
-      //console.log('mounted', this.block._id);
       this.destroyEditor();
       this.initEditor();
       this.addContentListeners();
+      document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
 
       this.$root.$on('block-state-refresh-' + this.block._id, this.forceReloadContent);
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
 
-//       Vue.nextTick(() => {
-//
-//       });
-      //this.showPinnedInText();
       if (this.audioTasksQueue.block.blockId === this.block.blockid && (!this.isSplittedBlock || this.blockPartIdx === this.audioTasksQueue.block.partIdx)) {
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOn();// was scrolled out of visible, and scrolled back, with audio editor opened
@@ -1092,9 +1086,9 @@ export default {
       })
   },
   beforeDestroy: function () {
-//     console.log('beforeDestroy', this.block._id);
-//     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
+
+    document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
 
     this.$root.$off('block-state-refresh-' + this.block._id, this.forceReloadContent);
 
@@ -3165,8 +3159,6 @@ export default {
       },
       handleAudioControl(e) {
         if (e) {
-          console.log(`handleAudioControl: `, this.isAudStarted, this.isAudPaused);
-
           if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
             if (!this.isRecordingPaused) {
               this.pauseRecording();
@@ -3190,14 +3182,23 @@ export default {
         }
       },
       clickAwayFromAudioControl(e){
-        const mouseOnContainer = e.target.closest('[data-audio-controls]');//`#${this.block.blockid}`);
-        console.log(`mouseOn: `, this.block.blockid, mouseOnContainer, this.isAudStarted, this.isAudPaused);
-        console.log(`e.target: `, e.target, e.target.hasAttribute('data-show-editor'));
+        const mouseOnContainer = e.target.closest('[data-audio-controls]');
         if (!mouseOnContainer || e.target.hasAttribute('data-show-editor')) {
-          if (!this.isAudPaused) {
-            this.audPause();
+          if (this.isAudStarted) {
+            if (!this.isAudPaused) {
+              this.audPause();
+            }
             document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
           }
+        } else if (this.isAudStarted) {
+          document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
+          document.body.addEventListener('keydown', this.handleAudioControl);
+        }
+      },
+      preventChromeScrollBySpace(e){
+        if (e.keyCode === 32 && e.target === document.body) {
+          e.preventDefault();
         }
       },
       _saveContent() {
@@ -4155,8 +4156,10 @@ Join subblocks?`,
         handler(val) {
           //console.log(`isAudStarted: `, this.block.blockid, val);
           document.body.removeEventListener('keydown', this.handleAudioControl);
+          document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
           document.body.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
+            document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
             document.body.addEventListener('keydown', this.handleAudioControl);
             document.body.addEventListener('click', this.clickAwayFromAudioControl);
           }
