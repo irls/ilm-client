@@ -114,10 +114,11 @@ export default {
 
     .fixed-bottom {
       position: relative;
+      overflow-y: auto;
       border: 1px solid black;
       border-radius: 0px;
       width: 100%;
-      min-height: 215px;
+      min-height: 218px;
       height: auto;
       margin-bottom: 0px;
       z-index: 990;
