@@ -1260,16 +1260,16 @@ class BookBlock {
   }
 
   cleanFindMarks() {
-    this.content = this.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
-    this.description = this.description.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+    this.content = this.content.replace(/data-in-search/g, '');
+    this.description = this.description.replace(/data-in-search/g, '');
     if (this.parts && this.parts.length) {
       for (let part of this.parts) {
-        part.content = part.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+        part.content = part.content.replace(/data-in-search/g, '');
       }
     }
     if (this.footnotes && this.footnotes.length) {
       for (let footnote of this.footnotes) {
-        footnote.content = footnote.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+        footnote.content = footnote.content.replace(/data-in-search/g, '');
       }
     }
   }
