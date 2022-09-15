@@ -1777,10 +1777,14 @@ export default {
         } else if (isSwitch) {
           //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
           if (this.bookMode !== 'narrate') {
-            $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+            if (!this.activeStyleTab || !Array.from(result.keys()).includes(this.activeStyleTab)) {
+              $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+            }
           } else {
             if (pausesAfter.size > 0) {
-              $(`li#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+              if (!this.activeStyleTab || !Array.from(pausesAfter.keys()).includes(this.activeStyleTab)) {
+                $(`li#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+              }
             } else {
               $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
             }
