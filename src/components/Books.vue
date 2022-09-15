@@ -232,7 +232,6 @@ export default {
         this.$root.$on('book-reimport-modal', this.evOnReimportModal);
         this.$root.$on('set-error-alert', this.setErrorAlert);
         this.$root.$on('set-alert', this.setAlert);
-        this.$root.$on('preloader-toggle', this.onPreloaderToggle);
         this.$root.$on('for-bookedit:scroll-to-block', this.goToBlock);
 
 //         this.loadTTSVoices();
@@ -285,21 +284,6 @@ export default {
     setAlert(message) {
       this.messageAlert = message;
     },
-    onPreloaderToggle(state, type) {
-      if (state) {
-        this.preloader = true;
-        this.preloaderType = type;
-        if (type == 'align') {
-          //this.tc_loadBookTask(this.currentBookMeta.bookid);
-        }
-      } else {
-        if (this.preloaderType == 'save') {
-          this.tc_loadBookTask(this.currentBookMeta.bookid);
-        }
-        this.preloader = false;
-        this.preloaderType = '';
-      }
-    },
     goToBlock(blockid) {
       if (this.$route && ['BookEdit', 'BookNarrate', 'BookProofread'].includes(this.$route.name)) {
         return;
@@ -316,7 +300,6 @@ export default {
     this.$root.$off('book-reimport-modal', this.evOnReimportModal);
     this.$root.$off('set-error-alert', this.setErrorAlert);
     this.$root.$off('set-alert', this.setAlert);
-    this.$root.$off('preloader-toggle', this.onPreloaderToggle);
     this.$root.$off('for-bookedit:scroll-to-block', this.goToBlock);
   }
 }

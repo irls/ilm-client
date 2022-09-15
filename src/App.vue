@@ -47,7 +47,7 @@ export default {
       },
       cache: false
     },
-    ...mapGetters(['isLoggedIn', 'currentCollectionId']),
+    ...mapGetters(['isLoggedIn', 'currentCollectionId', 'currentBookMeta']),
   },
 
   watch: {
@@ -79,16 +79,32 @@ export default {
   },
 
   created () {
-    window.addEventListener('beforeunload', this.stopWatchLiveQueries)
+    window.addEventListener('beforeunload', this.stopWatchLiveQueries);
     let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
     if (this.$route.name === 'BookEditDisplay') {
       mode = 'display';
     }
     this.$store.commit('set_book_mode', mode);
+    this.$root.$on('preloader-toggle', this.onPreloaderToggle);
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary']),
+    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary', 'tc_loadBookTask']),
+    onPreloaderToggle(state, type) {
+      if (state) {
+        this.preloader = true;
+        this.preloaderType = type;
+        if (type == 'align') {
+          //this.tc_loadBookTask(this.currentBookMeta.bookid);
+        }
+      } else {
+        if (this.preloaderType == 'save') {
+          this.tc_loadBookTask(this.currentBookMeta.bookid);
+        }
+        this.preloader = false;
+        this.preloaderType = '';
+      }
+    },
     //doesn't work from store in case with beforeDestroy
     stopWatchLiveQueries(){
       this.$store.state.liveDB.stopWatch('metaV');
@@ -98,7 +114,8 @@ export default {
     },
   },
   beforeDestroy () {
-    window.removeEventListener('beforeunload', this.stopWatchLiveQueries)
+    window.removeEventListener('beforeunload', this.stopWatchLiveQueries);
+    this.$root.$off('preloader-toggle', this.onPreloaderToggle);
   }
 }
 </script>
