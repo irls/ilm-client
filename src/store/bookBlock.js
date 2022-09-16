@@ -425,8 +425,8 @@ class BookBlock {
       return 'data-' + $1 + '="' + _.escape(tmp) + '"';
     });
     this.content = this.content
-      .replace(/(<[^>]+)(selected)/g, '$1')
-      .replace(/(<[^>]+)(audio-highlight)/g, '$1')
+      .replace(/(<w[^>]+)(selected)/g, '$1')
+      .replace(/(<w[^>]+)(audio-highlight)/g, '$1')
       .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/gi, '') // remove suggestions without text
       .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/gi, ''); // remove quotes without text
     return _.pick(this, defBlock); //<(qq*)\s*[^\/>]*>\s*<\/\1>
@@ -606,11 +606,18 @@ class BookBlock {
 
   calcFlagStatus(_id) {
     let status = { open: 0, resolved: 0, hidden: 0 };
+    let idRegex;
+    // ILM-5217, flags with wrong id
+    let parts = _id.split(':');
+    if (Array.isArray(parts) && parts.length === 2) {
+      idRegex = new RegExp(`\\:(${parts[1]})$`);
+    }
     this.flags.forEach(flag => {
-      if (flag._id === _id)
+      if (flag._id === _id || (idRegex && idRegex.test(flag._id))) {
         flag.parts.forEach(part => {
           status[part.status] += 1;
         });
+      }
     });
     if (status.open > 0) return 'open';
     if (status.resolved > 0) return 'resolved';

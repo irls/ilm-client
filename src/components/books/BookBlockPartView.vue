@@ -1871,9 +1871,9 @@ export default {
         if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
-        content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
+        content = content.replace(/(<w[^>]+)(selected)/g, '$1');//|suspicious-word
+        content = content.replace(/(<w[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<w[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -2425,6 +2425,15 @@ export default {
           this.flagsSel = this.block.flags.filter((flag)=>{
             return flag._id === flagId;
           })[0];
+          if (!this.flagsSel) {// ILM-5217, flags with wrong id
+            let parts = flagId.split(':');
+            if (Array.isArray(parts) && parts.length === 2) {
+              let idRegex = new RegExp(`\\:(${parts[1]})$`);
+              this.flagsSel = this.block.flags.find((flag) => {
+                return idRegex.test(flag._id);
+              });
+            }
+          }
           this.isHideArchParts = true;
           this.$refs.blockFlagPopup.open(ev, flagId);
           this.updateFlagStatus(flagId);
@@ -2473,6 +2482,15 @@ export default {
           if (node) node.dataset.flag = flagId;
         } else {
           node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+          if (!node) {// ILM-5217, flags with wrong id
+            let parts = flagId.split(':');
+            if (Array.isArray(parts) && parts.length === 2) {
+              let idRegex = new RegExp(`\\:(${parts[1]})$`);
+              node = Array.from(this.$refs.blockContent.querySelectorAll(`[data-flag]`)).find(n => {
+                return n.dataset && n.dataset.flag && idRegex.test(n.dataset.flag);
+              });
+            }
+          }
         }
         if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
       },

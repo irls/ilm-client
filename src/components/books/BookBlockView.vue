@@ -2506,9 +2506,9 @@ export default {
           return content;
         }
         //console.log(content)
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
-        content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
+        content = content.replace(/(<w[^>]+)(selected)/g, '$1');//|suspicious-word
+        content = content.replace(/(<w[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<w[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -4146,7 +4146,7 @@ Save text changes and realign the Block?`,
       },
       _saveContent() {
         if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
-          this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+          this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<w[^>]+)(selected)/g, '$1');
           this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         }
         if (this.block.footnotes && this.block.footnotes.length) {
