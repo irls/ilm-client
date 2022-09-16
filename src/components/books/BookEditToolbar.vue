@@ -53,6 +53,7 @@ import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';
 import Tooltip from 'primevue/tooltip';
+import { replaceSuperscript, replaceHTMLSpecials } from '@src/filters/search.js';
 
 export default {
   data () {
@@ -190,11 +191,51 @@ export default {
       this.$refs.searchPanel.hide(ev);
     },
     onPaste(ev) {
-      const clipboard = (event.clipboardData || window.clipboardData)
+      const clipboard = (ev.clipboardData || window.clipboardData)
       let paste = clipboard.getData('text/html');
-      paste = paste.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*<\/sup>/mig, '');
-      paste = paste.replace(/(<([^>]+)>)/gi, '');
-      this.bookSearch.string = paste;
+      paste = paste.length ? paste : clipboard.getData('text/plain');
+      //-- MSOffice -- { --//
+      const wordXreg = new RegExp("<body[\\s\\S]+<\\/body>", 'mi');
+      if (wordXreg.test(paste)) {
+        paste = wordXreg.exec(paste)[0];
+        console.log(`paste000: `, paste);
+        paste = paste.replace(/<!\[if[^\]]*\]>[\s\S]*?<!\[endif\]>/mig, '');
+        paste = paste.replace(/\[pg\s*\d+\]/mig, '');
+        paste = paste.replace(/<div\sstyle=['"]*mso-element:footnote['"]*[\s\S]*?<\/div>/mig, '');
+        paste = paste.replace(/<div\sid=['"]{1}sdfootnote\d+['"]{1}[\s\S]*?<\/div>/mig, '');
+        paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
+      } else console.log(`paste000: `, paste);
+      //-- } -- end -- MSOffice --//
+      //-- Gutenberg -- { --//
+      paste = paste.replace(/<a name=\"[^"]*\"[^>]*?>([\S\s]*?)<\/a>/mig, '$1');
+      paste = paste.replace(/<a[^>]*?>[^<]*?<\/a>/mig, '');
+      paste = paste.replace(/<span\sclass="(?:pagenum|marginal)".*?<\/span>/mig, '');
+      paste = paste.replace(/(<\/p>)(<p)/mig, '$1 $2');
+      paste = paste.replace(/<br[^>]*?>[^<]*?/mig, ' ');
+      paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
+      //-- } -- end -- Gutenberg --//
+      //console.log(`paste001: `, paste);
+      paste = paste.replace(/<\/*\s*span>/mig, '');
+      paste = replaceHTMLSpecials(paste);
+      paste = replaceSuperscript(paste);
+      //console.log(`paste222: `, paste);
+      paste = paste.replace(/(<([^>]+)>)/ig, '');
+      paste = paste.replace(/[\r\n]+/mig, ' ').replace(/\s\s+/g, ' ');
+      console.log(`paste: `, paste);
+
+      const start = ev.target.selectionStart;
+      const finish = ev.target.selectionEnd;
+
+      if (start || finish) {
+        const splitArray = [
+          this.bookSearch.string.slice(0, start), this.bookSearch.string.slice(finish)
+        ]
+        this.bookSearch.string = (splitArray[0]+paste+splitArray[1]).trim();
+      }
+      else {
+        this.bookSearch.string = paste.trim();
+      }
+
     },
     ...mapActions(['setBlockSelection'])
   },

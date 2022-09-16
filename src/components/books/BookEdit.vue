@@ -2278,10 +2278,12 @@ export default {
             return sEl.trim().length > 0;
           })
           let filterSearchArr = prepareForFilter(bookSearch.string, false)
-          //console.log(`parserSearchArr: `, parserSearchArr);
+          console.log(`parserSearchArr: `, parserSearchArr);
           //console.log(`filterSearchArr: `, filterSearchArr);
 
+          //let stop = 3;
           for (let blockId of this.parlistO.idsArray()) {
+            //if (stop-- == 0) break;
             const block = this.parlist.get(blockId);
             const result = block.findInText({
               parserSearchArr,
