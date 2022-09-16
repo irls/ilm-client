@@ -363,6 +363,7 @@ class BookBlock {
       this.classes.level = 'h1';
     }
     this.disabled = init.disabled || false;
+    this.audiosrc_config = init.audiosrc_config || {};
   }
 
   clean() {
@@ -1265,6 +1266,39 @@ class BookBlock {
         footnote.content = footnote.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
       }
     }
+  }
+  
+  getModeAudiosrc(partIdx, mode, config = {}) {
+    return this.getPartAudiosrc(partIdx, this.getModeAudiosrcVer(partIdx, mode, config));
+  }
+  
+  getModeAudiosrcVer(partIdx, mode, config = {}) {
+    
+    let ver = '';
+    if (this.audiosrc_config && this.audiosrc_config[partIdx] && this.audiosrc_config[partIdx][mode]) {
+      ver = this.audiosrc_config[partIdx][mode];
+    } else if (config && config[mode]) {
+      ver = config[mode];
+    }
+    
+    return ver;
+  }
+  
+  setAudiosrcConfig(partIdx, mode, value, config = {}) {
+    if (!this.audiosrc_config[partIdx]) {
+      this.audiosrc_config[partIdx] = {};
+    }
+    if (config && config[mode] && config[mode] === value) {
+      if (this.audiosrc_config[partIdx][mode]) {
+        delete this.audiosrc_config[partIdx][mode];
+      }
+    } else {
+      this.audiosrc_config[partIdx][mode] = value;
+    }
+  }
+  
+  resetAudiosrcConfig() {
+    this.audiosrc_config = {};
   }
 }
 
