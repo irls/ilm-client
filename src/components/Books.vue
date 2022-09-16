@@ -36,13 +36,9 @@
       <book-meta-edit v-if='metaVisible'></book-meta-edit>
     </div>
 
-    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor()}, audioeditorMode()]" >
-      <div v-if="preloader" :class="['audio-process-run', 'preloader-' + preloaderType]"></div>
-      <AudioEditor ref="audioEditor"></AudioEditor>
-    </nav>
-
     <v-dialog :clickToClose="false"/>
     <modals-container/>
+
     <alert :show="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
       <p>{{errorAlert}}</p>
@@ -65,7 +61,6 @@ import BookEditJson from './books/BookEdit_JSON'
 import axios from 'axios'
 import superlogin from 'superlogin-client'
 import api_config from '../mixins/api_config.js'
-import AudioEditor from './AudioEditor'
 import task_controls from '../mixins/task_controls.js'
 import BookReimport from './books/BookReimport'
 import Vue from 'vue';
@@ -91,9 +86,7 @@ export default {
       hasErrorAlert: false,
       errorAlert: '',
       hasAlert: false,
-      messageAlert: '',
-      preloader: false,
-      preloaderType: ''
+      messageAlert: ''
     }
   },
 
@@ -103,7 +96,6 @@ export default {
     BookEditToolbar,
     axios,
     superlogin,
-    AudioEditor,
     BookReimport,
     alert
   },
@@ -240,7 +232,6 @@ export default {
         this.$root.$on('book-reimport-modal', this.evOnReimportModal);
         this.$root.$on('set-error-alert', this.setErrorAlert);
         this.$root.$on('set-alert', this.setAlert);
-        this.$root.$on('preloader-toggle', this.onPreloaderToggle);
         this.$root.$on('for-bookedit:scroll-to-block', this.goToBlock);
 
 //         this.loadTTSVoices();
@@ -267,22 +258,6 @@ export default {
         return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
       })
     },
-//     recountRows () {
-//       let count = 1
-//       if (this.hasBookSelected()) count++
-//       if (this.metaVisible) count++
-//       this.colCount = count
-//     },
-    bookImportFinished(result) {
-
-    },
-
-    showAudioeditor() {
-      return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty();
-    },
-    audioeditorMode() {
-      return '-mode-' + (this.$refs.audioEditor ? this.$refs.audioEditor.mode : '');
-    },
 
     showModal(params) {
       this.$modal.show('dialog', params);
@@ -292,6 +267,8 @@ export default {
     },
     reimportBookClose() {
       this.showBookReimport = false;
+    },
+    bookImportFinished() {
     },
     evOnReimportModal() {
       if (this.tc_allowEditingComplete()) {
@@ -306,21 +283,6 @@ export default {
     },
     setAlert(message) {
       this.messageAlert = message;
-    },
-    onPreloaderToggle(state, type) {
-      if (state) {
-        this.preloader = true;
-        this.preloaderType = type;
-        if (type == 'align') {
-          //this.tc_loadBookTask(this.currentBookMeta.bookid);
-        }
-      } else {
-        if (this.preloaderType == 'save') {
-          this.tc_loadBookTask(this.currentBookMeta.bookid);
-        }
-        this.preloader = false;
-        this.preloaderType = '';
-      }
     },
     goToBlock(blockid) {
       if (this.$route && ['BookEdit', 'BookNarrate', 'BookProofread'].includes(this.$route.name)) {
@@ -338,7 +300,6 @@ export default {
     this.$root.$off('book-reimport-modal', this.evOnReimportModal);
     this.$root.$off('set-error-alert', this.setErrorAlert);
     this.$root.$off('set-alert', this.setAlert);
-    this.$root.$off('preloader-toggle', this.onPreloaderToggle);
     this.$root.$off('for-bookedit:scroll-to-block', this.goToBlock);
   }
 }
