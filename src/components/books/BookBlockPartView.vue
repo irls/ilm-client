@@ -4251,7 +4251,9 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-
+.-split-to-par, .-split-to-sub{
+  font-size: 16px;
+}
    .-content-block {
       .-mode-narrate & {
          padding-inline-end: 185px;
