@@ -75,7 +75,7 @@
                     </div>
                     <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
+                        <i class="fa fa-microphone" data-show-editor v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
                     </template>
                     <template v-if="player && blockAudio.src && !isRecording">
