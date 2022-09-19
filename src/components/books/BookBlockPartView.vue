@@ -30,10 +30,10 @@
                   <div class="message-text">{{uncompressedAudioMessage}}</div>
                 </div>
               </div>
-              <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
+              <div class="par-ctrl -audio -hidden" data-audio-controls v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
+                      <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -69,13 +69,13 @@
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
-                  <div class="table-row">
+                  <div class="table-row" data-audio-controls >
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+                      <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()"></i>
                     </div>
                     <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
+                        <i class="fa fa-microphone" data-show-editor v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
                     </template>
                     <template v-if="player && blockAudio.src && !isRecording">
@@ -302,11 +302,11 @@
                   </template>
                   <template v-if="blockAudio.src">
                     <li class="separator"></li>
-                    <li @click="audPlayFromSelection()" class="icon-menu-item">
+                    <li @click.stop="audPlayFromSelection()" class="icon-menu-item">
                       <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
                     </li>
                     <template v-if="!range.collapsed">
-                      <li @click="audPlaySelection()" class="icon-menu-item">
+                      <li @click.stop="audPlaySelection()" class="icon-menu-item">
                         <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
                       </li>
                     </template>
@@ -1065,24 +1065,18 @@ export default {
         this.footnoteIdx = this.block.footnoteIdx;
         delete this.block.footnoteIdx;
       }
-      //console.log('mounted isChecked', this.blockO);
-      //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
 
-      //console.log('mounted', this.block._id);
       this.destroyEditor();
       this.initEditor();
       this.addContentListeners();
+      document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
 
       this.$root.$on('block-state-refresh-' + this.block._id, this.forceReloadContent);
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
 
-//       Vue.nextTick(() => {
-//
-//       });
-      //this.showPinnedInText();
       if (this.audioTasksQueue.block.blockId === this.block.blockid && (!this.isSplittedBlock || this.blockPartIdx === this.audioTasksQueue.block.partIdx)) {
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOn();// was scrolled out of visible, and scrolled back, with audio editor opened
@@ -1092,9 +1086,9 @@ export default {
       })
   },
   beforeDestroy: function () {
-//     console.log('beforeDestroy', this.block._id);
-//     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
+
+    document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
 
     this.$root.$off('block-state-refresh-' + this.block._id, this.forceReloadContent);
 
@@ -1133,15 +1127,16 @@ export default {
     this.$root.$off('playBlock');
 
     if(this.block) {
-
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-
     }
 
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
     this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
+
+    document.body.removeEventListener('keydown', this.handleAudioControl);
+    document.body.removeEventListener('click', this.clickAwayFromAudioControl);
   },
   updated: function() {
     this.showPinnedInText();
@@ -1981,6 +1976,7 @@ export default {
             this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
           }
         }
+        this.$refs.blockCntx.close();
       },
       audPlaySelection() {
         if (this.player) {
@@ -2002,6 +1998,7 @@ export default {
           this.isAudPartStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
+        this.$refs.blockCntx.close();
       },
       audPause: function(block_id, ev) {
         if (this.player) {
@@ -3175,6 +3172,26 @@ export default {
           //console.log(e);
         }
       },
+      clickAwayFromAudioControl(e){
+        const mouseOnContainer = e.target.closest('[data-audio-controls]');
+        if (!mouseOnContainer || e.target.hasAttribute('data-show-editor')) {
+          if (this.isAudStarted) {
+            if (!this.isAudPaused) {
+              this.audPause();
+            }
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
+          }
+        } else if (this.isAudStarted) {
+          document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
+          document.body.addEventListener('keydown', this.handleAudioControl);
+        }
+      },
+      preventChromeScrollBySpace(e){
+        if (e.keyCode === 32 && e.target === document.body) {
+          e.preventDefault();
+        }
+      },
       _saveContent() {
         if (this.$refs.blockContent && this.isSplittedBlock && Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
           this.block.parts[this.blockPartIdx].content = this.$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
@@ -4128,9 +4145,14 @@ Join subblocks?`,
       },
       'isAudStarted': {
         handler(val) {
+          //console.log(`isAudStarted: `, this.block.blockid, val);
           document.body.removeEventListener('keydown', this.handleAudioControl);
+          document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
+          document.body.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
+            document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
             document.body.addEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
