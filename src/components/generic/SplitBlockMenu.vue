@@ -83,4 +83,8 @@
   .open-split-menu:after {
     content: '\2807';
   }
+  .-re-join, .-split-to-par, .-re-join{
+    font-size: 16px;
+  }
+
 </style>
