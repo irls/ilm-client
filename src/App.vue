@@ -3,6 +3,11 @@
     <MainMenu v-if="isLoggedIn"></MainMenu>
     <router-view v-if="isLoggedIn"></router-view>
     <Login v-if="!isLoggedIn"></Login>
+
+    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor}, audioeditorMode]" >
+      <div v-if="preloader" :class="['audio-process-run', 'preloader-' + preloaderType]"></div>
+      <AudioEditor ref="audioEditor"></AudioEditor>
+    </nav>
     <!-- <CanvasAbsolute/> -->
   </div>
 </template>
@@ -11,18 +16,38 @@
 import { mapGetters, mapActions } from 'vuex'
 import MainMenu from './components/MainMenu'
 import Login from './components/login'
+import AudioEditor from './components/AudioEditor'
 
 export default {
 
   name: 'App',
 
+  data() {
+    return {
+      preloader: false,
+      preloaderType: ''
+    }
+  },
+
   components: {
-    MainMenu, Login
+    MainMenu, Login, AudioEditor
     // , CanvasAbsolute
   },
 
   computed: {
-      ...mapGetters(['isLoggedIn', 'currentCollectionId']),
+    showAudioeditor: {
+      get() {
+        return this.$refs.audioEditor && !this.$refs.audioEditor.isEmpty;
+      },
+      cache: false
+    },
+    audioeditorMode: {
+      get() {
+        return '-mode-' + (this.$refs.audioEditor ? this.$refs.audioEditor.mode : '');
+      },
+      cache: false
+    },
+    ...mapGetters(['isLoggedIn', 'currentCollectionId', 'currentBookMeta']),
   },
 
   watch: {
@@ -54,16 +79,32 @@ export default {
   },
 
   created () {
-    window.addEventListener('beforeunload', this.stopWatchLiveQueries)
+    window.addEventListener('beforeunload', this.stopWatchLiveQueries);
     let mode = this.$route.meta && this.$route.meta.mode ? this.$route.meta.mode : null;
     if (this.$route.name === 'BookEditDisplay') {
       mode = 'display';
     }
     this.$store.commit('set_book_mode', mode);
+    this.$root.$on('preloader-toggle', this.onPreloaderToggle);
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary']),
+    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary', 'tc_loadBookTask']),
+    onPreloaderToggle(state, type) {
+      if (state) {
+        this.preloader = true;
+        this.preloaderType = type;
+        if (type == 'align') {
+          //this.tc_loadBookTask(this.currentBookMeta.bookid);
+        }
+      } else {
+        if (this.preloaderType == 'save') {
+          this.tc_loadBookTask(this.currentBookMeta.bookid);
+        }
+        this.preloader = false;
+        this.preloaderType = '';
+      }
+    },
     //doesn't work from store in case with beforeDestroy
     stopWatchLiveQueries(){
       this.$store.state.liveDB.stopWatch('metaV');
@@ -73,7 +114,8 @@ export default {
     },
   },
   beforeDestroy () {
-    window.removeEventListener('beforeunload', this.stopWatchLiveQueries)
+    window.removeEventListener('beforeunload', this.stopWatchLiveQueries);
+    this.$root.$off('preloader-toggle', this.onPreloaderToggle);
   }
 }
 </script>
@@ -86,19 +128,32 @@ export default {
   #app {
     display:flex;
     flex-direction: column;
+
+    .fixed-bottom {
+      position: relative;
+      overflow-y: auto;
+      border: 1px solid black;
+      border-radius: 0px;
+      width: 100%;
+      min-height: 218px;
+      height: auto;
+      margin-bottom: 0px;
+      z-index: 990;
+      &.-mode-file {
+          min-height: 183px;
+      }
+    }
   }
 
   .area-wrapper {
     flex-grow: 2;
-
-/*    display:flex;
-    flex-direction: row;*/
     overflow-y:auto;
 
     padding-top: 0px;
 
     margin-bottom: 0px;
     padding-bottom: 0px;
+
   }
 
 

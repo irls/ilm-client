@@ -25,6 +25,10 @@
             <div class="table-row-flex controls-top" v-if="mode !== 'narrate'">
               <div class="par-ctrl">
                 <span v-if="parnumComp.length && isSplittedBlock" class="sub-parnum">{{parnumComp}}</span>
+                <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
+                  <div></div>
+                  <div class="message-text">{{uncompressedAudioMessage}}</div>
+                </div>
               </div>
               <div class="par-ctrl -audio -hidden" data-audio-controls v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
@@ -52,7 +56,16 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-
+            <template v-if="editingLocked && mode === 'narrate' && blockPartIdx === 0">
+              <div class="-hidden-subblock editing-locked-narrate">
+                <div></div>
+                <label class="blocked-editing">{{editingLockedReason}}</label>
+              </div>
+            </template>
+            <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig && mode === 'narrate'">
+              <div></div>
+              <div class="message-text">{{uncompressedAudioMessage}}</div>
+            </div>
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
@@ -128,7 +141,7 @@
                     'hide-archive': isHideArchFlags
                   },
                     'part-' + blockPartIdx]"
-                  :data-audiosrc="blockAudio.src"
+                  :data-audiosrc="modeAudiosrc"
                   @click="onClick($event)"
                   @selectionchange.prevent="onSelect"
                   @input="onInput"
@@ -254,28 +267,49 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
-                    <li @click="addFootnote" class="icon-menu-item">
-                      <i class="fa fa-asterisk icon-menu -add-footnote"></i>Add footnote
-                    </li>
-                    <li class="separator"></li>
-                  </template>
-                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
-                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
-                  <template v-if="!range.collapsed && blockAudio.src">
-                    <li class="separator"></li>
-                    <li @click.stop="audPlayFromSelection()">Play from here</li>
-                    <li @click.stop="audPlaySelection()">Play selection</li>
-                  </template>
                   <template v-if="isSplitPointAllowed()">
                     <li class="separator"></li>
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
                       <i class="icon-menu -split-to-sub"></i>Split for narration
                     </li>
-                    <li class="separator"></li>
                     <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
                       <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
                     </li>
+                  </template>
+                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
+                    <li class="separator"></li>
+                    <li @click="addFootnote" class="icon-menu-item">
+                      <i class="fa fa-asterisk icon-menu -add-footnote"></i>Add footnote
+                    </li>
+                    <li class="separator"></li>
+                  </template>
+                  <template v-if="!range.collapsed">
+                    <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')" class="icon-menu-item">
+                      <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Editing
+                    </li>
+                    <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')" class="icon-menu-item">
+                      <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Narration
+                    </li>
+                  </template>
+                  <template v-if="range.collapsed && blockAudio.src">
+                    <li class="separator"></li>
+                    <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
+                      <i class="icon-menu -listen-compressed"></i>Listen compressed
+                    </li>
+                    <li class="icon-menu-item" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
+                      <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
+                    </li>
+                  </template>
+                  <template v-if="blockAudio.src">
+                    <li class="separator"></li>
+                    <li @click.stop="audPlayFromSelection()" class="icon-menu-item">
+                      <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
+                    </li>
+                    <template v-if="!range.collapsed">
+                      <li @click.stop="audPlaySelection()" class="icon-menu-item">
+                        <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
+                      </li>
+                    </template>
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -426,7 +460,7 @@ export default {
       //'modal': modal,
       'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -827,7 +861,8 @@ export default {
           checkRunningAudioTask: 'checkRunningAudioTask',
           isBlockOrPartLocked: 'isBlockOrPartLocked',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
-          storeListById: 'storeListById'
+          storeListById: 'storeListById',
+          blockAudiosrcConfig: 'blockAudiosrcConfig'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -958,6 +993,48 @@ export default {
       splitIntoBlocksAllowed: {
         get() {
           return this.mode !== 'narrate';
+        },
+        cache: false
+      },
+      modeAudiosrc: {
+        get() {
+          return this.block.getModeAudiosrc(this.blockPartIdx, this.mode, this.blockAudiosrcConfig);
+        },
+        cache: false
+      },
+      isUncompressedAudioSet: {
+        get() {
+          return this.block.getModeAudiosrcVer(this.blockPartIdx, this.mode, this.blockAudiosrcConfig) === 'flac';
+        },
+        cache: false
+      },
+      isCompressedAudioSet: {
+        get() {
+          return this.block.getModeAudiosrcVer(this.blockPartIdx, this.mode, this.blockAudiosrcConfig) === 'm4a';
+        },
+        cache: false
+      },
+      isDefaultAudioConfig: {
+        get() {
+          if (!this.block.audiosrc_config[this.blockPartIdx] || !this.block.audiosrc_config[this.blockPartIdx][this.mode]) {
+            return true;
+          }
+          if (this.blockAudiosrcConfig[this.mode] && this.block.audiosrc_config[this.blockPartIdx][this.mode] === this.blockAudiosrcConfig[this.mode]) {
+            return true;
+          }
+          return false;
+        },
+        cache: false
+      },
+      uncompressedAudioMessage: {
+        get() {
+          let label = this.block.getModeAudiosrcVer(this.blockPartIdx, this.mode, this.blockAudiosrcConfig);
+          if (label === 'flac') {
+            return 'Uncompressed audio';
+          } else if (label === 'm4a') {
+            return 'Compressed audio';
+          }
+          return '';
         },
         cache: false
       }
@@ -2544,6 +2621,7 @@ export default {
         }
         return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
           .then(() => {
+            this.resetListenCompressed();
             this.isUpdating = false;
           })
           .catch(err => {
@@ -2772,7 +2850,6 @@ export default {
                   });
                 });
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
@@ -3878,6 +3955,31 @@ Join subblocks?`,
           ],
           class: ['align-modal']
         });
+      },
+      setListenCompressed() {
+        this.block.setAudiosrcConfig(this.blockPartIdx, this.mode, 'm4a', this.blockAudiosrcConfig);
+        this.resetAudiosrc();
+        this.$forceUpdate();
+      },
+      setListenUncompressed() {
+        this.block.setAudiosrcConfig(this.blockPartIdx, this.mode, 'flac', this.blockAudiosrcConfig);
+        this.resetAudiosrc();
+        this.$forceUpdate();
+      },
+      resetListenCompressed() {
+        this.block.setAudiosrcConfig(this.blockPartIdx, this.mode, this.blockAudiosrcConfig[this.mode], this.blockAudiosrcConfig);
+      },
+      resetAudiosrc() {
+        if (this.isAudStarted || this.isAudPaused) {
+          let replay = this.isAudStarted && !this.isAudPaused;
+          if (replay) {
+            this.audPause();
+          }
+          this.player.setAudiosrc(this.modeAudiosrc);
+          if (replay) {
+            this.audResume();
+          }
+        }
       }
 
   },
@@ -4122,7 +4224,9 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-
+.-split-to-par, .-split-to-sub{
+  font-size: 16px;
+}
    .-content-block {
       .-mode-narrate & {
          padding-inline-end: 185px;
@@ -4177,10 +4281,62 @@ Join subblocks?`,
           -o-transform: rotate(90deg);
           transform: rotate(90deg);
         }
+        &.-listen-compressed {
+          background: url(/static/listen-compressed.png);
+          background-size: 15px;
+        }
+        &.-listen-uncompressed {
+          background: url(/static/listen-uncompressed.png);
+          background-size: 15px;
+        }
+        &.-add-flag {
+          background-color: transparent;
+          margin: 0px 6px 0px -2px;
+        }
+        &.-play-from {
+          background-color: transparent;
+          margin: 0px 4px 4px 0px;
+        }
      }
     }
    .toolbar-container {
      display: none;
    }
+   .uncompressed-audio-message {
+      font-size: 14px;
+      padding: 0px 0px 0px 10px;
+      color: gray;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .-mode-narrate {
+      .uncompressed-audio-message {
+        position: absolute;
+        top: 4px;
+        display: table-row;
+        position: inherit;
+        &>div {
+          display: table-cell;
+          padding: 0px 0px 0px 3px;
+        }
+      }
+    }
+    .editing-locked-narrate {
+      display: table-row;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      div {
+        display: table-cell;
+      }
+      .blocked-editing {
+        padding: 0px 0px 0px 3px;
+        font-weight: normal;
+      }
+    }
+    /* .meta-visible {
+      .-mode-narrate {
+        .uncompressed-audio-message {
+          display: table-cell;
+        }
+      }
+    } */
 
 </style>

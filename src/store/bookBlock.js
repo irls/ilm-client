@@ -363,6 +363,7 @@ class BookBlock {
       this.classes.level = 'h1';
     }
     this.disabled = init.disabled || false;
+    this.audiosrc_config = init.audiosrc_config || {};
   }
 
   clean() {
@@ -1253,18 +1254,51 @@ class BookBlock {
   }
 
   cleanFindMarks() {
-    this.content = this.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
-    this.description = this.description.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+    this.content = this.content.replace(/data-in-search/g, '');
+    this.description = this.description.replace(/data-in-search/g, '');
     if (this.parts && this.parts.length) {
       for (let part of this.parts) {
-        part.content = part.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+        part.content = part.content.replace(/data-in-search/g, '');
       }
     }
     if (this.footnotes && this.footnotes.length) {
       for (let footnote of this.footnotes) {
-        footnote.content = footnote.content.replace(/data-in-search/g, '').replace(/\s\s+/g, ' ');
+        footnote.content = footnote.content.replace(/data-in-search/g, '');
       }
     }
+  }
+  
+  getModeAudiosrc(partIdx, mode, config = {}) {
+    return this.getPartAudiosrc(partIdx, this.getModeAudiosrcVer(partIdx, mode, config));
+  }
+  
+  getModeAudiosrcVer(partIdx, mode, config = {}) {
+    
+    let ver = '';
+    if (this.audiosrc_config && this.audiosrc_config[partIdx] && this.audiosrc_config[partIdx][mode]) {
+      ver = this.audiosrc_config[partIdx][mode];
+    } else if (config && config[mode]) {
+      ver = config[mode];
+    }
+    
+    return ver;
+  }
+  
+  setAudiosrcConfig(partIdx, mode, value, config = {}) {
+    if (!this.audiosrc_config[partIdx]) {
+      this.audiosrc_config[partIdx] = {};
+    }
+    if (config && config[mode] && config[mode] === value) {
+      if (this.audiosrc_config[partIdx][mode]) {
+        delete this.audiosrc_config[partIdx][mode];
+      }
+    } else {
+      this.audiosrc_config[partIdx][mode] = value;
+    }
+  }
+  
+  resetAudiosrcConfig() {
+    this.audiosrc_config = {};
   }
 }
 

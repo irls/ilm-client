@@ -648,6 +648,9 @@ export default {
           res.checked = oldBlock.checked;
         }
         let block = new BookBlock(res);
+        if (oldBlock && oldBlock.audiosrc_config) {// stored only locally
+          block.audiosrc_config = oldBlock.audiosrc_config;
+        }
         if (Array.isArray(block.parts) && Array.isArray(oldBlock.parts) && block.parts.length === oldBlock.parts.length) {
           oldBlock.parts.forEach((p, pIdx) => {
             block.parts[pIdx].inid = p.inid;
@@ -2156,7 +2159,6 @@ export default {
             this.clearAudioTasks(false);
             return resolve();
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           //this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
@@ -2275,10 +2277,12 @@ export default {
             return sEl.trim().length > 0;
           })
           let filterSearchArr = prepareForFilter(bookSearch.string, false)
-          //console.log(`parserSearchArr: `, parserSearchArr);
+          console.log(`parserSearchArr: `, parserSearchArr);
           //console.log(`filterSearchArr: `, filterSearchArr);
 
+          //let stop = 3;
           for (let blockId of this.parlistO.idsArray()) {
+            //if (stop-- == 0) break;
             const block = this.parlist.get(blockId);
             const result = block.findInText({
               parserSearchArr,
@@ -2655,22 +2659,7 @@ export default {
   .infinite-status-prompt {
     margin-bottom: 175px;
   }
-  .fixed-bottom {
-    /*display: none;*/
-    position: fixed;
-    /*margin-left: -10px;*/
-    width: 99%;
-    bottom: 0px;
-    border: 1px solid black;
-    border-radius: 0px;
-    min-height: 205px;
-    height: auto;
-    margin-bottom: 0px;
-    z-index: 990;
-    &.-mode-file {
-        min-height: 183px;
-    }
-  }
+
   a.go-to-block {
     cursor: pointer;
   }

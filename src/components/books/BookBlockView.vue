@@ -42,9 +42,9 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
+              <div :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
                 <!--<i class="fa fa-hashtag"></i>-->
-                <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
+                <label ref="parnumRef" v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
               <div :class="['par-ctrl -hidden', {'-additional-info': editingLocked}]">
                 <div class="block-menu" v-if="mode !== 'narrate'">
@@ -195,7 +195,7 @@
                 <template v-else >
 
                 </template>
-                <template v-if="editingLocked">
+                <template v-if="editingLocked && mode !== 'narrate'">
                   <div class="par-ctrl-divider"></div>
                   <label class="blocked-editing">{{editingLockedReason}}</label>
                 </template>
@@ -221,6 +221,21 @@
               </div> -->
               <!--<div class="par-ctrl -hidden">-->
             </div>
+            <!-- <template v-if="mode === 'narrate' && editingLocked">
+              <div class="table-body">
+                <div class="table-cell"></div>
+                <div class="table-cell">
+                  <div class="table-body">
+                    <div class="table-row">
+                      <div class="table-cell controls-left audio-controls"></div>
+                      <div class="table-cell">
+                        <label class="blocked-editing">{{editingLockedReason}}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template> -->
             <!--<div class="table-row-flex controls-top">-->
 
             <!-- <div style="" class="preloader-container">
@@ -267,6 +282,7 @@
               :splitPointRemoved="splitPointRemoved"
               :checkVisible="checkVisible"
               :checkFullyVisible="checkFullyVisible"
+              :editingLockedReason="editingLockedReason"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -1440,6 +1456,9 @@ export default {
       if (this.FtnAudio.isStarted || this.FtnAudio.isPaused) {
         this.FtnAudio.audStop();
       }
+    }
+    if (this.$route && this.$route.meta && !this.$route.meta.mode) {// out of book edit
+      this.resetListenCompressed();
     }
   },
   destroyed: function () {
@@ -3229,6 +3248,7 @@ Save text changes and realign the Block?`,
       recordTimer() {
         let self = this;
         return new BPromise(function(resolve, reject) {
+          $('.recordStartCounterDep').hide();
           self.recordStartCounter = 3;
           $('#narrateStartCountdown strong').html(self.recordStartCounter);
           $('body').addClass('modal-open');
@@ -3239,6 +3259,8 @@ Save text changes and realign the Block?`,
               clearTimeout(timer)
               $('body').removeClass('modal-open');
               $('#narrateStartCountdown').hide();
+              $('.recordStartCounterDep').show();
+
               resolve()
             } else {
               //console.log(self.recordStartCounter);
@@ -3586,7 +3608,6 @@ Save text changes and realign the Block?`,
 
         //this.$root.$emit('for-audioeditor:load-and-play', this.block.getAudiosrcFootnote(ftnIdx, 'm4a', true), this.FtnAudio.map, `${this.block._id}_${ftnIdx}`);
 
-        //$('nav.fixed-bottom').removeClass('hidden');
         this.audioEditFootnote.footnote = footnote;
         this.showAudioEditor(ftnIdx, footnote);
       },
@@ -3619,7 +3640,6 @@ Save text changes and realign the Block?`,
           if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
@@ -4511,6 +4531,10 @@ Save text changes and realign the Block?`,
             }
           }
         }
+      },
+      
+      resetListenCompressed() {
+        this.block.resetAudiosrcConfig();
       }
   },
   watch: {
@@ -5418,14 +5442,27 @@ Save text changes and realign the Block?`,
 
         }
         &.-additional-info {
-          width: 840px;
+          width: 825px;
         }
       }
     }
 }
 .-mode-narrate {
   .-additional-info {
-    width: 50% !important;
+    /* width: 50% !important; */
+    width: 783px !important;
+    .blocked-editing {
+      margin-left: -82px;
+    }
+  }
+}
+.meta-visible {
+  .-mode-narrate {
+    .-additional-info {
+      .blocked-editing {
+        margin-left: -14px;
+      }
+    }
   }
 }
 

@@ -829,10 +829,6 @@
           });
           return;
         }
-        let api_url = this.API_URL + 'books/' + this.audiobook.bookid + '/selection_alignment';
-        let formData = new FormData();
-        let api = this.$store.state.auth.getHttp()
-        let self = this;
         //this.alignmentProcess = true;
         let realign = this.currentJobInfo.mastering;
         let update = this.saveAudiobook()
@@ -841,35 +837,21 @@
         Promise.all([update])
           .then((updated) => {
             this.$root.$emit('start-align');
-            api.post(api_url, {
+            return this.alignBook({
               start: this.blockSelection.start._id,
               end: this.blockSelection.end._id,
               audiofiles: id ? [id] : this.selections,
               realign: realign,
               positions: this.positions_tmp
-            }, {
-              validateStatus: function (status) {
-                return status == 200 || status == 504;
-              }
-            }).then(function(response){
-              self.getBookAlign();
-              self.$root.$emit('stop-align');
+            })
+            .then((response) => {
+              this.$root.$emit('stop-align');
               if (response.status===200) {
                 //self.$root.$emit('bookBlocksUpdates', response.data);
-                self.$emit('alignmentFinished');
-                self.aligningBlocks = [];
+                this.$emit('alignmentFinished');
+                this.aligningBlocks = [];
               } else if (response.status == 504) {
                 //self.checkAligningBlocks();
-              }
-              self.setCurrentBookCounters();
-            }).catch((err) => {
-              self.getBookAlign();
-              self.$root.$emit('stop-align');
-              console.log('error: '+ err);
-              if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-                //self.checkAligningBlocks();
-              } else {
-                //self.aligningBlocks = [];
               }
             });
           });
@@ -1287,7 +1269,8 @@
         return _.upperFirst(text);
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
+      ...mapActions('alignActions', ['alignBook'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
