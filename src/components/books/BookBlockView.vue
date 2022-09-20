@@ -4162,7 +4162,8 @@ Save text changes and realign the Block?`,
       },
       spotCheck: function() {
         let length = 3;
-        if (this.player && this.player.audio_element) {
+        let playerContainer = this.$refs.blocks && this.$refs.blocks[0] ? this.$refs.blocks[0] : null;
+        if (playerContainer && playerContainer.player && playerContainer.player.audio_element) {
           let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
           let blockOffset =this.$refs.viewBlock.offsetTop;
           if (menuHeight > blockOffset) {
@@ -4178,28 +4179,29 @@ Save text changes and realign the Block?`,
           let map = w.dataset.map.split(',');
           map[0] = parseInt(map[0]);
           map[1] = parseInt(map[1]);
+          playerContainer.isAudPartStarted = true;
           if (map[0] + map[1] < (2 * length + 1) * 1000) {
-            this.player.playBlock('content-' + this.block._id + '-part-0');
+            playerContainer.player.playBlock('content-' + this.block._id + '-part-0');
           } else {
             //this.player.audio_element.onended = () => {
               //console.log('ENDED')
             //};
 
-            this.player.audio_element.onpause = () => {
+            playerContainer.player.audio_element.onpause = () => {
               //console.log('PAUSE')
               let delay = 1000;
-              if (this.player.load_delay) {
-                delay+=this.player.load_delay;
+              if (playerContainer.player.load_delay) {
+                delay+=playerContainer.player.load_delay;
               }
               this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
               setTimeout(() => {
-                this.player.playRange(`content-${this.block._id}-part-0`, map[0] + map[1] - length * 1000, map[0] + map[1]);
+                playerContainer.player.playRange(`content-${this.block._id}-part-0`, map[0] + map[1] - length * 1000, map[0] + map[1]);
               }, delay);
 
               //console.log(this.player);
-              this.player.audio_element.onpause = null;
+              playerContainer.player.audio_element.onpause = null;
             };
-            this.player.playRange(`content-${this.block._id}-part-0`, 0, length * 1000);
+            playerContainer.player.playRange(`content-${this.block._id}-part-0`, 0, length * 1000);
           }
 
         }
