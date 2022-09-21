@@ -15,6 +15,7 @@ import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
 import setBlocksDisabled from './modules/setBlocksDisabled';
 import userActions from './modules/user';
+import alignActions from './modules/align';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -73,7 +74,8 @@ export const store = new Vuex.Store({
     uploadImage,
     testAudioConvert,
     setBlocksDisabled,
-    userActions
+    userActions,
+    alignActions
   },
   state: {
     SelectionModalProgress:0,
@@ -259,7 +261,10 @@ export const store = new Vuex.Store({
       'metaV':null
     },
     suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
-    setSelectedBlocksAsyncResult : []
+    setSelectedBlocksAsyncResult : [],
+    blockAudiosrcConfig: {
+      
+    }
   },
 
   getters: {
@@ -609,6 +614,9 @@ export const store = new Vuex.Store({
     },
     suspiciousWordsHighlight: state => {
       return state.suspiciousWordsHighlight;
+    },
+    blockAudiosrcConfig: state => {
+      return state.blockAudiosrcConfig;
     }
   },
 
@@ -1333,6 +1341,9 @@ export const store = new Vuex.Store({
         }
       } else if (data.action === 'change' && data.block) {
         if (blockStore) {
+          if (blockStore.audiosrc_config) {// stored only locally
+            data.block.audiosrc_config = blockStore.audiosrc_config;
+          }
           /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
             return p.isChanged;
           }) : false;*/
@@ -1341,7 +1352,7 @@ export const store = new Vuex.Store({
             return;
           }
           let changes = [];// collect changes
-          ['classes', 'pause_before']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+          ['classes', 'pause_after']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
             if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
               changes.push(k);
             }
@@ -1388,6 +1399,10 @@ export const store = new Vuex.Store({
 
     set_user(state, user) {
       state.user = user;
+    },
+    
+    set_blockAudiosrcConfig(state, audiosrc_config) {
+      state.blockAudiosrcConfig = audiosrc_config;
     }
   },
 
@@ -1658,6 +1673,7 @@ export const store = new Vuex.Store({
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
               commit('set_couplet_separator', config.couplet_separator);
+              commit('set_blockAudiosrcConfig', config.block_audiosrc_config);
             })
           dispatch('getBookCategories');
           dispatch('getCollections');
@@ -2475,6 +2491,7 @@ export const store = new Vuex.Store({
               oldBlock.type = response.data.type;
               oldBlock.language = response.data.language;
               oldBlock.classes = response.data.classes;
+              response.data.audiosrc_config = oldBlock.audiosrc_config;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();
 
@@ -2509,11 +2526,15 @@ export const store = new Vuex.Store({
       if (typeof block.content !== 'undefined') {
         update.block.content = block.content;
       }
+      let storeBlock = state.storeList.get(block.blockid);
       return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
           dispatch('getCurrentJobInfo');
+          if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
+            response.data.audiosrc_config = storeBlock.audiosrc_config;
+          }
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -2560,6 +2581,9 @@ export const store = new Vuex.Store({
         .then((response) => {
 
           let storeBlock = state.storeList.get(response.data.blockid);
+          if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
+            response.data.audiosrc_config = storeBlock.audiosrc_config;
+          }
           if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
             /*response.data.parts.forEach((p, pIdx) => {
               if (pIdx < blockIdx || pIdx > blockIdx + isSplitting) {
@@ -2667,6 +2691,7 @@ export const store = new Vuex.Store({
         url+= '?realign=true';
       }
       let currentBlockO = state.storeListO.get(cleanBlock.blockid);
+      let currentBlock = state.storeList.get(cleanBlock.blockid);
       return axios.put(url,
         {
           'block': cleanBlock,
@@ -2682,6 +2707,9 @@ export const store = new Vuex.Store({
             state.storeListO.updBlockByRid(response.data.id, {
               status: response.data.status
             });
+            if (currentBlock.audiosrc_config) {// stored only locally
+              response.data.audiosrc_config = currentBlock.audiosrc_config;
+            }
             if (!keep_block) {
               commit('set_storeList', new BookBlock(response.data));
             }
@@ -3408,6 +3436,9 @@ export const store = new Vuex.Store({
                           if (state.bookMode === 'edit') {
                             block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
                           }
+                          if (blockStore.audiosrc_config) {
+                            block.audiosrc_config = blockStore.audiosrc_config;
+                          }
                           store.commit('set_storeList', new BookBlock(block));
                           dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
                           return Promise.resolve();
@@ -4065,6 +4096,9 @@ export const store = new Vuex.Store({
       return axios.put(state.API_URL + url, update)
         .then((response) => {
           let storeBlock = state.storeList.get(response.data.blockid);
+          if (storeBlock.audiosrc_config) {// stored only locally
+            response.data.audiosrc_config = storeBlock.audiosrc_config;
+          }
           if (isSplitting && storeBlock.parts.length !== response.data.parts.length) {
             /*response.data.parts.forEach((p, pIdx) => {
               if (pIdx < blockIdx || pIdx > blockIdx + isSplitting) {
@@ -4666,9 +4700,9 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    setPauseBefore({state}, [blockType, value]) {
+    setPauseAfter({state}, [blockType, value]) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
-        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_before`, {
+        return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_after`, {
           range: {start_id: state.blockSelection.start._id,
           end_id: state.blockSelection.end._id},
           block_type: blockType,
@@ -4681,7 +4715,7 @@ export const store = new Vuex.Store({
                 let block = state.storeList.get(b.blockid);
                 if (block) {
                   block.setUpdated(b.updated);
-                  block.setPauseBefore(b.pause_before);
+                  block.setPauseAfter(b.pause_after);
                   block.status.marked = b.status.marked;
                 }
               });
@@ -5187,7 +5221,7 @@ export const store = new Vuex.Store({
             let hasPart = block.voicework === 'narration' && block.parts.length > 0 ? block.parts.find(p => {
               return p.audiosrc;
             }) : false;
-            if ((block.audiosrc || hasPart) && !block.disabled) {
+            if ((block.audiosrc || hasPart || block.type === 'hr') && !block.disabled) {
               return Promise.resolve(block);
             }
             crossId = state.storeListO.getOutId(block.blockid);

@@ -4,7 +4,7 @@
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
-      
+
       <LockedBlockActions
         :lockedType="lockedType"
         :block="block"
@@ -25,11 +25,15 @@
             <div class="table-row-flex controls-top" v-if="mode !== 'narrate'">
               <div class="par-ctrl">
                 <span v-if="parnumComp.length && isSplittedBlock" class="sub-parnum">{{parnumComp}}</span>
+                <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig">
+                  <div></div>
+                  <div class="message-text">{{uncompressedAudioMessage}}</div>
+                </div>
               </div>
-              <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'"> <!---->
+              <div class="par-ctrl -audio -hidden" data-audio-controls v-if="mode !== 'narrate'"> <!---->
                 <template v-if="player && blockAudio.src && !isRecording">
                     <template v-if="!isAudStarted">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
+                      <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
@@ -52,17 +56,26 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-
+            <template v-if="editingLocked && mode === 'narrate' && blockPartIdx === 0">
+              <div class="-hidden-subblock editing-locked-narrate">
+                <div></div>
+                <label class="blocked-editing">{{editingLockedReason}}</label>
+              </div>
+            </template>
+            <div :class="['uncompressed-audio-message', '-part-' + blockPartIdx, {'-splitted': isSplittedBlock}]" v-if="!isDefaultAudioConfig && mode === 'narrate'">
+              <div></div>
+              <div class="message-text">{{uncompressedAudioMessage}}</div>
+            </div>
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
               <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
                 <div class="table-body">
-                  <div class="table-row">
+                  <div class="table-row" data-audio-controls >
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+                      <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()"></i>
                     </div>
                     <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording(true)"></i>
+                        <i class="fa fa-microphone" data-show-editor v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
                     </template>
                     <template v-if="player && blockAudio.src && !isRecording">
@@ -128,7 +141,7 @@
                     'hide-archive': isHideArchFlags
                   },
                     'part-' + blockPartIdx]"
-                  :data-audiosrc="blockAudio.src"
+                  :data-audiosrc="modeAudiosrc"
                   @click="onClick($event)"
                   @selectionchange.prevent="onSelect"
                   @input="onInput"
@@ -254,28 +267,49 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
-                    <li @click="addFootnote" class="icon-menu-item">
-                      <i class="fa fa-asterisk icon-menu -add-footnote"></i>Add footnote
-                    </li>
-                    <li class="separator"></li>
-                  </template>
-                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
-                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
-                  <template v-if="!range.collapsed && blockAudio.src">
-                    <li class="separator"></li>
-                    <li @click="audPlayFromSelection()">Play from here</li>
-                    <li @click="audPlaySelection()">Play selection</li>
-                  </template>
                   <template v-if="isSplitPointAllowed()">
                     <li class="separator"></li>
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
                       <i class="icon-menu -split-to-sub"></i>Split for narration
                     </li>
-                    <li class="separator"></li>
                     <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
                       <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
                     </li>
+                  </template>
+                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
+                    <li class="separator"></li>
+                    <li @click="addFootnote" class="icon-menu-item">
+                      <i class="fa fa-asterisk icon-menu -add-footnote"></i>Add footnote
+                    </li>
+                    <li class="separator"></li>
+                  </template>
+                  <template v-if="!range.collapsed">
+                    <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')" class="icon-menu-item">
+                      <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Editing
+                    </li>
+                    <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')" class="icon-menu-item">
+                      <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Narration
+                    </li>
+                  </template>
+                  <template v-if="range.collapsed && blockAudio.src">
+                    <li class="separator"></li>
+                    <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
+                      <i class="icon-menu -listen-compressed"></i>Listen compressed
+                    </li>
+                    <li class="icon-menu-item" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
+                      <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
+                    </li>
+                  </template>
+                  <template v-if="blockAudio.src">
+                    <li class="separator"></li>
+                    <li @click.stop="audPlayFromSelection()" class="icon-menu-item">
+                      <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
+                    </li>
+                    <template v-if="!range.collapsed">
+                      <li @click.stop="audPlaySelection()" class="icon-menu-item">
+                        <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play selection
+                      </li>
+                    </template>
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
@@ -426,7 +460,7 @@ export default {
       //'modal': modal,
       'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: {
@@ -827,7 +861,8 @@ export default {
           checkRunningAudioTask: 'checkRunningAudioTask',
           isBlockOrPartLocked: 'isBlockOrPartLocked',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
-          storeListById: 'storeListById'
+          storeListById: 'storeListById',
+          blockAudiosrcConfig: 'blockAudiosrcConfig'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -960,6 +995,51 @@ export default {
           return this.mode !== 'narrate';
         },
         cache: false
+      },
+      modeAudiosrc: {
+        get() {
+          return this.block.getModeAudiosrc(this.blockPartIdx, this.mode, this.blockAudiosrcConfig);
+        },
+        cache: false
+      },
+      isUncompressedAudioSet: {
+        get() {
+          return this.block.getModeAudiosrcVer(this.blockPartIdx, this.mode, this.blockAudiosrcConfig) === 'flac';
+        },
+        cache: false
+      },
+      isCompressedAudioSet: {
+        get() {
+          return this.block.getModeAudiosrcVer(this.blockPartIdx, this.mode, this.blockAudiosrcConfig) === 'm4a';
+        },
+        cache: false
+      },
+      isDefaultAudioConfig: {
+        get() {
+          if (['hr', 'illustration'].includes(this.block.type) || !this.blockPart.audiosrc) {
+            return true;
+          }
+          if (!this.block.audiosrc_config[this.blockPartIdx] || !this.block.audiosrc_config[this.blockPartIdx][this.mode]) {
+            return true;
+          }
+          if (this.blockAudiosrcConfig[this.mode] && this.block.audiosrc_config[this.blockPartIdx][this.mode] === this.blockAudiosrcConfig[this.mode]) {
+            return true;
+          }
+          return false;
+        },
+        cache: false
+      },
+      uncompressedAudioMessage: {
+        get() {
+          let label = this.block.getModeAudiosrcVer(this.blockPartIdx, this.mode, this.blockAudiosrcConfig);
+          if (label === 'flac') {
+            return 'Uncompressed audio';
+          } else if (label === 'm4a') {
+            return 'Compressed audio';
+          }
+          return '';
+        },
+        cache: false
       }
   },
   mounted: function() {
@@ -988,24 +1068,18 @@ export default {
         this.footnoteIdx = this.block.footnoteIdx;
         delete this.block.footnoteIdx;
       }
-      //console.log('mounted isChecked', this.blockO);
-      //this.isChecked = this.blockO.checked;
       //this.detectMissedFlags();
 
-      //console.log('mounted', this.block._id);
       this.destroyEditor();
       this.initEditor();
       this.addContentListeners();
+      document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
 
       this.$root.$on('block-state-refresh-' + this.block._id, this.forceReloadContent);
       this.$root.$on('prepare-alignment', this._saveContent);
       this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
       this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
 
-//       Vue.nextTick(() => {
-//
-//       });
-      //this.showPinnedInText();
       if (this.audioTasksQueue.block.blockId === this.block.blockid && (!this.isSplittedBlock || this.blockPartIdx === this.audioTasksQueue.block.partIdx)) {
         this.check_id = this.generateAudioCheckId();
         this.audioEditorEventsOn();// was scrolled out of visible, and scrolled back, with audio editor opened
@@ -1015,9 +1089,9 @@ export default {
       })
   },
   beforeDestroy: function () {
-//     console.log('beforeDestroy', this.block._id);
-//     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
+
+    document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
 
     this.$root.$off('block-state-refresh-' + this.block._id, this.forceReloadContent);
 
@@ -1056,15 +1130,16 @@ export default {
     this.$root.$off('playBlock');
 
     if(this.block) {
-
       this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-
     }
 
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
     this.$root.$off('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
+
+    document.body.removeEventListener('keydown', this.handleAudioControl);
+    document.body.removeEventListener('click', this.clickAwayFromAudioControl);
   },
   updated: function() {
     this.showPinnedInText();
@@ -1798,9 +1873,9 @@ export default {
         if (content === false) {
           content = this.$refs.blockContent.innerHTML;
         }
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
-        content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
+        content = content.replace(/(<w[^>]+)(selected)/g, '$1');//|suspicious-word
+        content = content.replace(/(<w[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<w[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -1892,6 +1967,8 @@ export default {
           this.isAudPartStarted = false;
           this.audCleanClasses(this.block.blockid, ev);
           this.player.playBlock('content-'+this.block.blockid+'-part-'+this.blockPartIdx);
+        } else {
+          this.$emit('partAudioComplete', this.blockPartIdx);
         }
       },
       audPlayFromSelection() {
@@ -1904,6 +1981,7 @@ export default {
             this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
           }
         }
+        this.$refs.blockCntx.close();
       },
       audPlaySelection() {
         if (this.player) {
@@ -1925,6 +2003,7 @@ export default {
           this.isAudPartStarted = true;
           this.$root.$emit('playBlock', this.block._id);
         }
+        this.$refs.blockCntx.close();
       },
       audPause: function(block_id, ev) {
         if (this.player) {
@@ -2342,6 +2421,15 @@ export default {
           this.flagsSel = this.block.flags.filter((flag)=>{
             return flag._id === flagId;
           })[0];
+          if (!this.flagsSel) {// ILM-5217, flags with wrong id
+            let parts = flagId.split(':');
+            if (Array.isArray(parts) && parts.length === 2) {
+              let idRegex = new RegExp(`\\:(${parts[1]})$`);
+              this.flagsSel = this.block.flags.find((flag) => {
+                return idRegex.test(flag._id);
+              });
+            }
+          }
           this.isHideArchParts = true;
           this.$refs.blockFlagPopup.open(ev, flagId);
           this.updateFlagStatus(flagId);
@@ -2390,6 +2478,15 @@ export default {
           if (node) node.dataset.flag = flagId;
         } else {
           node = this.$refs.blockContent.querySelector(`[data-flag="${flagId}"]`);
+          if (!node) {// ILM-5217, flags with wrong id
+            let parts = flagId.split(':');
+            if (Array.isArray(parts) && parts.length === 2) {
+              let idRegex = new RegExp(`\\:(${parts[1]})$`);
+              node = Array.from(this.$refs.blockContent.querySelectorAll(`[data-flag]`)).find(n => {
+                return n.dataset && n.dataset.flag && idRegex.test(n.dataset.flag);
+              });
+            }
+          }
         }
         if (node) node.dataset.status = this.block.calcFlagStatus(flagId);
       },
@@ -2547,6 +2644,7 @@ export default {
         }
         return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
           .then(() => {
+            this.resetListenCompressed();
             this.isUpdating = false;
           })
           .catch(err => {
@@ -2775,7 +2873,6 @@ export default {
                   });
                 });
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
@@ -3096,6 +3193,26 @@ export default {
             e.preventDefault();
           }
           //console.log(e);
+        }
+      },
+      clickAwayFromAudioControl(e){
+        const mouseOnContainer = e.target.closest('[data-audio-controls]');
+        if (!mouseOnContainer || e.target.hasAttribute('data-show-editor')) {
+          if (this.isAudStarted) {
+            if (!this.isAudPaused) {
+              this.audPause();
+            }
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
+          }
+        } else if (this.isAudStarted) {
+          document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
+          document.body.addEventListener('keydown', this.handleAudioControl);
+        }
+      },
+      preventChromeScrollBySpace(e){
+        if (e.keyCode === 32 && e.target === document.body) {
+          e.preventDefault();
         }
       },
       _saveContent() {
@@ -3661,7 +3778,7 @@ Please save or discard your changes before joining.`,
           });
         }
       },
-      
+
       splitIntoBlocks(ev) {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3684,7 +3801,7 @@ Please save or discard your changes before joining.`,
             });
         }
       },
-      
+
       splitIntoSubblocks(ev) {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3707,7 +3824,7 @@ Please save or discard your changes before joining.`,
             });
         }
       },
-      
+
       splitSubblock() {
         if (!this.splitUnsavedCheck()) {
           return false;
@@ -3722,7 +3839,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       mergeAllSubblocks(confirm = true) {
         let hasChanged = this.block.parts.find(p => {
           return p.isChanged;
@@ -3789,7 +3906,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       splitUnsavedCheck() {
         let hasChanges = this.isChanged || this.isAudioChanged;
         if (!hasChanges || this.block.getIsSplittedBlock()) {
@@ -3806,7 +3923,7 @@ Please save or discard your changes before joining.`,
         }
         return true;
       },
-      
+
       splitUnsavedWarning() {
         this.$root.$emit('show-modal', {
           title: 'Unsaved Changes',
@@ -3824,7 +3941,7 @@ Save or discard your changes before splitting`,
           class: ['align-modal']
         });
       },
-      
+
       closeAudioEditor() {
         let isAudioEditorOpened = this.isAudioEditing;
         if (!isAudioEditorOpened) {
@@ -3836,7 +3953,7 @@ Save or discard your changes before splitting`,
           this.$root.$emit('for-audioeditor:force-close');
         }
       },
-      
+
       joinAndRemoveAudioWarning(callback) {
         this.$root.$emit('show-modal', {
           title: 'Join subblocks',
@@ -3861,6 +3978,31 @@ Join subblocks?`,
           ],
           class: ['align-modal']
         });
+      },
+      setListenCompressed() {
+        this.block.setAudiosrcConfig(this.blockPartIdx, this.mode, 'm4a', this.blockAudiosrcConfig);
+        this.resetAudiosrc();
+        this.$forceUpdate();
+      },
+      setListenUncompressed() {
+        this.block.setAudiosrcConfig(this.blockPartIdx, this.mode, 'flac', this.blockAudiosrcConfig);
+        this.resetAudiosrc();
+        this.$forceUpdate();
+      },
+      resetListenCompressed() {
+        this.block.setAudiosrcConfig(this.blockPartIdx, this.mode, this.blockAudiosrcConfig[this.mode], this.blockAudiosrcConfig);
+      },
+      resetAudiosrc() {
+        if (this.isAudStarted || this.isAudPaused) {
+          let replay = this.isAudStarted && !this.isAudPaused;
+          if (replay) {
+            this.audPause();
+          }
+          this.player.setAudiosrc(this.modeAudiosrc);
+          if (replay) {
+            this.audResume();
+          }
+        }
       }
 
   },
@@ -4026,9 +4168,14 @@ Join subblocks?`,
       },
       'isAudStarted': {
         handler(val) {
+          //console.log(`isAudStarted: `, this.block.blockid, val);
           document.body.removeEventListener('keydown', this.handleAudioControl);
+          document.body.addEventListener('keydown', this.preventChromeScrollBySpace);
+          document.body.removeEventListener('click', this.clickAwayFromAudioControl);
           if (val === true) {
+            document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
             document.body.addEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('click', this.clickAwayFromAudioControl);
           }
         }
       },
@@ -4100,7 +4247,9 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-
+.-split-to-par, .-split-to-sub{
+  font-size: 16px;
+}
    .-content-block {
       .-mode-narrate & {
          padding-inline-end: 185px;
@@ -4155,10 +4304,62 @@ Join subblocks?`,
           -o-transform: rotate(90deg);
           transform: rotate(90deg);
         }
+        &.-listen-compressed {
+          background: url(/static/listen-compressed.png);
+          background-size: 15px;
+        }
+        &.-listen-uncompressed {
+          background: url(/static/listen-uncompressed.png);
+          background-size: 15px;
+        }
+        &.-add-flag {
+          background-color: transparent;
+          margin: 0px 6px 0px -2px;
+        }
+        &.-play-from {
+          background-color: transparent;
+          margin: 0px 4px 4px 0px;
+        }
      }
     }
    .toolbar-container {
      display: none;
    }
+   .uncompressed-audio-message {
+      font-size: 14px;
+      padding: 0px 0px 0px 10px;
+      color: gray;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    .-mode-narrate {
+      .uncompressed-audio-message {
+        position: absolute;
+        top: 4px;
+        display: table-row;
+        position: inherit;
+        &>div {
+          display: table-cell;
+          padding: 0px 0px 0px 3px;
+        }
+      }
+    }
+    .editing-locked-narrate {
+      display: table-row;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      div {
+        display: table-cell;
+      }
+      .blocked-editing {
+        padding: 0px 0px 0px 3px;
+        font-weight: normal;
+      }
+    }
+    /* .meta-visible {
+      .-mode-narrate {
+        .uncompressed-audio-message {
+          display: table-cell;
+        }
+      }
+    } */
 
 </style>

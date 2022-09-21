@@ -9,7 +9,7 @@
 
     <div slot="modal-body" class="modal-body">
       <div class="form-group">
-        <label style="font-weight: 500 bold; font-size: 30px;color: rgb(51,51,51);">Setting range... {{SelectionModalProgress}}%</label> <i style="margin-left: 20px; color:rgb(192,192,192)" class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
+        <label style="font-weight: 500 bold; font-size: 30px;color: rgb(51,51,51);">Selecting range... {{SelectionModalProgress}}%</label> <i style="margin-left: 20px; color:rgb(192,192,192)" class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i>
       </div>
 <!--      <div class="form-group">-->
 <!--        <label>Speed {{SelectionModalProgressIterations}}</label>-->

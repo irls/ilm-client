@@ -504,8 +504,8 @@
                   </fieldset>
                   <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them</i>
                   <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
-                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
-                    <legend>Pause before block (sec.)</legend>
+                  <fieldset v-if="pausesAfterProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
+                    <legend>Pause after block (sec.)</legend>
                     <!-- <block-style-labels
                       :blockType="blockType"
                       :styleArr="['none', '0.6', '1', '2', '4']"
@@ -514,12 +514,12 @@
                       :styleValue="styleValue"
                       @selectStyleEv="selectPauseBefore"
                     ></block-style-labels> -->
-                    <pause-before-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
-                      v-bind:key="blockType + 'pause_before_container'"
+                    <pause-after-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
+                      v-bind:key="blockType + 'pause_after_container'"
                       :blockType="blockType"
                       :styleValue="styleValue"
-                      :styleProps="pausesBeforeProps"
-                      @setPauseBefore="selectPauseBefore"></pause-before-block>
+                      :styleProps="pausesAfterProps"
+                      @setPauseAfter="selectPauseAfter"></pause-after-block>
                   </fieldset>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
@@ -543,27 +543,6 @@
                 </vue-tab>
 
               </vue-tabs>
-              <!-- <vue-tabs ref="blockTypesTabsNarration" class="block-style-tabs-narrate" @tab-change="styleTabChange" v-else>
-
-                <vue-tab :title="blockType"
-                  :disabled="!displayStyleTab(blockType)"
-                  v-for="(val, blockType) in blockTypesByMode"
-                  :id="'block-type-'+blockType" :key="blockType">
-                  <i>Please keep defaults unless you have a compelling reason to change them {{blockType}}</i>
-                  <fieldset v-if="pausesBeforeProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
-                    <legend>Pause before block (sec.)</legend>
-                    NARRATE
-                    <pause-before-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
-                      v-bind:key="blockType + 'pause_before_container'"
-                      :blockType="blockType"
-                      :styleValue="styleValue"
-                      :styleProps="pausesBeforeProps"
-                      @setPauseBefore="selectPauseBefore"></pause-before-block>
-                  </fieldset>
-
-                </vue-tab>
-
-              </vue-tabs> -->
 
             </div>
         </vue-tab>
@@ -630,7 +609,7 @@ import BookPublish from './details/BookPublish';
 import SplitPreview from './details/SplitPreview';
 import BlockStyleLabels from './details/BlockStyleLabels';
 import CompleteAudioExport from './details/CompleteAudioExport';
-import PauseBeforeBlock from './details/PauseBeforeBlock';
+import PauseAfterBlock from './details/PauseAfterBlock';
 import VTagSuggestion from './details/HashTag';
 import ResizableTextarea from '../generic/ResizableTextarea';
 
@@ -659,7 +638,7 @@ export default {
     SplitPreview,
     BlockStyleLabels,
     CompleteAudioExport,
-    PauseBeforeBlock,
+    PauseAfterBlock,
     VTagSuggestion,
     'resizable-textarea': ResizableTextarea
 
@@ -746,7 +725,7 @@ export default {
        'tradition': 'حدیث',
        'husayn':   'حسین'
       },
-      pausesBeforeProps: new Map(),
+      pausesAfterProps: new Map(),
       STYLE_TABS: {
         0: 'book',
         1: 'title',
@@ -1663,7 +1642,7 @@ export default {
       let result = new Map();
       let nums = new Map();
       let lang = 'en'; // for transfer to block styles panel;
-      let pausesBefore = new Map();
+      let pausesAfter = new Map();
 
       //console.log('collectCheckedStyles', startId, endId);
 
@@ -1754,9 +1733,9 @@ export default {
                 }
               }
               if (this.bookMode !== 'narrate' || pBlock.allowNarrate(this.bookMode)) {
-                if (!pausesBefore.has(oBlock.type)) {
-                  pausesBefore.set(oBlock.type, new Map());
-                  pausesBefore.get(oBlock.type).set('pause_before', new Map());
+                if (!pausesAfter.has(oBlock.type)) {
+                  pausesAfter.set(oBlock.type, new Map());
+                  pausesAfter.get(oBlock.type).set('pause_after', new Map());
                   /*pausesBefore.get(oBlock.type).get('pauses_before').set(new Map([
                     ['none', !pBlock.pause_before],
                     [0.6, pBlock.pause_before == 0.6],
@@ -1765,7 +1744,7 @@ export default {
                     [4, pBlock.pause_before == 4]
                   ]));*/
                 }
-                pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? `${pBlock.pause_before}` : 'none', true);
+                pausesAfter.get(oBlock.type).get('pause_after').set(pBlock.pause_after ? `${pBlock.pause_after}` : 'none', true);
                 //pausesBefore.get(oBlock.type).get('pause_before').set(pBlock.pause_before ? pBlock.pause_before : '0.6', true);
               }
             }
@@ -1786,7 +1765,7 @@ export default {
         this.styleTabs = new Map();
         this.numProps = new Map();
       }
-      this.pausesBeforeProps = pausesBefore;
+      this.pausesAfterProps = pausesAfter;
 
       //console.log('result', result);
       //console.log('nums', nums);
@@ -1798,10 +1777,14 @@ export default {
         } else if (isSwitch) {
           //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
           if (this.bookMode !== 'narrate') {
-            $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+            if (!this.activeStyleTab || !Array.from(result.keys()).includes(this.activeStyleTab)) {
+              $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+            }
           } else {
-            if (pausesBefore.size > 0) {
-              $(`li#t-block-type-${pausesBefore.keys().next().value}`).trigger( "click" );
+            if (pausesAfter.size > 0) {
+              if (!this.activeStyleTab || !Array.from(pausesAfter.keys()).includes(this.activeStyleTab)) {
+                $(`li#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+              }
             } else {
               $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
             }
@@ -1967,7 +1950,7 @@ export default {
           })
       }
     },
-    selectPauseBefore(blockType, styleVal) {
+    selectPauseAfter(blockType, styleVal) {
       //console.log(blockType, styleKey, styleVal);
       if (this.proofreadModeReadOnly) {
         return;
@@ -1979,12 +1962,12 @@ export default {
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock && oBlock.type === blockType) {
               let pBlock = this.storeList.get(oBlock.blockid);
-              pBlock.pause_before = styleVal;
+              pBlock.pause_after = styleVal;
             }
           })
           this.updateBookVersion({major: true});
         }
-        return this.setPauseBefore([blockType, styleVal])
+        return this.setPauseAfter([blockType, styleVal])
           .then(() => {
             this.tc_loadBookTask(this.currentBookMeta._id);
             this.getCurrentJobInfo();
@@ -2241,7 +2224,7 @@ export default {
       if (this.bookMode !== 'narrate') {
         return (this.styleTabs.has(blockType));
       }
-      return this.pausesBeforeProps.has(blockType);
+      return this.pausesAfterProps.has(blockType);
     },
     setTrimSilenceConfig(val, ev) {
       switch (val) {
@@ -2254,7 +2237,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseBefore'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter'])
   }
 }
 

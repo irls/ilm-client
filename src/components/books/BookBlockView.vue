@@ -42,9 +42,9 @@
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
-              <div v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
+              <div :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
                 <!--<i class="fa fa-hashtag"></i>-->
-                <label ref="parnumRef" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
+                <label ref="parnumRef" v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
               </div>
               <div :class="['par-ctrl -hidden', {'-additional-info': editingLocked}]">
                 <div class="block-menu" v-if="mode !== 'narrate'">
@@ -195,7 +195,7 @@
                 <template v-else >
 
                 </template>
-                <template v-if="editingLocked">
+                <template v-if="editingLocked && mode !== 'narrate'">
                   <div class="par-ctrl-divider"></div>
                   <label class="blocked-editing">{{editingLockedReason}}</label>
                 </template>
@@ -221,6 +221,21 @@
               </div> -->
               <!--<div class="par-ctrl -hidden">-->
             </div>
+            <!-- <template v-if="mode === 'narrate' && editingLocked">
+              <div class="table-body">
+                <div class="table-cell"></div>
+                <div class="table-cell">
+                  <div class="table-body">
+                    <div class="table-row">
+                      <div class="table-cell controls-left audio-controls"></div>
+                      <div class="table-cell">
+                        <label class="blocked-editing">{{editingLockedReason}}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template> -->
             <!--<div class="table-row-flex controls-top">-->
 
             <!-- <div style="" class="preloader-container">
@@ -267,6 +282,7 @@
               :splitPointRemoved="splitPointRemoved"
               :checkVisible="checkVisible"
               :checkFullyVisible="checkFullyVisible"
+              :editingLockedReason="editingLockedReason"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -1441,6 +1457,9 @@ export default {
         this.FtnAudio.audStop();
       }
     }
+    if (this.$route && this.$route.meta && !this.$route.meta.mode) {// out of book edit
+      this.resetListenCompressed();
+    }
   },
   destroyed: function () {
     this.$root.$off('playBlockFootnote');
@@ -2486,9 +2505,9 @@ export default {
           return content;
         }
         //console.log(content)
-        content = content.replace(/(<[^>]+)(selected)/g, '$1');//|suspicious-word
-        content = content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
-        content = content.replace(/(<[^>]+)(pinned-word)/g, '$1');
+        content = content.replace(/(<w[^>]+)(selected)/g, '$1');//|suspicious-word
+        content = content.replace(/(<w[^>]+)(audio-highlight)/g, '$1');
+        content = content.replace(/(<w[^>]+)(pinned-word)/g, '$1');
         content = content.replace(/<br class="narrate-split"[^>]*>/g, '')
         content = content.replace('<span class="content-tail"></span>', '');
         content = content.replace(/&nbsp;/gm, ' ')
@@ -3229,6 +3248,7 @@ Save text changes and realign the Block?`,
       recordTimer() {
         let self = this;
         return new BPromise(function(resolve, reject) {
+          $('.recordStartCounterDep').hide();
           self.recordStartCounter = 3;
           $('#narrateStartCountdown strong').html(self.recordStartCounter);
           $('body').addClass('modal-open');
@@ -3239,6 +3259,8 @@ Save text changes and realign the Block?`,
               clearTimeout(timer)
               $('body').removeClass('modal-open');
               $('#narrateStartCountdown').hide();
+              $('.recordStartCounterDep').show();
+
               resolve()
             } else {
               //console.log(self.recordStartCounter);
@@ -3586,7 +3608,6 @@ Save text changes and realign the Block?`,
 
         //this.$root.$emit('for-audioeditor:load-and-play', this.block.getAudiosrcFootnote(ftnIdx, 'm4a', true), this.FtnAudio.map, `${this.block._id}_${ftnIdx}`);
 
-        //$('nav.fixed-bottom').removeClass('hidden');
         this.audioEditFootnote.footnote = footnote;
         this.showAudioEditor(ftnIdx, footnote);
       },
@@ -3619,7 +3640,6 @@ Save text changes and realign the Block?`,
           if (this.isAudioChanged || this.audioEditFootnote.isAudioChanged) {
             this.discardAudioEdit(this.footnoteIdx, false);
           }
-          //$('nav.fixed-bottom').addClass('hidden');
 
           this.$refs.viewBlock.querySelector(`.table-body.-content`).classList.remove('editing');
           //$('#' + this.block._id + ' .table-body.-content').removeClass('editing');
@@ -4128,7 +4148,7 @@ Save text changes and realign the Block?`,
       },
       _saveContent() {
         if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs.blockContent) {
-          this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<[^>]+)(selected)/g, '$1');
+          this.block.content = this.$refs.blocks[0].$refs.blockContent.innerHTML.replace(/(<w[^>]+)(selected)/g, '$1');
           this.block.content = this.block.content.replace(/(<[^>]+)(audio-highlight)/g, '$1');
         }
         if (this.block.footnotes && this.block.footnotes.length) {
@@ -4142,7 +4162,8 @@ Save text changes and realign the Block?`,
       },
       spotCheck: function() {
         let length = 3;
-        if (this.player && this.player.audio_element) {
+        let playerContainer = this.$refs.blocks && this.$refs.blocks[0] ? this.$refs.blocks[0] : null;
+        if (playerContainer && playerContainer.player && playerContainer.player.audio_element) {
           let menuHeight = $('div.top-menu-wrapper').height() + $('div.toolbar').height();
           let blockOffset =this.$refs.viewBlock.offsetTop;
           if (menuHeight > blockOffset) {
@@ -4158,28 +4179,29 @@ Save text changes and realign the Block?`,
           let map = w.dataset.map.split(',');
           map[0] = parseInt(map[0]);
           map[1] = parseInt(map[1]);
+          playerContainer.isAudPartStarted = true;
           if (map[0] + map[1] < (2 * length + 1) * 1000) {
-            this.player.playBlock('content-' + this.block._id + '-part-0');
+            playerContainer.player.playBlock('content-' + this.block._id + '-part-0');
           } else {
             //this.player.audio_element.onended = () => {
               //console.log('ENDED')
             //};
 
-            this.player.audio_element.onpause = () => {
+            playerContainer.player.audio_element.onpause = () => {
               //console.log('PAUSE')
               let delay = 1000;
-              if (this.player.load_delay) {
-                delay+=this.player.load_delay;
+              if (playerContainer.player.load_delay) {
+                delay+=playerContainer.player.load_delay;
               }
               this.$root.$emit('for-bookedit:scroll-to-block-end', this.block._id);
               setTimeout(() => {
-                this.player.playRange(`content-${this.block._id}-part-0`, map[0] + map[1] - length * 1000, map[0] + map[1]);
+                playerContainer.player.playRange(`content-${this.block._id}-part-0`, map[0] + map[1] - length * 1000, map[0] + map[1]);
               }, delay);
 
               //console.log(this.player);
-              this.player.audio_element.onpause = null;
+              playerContainer.player.audio_element.onpause = null;
             };
-            this.player.playRange(`content-${this.block._id}-part-0`, 0, length * 1000);
+            playerContainer.player.playRange(`content-${this.block._id}-part-0`, 0, length * 1000);
           }
 
         }
@@ -4511,6 +4533,10 @@ Save text changes and realign the Block?`,
             }
           }
         }
+      },
+      
+      resetListenCompressed() {
+        this.block.resetAudiosrcConfig();
       }
   },
   watch: {
@@ -4829,7 +4855,7 @@ Save text changes and realign the Block?`,
           //console.log(val);
           if (Array.isArray(val) && val.length > 0 && this.isChecked) {
             let recollect = val.some((el) => {
-              return ['pause_before', 'classes'].indexOf(el) !== -1;
+              return ['pause_after', 'classes'].indexOf(el) !== -1;
             });
             if (recollect) {
               this.$root.$emit('from-block-edit:set-style');
@@ -5418,14 +5444,27 @@ Save text changes and realign the Block?`,
 
         }
         &.-additional-info {
-          width: 840px;
+          width: 825px;
         }
       }
     }
 }
 .-mode-narrate {
   .-additional-info {
-    width: 50% !important;
+    /* width: 50% !important; */
+    width: 783px !important;
+    .blocked-editing {
+      margin-left: -82px;
+    }
+  }
+}
+.meta-visible {
+  .-mode-narrate {
+    .-additional-info {
+      .blocked-editing {
+        margin-left: -14px;
+      }
+    }
   }
 }
 
