@@ -1016,6 +1016,9 @@ export default {
       },
       isDefaultAudioConfig: {
         get() {
+          if (['hr', 'illustration'].includes(this.block.type) || !this.blockPart.audiosrc) {
+            return true;
+          }
           if (!this.block.audiosrc_config[this.blockPartIdx] || !this.block.audiosrc_config[this.blockPartIdx][this.mode]) {
             return true;
           }
