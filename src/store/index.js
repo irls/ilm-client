@@ -219,7 +219,7 @@ export const store = new Vuex.Store({
     // ],
     bookDifficultyDefault:'6',
     loadBookWait: null,
-    loadBookTaskWait: null,
+    loadBookTaskWait: {},
     jobInfoRequest: null,
     jobInfoTimer: null,
     jobStatusError: '',
@@ -1904,6 +1904,9 @@ export const store = new Vuex.Store({
             answer.executors = bookMeta.executors;
           }
           commit('SET_CURRENTBOOK_META', answer);
+          if (state.loadBookTaskWait[`user_${state.user._id}`]) {
+            dispatch('tc_loadBookTask', answer.bookid);
+          }
           let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof answer.version !== 'undefined' && answer.version === answer.publishedVersion);
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
@@ -2792,17 +2795,18 @@ export const store = new Vuex.Store({
 
     tc_loadBookTask({state, commit, dispatch}, bookid) {
       //console.log('tc_loadBookTask, bookid', bookid);
-      if (state.loadBookTaskWait) {
-        return state.loadBookTaskWait;
+      let key = bookid ? `book_${bookid}` : `user_${state.user._id}`;
+      if (state.loadBookTaskWait[key]) {
+        return state.loadBookTaskWait[key];
       }
       let address = state.API_URL + 'tasks';
       if (bookid) {
         address+='?bookid=' + bookid
       }
-      state.loadBookTaskWait = axios.get(address)
-      return state.loadBookTaskWait
+      state.loadBookTaskWait[key] = axios.get(address)
+      return state.loadBookTaskWait[key]
         .then((list) => {
-          state.loadBookTaskWait = null;
+          state.loadBookTaskWait[key] = null;
           state.tc_tasksByBlock = {}
           if (!bookid || !state.tc_userTasks.list) {
             state.tc_userTasks = {list: list.data, total: 0}
@@ -2825,7 +2829,7 @@ export const store = new Vuex.Store({
           return list;
         })
         .catch(err => {
-          state.loadBookTaskWait = null;
+          state.loadBookTaskWait[key] = null;
           console.log(err)
         })
     },
