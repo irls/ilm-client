@@ -1716,6 +1716,7 @@ export const store = new Vuex.Store({
             }
           });
       dispatch('getSuspiciousWordsCharacters');
+      axios.get(`${state.API_URL}tasks/user_tasklist`);
     },
 
     destroyDB ({ state, commit, dispatch }) {
