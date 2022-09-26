@@ -2839,7 +2839,7 @@ export const store = new Vuex.Store({
             }
           }
           commit('TASK_LIST_LOADED')
-          if (oldCount === 0 && bookid) {
+          if (oldCount === 0 && bookid && bookid !== 'all') {
             state.tc_userTasks.total = 0;
           }
           commit('PREPARE_BOOK_COLLECTIONS');
