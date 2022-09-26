@@ -2808,6 +2808,7 @@ export const store = new Vuex.Store({
         .then((list) => {
           state.loadBookTaskWait[key] = null;
           state.tc_tasksByBlock = {}
+          let oldCount = state.tc_userTasks.total;
           if (!bookid || !state.tc_userTasks.list) {
             state.tc_userTasks = {list: list.data, total: 0}
           } else {
@@ -2824,6 +2825,9 @@ export const store = new Vuex.Store({
             }
           }
           commit('TASK_LIST_LOADED')
+          if (oldCount === 0 && bookid) {
+            state.tc_userTasks.total = 0;
+          }
           commit('PREPARE_BOOK_COLLECTIONS');
           dispatch('recountApprovedInRange');
           return list;
