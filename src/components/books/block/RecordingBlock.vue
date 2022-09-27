@@ -234,8 +234,8 @@
   animation-iteration-count: infinite;
 }
 @keyframes recording-in-progress-animation {
-  from {opacity: 20%;}
-  to {opacity: 100%;}
+  from {opacity: 0.2;}
+  to {opacity: 1}
 }
 .recording-on-pause .icon{
   height: 37px;
