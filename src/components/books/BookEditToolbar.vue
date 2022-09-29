@@ -22,7 +22,7 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if="(currRoute === 'BookEdit' || currRoute === 'CollectionBookEdit') && hasBookSelected()" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
+    <button v-if="(['BookEdit','CollectionBookEdit','BookProofread'].includes(currRoute) && hasBookSelected())" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
     <OverlayPanel ref="searchPanel" :dismissable="false">
       <div class="search-box">
         <div class="search">
@@ -75,7 +75,6 @@ export default {
   computed: {
 
     currRoute: function () {
-      let result = ''
       return this.$route.name;
     },
 
@@ -198,13 +197,14 @@ export default {
       const wordXreg = new RegExp("<body[\\s\\S]+<\\/body>", 'mi');
       if (wordXreg.test(paste)) {
         paste = wordXreg.exec(paste)[0];
-        console.log(`paste000: `, paste);
+        //console.log(`paste001: `, paste);
         paste = paste.replace(/<!\[if[^\]]*\]>[\s\S]*?<!\[endif\]>/mig, '');
         paste = paste.replace(/\[pg\s*\d+\]/mig, '');
         paste = paste.replace(/<div\sstyle=['"]*mso-element:footnote['"]*[\s\S]*?<\/div>/mig, '');
         paste = paste.replace(/<div\sid=['"]{1}sdfootnote\d+['"]{1}[\s\S]*?<\/div>/mig, '');
         paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
-      } else console.log(`paste000: `, paste);
+        //console.log(`paste002: `, paste);
+      } //else console.log(`paste003: `, paste);
       //-- } -- end -- MSOffice --//
       //-- Gutenberg -- { --//
       paste = paste.replace(/<a name=\"[^"]*\"[^>]*?>([\S\s]*?)<\/a>/mig, '$1');
@@ -214,14 +214,14 @@ export default {
       paste = paste.replace(/<br[^>]*?>[^<]*?/mig, ' ');
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
       //-- } -- end -- Gutenberg --//
-      //console.log(`paste001: `, paste);
+      //console.log(`paste004: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
       paste = replaceHTMLSpecials(paste);
       paste = replaceSuperscript(paste);
       //console.log(`paste222: `, paste);
       paste = paste.replace(/(<([^>]+)>)/ig, '');
       paste = paste.replace(/[\r\n]+/mig, ' ').replace(/\s\s+/g, ' ');
-      console.log(`paste: `, paste);
+      //console.log(`paste: `, paste);
 
       const start = ev.target.selectionStart;
       const finish = ev.target.selectionEnd;
@@ -265,7 +265,8 @@ export default {
   watch: {
     '$route' (toRoute, fromRoute) {
       this.setSelectedRoute();
-      if (['BookEdit', 'CollectionBookEdit'].indexOf(toRoute.name) == -1) {
+      const bookSearchRoutes = ['BookEdit', 'CollectionBookEdit','BookProofread'];
+      if (fromRoute.name !== toRoute.name || !bookSearchRoutes.includes(toRoute.name)) {
         this.bookSearch.string = "";
         this.$refs.searchPanel.hide();
       }
