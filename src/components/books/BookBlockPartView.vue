@@ -216,7 +216,7 @@
                     <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
 
                     <p v-for="comment in part.comments" class="flag-comment">
-                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
+                      <FlagComment :comment="comment"/>
                     </p>
 
                     <textarea v-if="part.status !== 'hidden'"
@@ -372,6 +372,7 @@ import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import LockedBlockActions from './block/LockedBlockActions';
+import FlagComment        from './block/FlagComment';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
@@ -453,12 +454,14 @@ export default {
     }
   },
   components: {
-    UploadImage, LockedBlockActions,
-      'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'block-flag-popup': BlockFlagPopup,
-      //'modal': modal,
-      'split-block-menu': SplitBlockMenu
+    UploadImage,
+    LockedBlockActions,
+    FlagComment,
+    'block-menu': BlockMenu,
+    'block-cntx-menu': BlockContextMenu,
+    'block-flag-popup': BlockFlagPopup,
+    //'modal': modal,
+    'split-block-menu': SplitBlockMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
   mixins: [taskControls, apiConfig, access],
