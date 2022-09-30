@@ -266,6 +266,10 @@ export const store = new Vuex.Store({
     suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
     blockAudiosrcConfig: {
       
+    },
+    
+    audioFadeConfig: {
+      
     }
   },
 
@@ -619,6 +623,9 @@ export const store = new Vuex.Store({
     },
     blockAudiosrcConfig: state => {
       return state.blockAudiosrcConfig;
+    },
+    audioFadeConfig: state => {
+      return state.audioFadeConfig;
     }
   },
 
@@ -1409,6 +1416,10 @@ export const store = new Vuex.Store({
     
     set_blockAudiosrcConfig(state, audiosrc_config) {
       state.blockAudiosrcConfig = audiosrc_config;
+    },
+    
+    set_audioFadeConfig(state, config) {
+      state.audioFadeConfig = config;
     }
   },
 
@@ -1723,6 +1734,7 @@ export const store = new Vuex.Store({
             }
           });
       dispatch('getSuspiciousWordsCharacters');
+      dispatch('getAudioFadeConfig');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -4414,7 +4426,7 @@ export const store = new Vuex.Store({
       }
       state.audioTasksQueue.time = time;
       state.audioTasksQueue.log.push(record);
-      if (state.audioTasksQueue.queue.length >= audioTasksQueueRunSize && !state.audioTasksQueue.running) {
+      if ((state.audioTasksQueue.queue.length >= audioTasksQueueRunSize/* || record.type === 'fade'*/) && !state.audioTasksQueue.running) {
         dispatch('applyTasksQueue', [audioTasksQueueRunSize, state.audioTasksQueue.block.blockId, state.audioTasksQueue.block.partIdx]);
       }
       //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
@@ -4549,7 +4561,10 @@ export const store = new Vuex.Store({
             //console.log(block.history);
           }
           //console.log(state.audioTasksQueue);
-          if (state.audioTasksQueue.queue.length >= 5 && !state.audioTasksQueue.running) {
+          let hasFadeAction = state.audioTasksQueue.queue.find(r => {
+            return r.type === 'fade';
+          });
+          if ((state.audioTasksQueue.queue.length >= 5/* || hasFadeAction*/) && !state.audioTasksQueue.running) {
             dispatch('applyTasksQueue', [null]);
           }
           return Promise.resolve(data);
@@ -5272,6 +5287,17 @@ export const store = new Vuex.Store({
           if (response.status === 200) {
             state.suspiciousWordsHighlight.setSuspiciousWordsCharacters(response.data);
           }
+        });
+    },
+    
+    getAudioFadeConfig({state, commit}) {
+      return axios.get(`${state.API_URL}audio_config/fade`)
+        .then(response => {
+          commit('set_audioFadeConfig', response.data);
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
         });
     }
   }
