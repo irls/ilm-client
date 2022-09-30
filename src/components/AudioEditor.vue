@@ -68,6 +68,8 @@
               <template v-if="!editingLocked">
                 <button class="btn btn-primary" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection">Cut</button>
                 <button class="btn btn-primary" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
+                <!-- <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled"></button> -->
+                <button class="btn btn-primary" v-on:click="fade()" :disabled="isFadeDisabled">Fade</button>
               </template>
             </div>
           </template>
@@ -1480,6 +1482,83 @@
           this.audiosourceEditor.drawRequest();
           return cut_range;
         },
+        fade() {
+          let playPosition = null;
+          return this.pause()
+            .then(() => {
+              
+              let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+
+              let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              
+              silence.fill(SILENCE_VALUE);
+              let range = this.cutRangeAction(this.selection.start, this.selection.end);
+              
+              let fadeLength = this.audioFadeConfig.length * original_buffer.sampleRate;
+              let removePercent = (100 - this.audioFadeConfig.percent);
+              for (let i = 0; i <= fadeLength; ++i) {
+                if (range[i]) {
+                  let currentPercent = i * removePercent / fadeLength;
+                  let currentDelta = currentPercent * Math.abs(range[i]) / 100;
+                  let currentValue;
+                  if (range[i] < 0) {
+                    currentValue = range[i] + currentDelta;
+                  } else if (range[i] > 0) {
+                    currentValue = range[i] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  silence[i] = currentValue;
+                }
+              }
+              let fadeInStart = range.length - fadeLength;
+              for (let i = 0; i <= fadeLength; ++i) {
+                //console.log(i, fadeInStart, range.length)
+                //console.log(range[i]);
+                let currentPercent = i * removePercent / fadeLength;
+                //console.log(currentPercent);
+                let rangePos = range.length - 1 - i;
+                if (range[rangePos]) {
+                  let currentDelta = currentPercent * Math.abs(range[rangePos]) / 100;
+                  let currentValue;
+                  if (range[rangePos] < 0) {
+                    currentValue = range[rangePos] + currentDelta;
+                  } else if (range[rangePos] > 0) {
+                    currentValue = range[rangePos] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  silence[rangePos] = currentValue;
+                }
+                //console.log('===========', silence[i]);
+              }
+              
+              for (let i = fadeLength + 1; i < fadeInStart; ++i) {
+                if (range[i]) {
+                  let currentDelta = removePercent * Math.abs(range[i]) / 100;
+                  let currentValue;
+                  if (range[i] < 0) {
+                    currentValue = range[i] + currentDelta;
+                  } else if (range[i] > 0) {
+                    currentValue = range[i] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  silence[i] = currentValue;
+                }
+              }
+              
+              this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
+              
+              
+              this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
+              this.addTaskQueue('fade', [this.selection.start, this.selection.end, this.audioFadeConfig.percent, this.audioFadeConfig.length]);
+              this.isModified = true;
+              if (playPosition) {
+                this.cursorPosition = playPosition;
+              }
+            });
+        },
         setAudioBuffer(new_buffer) {
           if (this.audiosourceEditor && this.audiosourceEditor.activeTrack) {
             this.audiosourceEditor.activeTrack.setBuffer(new_buffer);
@@ -1992,6 +2071,10 @@
                       $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
                     });
                   }
+                  break;
+                case 'fade':
+                  this.cutRangeAction(record.selection.start, record.selection.end);
+                  this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
                   break;
               }
             } else {
@@ -2977,6 +3060,9 @@ Revert to original block audio?`,
                 case 'insert_silence':
                   return 'Silence';
                   break;
+                case 'fade':
+                  return 'Fade';
+                  break;
               }
             }
           },
@@ -2998,6 +3084,15 @@ Revert to original block audio?`,
           },
           cache: false
         },
+        isFadeDisabled: {
+          get() {
+            if (!this.hasSelection || this.isSinglePointSelection) {
+              return true;
+            }
+            return typeof this.selection.start !== 'undefined' && typeof this.selection.end !== 'undefined' && this._round(this.selection.end - this.selection.start, 1) >= this._round(this.audioFadeConfig.length * 2, 1) ? false : true;
+          },
+          cache: false
+        },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',
           blkSelection: 'blockSelection',
@@ -3010,7 +3105,8 @@ Revert to original block audio?`,
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
           coupletSeparator: 'coupletSeparator',
           allowAlignBlocksLimit: 'allowAlignBlocksLimit',
-          user: 'user'
+          user: 'user',
+          audioFadeConfig: 'audioFadeConfig'
         })
       },
       watch: {
@@ -3388,6 +3484,24 @@ Revert to original block audio?`,
       }
       &.-file {
         padding: 25px 20px 14px 20px;
+      }
+      .audio-btn {
+        display: inline-block;
+        vertical-align: middle;
+        cursor: pointer;
+        border: none;
+        &[disabled] {
+          cursor: not-allowed;
+        }
+        &.-fade {
+          width: 41px;
+          height: 34px;
+          background: url(/static/audio_editor/fade.svg);
+          &[disabled] {
+            background: url(/static/audio_editor/fade-disabled.svg);
+            
+          }
+        }
       }
     }
     .audio-controls {
