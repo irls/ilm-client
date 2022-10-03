@@ -5,7 +5,9 @@
   import moment from 'moment';
   export default {
     data() {
-      return {}
+      return {
+        urlRx: /((\b(?:https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]))/mig,
+      }
     },
     props: ['comment'],
     computed: {
@@ -21,8 +23,10 @@
       },
       content: {
         get() {
-          //return '<a>asasas</a>';
-          return this.comment.comment;
+          return (
+            this.comment.comment
+            .replace(this.urlRx, '<a href="$1" target="_blank" data-except-link-prevent >Link</a>')
+          )
         }
       },
     }
