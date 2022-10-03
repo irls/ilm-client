@@ -2401,7 +2401,8 @@ export default {
       this.$root.$on('from-block-part-view:on-input', this.correctCurrentEditHeight);
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
-        e.preventDefault();
+        if (e.target.hasAttribute('data-except-link-prevent')) return;
+        e.preventDefault(); //else
       });
 
       this.$root.$on('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
