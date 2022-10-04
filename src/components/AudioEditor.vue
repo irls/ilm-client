@@ -496,7 +496,7 @@
             {
               src: this.audiofile,
               name: 'block-audio',
-              gain: 1.5,
+              gain: 1.1,
               waveOutlineColor: '#f3f3f3',
               customClass: 'block-audio',
               states: {
