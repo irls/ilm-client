@@ -33,7 +33,6 @@
           <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
           <div class="speed-controls" v-if="mode === 'block'">
-            <!-- <input type="number" v-model="playbackRate" min="0.75" max="1.25" step="0.05" /> -->
             <dropdown 
               v-model="playbackRate" 
               :options="playbackRates" 
@@ -51,7 +50,6 @@
           <button class="audio-btn -zoom-out" :disabled="!allowZoomOut" v-on:click="zoomOut()"></button>
         </div>
         <div class="silence-controls" v-if="mode == 'block' && !editingLocked">
-          <!-- <input type="number" step="0.1" v-model="silenceLength" /> -->
           <dropdown 
             v-model="silenceLength" 
             :options="silenceLengths" 
@@ -2970,10 +2968,6 @@ Revert to original block audio?`,
           if (end < this.audioDuration) {
             this.selectionEndS = end + 0.1;
           }
-        },
-        getButtonTooltip(text) {
-          return `<div class="tooltip-arrow"></div>
-<div class="tooltip-text">${text}</div>`;
         },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
