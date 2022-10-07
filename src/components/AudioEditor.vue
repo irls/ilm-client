@@ -3759,7 +3759,7 @@ Revert to original block audio?`,
     z-index: 9999;
     top: -29px;
     left: 595.35px;
-    min-width: 260px;
+    min-width: 265px;
     .selection-tooltip {
       display: inline-block;
       background: rgb(186, 232, 195);
