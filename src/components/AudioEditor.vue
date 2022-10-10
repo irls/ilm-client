@@ -11,6 +11,18 @@
       <div v-if="!this.$parent.preloader" class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
+      <div v-if="selection.start >= 0 && selection.end > 0" class="selection-tooltips">
+        <div class="selection-tooltip -start">
+          <button class="adjust-selection selection-decrease" v-on:click="decreaseSelectionStart()"></button>
+          <span class="selection-time">{{selectionStartH}}:{{selectionStartM}}:{{selectionStartS}}</span>
+          <button class="adjust-selection selection-increase" v-on:click="increaseSelectionStart()"></button>
+        </div>
+        <div class="selection-tooltip -end">
+          <button class="adjust-selection selection-decrease" v-on:click="decreaseSelectionEnd()"></button>
+          <span class="selection-time">{{selectionEndH}}:{{selectionEndM}}:{{selectionEndS}}</span>
+          <button class="adjust-selection selection-increase" v-on:click="increaseSelectionEnd()"></button>
+        </div>
+      </div>
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
@@ -18,25 +30,36 @@
 
         <div :class="['play-controls', '-' + mode]">
           <div class="hidden">cursorPosition: {{cursorPosition}}</div>
-          <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
+          <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
           <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
           <div class="speed-controls" v-if="mode === 'block'">
-            <span>Speed</span>
-            <input type="number" v-model="playbackRate" min="0.75" max="1.25" step="0.05" />
+            <dropdown 
+              v-model="playbackRate" 
+              :options="playbackRates" 
+              scrollHeight="400px" 
+              @change="onPlaybackRateChange"
+              class="playbackrate-dropdown"/>
           </div>
         </div>
-        <div :class="['play-controls', '-' + mode]">
-          <i class="fa fa-step-backward" v-on:click="goToStart()"></i>
-          <i class="fa fa-step-forward" v-on:click="goToEnd()"></i>
+        <div :class="['play-controls seek-controls', '-' + mode]">
+          <button class="audio-btn -go-to-start" v-on:click="goToStart()"></button>
+          <button class="audio-btn -go-to-end" v-on:click="goToEnd()"></button>
         </div>
         <div class="zoom-controls">
-          <i :class="['fa', 'fa-search-plus', {'disabled': !allowZoomIn}]" v-on:click="zoomIn()"></i>
-          <i :class="['fa', 'fa-search-minus', {'disabled': !allowZoomOut}]" v-on:click="zoomOut()"></i>
+          <button class="audio-btn -zoom-in" :disabled="!allowZoomIn" v-on:click="zoomIn()"></button>
+          <button class="audio-btn -zoom-out" :disabled="!allowZoomOut" v-on:click="zoomOut()"></button>
         </div>
-        <div class="selection-controls" v-bind:class="['-' + mode]">
+        <div class="silence-controls" v-if="mode == 'block' && !editingLocked">
+          <dropdown 
+            v-model="silenceLength" 
+            :options="silenceLengths" 
+            scrollHeight="400px" />
+          <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
+        </div>
+        <div class="selection-controls" v-bind:class="['-' + mode]" v-if="mode === 'block'">
           <div class="hidden">{{origFilePositions}}
             {{selection}}</div>
-          <div v-if="selection.start >= 0" class="selection-display">
+          <div v-if="selection.start >= 0" class="selection-display hidden">
             <div>Selection Start</div>
             <div>
               <template v-if="mode == 'block'">
@@ -49,7 +72,7 @@
               </template>
             </div>
           </div>
-          <div v-if="selection.end >= 0" class="selection-display">
+          <div v-if="selection.end >= 0" class="selection-display hidden">
             <div>Selection End</div>
             <div>
               <template v-if="mode == 'block'">
@@ -63,43 +86,38 @@
             </div>
           </div>
           <template v-if="mode == 'block'">
-            <div>
-              <button class="btn btn-default" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection">Clear</button>
-              <template v-if="!editingLocked">
-                <button class="btn btn-primary" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection">Cut</button>
-                <button class="btn btn-primary" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
-                <!-- <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled"></button> -->
-                <button class="btn btn-primary" v-on:click="fade()" :disabled="isFadeDisabled">Fade</button>
-              </template>
-            </div>
+            <template v-if="!editingLocked">
+              <div>
+                <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
+                <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
+                <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'"></button>
+              </div>
+            </template>
+            <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
           </template>
         </div>
-        <div class="selection-controls" v-if="mode == 'block' && !editingLocked">
-          <input type="number" step="0.1" v-model="silenceLength" />
-          <button class="btn btn-primary" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false">Add Silence</button>
-        </div>
         <template v-if="mode == 'block' && !isFootnote && !editingLocked">
-          <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
-          <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
         </template>
-        <div class="audio-controls" v-if="isModifiedComputed && mode == 'block' && !editingLocked">
-          <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
-          <button class="btn btn-primary" v-on:click="save()"  :disabled="isSaveDisabled">Save</button>
-          <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
+        <div class="audio-controls" v-if="mode == 'block' && !editingLocked">
+          <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName}"></button>
+          <button class="audio-btn -save" v-on:click="save()"  :disabled="!isModifiedComputed" v-ilm-tooltip.top="'Save'"></button>
+          <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="!isModifiedComputed" v-ilm-tooltip.top="'Save & Re-align'"></button>
+          <button class="audio-btn -revert" :disabled="isRevertDisabled" v-on:click="revert(true)" v-ilm-tooltip.top="'Revert'"></button>
         </div>
         <div v-if="editingLocked" class="audio-controls blocked-message">
           {{editingLockedReason}}
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
-          <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess">Align</button>
+          <button class="audio-btn -undo" :disabled="!isModifiedComputed" v-on:click="undo()" v-ilm-tooltip.top="'Undo'"></button>
+          <button class="audio-btn -align" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess" v-ilm-tooltip.top="'Align'"></button>
           <span v-else class="align-preloader -small"></span>
           <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
-          <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
+          <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
           <template v-else>
-            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">
-              {{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
+              {{selectionBlocksToAlign}}
             </span>
+            <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
           </template>
         </div>
       </div>
@@ -145,15 +163,29 @@
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   import { setUpSource, onSourceEnded } from '../store/audio/AudioPlayout.js';
   import { updateEditor } from '../store/audio/AudioPlaylist.js';
+  //import $ from 'jquery';
+  //import 'select2';
+  //import 'select2/dist/css/select2.css';
+  import dropdown from 'primevue/dropdown';
+  //import tooltip from 'primevue/tooltip';
+  import IlmTooltip from '../directives/ilm-tooltip/ilm-tooltip.js';
+  import '../directives/ilm-tooltip/ilm-tooltip.css';
+  //import IlmRedTooltip from './directives/ilm-tooltip/red-tooltip.js';
+  //import './directives/ilm-tooltip/red-tooltip.css';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
   const closeBracketsRegex = /[\)\]\}\﴿]/mg;
   const closeQuotesRegex = /[\”\’\»]/mg;
+  
+  //Vue.directive('tooltip', tooltip);
+  Vue.directive('ilm-tooltip', IlmTooltip);
+  //Vue.directive('ilm-red-tooltip', IlmRedTooltip);
 
   export default {
       name: 'AudioEditor',
       components: {
-        'cntx-menu': BlockContextMenu
+        'cntx-menu': BlockContextMenu,
+        'dropdown': dropdown
       },
       mixins: [api_config, task_controls],
       data() {
@@ -174,6 +206,7 @@
           isPaused: false,
           isSingleWordPlaying: false,
           silenceLength: 0.1,
+          silenceLengths: [],
           audioContext: null,
           contentContainer: null,
           isModified: false,
@@ -209,7 +242,8 @@
           editingLocked: false,
           editingLockedReason: '',
           pausedAt: null,
-          playbackRate: 1
+          playbackRate: 1,
+          playbackRates: []
         }
       },
       mounted() {
@@ -238,6 +272,16 @@
         this.$root.$on('for-audioeditor:flush', this.flush);
         this.$root.$on('for-audioeditor:lock-editing', this.setEditingLocked);
         this.$root.$on('readalong:playBlock', this.stop);
+        
+        for (let i = 0.75; i <= 1.25; i+=0.05) {
+          this.playbackRates.push(this._round(i, 2));
+        }
+        
+        for (let i = 0.1; i <= 1; i+=0.1) {
+          this.silenceLengths.push(this._round(i, 1));
+        }
+        this.silenceLengths.push(1.5);
+        this.silenceLengths.push(2);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -423,6 +467,7 @@
               this.playbackRate = this.user.bookPlaybackRate[this.currentBookMeta.bookid];
             }
           }
+          $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`)
 
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.close();
@@ -2895,6 +2940,35 @@ Revert to original block audio?`,
             return false;
           }
         },
+        onPlaybackRateChange() {
+          //console.log(this.playbackRate);
+          $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`);
+        },
+        decreaseSelectionStart() {
+          let start = this._round(this.selectionStartS, 1);
+          if (start > 0) {
+            this.selectionStartS = start - 0.1;
+          }
+        },
+        increaseSelectionStart() {
+          let start = this._round(this.selectionStartS, 1);
+          if (start < this.audioDuration) {
+            this.selectionStartS = start + 0.1;
+            //this.setSelectionStart(start + 0.1);
+          }
+        },
+        decreaseSelectionEnd() {
+          let end = this._round(this.selectionEndS, 1);
+          if (end > 0) {
+            this.selectionEndS = end - 0.1;
+          }
+        },
+        increaseSelectionEnd() {
+          let end = this._round(this.selectionEndS, 1);
+          if (end < this.audioDuration) {
+            this.selectionEndS = end + 0.1;
+          }
+        },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
 
@@ -3195,6 +3269,11 @@ Revert to original block audio?`,
                 this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : this.cursorPosition;
                 this._showSelectionBorders();
               }
+              if ($('.selection-tooltip.-start').length > 0) {
+                let left = val.start * this.audiosourceEditor.sampleRate /  this.audiosourceEditor.samplesPerPixel;
+                let right = val.end * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel;
+                $('.selection-tooltips').css('left', `${left}px`).width(`${right - left}px`);
+              }
             })
             this.smoothSelection(val, oldVal);
           },
@@ -3259,6 +3338,7 @@ Revert to original block audio?`,
 </script>
 <style lang="less">
   @waveform-height: 80px;
+  @audio-btn: "/static/audio_editor/";
   .waveform {
       max-height: @waveform-height;
       .resize-selection {
@@ -3274,16 +3354,6 @@ Revert to original block audio?`,
   }
   .waveform-playlist {
     background-color: #d9d9d9;
-    .blue-message {
-        color: blue;
-        display: inline-block;
-        padding: 1px 3px;
-    }
-    a.blue-message {
-        font-weight: bold;
-        text-decoration: underline;
-        cursor: pointer;
-    }
     .red-message {
         color: red;
         display: inline-block;
@@ -3426,8 +3496,7 @@ Revert to original block audio?`,
     -webkit-user-select: none;
     .play-controls {
       display: inline-block;
-      padding: 17px 25px;
-      /*width: 200px;*/
+      padding: 17px 15px;
       i {
         font-size: 29px;
         color: #0089ff;
@@ -3436,7 +3505,7 @@ Revert to original block audio?`,
       }
       .speed-controls {
         display: inline-block;
-        width: 50px;
+        width: 80px;
         margin: -13px 2px -3px 5px;
         span {
           display: block;
@@ -3447,10 +3516,13 @@ Revert to original block audio?`,
         }
       }
     }
+    .seek-controls {
+      width: 115px;
+    }
     .zoom-controls {
       display: inline-block;
       padding: 17px 14px;
-      /*width: 120px;*/
+      width: 115px;
       i {
         font-size: 29px;
         color: #0089ff;
@@ -3462,11 +3534,16 @@ Revert to original block audio?`,
         }
       }
     }
+    .silence-controls {
+      width: 170px;
+      display: inline-block;
+      padding: 21px 20px 9px 20px;
+    }
     .selection-controls {
       display: inline-block;
       padding: 21px 20px 9px 20px;
-      /*width: 500px;*/
-      &>div {
+      width: 265px;
+      &>div:not(.p-dropdown) {
         display: inline-block;
         padding: 0px 10px;
       }
@@ -3485,34 +3562,26 @@ Revert to original block audio?`,
       &.-file {
         padding: 25px 20px 14px 20px;
       }
-      .audio-btn {
-        display: inline-block;
-        vertical-align: middle;
-        cursor: pointer;
-        border: none;
-        &[disabled] {
-          cursor: not-allowed;
-        }
-        &.-fade {
-          width: 41px;
-          height: 34px;
-          background: url(/static/audio_editor/fade.svg);
-          &[disabled] {
-            background: url(/static/audio_editor/fade-disabled.svg);
-            
-          }
-        }
-      }
     }
     .audio-controls {
       display: inline-block;
+      float: right;
+      margin: 18px 30px;
+      height: 70px;
       &.blocked-message {
         color: gray;
         padding: 0px 15px;
       }
     }
-    >div:not(.audio-controls) {
+    >div:not(.audio-controls, .seek-controls) {
       border-right: solid 2px #b1b1b1;
+    }
+    .p-dropdown {
+      height: 34px;
+      vertical-align: middle;
+      .p-inputtext {
+        font-size: inherit;
+      }
     }
   }
   .cursor-position {
@@ -3575,5 +3644,178 @@ Revert to original block audio?`,
     .btn.btn-default {
       display: none;
     }
+  }
+  .audio-btn {
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
+    border: none;
+    width: 41px;
+    height: 34px;
+    margin: 1px 3px;
+    &[disabled] {
+      cursor: not-allowed;
+    }
+    &.-play {
+      background: url("@{audio-btn}play.png");
+    }
+    &.-go-to-start {
+      background: url("@{audio-btn}go-to-start.png");
+    }
+    &.-go-to-end {
+      background: url("@{audio-btn}go-to-end.png");
+    }
+    &.-zoom-in {
+      background: url("@{audio-btn}zoom-in.png");
+      &[disabled] {
+        background: url("@{audio-btn}zoom-in-disabled.png");
+      }
+    }
+    &.-zoom-out {
+      background: url("@{audio-btn}zoom-out.png");
+      &[disabled] {
+        background: url("@{audio-btn}zoom-out-disabled.png");
+      }
+    }
+    &.-fade {
+      background: url("@{audio-btn}fade.png");
+      &[disabled] {
+        background: url("@{audio-btn}fade-disabled.png");
+
+      }
+    }
+    &.-clear {
+      background: url("@{audio-btn}clear.png");
+      &[disabled] {
+        background: url("@{audio-btn}clear-disabled.png");
+      }
+    }
+    &.-erase {
+      background: url("@{audio-btn}erase.png");
+      &[disabled] {
+        background: url("@{audio-btn}erase-disabled.png");
+      }
+    }
+    &.-cut {
+      background: url("@{audio-btn}cut.png");
+      &[disabled] {
+        background: url("@{audio-btn}cut-disabled.png");
+      }
+    }
+    &.-add-silence {
+      background: url("@{audio-btn}add-silence.png");
+      width: 63px;
+      &[disabled] {
+        background: url("@{audio-btn}add-silence-disabled.png");
+      }
+    }
+    &.-revert{
+      background: url("@{audio-btn}revert.png");
+      &[disabled] {
+        background: url("@{audio-btn}revert-disabled.png");
+      }
+    }
+    &.-save {
+      background: url("@{audio-btn}save.png");
+      &[disabled] {
+        background: url("@{audio-btn}save-disabled.png");
+      }
+    }
+    &.-save-and-realign {
+      background: url("@{audio-btn}save-and-realign.png");
+      width: 91px;
+      &[disabled] {
+        background: url("@{audio-btn}save-and-realign-disabled.png");
+      }
+    }
+    &.-undo {
+      background: url("@{audio-btn}undo.png");
+      &[disabled] {
+        background: url("@{audio-btn}undo-disabled.png");
+      }
+    }
+    &.-align {
+      background: url("@{audio-btn}save-and-realign.png");
+      background-position-x: -48px;
+      width: 40px;
+      border-radius: 4px;
+      &[disabled] {
+        background: url("@{audio-btn}align-disabled.png");
+        background-position-x: center;
+        width: 45px;
+      }
+    }
+  }
+  .play-controls, .zoom-controls {
+    .audio-btn {
+      width: 34px;
+    }
+  }
+  .playbackrate-dropdown {
+    width: 70px;
+  }
+  .selection-tooltips {
+    position: absolute;
+    z-index: 9999;
+    top: -29px;
+    left: 595.35px;
+    min-width: 265px;
+    .selection-tooltip {
+      display: inline-block;
+      background: rgb(186, 232, 195);
+      border-radius: 4px 4px 0px 0px;
+      padding: 4px 5px;
+      &.-start {
+        float: left;
+      }
+      &.-end {
+        float: right;
+      }
+      .adjust-selection {
+        width: 20px;
+        height: 19px;
+        border: none;
+        vertical-align: middle;
+        &.selection-decrease {
+          background: url("@{audio-btn}selection-decrease.png");
+        }
+        &.selection-increase {
+          background: url("@{audio-btn}selection-increase.png");
+        }
+      }
+      .selection-time {
+        padding: 0px 2px;
+        display: inline-block;
+        font-weight: 700;
+        min-width: 72px;
+        text-align: center;
+      }
+    }
+  }
+  .define-block-range {
+    border: 1.5px solid #FF4343;
+    transform: matrix(1, 0, 0, -1, 0, 0);
+    padding: 3px 9px;
+    border-radius: 15px;
+    color: #FF4343;
+    cursor: pointer;
+  }
+  
+  span.blue-message {
+    color: #2D76B0;
+    border: 1.5px solid #2D76B0;
+    /*transform: matrix(1, 0, 0, -1, 0, 0);*/
+    padding: 5px 6px;
+    border-radius: 15px;
+    cursor: pointer;
+    width: 31px;
+    display: inline-block;
+    text-align: center;
+  }
+  a.blue-message {
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
+    color: #2D76B0;
   }
 </style>
