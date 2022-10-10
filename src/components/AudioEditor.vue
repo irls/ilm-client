@@ -117,7 +117,7 @@
             <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
               {{selectionBlocksToAlign}}
             </span>
-            <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
+            <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)" :data-blockid="blockSelection.start._id">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)" :data-blockid="blockSelection.end._id">{{blockSelection.end._id_short}}</a></div>
           </template>
         </div>
       </div>
@@ -356,6 +356,15 @@
           let mode = bookAudiofile.id ? 'file' : 'block';
           if (mode === 'file') {
             this.setEditingLocked(false);
+            $('.waveform-playlist').on('mouseenter', 'span.blue-message', () => {
+              setTimeout(() => {
+                $('a.blue-message').on('click', (event) => {
+                  if (event && event.target && event.target.dataset) {
+                    this.goToBlock(event.target.dataset.blockid);
+                  }
+                });
+              });
+            });
           }
           let closingId = this.audiofileId;
           if (bookAudiofile.id) {
@@ -3804,11 +3813,10 @@ Revert to original block audio?`,
   span.blue-message {
     color: #2D76B0;
     border: 1.5px solid #2D76B0;
-    /*transform: matrix(1, 0, 0, -1, 0, 0);*/
     padding: 5px 6px;
     border-radius: 15px;
     cursor: pointer;
-    width: 31px;
+    width: 32px;
     display: inline-block;
     text-align: center;
   }
