@@ -20,7 +20,15 @@ function onMouseEnter(event) {
 }
 
 function onMouseLeave(event) {
-  hide(event.currentTarget);
+  let tooltipElement = getTooltipElement(event.currentTarget);
+  if ((event.currentTarget && event.currentTarget.$_ilmTooltipId && event.toElement && event.currentTarget.$_ilmTooltipId === event.toElement.id) || (tooltipElement && tooltipElement.contains(event.toElement))) {
+    let hideElement = event.currentTarget;
+    tooltipElement.addEventListener('mouseleave', () => {
+      hide(hideElement);
+    });
+  } else {
+    hide(event.currentTarget);
+  }
 }
 
 function onClick(event) {
