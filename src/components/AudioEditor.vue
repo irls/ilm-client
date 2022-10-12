@@ -31,7 +31,7 @@
         <div :class="['play-controls', '-' + mode]">
           <div class="hidden">cursorPosition: {{cursorPosition}}</div>
           <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
-          <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
+          <button class="audio-btn -pause" v-if="isPlaying" v-on:click="pause()"></button>
           <div class="speed-controls" v-if="mode === 'block'">
             <dropdown 
               v-model="playbackRate" 
@@ -100,8 +100,8 @@
         </template>
         <div class="audio-controls" v-if="mode == 'block' && !editingLocked">
           <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName}"></button>
-          <button class="audio-btn -save" v-on:click="save()"  :disabled="!isModifiedComputed" v-ilm-tooltip.top="'Save'"></button>
-          <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="!isModifiedComputed" v-ilm-tooltip.top="'Save & Re-align'"></button>
+          <button class="audio-btn -save" v-on:click="save()"  :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save'"></button>
+          <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save & Re-align'"></button>
           <button class="audio-btn -revert" :disabled="isRevertDisabled" v-on:click="revert(true)" v-ilm-tooltip.top="'Revert'"></button>
         </div>
         <div v-if="editingLocked" class="audio-controls blocked-message">
@@ -3153,6 +3153,9 @@ Revert to original block audio?`,
         },
         isSaveDisabled: {
           get() {
+            if (!this.isModifiedComputed) {
+              return true;
+            }
             if (this.audioTasksQueue.running) {
               return true;
             } else {
@@ -3668,6 +3671,9 @@ Revert to original block audio?`,
     &.-play {
       background: url("@{audio-btn}play.png");
     }
+    &.-pause {
+      background: url("@{audio-btn}pause.png");
+    }
     &.-go-to-start {
       background: url("@{audio-btn}go-to-start.png");
     }
@@ -3744,14 +3750,9 @@ Revert to original block audio?`,
       }
     }
     &.-align {
-      background: url("@{audio-btn}save-and-realign.png");
-      background-position-x: -48px;
-      width: 40px;
-      border-radius: 4px;
+      background: url("@{audio-btn}align.png");
       &[disabled] {
         background: url("@{audio-btn}align-disabled.png");
-        background-position-x: center;
-        width: 45px;
       }
     }
   }
@@ -3802,23 +3803,34 @@ Revert to original block audio?`,
     }
   }
   .define-block-range {
-    border: 1.5px solid #FF4343;
-    transform: matrix(1, 0, 0, -1, 0, 0);
-    padding: 3px 9px;
+    border: 1.7px solid #FF4343;
+    /*transform: matrix(1, 0, 0, -1, 0, 0);*/
+    padding: 1px 1px;
     border-radius: 15px;
     color: #FF4343;
     cursor: pointer;
+    width: 22px;
+    display: inline-block;
+    text-align: center;
+    height: 22px;
+    vertical-align: middle;
+    font-size: 12px;
+    font-weight: bold;
   }
   
   span.blue-message {
     color: #2D76B0;
-    border: 1.5px solid #2D76B0;
-    padding: 5px 6px;
+    border: 1.7px solid #2D76B0;
+    padding: 1px 1px;
     border-radius: 15px;
     cursor: pointer;
-    width: 32px;
+    width: 22px;
     display: inline-block;
     text-align: center;
+    height: 22px;
+    vertical-align: middle;
+    font-size: 12px;
+    font-weight: bold;
   }
   a.blue-message {
     font-weight: bold;
