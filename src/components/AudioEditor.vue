@@ -36,7 +36,7 @@
             <dropdown 
               v-model="playbackRate" 
               :options="playbackRates" 
-              scrollHeight="400px" 
+              scrollHeight="410px" 
               @change="onPlaybackRateChange"
               class="playbackrate-dropdown"/>
           </div>
@@ -53,7 +53,7 @@
           <dropdown 
             v-model="silenceLength" 
             :options="silenceLengths" 
-            scrollHeight="400px" />
+            scrollHeight="410px" />
           <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
         </div>
         <div class="selection-controls" v-bind:class="['-' + mode]" v-if="mode === 'block'">
@@ -273,15 +273,15 @@
         this.$root.$on('for-audioeditor:lock-editing', this.setEditingLocked);
         this.$root.$on('readalong:playBlock', this.stop);
         
-        for (let i = 0.75; i <= 1.25; i+=0.05) {
+        for (let i = 1.25; i > 0.7; i-=0.05) {
           this.playbackRates.push(this._round(i, 2));
         }
         
-        for (let i = 0.1; i <= 1; i+=0.1) {
+        this.silenceLengths.push(2);
+        this.silenceLengths.push(1.5);
+        for (let i = 1; i >= 0.1; i-=0.1) {
           this.silenceLengths.push(this._round(i, 1));
         }
-        this.silenceLengths.push(1.5);
-        this.silenceLengths.push(2);
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -3595,6 +3595,38 @@ Revert to original block audio?`,
         font-size: inherit;
       }
     }
+    .speed-controls, .silence-controls {
+      .p-dropdown {
+        .p-dropdown-panel {
+          border-radius: 5px;
+        }
+        .p-dropdown-items-wrapper {
+          box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
+          &::-webkit-scrollbar {
+            width: 2px;
+          }
+          &::-webkit-scrollbar-track {
+            background: white;
+            border-radius: 10px;
+            width: 2px;
+          }
+          &::-webkit-scrollbar-thumb {
+            background: #D9D9D9;
+            border-radius: 10px;
+            width: 2px;
+          }
+          .p-dropdown-items {
+            border-radius: 5px;
+          }
+          .p-dropdown-item {
+            &.p-highlight {
+              background: inherit;
+              font-weight: bolder;
+            }
+          }
+        }
+      }
+    }
   }
   .cursor-position {
       width: 1px;
@@ -3766,7 +3798,7 @@ Revert to original block audio?`,
   }
   .selection-tooltips {
     position: absolute;
-    z-index: 9999;
+    z-index: 999;
     top: -29px;
     left: 595.35px;
     min-width: 265px;
