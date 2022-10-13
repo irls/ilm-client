@@ -2978,6 +2978,13 @@ Revert to original block audio?`,
             this.selectionEndS = end + 0.1;
           }
         },
+        showSelectionTooltip() {
+          if ($('.selection-tooltip.-start').length > 0) {
+            let left = this.selection.start * this.audiosourceEditor.sampleRate /  this.audiosourceEditor.samplesPerPixel - this.playlistScrollPosition;
+            let right = this.selection.end * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel - this.playlistScrollPosition;
+            $('.selection-tooltips').css('left', `${left}px`).width(`${right - left}px`);
+          }
+        },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
 
@@ -3229,6 +3236,9 @@ Revert to original block audio?`,
               let pos = this.cursorPosition * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel;
               $('#cursor-position').css('left', pos);
             }
+            Vue.nextTick(() => {
+              this.showSelectionTooltip();
+            });
           }
         },
         'blockSelection.start._id': {
@@ -3281,11 +3291,7 @@ Revert to original block audio?`,
                 this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : this.cursorPosition;
                 this._showSelectionBorders();
               }
-              if ($('.selection-tooltip.-start').length > 0) {
-                let left = val.start * this.audiosourceEditor.sampleRate /  this.audiosourceEditor.samplesPerPixel;
-                let right = val.end * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel;
-                $('.selection-tooltips').css('left', `${left}px`).width(`${right - left}px`);
-              }
+              this.showSelectionTooltip();
             })
             this.smoothSelection(val, oldVal);
           },
@@ -3343,6 +3349,11 @@ Revert to original block audio?`,
                 this.updateUser([this.user._id, {bookPlaybackRate: bookPlaybackRate}]);
               }
             }
+          }
+        },
+        'playlistScrollPosition': {
+          handler(val) {
+            this.showSelectionTooltip();
           }
         }
       }
