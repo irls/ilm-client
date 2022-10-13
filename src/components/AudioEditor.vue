@@ -3603,17 +3603,18 @@ Revert to original block audio?`,
         .p-dropdown-items-wrapper {
           box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
           &::-webkit-scrollbar {
-            width: 2px;
+            width: 10px;
           }
           &::-webkit-scrollbar-track {
             background: white;
             border-radius: 10px;
-            width: 2px;
           }
           &::-webkit-scrollbar-thumb {
             background: #D9D9D9;
-            border-radius: 10px;
+            border-radius: 9999px;
             width: 2px;
+            background-clip: padding-box;
+            border: 4px solid rgba(0, 0, 0, 0);
           }
           .p-dropdown-items {
             border-radius: 5px;
