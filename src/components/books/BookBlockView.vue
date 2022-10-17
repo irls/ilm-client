@@ -5444,7 +5444,7 @@ Save text changes and realign the Block?`,
 
         }
         &.-additional-info {
-          width: 825px;
+          width: 780px;
         }
       }
     }
