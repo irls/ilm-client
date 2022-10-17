@@ -53,7 +53,7 @@
           <dropdown 
             v-model="silenceLength" 
             :options="silenceLengths" 
-            scrollHeight="410px" />
+            scrollHeight="auto" />
           <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
         </div>
         <div class="selection-controls" v-bind:class="['-' + mode]" v-if="mode === 'block'">
@@ -3558,9 +3558,12 @@ Revert to original block audio?`,
       }
     }
     .silence-controls {
-      width: 170px;
+      width: 172px;
       display: inline-block;
       padding: 21px 20px 9px 20px;
+      .p-dropdown {
+        width: 57px;
+      }
     }
     .selection-controls {
       display: inline-block;
