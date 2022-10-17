@@ -1472,6 +1472,9 @@
           this.setAudioBuffer(new_buffer);
           //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           this.audiosourceEditor.activeTrack.duration-= end - start;
+          if (this.audiosourceEditor.activeTrack.duration < 0) {
+            this.audiosourceEditor.activeTrack.duration = 0;
+          }
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
           this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
 
