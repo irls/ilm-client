@@ -2378,8 +2378,20 @@
           });
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.open(e);
-            $('body').one('click', this.$refs.waveformContext.close);
+            $('body').one('click', () => {
+              this.$refs.waveformContext.close();
+              this.contextPosition = null;
+            });
           }
+          let hasSelection = $('.selection.segment').length > 0;
+          Vue.nextTick(() => {
+            window.requestAnimationFrame(() => {
+              if (hasSelection) {
+                //this._setSelectionOnWaveform();
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              }
+            });
+          });
         },
         setSelectionStart(val, event) {
           //if (this.mode == 'file') {
