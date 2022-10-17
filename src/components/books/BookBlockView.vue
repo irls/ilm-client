@@ -197,7 +197,7 @@
                 </template>
                 <template v-if="editingLocked && mode !== 'narrate'">
                   <div class="par-ctrl-divider"></div>
-                  <label class="blocked-editing">{{editingLockedReason}}</label>
+                  <label class="blocked-editing -hidden">{{editingLockedReason}}</label>
                 </template>
               </div>
               <!--<div class="par-ctrl -hidden">-->
@@ -6087,6 +6087,9 @@ div.-content.editing  div.content-wrap {
 
 .blocked-editing {
   color: gray;
+}
+.table-body.-content:hover .blocked-editing.-hidden {
+  min-width: 380px;
 }
 .suspicious-word:before {
    content: ' \01C3';
