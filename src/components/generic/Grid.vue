@@ -52,7 +52,7 @@ Features:
           >{{ key.title }}</th>
       </tr>
     </thead>
-    <draggable element="tbody" @end="endMove" ref="draggable" :move="checkMove" v-model="limitedData">
+    <draggable tag="tbody" @end="endMove" ref="draggable" :move="checkMove" v-model="limitedData">
     <!--  {{ key.render(entry[key.path]) }} -->
       <tr v-for="entry in limitedData" @click="rowEvent(entry, $event)" class="grid-row" :data-id="entry[idField]" :class='[{selected : isSelected(entry[idField])}, {"status-archived": entry.job_status === "archived"}]' >
         <td v-for="key in columns" :class="[key.addClass]" class="grid-cell">
@@ -204,9 +204,6 @@ Features:
         //console.log('CHECK MOVE', arguments);
         return true;
       }
-    },
-    mounted() {
-      
     }
   }
 </script>
