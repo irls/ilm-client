@@ -3185,6 +3185,9 @@ Revert to original block audio?`,
                 case 'fade':
                   return 'Fade';
                   break;
+                case 'unpin_right':
+                  return 'Pin';
+                  break;
               }
             }
           },
@@ -3214,7 +3217,7 @@ Revert to original block audio?`,
             if (!this.hasSelection || this.isSinglePointSelection) {
               return true;
             }
-            return typeof this.selection.start !== 'undefined' && typeof this.selection.end !== 'undefined' && this._round(this.selection.end - this.selection.start, 1) >= this._round(this.audioFadeConfig.length * 2, 1) ? false : true;
+            return typeof this.selection.start !== 'undefined' && typeof this.selection.end !== 'undefined' && this._round(this.selection.end - this.selection.start, 2) >= this._round(this.audioFadeConfig.length * 2, 2) ? false : true;
           },
           cache: false
         },
@@ -3600,7 +3603,7 @@ Revert to original block audio?`,
     .selection-controls {
       display: inline-block;
       padding: 21px 20px 9px 20px;
-      width: 265px;
+      /*width: 265px;*/
       &>div:not(.p-dropdown) {
         display: inline-block;
         padding: 0px 10px;
@@ -3628,7 +3631,8 @@ Revert to original block audio?`,
       height: 70px;
       &.blocked-message {
         color: gray;
-        padding: 0px 15px;
+        padding: 0px 0px;
+        float: none;
       }
     }
     >div:not(.audio-controls, .seek-controls) {
