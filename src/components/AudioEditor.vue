@@ -1979,23 +1979,23 @@
           if (new_selection.end > this._round(this.audiosourceEditor.activeTrack.duration, 1)) {
             new_selection.end = this._round(this.audiosourceEditor.activeTrack.duration, 1)
           }
-          if (this._round(new_selection.start, 1) == this._round(new_selection.end, 1) && field == 's') {
+          if (this._round(new_selection.start, 2) == this._round(new_selection.end, 2) && field == 's') {
             switch (part) {
               case 'start':
-                new_selection.end+= 0.1;
-                if (new_selection.end > this._round(this.audiosourceEditor.activeTrack.duration, 1)) {
+                new_selection.end+= 0.01;
+                if (new_selection.end > this._round(this.audiosourceEditor.activeTrack.duration, 2)) {
                   return;
                 }
                 break;
               case 'end':
-                new_selection.start-= 0.1;
+                new_selection.start-= 0.01;
                 if (new_selection.start < 0) {
                   return;
                 }
                 break;
             }
-            new_selection.end = this._round(new_selection.end, 1);
-            new_selection.start = this._round(new_selection.start, 1);
+            new_selection.end = this._round(new_selection.end, 2);
+            new_selection.start = this._round(new_selection.start, 2);
           }
           if (new_selection.start >= 0 && new_selection.start < new_selection.end) {
             //this._setSelectionOnWaveform();
