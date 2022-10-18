@@ -2958,7 +2958,7 @@ Revert to original block audio?`,
             return false;
           }
           if (this.selection.start > 0) {
-            this.selectionStartS = this._round(this.selectionStartS, 1) - 0.1;
+            this.selectionStartS = this._round(this.selectionStartS, 2) - 0.01;
           }
         },
         increaseSelectionStart() {
@@ -2966,7 +2966,7 @@ Revert to original block audio?`,
             return false;
           }
           if (this.selection.start < this.audioDuration) {
-            this.selectionStartS = this._round(this.selectionStartS, 1) + 0.1;
+            this.selectionStartS = this._round(this.selectionStartS, 2) + 0.01;
             //this.setSelectionStart(start + 0.1);
           }
         },
@@ -2975,7 +2975,7 @@ Revert to original block audio?`,
             return false;
           }
           if (this.selection.end > 0) {
-            this.selectionEndS = this._round(this.selectionEndS, 1) - 0.1;
+            this.selectionEndS = this._round(this.selectionEndS, 2) - 0.01;
           }
         },
         increaseSelectionEnd() {
@@ -2983,7 +2983,7 @@ Revert to original block audio?`,
             return false;
           }
           if (this.selection.end < this.audioDuration) {
-            this.selectionEndS = this._round(this.selectionEndS, 1) + 0.1;
+            this.selectionEndS = this._round(this.selectionEndS, 2) + 0.01;
           }
         },
         showSelectionTooltip() {
@@ -3025,7 +3025,7 @@ Revert to original block audio?`,
             if (typeof this.selection.start == 'undefined') {
               return false;
             }
-            return this._numToTime(this._round(this.selection.start % 60))
+            return this._numToTime(this._round(this.selection.start % 60, 2));
           },
           set(value) {
             this._emitSelection('start', 's', value);
@@ -3058,7 +3058,7 @@ Revert to original block audio?`,
             if (typeof this.selection.end == 'undefined') {
               return false
             }
-            return this._numToTime(this._round(this.selection.end % 60))
+            return this._numToTime(this._round(this.selection.end % 60, 2));
           },
           set(value) {
             this._emitSelection('end', 's', value);
@@ -3824,7 +3824,7 @@ Revert to original block audio?`,
     z-index: 999;
     top: -29px;
     left: 595.35px;
-    min-width: 265px;
+    min-width: 275px;
     .selection-tooltip {
       display: inline-block;
       background: rgb(186, 232, 195);
@@ -3849,10 +3849,10 @@ Revert to original block audio?`,
         }
       }
       .selection-time {
-        padding: 0px 2px;
+        padding: 0px 0px;
         display: inline-block;
         font-weight: 700;
-        min-width: 72px;
+        min-width: 77px;
         text-align: center;
       }
     }
