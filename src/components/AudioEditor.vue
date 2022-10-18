@@ -2954,28 +2954,36 @@ Revert to original block audio?`,
           $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`);
         },
         decreaseSelectionStart() {
-          let start = this._round(this.selectionStartS, 1);
-          if (start > 0) {
-            this.selectionStartS = start - 0.1;
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.start > 0) {
+            this.selectionStartS = this._round(this.selectionStartS, 1) - 0.1;
           }
         },
         increaseSelectionStart() {
-          let start = this._round(this.selectionStartS, 1);
-          if (start < this.audioDuration) {
-            this.selectionStartS = start + 0.1;
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.start < this.audioDuration) {
+            this.selectionStartS = this._round(this.selectionStartS, 1) + 0.1;
             //this.setSelectionStart(start + 0.1);
           }
         },
         decreaseSelectionEnd() {
-          let end = this._round(this.selectionEndS, 1);
-          if (end > 0) {
-            this.selectionEndS = end - 0.1;
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.end > 0) {
+            this.selectionEndS = this._round(this.selectionEndS, 1) - 0.1;
           }
         },
         increaseSelectionEnd() {
-          let end = this._round(this.selectionEndS, 1);
-          if (end < this.audioDuration) {
-            this.selectionEndS = end + 0.1;
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.end < this.audioDuration) {
+            this.selectionEndS = this._round(this.selectionEndS, 1) + 0.1;
           }
         },
         showSelectionTooltip() {
