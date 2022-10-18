@@ -2990,7 +2990,31 @@ Revert to original block audio?`,
           if ($('.selection-tooltip.-start').length > 0) {
             let left = this.selection.start * this.audiosourceEditor.sampleRate /  this.audiosourceEditor.samplesPerPixel - this.playlistScrollPosition;
             let right = this.selection.end * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel - this.playlistScrollPosition;
-            $('.selection-tooltips').css('left', `${left}px`).width(`${right - left}px`);
+            let win = window,
+              d = document,
+              e = d.documentElement,
+              g = d.getElementsByTagName('body')[0],
+              w = win.innerWidth || e.clientWidth || g.clientWidth;
+            let elWidth = right - left;
+            let minWidth = parseInt($('.selection-tooltips').css('min-width'));
+            if (elWidth < minWidth) {
+              right = left + minWidth;
+            }
+            if (left < 0 || w - right < 0) {
+              if (left < 0) {
+                left = 0;
+              }
+              if (w - right < 0) {
+                right = w;
+              }
+              if (right - left < minWidth) {
+                if (left > 0) {
+                  left = right - minWidth;
+                }
+              }
+              elWidth = right - left;
+            }
+            $('.selection-tooltips').css('left', `${left}px`).width(`${elWidth}px`);
           }
         },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
