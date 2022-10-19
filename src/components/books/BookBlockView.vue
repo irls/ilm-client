@@ -353,7 +353,7 @@
                 <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
 
                 <p v-for="comment in part.comments" class="flag-comment">
-                  <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
+                  <FlagComment :comment="comment"/>
                 </p>
 
                 <textarea v-if="part.status !== 'hidden'"
@@ -648,6 +648,7 @@ import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
 import BookBlockPartView from './BookBlockPartView';
 import LockedBlockActions from './block/LockedBlockActions';
+import FlagComment        from './block/FlagComment';
 //import { tabs, tab } from 'vue-strap';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
@@ -748,7 +749,8 @@ export default {
       //'highlightjs': hljs
       //'VueHighlightJS': VueHighlightJS
       'codemirror': codemirror,
-      LockedBlockActions
+      LockedBlockActions,
+      FlagComment,
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder', 'playNextBlock', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access, toc_methods],
@@ -4534,7 +4536,7 @@ Save text changes and realign the Block?`,
           }
         }
       },
-      
+
       resetListenCompressed() {
         this.block.resetAudiosrcConfig();
       }
