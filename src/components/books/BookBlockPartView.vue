@@ -4314,7 +4314,7 @@ Join subblocks?`,
         }
         &.-listen-uncompressed {
           background: url(/static/listen-uncompressed.png);
-          background-size: 15px;
+          background-size: 14px;
         }
         &.-add-flag {
           background-color: transparent;
