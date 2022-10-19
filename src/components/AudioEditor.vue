@@ -2486,8 +2486,19 @@
           if (this.selection.end >= this.audioDuration && this.mode === 'block') {
 
             setTimeout(() => {
-              $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
-            }, 500)
+              let resizeRight = document.getElementById('resize-selection-right');
+              if (resizeRight) {
+                let win = window,
+                  d = document,
+                  e = d.documentElement,
+                  g = d.getElementsByTagName('body')[0],
+                  w = win.innerWidth || e.clientWidth || g.clientWidth;
+                let offset = resizeRight.getBoundingClientRect();
+                if (offset.left < w) {
+                  $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
+                }
+              }
+            }, 500);
           }
         }, 30),
 
