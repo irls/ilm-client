@@ -4247,7 +4247,11 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-.-split-to-par, .-split-to-sub{
+.-split-to-par{
+  font-size: 14px;
+}
+
+.-split-to-sub{
   font-size: 16px;
 }
    .-content-block {
