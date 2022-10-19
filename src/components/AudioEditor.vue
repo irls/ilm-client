@@ -3211,10 +3211,11 @@ Revert to original block audio?`,
                 case 'fade':
                   return 'Fade';
                   break;
-                case 'unpin_right':
+                case 'manual_boundaries':
                   return 'Pin';
                   break;
               }
+              return '';
             }
           },
           cache: false
