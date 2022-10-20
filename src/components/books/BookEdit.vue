@@ -1771,7 +1771,7 @@ export default {
             break;
           default:
             task = Promise.resolve();
-            console.log('Not implemented type', record.type, record);
+            //console.log('Not implemented type', record.type, record);
             break;
         }
         if (block.getIsSplittedBlock()) {
