@@ -4263,9 +4263,6 @@ Join subblocks?`,
          }
       }
    }
-    .icon-menu-item.-split-to-par ,.icon-menu-item.-listen-uncompressed{
-      font-size: 14px;
-    }
     .icon-menu-item {
       .icon-menu {
         width: 14px;
