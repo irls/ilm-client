@@ -16,6 +16,7 @@ import testAudioConvert from './modules/testAudioConvert';
 import setBlocksDisabled from './modules/setBlocksDisabled';
 import userActions from './modules/user';
 import alignActions from './modules/align';
+import tasks from './modules/tasks';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -75,7 +76,8 @@ export const store = new Vuex.Store({
     testAudioConvert,
     setBlocksDisabled,
     userActions,
-    alignActions
+    alignActions,
+    tasks
   },
   state: {
     SelectionModalProgress:0,
@@ -686,6 +688,10 @@ export const store = new Vuex.Store({
 
     SET_CURRENTBOOK (state, book) {
       state.currentBook = book
+    },
+
+    SET_CURRENTBOOK_ID (state, bookId) {
+      state.currentBookid = bookId;
     },
 
     SET_CURRENTBOOK_META (state, meta) {
@@ -1678,7 +1684,7 @@ export const store = new Vuex.Store({
 
           dispatch('getTaskTypes')
             .then(() => {
-              dispatch('tc_loadBookTask');
+              dispatch('tc_loadBookTask', 'all');
             });
           dispatch('getConfig', 'custom')
             .then(config => {
@@ -2812,7 +2818,8 @@ export const store = new Vuex.Store({
         return state.loadBookTaskWait[key];
       }
       let address = state.API_URL + 'tasks';
-      if (bookid) {
+      bookid = bookid || state.currentBookid || null;
+      if (bookid && bookid !== 'all') {
         address+='?bookid=' + bookid
       }
       state.loadBookTaskWait[key] = axios.get(address)
@@ -4071,7 +4078,10 @@ export const store = new Vuex.Store({
           //console.log(response);
           //return dispatch('getBookAlign')
             //.then(() => {
-              return Promise.resolve(response);
+            return dispatch('tasks/getByBlockid', [data.blockid])
+              .then(() => {
+                return Promise.resolve(response);
+              });
             //});
         })
         .catch(err => {
@@ -4205,6 +4215,7 @@ export const store = new Vuex.Store({
                 dispatch('startProcessQueueWatch');
               } else {
                 dispatch('stopProcessQueueWatch');
+                dispatch('tc_loadBookTask');
               }
               //console.log(state.lockedBlocks)
             }
