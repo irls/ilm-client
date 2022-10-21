@@ -1,23 +1,23 @@
 <template>
   <div>
     <div class="collection-meta col-sm-12">
-      <div >
-        {{collectionBooksLength}} Books, {{collection.blocksCount}} pages
+      <div class="c-info-block">
+        <h5 class="c-title">{{currentCollection.title}}</h5>
+        {{collectionBooksLength}} books
       </div>
-      <div v-if="allowCollectionsEdit">
-        <fieldset>
-          <legend>Ready for publication</legend>
-          <div class="col-sm-6">
-            <button class="btn btn-default" v-on:click="linkBookModal = true">
-              <i class="fa fa-plus"></i>&nbsp;Add to collection
-            </button>
-          </div>
-          <div class="col-sm-6">
-            <button class="btn btn-danger" v-on:click="remove(true)">
-              Remove collection
-            </button>
-          </div>
-        </fieldset>
+      <div v-if="allowCollectionsEdit" class="c-action-block">
+
+        <div class="c-action-button">
+          <button class="btn btn-primary" v-on:click="linkBookModal = true"><!--btn-default-->
+            <i class="fa fa-plus"></i>&nbsp;Add to collection
+          </button>
+        </div>
+        <div class="c-action-button">
+          <button class="btn btn-danger" v-on:click="remove(true)">
+            Remove collection
+          </button>
+        </div>
+
       </div>
       <linkBook v-if="linkBookModal"
         @close_modal="linkBookModal = false"
@@ -37,8 +37,11 @@
         </fieldset>
 
 
-        <fieldset>
+        <fieldset class="c-publication-action">
           <legend>Publication</legend>
+          <p>Published: Ver. DD Mon YYYY</p>
+          <p>Unpublished: DD Mon YYYY</p>
+          <button class="btn btn-primary">Publish</button>
         </fieldset>
 
     </div>
@@ -56,9 +59,26 @@
         collection: {},
         linkBookModal: false,
         headers: [
-          {title: 'Ready', path: 'bookid'},
-          {title: 'Book updates', path: 'title'},
-          {title: 'Version', path: 'ver', addClass: 'book-version',},
+          {title: 'Ready', path: 'ready', addClass: 'book-status',
+            html (val) {
+              switch(val) {
+                case 'done' : {
+                  return `<i class='fa fa-check' style="color: darkseagreen;"></i>`;
+                } break;
+                case 'error' : {
+                  return `<i class='fa fa-warning' style="color: rgb(217 83 79);"></i>`;
+                } break;
+                case 'process' : {
+                  return `<i class='fa fa-spinner fa-spin'></i>`;
+                } break;
+                default : {
+                  return ``;
+                } break;
+              };
+            }
+          },
+          {title: 'Book updates', path: 'title', addClass: 'book-title'},
+          {title: 'Version', path: 'ver', addClass: 'book-version'},
         ],
         selectedBooks: []
       }
@@ -73,8 +93,6 @@
         return Languages;
       },
       collectionBooksLength() {
-        console.log(`this.currentCollection: `, this.currentCollection);
-        console.log(`this.books_list: `, this.currentCollection.books_list);
         if (this.currentCollection.books instanceof Object) {
           return Object.keys(this.currentCollection.books).length;
         }
@@ -83,11 +101,30 @@
       booksGrid() {
         if (this.currentCollection.books instanceof Object) {
           const res = this.currentCollection.books_list.map((book)=>{
+            console.log(`book.publicationStatus: `, book.publicationStatus);
+            console.log(`(book.isIntheProcessOfPublication || book.isInTheQueueOfPublication): `, (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication));
+            let publicationStatus = 'none';
+            if (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication) {
+              publicationStatus = 'process';
+            } else {
+              switch(book.publicationStatus) {
+                case 'done' : {
+                  publicationStatus = 'done';
+                } break;
+                case '' : {
+                  publicationStatus = 'none';
+                } break;
+                default : {
+                  publicationStatus = 'error';
+                } break;
+              };
+            }
+console.log(`publicationStatus: `, publicationStatus);
             return {
               bookid: book.bookid,
-              ready: '1',
+              ready: publicationStatus,
               title: book.title,
-              ver: book.cur_ver
+              ver: book.pub_ver
             }
           });
           console.log(`booksGrid: `, res);
@@ -139,6 +176,27 @@
     }
   }
 </script>
+
+<style scoped>
+  .c-info-block {
+    padding-left: 10px;
+  }
+  h5.c-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  .c-action-block {
+    display: flex;
+    width: 100%;
+    justify-content: space-evenly;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+  .c-publication-action {
+    padding: 10px;
+  }
+</style>
+
 <style>
   #books-in-collection thead th {
     background-color: silver;
@@ -151,5 +209,17 @@
   }
   #books-in-collection thead .book-version {
     min-width: 82px;
+  }
+  #books-in-collection thead .book-status {
+    width: 75px;
+  }
+  #books-in-collection td.book-status {
+    text-align: center;
+  }
+  #books-in-collection td.book-title {
+    max-width: 80px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 </style>
