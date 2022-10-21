@@ -1495,8 +1495,8 @@
           let first_list_index        = (start * original_buffer.sampleRate);
           let second_list_index       = (end * original_buffer.sampleRate);
           let second_list_mem_alloc   = (original_buffer.length - (end * original_buffer.sampleRate));
-          if (second_list_mem_alloc < 0) {
-            second_list_mem_alloc = 0;
+          if (second_list_mem_alloc < 1) {
+            second_list_mem_alloc = 1;
           }
 
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
@@ -1528,6 +1528,9 @@
           this.setAudioBuffer(new_buffer);
           //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           this.audiosourceEditor.activeTrack.duration-= end - start;
+          if (this.audiosourceEditor.activeTrack.duration < 0) {
+            this.audiosourceEditor.activeTrack.duration = 0;
+          }
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
           this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
 
