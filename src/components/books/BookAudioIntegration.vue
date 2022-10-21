@@ -973,23 +973,9 @@
           });
           return;
         }
-        let api_url = this.API_URL + 'books/' + this.currentBookid + '/selection_alignment';
-        let formData = new FormData();
-        let api = this.$store.state.auth.getHttp()
         this.$root.$emit('start-align');
-        api.post(api_url, {
-          start: this.blockSelection.start._id,
-          end: this.blockSelection.end._id,
-          audiofiles: false,
-          realign: true,
-          voicework: 'all_with_tts',
-          voices: this.currentBookMeta.voices
-        }, {
-          validateStatus: function (status) {
-            return status == 200 || status == 504;
-          }
-        }).then((response)=>{
-          this.getBookAlign();
+        return this.alignTTS()
+          .then((response) => {
           this.$root.$emit('stop-align');
           if (response.status===200) {
             //this.$root.$emit('bookBlocksUpdates', response.data);
@@ -998,15 +984,8 @@
           } else if (response.status == 504) {
             //self.checkAligningBlocks();
           }
-          this.setCurrentBookCounters();
         }).catch((err) => {
-          this.getBookAlign();
           this.$root.$emit('stop-align');
-          if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
-            //this.checkAligningBlocks();
-          } else {
-            //this.aligningBlocks = [];
-          }
         });
       },
       scrollToBlock(id) {
@@ -1270,7 +1249,7 @@
       },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
-      ...mapActions('alignActions', ['alignBook'])
+      ...mapActions('alignActions', ['alignBook', 'alignTTS'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
