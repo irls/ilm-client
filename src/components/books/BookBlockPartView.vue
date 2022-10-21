@@ -272,7 +272,7 @@
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
                       <i class="icon-menu -split-to-sub"></i>Split for narration
                     </li>
-                    <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
+                    <li @click="splitIntoBlocks($event)" class="icon-menu-item -split-to-par" v-if="splitIntoBlocksAllowed">
                       <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
                     </li>
                   </template>
@@ -296,7 +296,7 @@
                     <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
                       <i class="icon-menu -listen-compressed"></i>Listen compressed
                     </li>
-                    <li class="icon-menu-item" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
+                    <li class="icon-menu-item -listen-uncompressed" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
                       <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
                     </li>
                   </template>
@@ -4250,7 +4250,7 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-.-split-to-par, .-split-to-sub{
+.-split-to-par,.-split-to-sub{
   font-size: 16px;
 }
    .-content-block {
@@ -4313,7 +4313,7 @@ Join subblocks?`,
         }
         &.-listen-uncompressed {
           background: url(/static/listen-uncompressed.png);
-          background-size: 15px;
+          background-size: 16px;
         }
         &.-add-flag {
           background-color: transparent;

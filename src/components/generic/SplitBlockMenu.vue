@@ -5,7 +5,7 @@
       <li class="icon-menu-item" v-if="allowRejoin" v-on:click="reJoin()">
         <i class="icon-menu -re-join"></i>Re-join narration split
       </li>
-      <li class="icon-menu-item" v-if="allowSplit" v-on:click="split()">
+      <li class="icon-menu-item -split-to-par" v-if="allowSplit" v-on:click="split()">
         <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
       </li>
       <li class="icon-menu-item" v-if="allowRejoinAll" v-on:click="reJoinAll()">
