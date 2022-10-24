@@ -1079,7 +1079,7 @@ export default {
                 this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
+                this.$store.dispatch('set_selected_blocks');
                 Vue.nextTick(() => {
                   elNext.highlightSuspiciousWords();
                 });
