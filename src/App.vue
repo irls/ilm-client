@@ -131,7 +131,7 @@ export default {
 
     .fixed-bottom {
       position: relative;
-      overflow-y: auto;
+      /*overflow-y: auto;*/
       border: 1px solid black;
       border-radius: 0px;
       width: 100%;

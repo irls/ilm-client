@@ -104,7 +104,7 @@
      }
    }
    &.context-menu {
-     width: 200px;
+     width: 205px;
    }
 }
 </style>

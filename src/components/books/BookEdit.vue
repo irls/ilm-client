@@ -319,6 +319,7 @@ export default {
         let checkMeta = this.parlistO.meta || {};
         checkMeta = checkMeta.bookid || false;
         const bookid = this.$route.params.bookid;
+        //this.$store.commit('SET_CURRENTBOOK_ID', bookid);
         let loadType = 'load';
         if (!checkMeta || checkMeta !== bookid || !this.parlist.values().next().value || this.$route.params.task_type) {
           console.log('loadBookMounted', loadType);
@@ -1078,7 +1079,7 @@ export default {
                 this.refreshTmpl();
                 this.unfreeze('joinBlocks');
                 this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
+                this.$store.dispatch('set_selected_blocks');
                 Vue.nextTick(() => {
                   elNext.highlightSuspiciousWords();
                 });
@@ -1771,7 +1772,7 @@ export default {
             break;
           default:
             task = Promise.resolve();
-            console.log('Not implemented type', record.type, record);
+            //console.log('Not implemented type', record.type, record);
             break;
         }
         if (block.getIsSplittedBlock()) {
@@ -2398,7 +2399,8 @@ export default {
       this.$root.$on('from-block-part-view:on-input', this.correctCurrentEditHeight);
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
-        e.preventDefault();
+        if (e.target.hasAttribute('data-except-link-prevent')) return;
+        e.preventDefault(); //else
       });
 
       this.$root.$on('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);

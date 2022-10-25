@@ -216,7 +216,7 @@
                     <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
 
                     <p v-for="comment in part.comments" class="flag-comment">
-                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
+                      <FlagComment :comment="comment"/>
                     </p>
 
                     <textarea v-if="part.status !== 'hidden'"
@@ -272,7 +272,7 @@
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
                       <i class="icon-menu -split-to-sub"></i>Split for narration
                     </li>
-                    <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
+                    <li @click="splitIntoBlocks($event)" class="icon-menu-item -split-to-par" v-if="splitIntoBlocksAllowed">
                       <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
                     </li>
                   </template>
@@ -296,7 +296,7 @@
                     <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
                       <i class="icon-menu -listen-compressed"></i>Listen compressed
                     </li>
-                    <li class="icon-menu-item" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
+                    <li class="icon-menu-item -listen-uncompressed" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
                       <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
                     </li>
                   </template>
@@ -372,6 +372,7 @@ import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import LockedBlockActions from './block/LockedBlockActions';
+import FlagComment        from './block/FlagComment';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
@@ -453,12 +454,14 @@ export default {
     }
   },
   components: {
-    UploadImage, LockedBlockActions,
-      'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'block-flag-popup': BlockFlagPopup,
-      //'modal': modal,
-      'split-block-menu': SplitBlockMenu
+    UploadImage,
+    LockedBlockActions,
+    FlagComment,
+    'block-menu': BlockMenu,
+    'block-cntx-menu': BlockContextMenu,
+    'block-flag-popup': BlockFlagPopup,
+    //'modal': modal,
+    'split-block-menu': SplitBlockMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
   mixins: [taskControls, apiConfig, access],
@@ -4247,7 +4250,7 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-.-split-to-par, .-split-to-sub{
+.-split-to-par,.-split-to-sub{
   font-size: 16px;
 }
    .-content-block {
@@ -4310,7 +4313,7 @@ Join subblocks?`,
         }
         &.-listen-uncompressed {
           background: url(/static/listen-uncompressed.png);
-          background-size: 15px;
+          background-size: 16px;
         }
         &.-add-flag {
           background-color: transparent;

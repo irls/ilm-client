@@ -1,0 +1,57 @@
+.ilm-tooltip {
+  z-index: 9999;
+  position: absolute;
+  display: none;
+  padding: 0.25em 0.5rem;
+  max-width: 12.5rem;
+}
+.ilm-tooltip.-top {
+  /*padding: 0.25em 0;*/
+}
+.ilm-tooltip .ilm-tooltip-text {
+  font-size: 1.4rem;
+  background: #F0F0F0;
+  color: #000000;
+  padding: 0.5rem 0.5rem;
+  box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
+  border-radius: 4px;
+  white-space: pre-line;
+  word-break: break-word;
+  font-weight: 400;
+}
+.ilm-tooltip.-top .ilm-tooltip-arrow {
+  border-top-color: #F0F0F0;
+}
+
+.ilm-tooltip-arrow {
+  bottom: 0;
+  left: 50%;
+  margin-left: -0.25rem;
+  border-width: 0.25em 0.25em 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+}
+
+.ilm-tooltip.blue-tooltip {
+  max-width: none;
+}
+.ilm-tooltip.blue-tooltip .ilm-tooltip-text {
+  color: #2D76B0;
+  white-space: nowrap;
+}
+.ilm-tooltip.-top.blue-tooltip .ilm-tooltip-arrow {
+  /*border-top-color: #2D76B0;*/
+}
+
+.ilm-tooltip.red-tooltip {
+  max-width: none;
+}
+.ilm-tooltip.red-tooltip .ilm-tooltip-text {
+  background: #F0F0F0;
+  color: #FF4343;
+  white-space: nowrap;
+  word-break: break-word;
+}
