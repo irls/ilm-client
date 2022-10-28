@@ -6092,14 +6092,18 @@ div.-content.editing  div.content-wrap {
   min-width: 380px;
 }
 .suspicious-word:before {
-   content: ' \01C3';
-   color: red;
+   content: '\003F';
+   color: rgba(255, 0, 0, 0.75);
    /*width: 17px;*/
    display: inline-block;
    /*margin-left: -10px;*/
    font-style: normal;
    font-weight: bolder;
    /*margin: 2px 0px 2px 0px;*/
+   top: -0.7em;
+   position: relative;
+   font-size: 17px;
+   font-family: GentiumPlus, "Georgia", "serif";
 }
 .content-wrap.dropcap {
   >.suspicious-word:first-child {
