@@ -677,13 +677,18 @@
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
+              // do not select less than 0.2 sec
               if (self.mode === 'file' && Math.abs(end - start) < 0.2 &&
                       typeof self.selection.start !== 'undefined' &&
                       typeof self.selection.end !== 'undefined' &&
                       (self.selection.start != start ||
                       self.selection.end != end)) {
-
-                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                self.selection.start = self._round(self.selection.start, 2);
+                self.selection.end = self._round(self.selection.end, 2);
+                if (self.selection.start != start ||
+                      self.selection.end != end) {
+                  self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                }
                 return;
               }
               if (!is_single_cursor) {
