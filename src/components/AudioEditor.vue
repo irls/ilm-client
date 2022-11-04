@@ -53,7 +53,8 @@
           <dropdown 
             v-model="silenceLength" 
             :options="silenceLengths" 
-            scrollHeight="auto" />
+            scrollHeight="auto"
+            class="add-silence-dropdown" />
           <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
         </div>
         <div class="selection-controls" v-bind:class="['-' + mode]" v-if="mode === 'block'">
@@ -90,7 +91,12 @@
               <div>
                 <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
                 <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
-                <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'"></button>
+                <dropdown 
+                  v-model="fadePercent" 
+                  :options="fadePercents" 
+                  scrollHeight="410px" 
+                  class="fade-percent-dropdown"/>
+                <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
               </div>
             </template>
             <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
@@ -99,7 +105,7 @@
         <template v-if="mode == 'block' && !isFootnote && !editingLocked">
         </template>
         <div class="audio-controls" v-if="mode == 'block' && !editingLocked">
-          <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName}"></button>
+          <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName, closeOnClick: false}"></button>
           <button class="audio-btn -save" v-on:click="save()"  :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save'"></button>
           <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save & Re-align'"></button>
           <button class="audio-btn -revert" :disabled="isRevertDisabled" v-on:click="revert(true)" v-ilm-tooltip.top="'Revert'"></button>
@@ -163,23 +169,18 @@
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   import { setUpSource, onSourceEnded } from '../store/audio/AudioPlayout.js';
   import { updateEditor } from '../store/audio/AudioPlaylist.js';
-  //import $ from 'jquery';
-  //import 'select2';
-  //import 'select2/dist/css/select2.css';
   import dropdown from 'primevue/dropdown';
-  //import tooltip from 'primevue/tooltip';
   import IlmTooltip from '../directives/ilm-tooltip/ilm-tooltip.js';
   import '../directives/ilm-tooltip/ilm-tooltip.css';
-  //import IlmRedTooltip from './directives/ilm-tooltip/red-tooltip.js';
-  //import './directives/ilm-tooltip/red-tooltip.css';
+  import BtnToast from '../directives/btn-toast/btn-toast.js';
+  import '../directives/btn-toast/btn-toast.css';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
   const closeBracketsRegex = /[\)\]\}\﴿]/mg;
   const closeQuotesRegex = /[\”\’\»]/mg;
   
-  //Vue.directive('tooltip', tooltip);
   Vue.directive('ilm-tooltip', IlmTooltip);
-  //Vue.directive('ilm-red-tooltip', IlmRedTooltip);
+  Vue.directive('btn-toast', BtnToast);
 
   export default {
       name: 'AudioEditor',
@@ -243,7 +244,10 @@
           editingLockedReason: '',
           pausedAt: null,
           playbackRate: 1,
-          playbackRates: []
+          playbackRates: [],
+          fadePercent: '',
+          fadePercents: ['95%', '90%', '75%', '50%', '25%', '10%', '5%'],
+          fadeSelectionLog: []
         }
       },
       mounted() {
@@ -476,6 +480,13 @@
               this.playbackRate = this.user.bookPlaybackRate[this.currentBookMeta.bookid];
             }
           }
+          let fadePercent = this.audioFadeConfig.percent;
+          /*if (this.currentBookMeta && this.currentBookMeta.bookid && mode === 'block') {
+            if (this.user.audioFadeConfig && this.user.audioFadeConfig[this.currentBookMeta.bookid]) {
+              fadePercent = this.user.audioFadeConfig[this.currentBookMeta.bookid].percent;
+            }
+          }*/
+          this.fadePercent = `${fadePercent}%`;
           $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`)
 
           if (this.$refs.waveformContext) {
@@ -1552,7 +1563,8 @@
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               
               let fadeLength = this.audioFadeConfig.length * original_buffer.sampleRate;
-              let removePercent = (100 - this.audioFadeConfig.percent);
+              let fadePercent = this.getClearFadePercent();
+              let removePercent = (100 - fadePercent);
               for (let i = 0; i <= fadeLength; ++i) {
                 if (range[i]) {
                   let currentPercent = i * removePercent / fadeLength;
@@ -1609,11 +1621,13 @@
               
               
               this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
-              this.addTaskQueue('fade', [this.selection.start, this.selection.end, this.audioFadeConfig.percent, this.audioFadeConfig.length]);
+              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, this.audioFadeConfig.length]);
+              this.addFadeSelectionLog();
               this.isModified = true;
               if (playPosition) {
                 this.cursorPosition = playPosition;
               }
+              this.play(this.selection.start);
             });
         },
         setAudioBuffer(new_buffer) {
@@ -1674,6 +1688,7 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
+            this.popFadeSelectionLog();
             return this.pause()
               .then(() => {
                 let make_event = !this.audioTasksQueue.running;
@@ -1998,6 +2013,7 @@
             new_selection.start = this._round(new_selection.start, 2);
           }
           if (new_selection.start >= 0 && new_selection.start < new_selection.end) {
+            this.clearFadeSelectionLog();
             //this._setSelectionOnWaveform();
             if (this.selection.end == new_selection.start) {
               this.setSelectionEnd(new_selection.end);
@@ -3031,6 +3047,18 @@ Revert to original block audio?`,
             $('.selection-tooltips').css('left', `${left}px`).width(`${elWidth}px`);
           }
         },
+        addFadeSelectionLog() {
+          this.fadeSelectionLog.push({percent: this.getClearFadePercent()});
+        },
+        popFadeSelectionLog() {
+          this.fadeSelectionLog.pop();
+        },
+        clearFadeSelectionLog() {
+          this.fadeSelectionLog = [];
+        },
+        getClearFadePercent() {
+          return parseInt(this.fadePercent);
+        },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
 
@@ -3236,6 +3264,16 @@ Revert to original block audio?`,
           },
           cache: false
         },
+        rangeFadePercent: {
+          get() {
+            let startPercent = 100;
+            this.fadeSelectionLog.forEach(log => {
+              startPercent = log.percent * startPercent / 100;
+            });
+            return `Faded ${this._round(startPercent, 0)}%`;
+          },
+          cache: false
+        },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',
           blkSelection: 'blockSelection',
@@ -3325,6 +3363,7 @@ Revert to original block audio?`,
         'selection': {
           handler(val, oldVal) {
 
+            let clearFadeLog = val instanceof Object && val.hasOwnProperty('start') && val.hasOwnProperty('end') && (!oldVal || (val.start !== oldVal.start || val.end !== oldVal.end));
             Vue.nextTick(() => {
               //return;
               //$('[id="resize-selection-right"]')
@@ -3344,6 +3383,9 @@ Revert to original block audio?`,
               this.showSelectionTooltip();
             })
             this.smoothSelection(val, oldVal);
+            if (clearFadeLog) {
+              this.clearFadeSelectionLog();
+            }
           },
           deep: true
         },
@@ -3406,6 +3448,19 @@ Revert to original block audio?`,
             this.showSelectionTooltip();
           }
         }
+        /*'fadePercent': {
+          handler(val) {
+            if (this.currentBookMeta && this.currentBookMeta.bookid && this.mode === 'block') {
+              let audioFadeConfig = {};
+              let clearPercent = this.getClearFadePercent();
+              audioFadeConfig[this.currentBookMeta.bookid] = Object.assign({}, this.audioFadeConfig);
+              if (!this.user.audioFadeConfig || !this.user.audioFadeConfig[this.currentBookMeta.bookid] || this.user.audioFadeConfig[this.currentBookMeta.bookid].percent !== clearPercent) {
+                audioFadeConfig[this.currentBookMeta.bookid].percent = parseFloat(parseFloat(clearPercent).toFixed(0));
+                this.updateUser([this.user._id, {audioFadeConfig: audioFadeConfig}]);
+              }
+            }
+          }
+        }*/
       }
   }
 </script>
@@ -3578,7 +3633,7 @@ Revert to original block audio?`,
       }
       .speed-controls {
         display: inline-block;
-        width: 80px;
+        width: 70px;
         margin: -13px 2px -3px 5px;
         span {
           display: block;
@@ -3608,11 +3663,16 @@ Revert to original block audio?`,
       }
     }
     .silence-controls {
-      width: 172px;
+      width: 163px;
       display: inline-block;
       padding: 21px 20px 9px 20px;
-      .p-dropdown {
-        width: 57px;
+      .add-silence-dropdown.p-dropdown {
+        width: 47px;
+        .p-dropdown-trigger {
+          .pi-chevron-down::before {
+            left: 70%;
+          }
+        }
       }
     }
     .selection-controls {
@@ -3660,7 +3720,7 @@ Revert to original block audio?`,
         font-size: inherit;
       }
     }
-    .speed-controls, .silence-controls {
+    .speed-controls, .silence-controls, .selection-controls {
       .p-dropdown {
         .p-dropdown-panel {
           border-radius: 5px;
@@ -3690,6 +3750,26 @@ Revert to original block audio?`,
               font-weight: bolder;
             }
           }
+        }
+      }
+    }
+    .p-dropdown {
+      .p-inputtext {
+        /*padding: 5px 3px;*/
+      }
+      .p-dropdown-trigger {
+        width: 15px;
+        .pi-chevron-down::before {
+          content: '';
+          position: absolute;
+          left: 75%;
+          top: 13px;
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top: 6px solid #000;
+          clear: both;
         }
       }
     }
@@ -3792,9 +3872,9 @@ Revert to original block audio?`,
     }
     &.-fade {
       background: url("@{audio-btn}fade.png");
+      width: 49px;
       &[disabled] {
         background: url("@{audio-btn}fade-disabled.png");
-
       }
     }
     &.-clear {
@@ -3859,8 +3939,11 @@ Revert to original block audio?`,
       width: 34px;
     }
   }
-  .playbackrate-dropdown {
-    width: 70px;
+  .playbackrate-dropdown.p-dropdown {
+    width: 62px;
+  }
+  .fade-percent-dropdown.p-dropdown {
+    width: 56px;
   }
   .selection-tooltips {
     position: absolute;
