@@ -4897,6 +4897,7 @@ Save text changes and realign the Block?`,
 <style lang='less'>
 
 @variable: 90px;
+@suspicious-word-icon: '\003F';
 .ilm-block {
     padding: 0;
     .medium-editor-placeholder:after {
@@ -6092,7 +6093,7 @@ div.-content.editing  div.content-wrap {
   min-width: 380px;
 }
 .suspicious-word:before {
-   content: '\003F';
+   content: "@{suspicious-word-icon}";
    color: rgba(255, 0, 0, 0.75);
    /*width: 17px;*/
    display: inline-block;
@@ -6105,6 +6106,12 @@ div.-content.editing  div.content-wrap {
    font-size: 17px;
    font-family: GentiumPlus, "Georgia", "serif";
 }
+.title {
+  .suspicious-word:before {
+    top: -1.3em;
+    font-size: 20px;
+  }
+}
 .content-wrap.dropcap {
   >.suspicious-word:first-child {
     position: relative;
@@ -6112,13 +6119,14 @@ div.-content.editing  div.content-wrap {
       content: none;
     }
     &:after {
-      content: ' \01C3';
+      content: "@{suspicious-word-icon}";
       position: absolute;
       color: red;
       display: inline-block;
       font-style: normal;
       font-weight: bolder;
       left: -80px;
+      top: -0.4em;
     }
   }
 }
