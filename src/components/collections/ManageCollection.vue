@@ -41,7 +41,7 @@
           <legend>Publication</legend>
           <p>Published: Ver. DD Mon YYYY</p>
           <p>Unpublished: DD Mon YYYY</p>
-          <button class="btn btn-primary">Publish</button>
+          <button class="btn btn-primary" @click="publish">Publish</button>
         </fieldset>
 
     </div>
@@ -50,8 +50,11 @@
 <script>
   import {mapActions, mapGetters} from 'vuex';
   import LinkBook from './LinkBook';
-  import { Languages } from "../../mixins/lang_config.js"
+  import { Languages } from "../../mixins/lang_config.js";
   import Grid from '../generic/Grid';
+  import api_config     from '../../mixins/api_config.js';
+  import axios from 'axios';
+
   export default {
     name: 'ManageCollection',
     data() {
@@ -86,6 +89,7 @@
     components: {
       LinkBook, Grid
     },
+    mixins: [api_config],
     computed: {
       ...mapGetters(['currentCollection', 'allowCollectionsEdit']),
 
@@ -171,6 +175,19 @@ console.log(`publicationStatus: `, publicationStatus);
               console.log(err);
             });
         }
+      },
+      publish() {
+        console.log(`this.currentCollection: `, this.currentCollection);
+        // this.isPublishing = false;
+        // this.isPublishingQueue = true;
+        return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
+        .then(resp => {
+          if (resp.status == 200 && resp.data.ok) {
+            //this.currentBook.isInTheQueueOfPublication = true;
+            //this.currentBookMeta.isInTheQueueOfPublication = true;
+          }
+          console.log(resp);
+        });
       },
       ...mapActions(['removeCollection'])
     }
