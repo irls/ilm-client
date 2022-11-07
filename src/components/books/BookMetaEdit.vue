@@ -1570,7 +1570,7 @@ export default {
           this.currentBook.isInTheQueueOfPublication = true;
           this.currentBookMeta.isInTheQueueOfPublication = true;
         }
-        console.log(resp);
+        //console.log(resp);
       });
     },
     publishContent() {
