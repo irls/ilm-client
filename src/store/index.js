@@ -263,7 +263,7 @@ export const store = new Vuex.Store({
     suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
     setSelectedBlocksAsyncResult : [],
     blockAudiosrcConfig: {
-      
+
     }
   },
 
@@ -1400,7 +1400,7 @@ export const store = new Vuex.Store({
     set_user(state, user) {
       state.user = user;
     },
-    
+
     set_blockAudiosrcConfig(state, audiosrc_config) {
       state.blockAudiosrcConfig = audiosrc_config;
     }
@@ -1678,8 +1678,7 @@ export const store = new Vuex.Store({
           dispatch('getBookCategories');
           dispatch('getCollections');
           dispatch('getAlignBlocksLimit');
-          state.liveDB.startWatch('collection', 'collection', {}, (data) => {
-            //console.log(data);
+          state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
             if (data.action) {
               switch (data.action) {
                 case 'change':

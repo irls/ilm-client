@@ -39,9 +39,11 @@
 
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
-          <p>Published: Ver. DD Mon YYYY</p>
-          <p>Unpublished: DD Mon YYYY</p>
-          <button class="btn btn-primary" @click="publish">Publish</button>
+          <p>Published: Ver. {{pubVersionDate}}</p>
+          <p>Unpublished: {{currVersionDate}}</p>
+          <p>{{currentCollection.id}} - {{currentCollection.isInTheQueueOfPublication}}</p>
+          <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
+          <button v-else class="btn btn-primary" @click="publish">Publish</button>
         </fieldset>
 
     </div>
@@ -83,7 +85,8 @@
           {title: 'Book updates', path: 'title', addClass: 'book-title'},
           {title: 'Version', path: 'ver', addClass: 'book-version'},
         ],
-        selectedBooks: []
+        selectedBooks: [],
+        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       }
     },
     components: {
@@ -123,7 +126,6 @@
                 } break;
               };
             }
-console.log(`publicationStatus: `, publicationStatus);
             return {
               bookid: book.bookid,
               ready: publicationStatus,
@@ -135,7 +137,22 @@ console.log(`publicationStatus: `, publicationStatus);
           return res;
         }
         return [];
-      }
+      },
+      pubVersionDate() {
+        //DD Mon YYYY
+        if (this.currentCollection.pubVersionDate) {
+          const uDate = new Date(this.currentCollection.pubVersionDate);
+          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
+        }
+        return '';
+      },
+      currVersionDate() {
+        if (this.currentCollection.currVersionDate) {
+          const uDate = new Date(this.currentCollection.currVersionDate);
+          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
+        }
+        return '';
+      },
     },
     methods: {
       remove(showMessage = false) {
@@ -183,8 +200,7 @@ console.log(`publicationStatus: `, publicationStatus);
         return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
         .then(resp => {
           if (resp.status == 200 && resp.data.ok) {
-            //this.currentBook.isInTheQueueOfPublication = true;
-            //this.currentBookMeta.isInTheQueueOfPublication = true;
+            this.currentCollection.isInTheQueueOfPublication = true;
           }
           console.log(resp);
         });
