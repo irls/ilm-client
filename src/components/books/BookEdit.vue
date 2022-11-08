@@ -98,11 +98,11 @@
 
   </div>
   <!--<div class="container-block">   -->
-  <div :class="['audio-fab', '-' + playingBlock.state, {'-audio-editor-opened': audioTasksQueue.block.blockId}]" v-if="hasPlayingBlock" v-on:click="onAudioFab()">
-    <!-- <i class="fa fa-play-circle" v-if="playingBlock.state === 'pause'"></i>
-    <i class="fa fa-pause-circle" v-if="playingBlock.state === 'play'"></i> -->
-    <i class="fab-play" v-if="playingBlock.state === 'pause'"></i>
-    <i class="fab-pause" v-if="playingBlock.state === 'play'"></i>
+  <div class="fab-container">
+    <div :class="['audio-fab', '-' + playingBlock.state]" v-if="hasPlayingBlock" v-on:click="onAudioFab()">
+      <i class="fab-play" v-if="playingBlock.state === 'pause'"></i>
+      <i class="fab-pause" v-if="playingBlock.state === 'play'"></i>
+    </div>
   </div>
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -3112,75 +3112,59 @@ div.merge-subblocks {
   left: 0px;
 }
 
-.audio-fab {
-  /*background: url('/static/fab-all.png'); */
-  /*width: 20px; */
-  /*height: 20px; */
-  position: absolute; 
-  z-index: 9999;
-  right: 50px;
-  top: calc(~'100% - 80px');
-  cursor: pointer;
-  &.-pause {
-    background-position-x: 20px;
-  }
-  &.-audio-editor-opened {
-    top: calc(~'100% - 283px');
-  }
-  i, i:hover {
-    font-size: 45px;
-    color: #307AB4;
-    background-color: #307AB4;
-  }
-  .fab-play {
-    box-sizing: border-box;
-    position: relative;
-    display: block;
-    transform: scale(var(--ggs,1));
-    width: 40px;
-    height: 40px;
-    border: 2px solid;
-    border-radius: 20px
-  }
-  .fab-play::before {
-    content: "";
-    display: block;
-    box-sizing: border-box;
-    position: absolute;
-    width: 0;
-    height: 18px;
-    border-top: 9px solid transparent;
-    border-bottom: 9px solid transparent;
-    border-left: 12px solid white;
-    top: 9px;
-    left: 14px
-  }
-  .fab-pause {
-    box-sizing: border-box;
-    position: relative;
-    display: block;
-    transform: scale(var(--ggs,1));
-    width: 40px;
-    height: 40px;
-    border: 2px solid;
-    border-radius: 22px
-  }
-  .fab-pause::before {
-    content: "";
-    display: block;
-    box-sizing: border-box;
-    position: absolute;
-    width: 12px;
-    height: 15px;
-    left: 12px;
-    top: 10px;
-    border-left: 4px solid white;
-    border-right: 4px solid white;
-  }
-}
-.meta-visible {
+.fab-container {
+  float: right;
+  text-align: right;
+  float: right;
+  /*margin: 0px 0px -10px 0px;*/
+  position: relative;
   .audio-fab {
-    right: 495px;
+    /*background: url('/static/fab-all.png'); */
+    /*width: 20px; */
+    /*height: 20px; */
+    position: absolute; 
+    z-index: 9999;
+    right: 50px;
+    top: calc(~'100% - 80px');
+    cursor: pointer;
+    i, i:hover {
+      font-size: 45px;
+      color: #307AB4;
+      background-color: #307AB4;
+      box-sizing: border-box;
+      position: relative;
+      display: block;
+      transform: scale(var(--ggs,1));
+      width: 40px;
+      height: 40px;
+      border: 2px solid;
+      border-radius: 20px
+    }
+    .fab-play::before {
+      content: "";
+      display: block;
+      box-sizing: border-box;
+      position: absolute;
+      width: 0;
+      height: 18px;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      border-left: 12px solid white;
+      top: 9px;
+      left: 14px
+    }
+    .fab-pause::before {
+      content: "";
+      display: block;
+      box-sizing: border-box;
+      position: absolute;
+      width: 12px;
+      height: 15px;
+      left: 12px;
+      top: 10px;
+      border-left: 4px solid white;
+      border-right: 4px solid white;
+    }
   }
 }
 
