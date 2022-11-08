@@ -29,13 +29,24 @@ class Collection {
     this.slug_status = data.hasOwnProperty('slug_status') ? data.slug_status : 1;// 1 - auto, 0 - manual
     this.books_list = data.books_list || [];
     this.pages = data.pages || 0;
-    
+
     this.validationErrors = {
       difficulty: '',
       weight: ''
     };
+
+    //-- Publication section -- { --//
+    this.isInTheQueueOfPublication = data.isInTheQueueOfPublication || false;
+    this.isPublished               = data.isPublished               || false;
+    this.currVersion               = data.currVersion               || '1.0';
+    this.currVersionDate           = data.currVersionDate           || '';
+    this.pubVersion                = data.pubVersion                || '1.0';
+    this.pubVersionDate            = data.pubVersionDate            || '';
+    this.pubBooksEntities          = data.pubBooksEntities          || [];
+    this.pubBooksHistory           = data.pubBooksHistory           || [];
+    //-- } -- end -- Publication section --//
   }
-  
+
   sortBooks() {
     //console.log('SORTING', this._id, this.books_list.length);
     /*this.books_list.forEach(b => {
@@ -58,7 +69,7 @@ class Collection {
       }
     });
   }
-  
+
   updateBook(book) {
     if (book && book.bookid) {
       let index = this.books_list.findIndex(b => {
@@ -70,7 +81,7 @@ class Collection {
       }
     }
   }
-  
+
   setValidateWeight(value) {
     let errorMessage = 'Allowed range ' + weightRange[0] + ' - ' + weightRange[1];
     this.weight = value;
@@ -80,7 +91,7 @@ class Collection {
     }
     return true;
   }
-  
+
   setValidateDifficulty(value) {
     this.difficulty = value;
     if (!value || !/^\d{1,2}([\.\,]\d{1,2})?$/.test(value) || value < difficultyRange[0] || value > difficultyRange[1]) {
@@ -89,8 +100,8 @@ class Collection {
     }
     return true;
   }
-  
-  
+
+
 }
 
 export { Collection }

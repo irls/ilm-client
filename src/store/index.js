@@ -265,11 +265,11 @@ export const store = new Vuex.Store({
     setSelectedBlocksAsyncResult : [],
     suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
     blockAudiosrcConfig: {
-      
+
     },
-    
+
     audioFadeConfig: {
-      
+
     }
   },
 
@@ -1413,11 +1413,11 @@ export const store = new Vuex.Store({
     set_user(state, user) {
       state.user = user;
     },
-    
+
     set_blockAudiosrcConfig(state, audiosrc_config) {
       state.blockAudiosrcConfig = audiosrc_config;
     },
-    
+
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
     }
@@ -1696,8 +1696,7 @@ export const store = new Vuex.Store({
           dispatch('getBookCategories');
           dispatch('getCollections');
           dispatch('getAlignBlocksLimit');
-          state.liveDB.startWatch('collection', 'collection', {}, (data) => {
-            //console.log(data);
+          state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
             if (data.action) {
               switch (data.action) {
                 case 'change':
@@ -5289,7 +5288,7 @@ export const store = new Vuex.Store({
           }
         });
     },
-    
+
     getAudioFadeConfig({state, commit}) {
       return axios.get(`${state.API_URL}audio_config/fade`)
         .then(response => {
