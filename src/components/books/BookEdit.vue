@@ -98,12 +98,8 @@
 
   </div>
   <!--<div class="container-block">   -->
-  <div class="fab-container">
-    <div :class="['audio-fab', '-' + playingBlock.state]" v-if="hasPlayingBlock" v-on:click="onAudioFab()">
-      <i class="fab-play" v-if="playingBlock.state === 'pause'"></i>
-      <i class="fab-pause" v-if="playingBlock.state === 'play'"></i>
-    </div>
-  </div>
+  <AudioFAB 
+    @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -124,6 +120,7 @@ import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import { prepareForFilter } from '@src/filters/search.js';
+import AudioFAB from './details/AudioFAB';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -293,19 +290,14 @@ export default {
         get: function() {
           return this.currentJobInfo;
         }
-      },
-      hasPlayingBlock: {
-        get() {
-          return this.playingBlock && this.playingBlock.blockid;
-        },
-        cache: false
       }
   },
   mixins: [access, taskControls, api_config, playing_block],
   components: {
     SelectionModal,
     BookBlockView, BookBlockPreview, vueSlider,
-      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
+      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div'),
+      AudioFAB
   },
   methods: {
     ...mapActions([
@@ -3110,62 +3102,6 @@ div.merge-subblocks {
   background-position: center;
   position: absolute;
   left: 0px;
-}
-
-.fab-container {
-  float: right;
-  text-align: right;
-  float: right;
-  /*margin: 0px 0px -10px 0px;*/
-  position: relative;
-  .audio-fab {
-    /*background: url('/static/fab-all.png'); */
-    /*width: 20px; */
-    /*height: 20px; */
-    position: absolute; 
-    z-index: 9999;
-    right: 50px;
-    top: calc(~'100% - 80px');
-    cursor: pointer;
-    i, i:hover {
-      font-size: 45px;
-      color: #307AB4;
-      background-color: #307AB4;
-      box-sizing: border-box;
-      position: relative;
-      display: block;
-      transform: scale(var(--ggs,1));
-      width: 40px;
-      height: 40px;
-      border: 2px solid;
-      border-radius: 20px
-    }
-    .fab-play::before {
-      content: "";
-      display: block;
-      box-sizing: border-box;
-      position: absolute;
-      width: 0;
-      height: 18px;
-      border-top: 9px solid transparent;
-      border-bottom: 9px solid transparent;
-      border-left: 12px solid white;
-      top: 9px;
-      left: 14px
-    }
-    .fab-pause::before {
-      content: "";
-      display: block;
-      box-sizing: border-box;
-      position: absolute;
-      width: 12px;
-      height: 15px;
-      left: 12px;
-      top: 10px;
-      border-left: 4px solid white;
-      border-right: 4px solid white;
-    }
-  }
 }
 
 </style>
