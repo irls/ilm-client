@@ -98,7 +98,12 @@
 
   </div>
   <!--<div class="container-block">   -->
-
+  <div :class="['audio-fab', '-' + playingBlock.state, {'-audio-editor-opened': audioTasksQueue.block.blockId}]" v-if="hasPlayingBlock" v-on:click="onAudioFab()">
+    <!-- <i class="fa fa-play-circle" v-if="playingBlock.state === 'pause'"></i>
+    <i class="fa fa-pause-circle" v-if="playingBlock.state === 'play'"></i> -->
+    <i class="fab-play" v-if="playingBlock.state === 'pause'"></i>
+    <i class="fab-pause" v-if="playingBlock.state === 'play'"></i>
+  </div>
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -114,6 +119,7 @@ import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
+import playing_block from '../../mixins/playing_block.js';
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
@@ -287,9 +293,15 @@ export default {
         get: function() {
           return this.currentJobInfo;
         }
+      },
+      hasPlayingBlock: {
+        get() {
+          return this.playingBlock && this.playingBlock.blockid;
+        },
+        cache: false
       }
   },
-  mixins: [access, taskControls, api_config],
+  mixins: [access, taskControls, api_config, playing_block],
   components: {
     SelectionModal,
     BookBlockView, BookBlockPreview, vueSlider,
@@ -2343,6 +2355,25 @@ export default {
           console.log(`startId: `, this.startId);
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
+      },
+      
+      onAudioFab() {
+        let component = this.$refs.blocks.find(blk => {
+          return blk.block.blockid === this.playingBlock.blockid;
+        });
+        if (component && this.playingBlock.partIdx !== null) {
+          component = component.$refs.blocks[this.playingBlock.partIdx];
+        }
+        if (component) {
+          switch (this.playingBlock.state) {
+            case 'pause':
+              component.audResume(this.playingBlock.blockid);
+              break;
+            case 'play':
+              component.audPause();
+              break;
+          }
+        }
       }
   },
   events: {
@@ -3079,6 +3110,78 @@ div.merge-subblocks {
   background-position: center;
   position: absolute;
   left: 0px;
+}
+
+.audio-fab {
+  /*background: url('/static/fab-all.png'); */
+  /*width: 20px; */
+  /*height: 20px; */
+  position: absolute; 
+  z-index: 9999;
+  right: 50px;
+  top: calc(~'100% - 80px');
+  cursor: pointer;
+  &.-pause {
+    background-position-x: 20px;
+  }
+  &.-audio-editor-opened {
+    top: calc(~'100% - 283px');
+  }
+  i, i:hover {
+    font-size: 45px;
+    color: #307AB4;
+    background-color: #307AB4;
+  }
+  .fab-play {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs,1));
+    width: 40px;
+    height: 40px;
+    border: 2px solid;
+    border-radius: 20px
+  }
+  .fab-play::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 0;
+    height: 18px;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    border-left: 12px solid white;
+    top: 9px;
+    left: 14px
+  }
+  .fab-pause {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs,1));
+    width: 40px;
+    height: 40px;
+    border: 2px solid;
+    border-radius: 22px
+  }
+  .fab-pause::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 12px;
+    height: 15px;
+    left: 12px;
+    top: 10px;
+    border-left: 4px solid white;
+    border-right: 4px solid white;
+  }
+}
+.meta-visible {
+  .audio-fab {
+    right: 495px;
+  }
 }
 
 </style>

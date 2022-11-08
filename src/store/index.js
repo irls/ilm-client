@@ -270,6 +270,11 @@ export const store = new Vuex.Store({
     
     audioFadeConfig: {
       
+    },
+    playingBlock: {
+      state: null,
+      blockid: null,
+      partIdx: null
     }
   },
 
@@ -626,6 +631,9 @@ export const store = new Vuex.Store({
     },
     audioFadeConfig: state => {
       return state.audioFadeConfig;
+    },
+    playingBlock: state => {
+      return state.playingBlock;
     }
   },
 
