@@ -98,7 +98,8 @@
 
   </div>
   <!--<div class="container-block">   -->
-
+  <AudioFAB 
+    @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -114,10 +115,12 @@ import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
+import playing_block from '../../mixins/playing_block.js';
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import { prepareForFilter } from '@src/filters/search.js';
+import AudioFAB from './details/AudioFAB';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -291,11 +294,12 @@ export default {
         }
       }
   },
-  mixins: [access, taskControls, api_config],
+  mixins: [access, taskControls, api_config, playing_block],
   components: {
     SelectionModal,
     BookBlockView, BookBlockPreview, vueSlider,
-      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
+      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div'),
+      AudioFAB
   },
   methods: {
     ...mapActions([
@@ -2344,6 +2348,25 @@ export default {
           }
           console.log(`startId: `, this.startId);
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+        }
+      },
+      
+      onAudioFab() {
+        let component = this.$refs.blocks.find(blk => {
+          return blk.block.blockid === this.playingBlock.blockid;
+        });
+        if (component && this.playingBlock.partIdx !== null) {
+          component = component.$refs.blocks[this.playingBlock.partIdx];
+        }
+        if (component) {
+          switch (this.playingBlock.state) {
+            case 'pause':
+              component.audResume(this.playingBlock.blockid);
+              break;
+            case 'play':
+              component.audPause();
+              break;
+          }
         }
       }
   },
