@@ -1632,6 +1632,11 @@
               if (playPosition) {
                 this.cursorPosition = playPosition;
               }
+              let el = document.getElementById('resize-selection-left');
+              let pos = el.getBoundingClientRect();
+              if (window.innerWidth <= pos.left - 20) {
+                $('.playlist-tracks').scrollLeft(pos.left - ($('.playlist-tracks')[0].offsetWidth / 2));
+              }
               this.play(this.selection.start);
             });
         },
