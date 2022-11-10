@@ -5,6 +5,7 @@ const difficultyRange = [1, 14.99];
 
 class Collection {
   constructor(data) {
+    this.version = data.version || 1;
     this._id = data._id || '';
     this.books = data.books || {};
     this.state = data.state || "";

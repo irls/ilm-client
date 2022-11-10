@@ -108,8 +108,8 @@
       booksGrid() {
         if (this.currentCollection.books instanceof Object) {
           const res = this.currentCollection.books_list.map((book)=>{
-            console.log(`book.publicationStatus: `, book.publicationStatus);
-            console.log(`(book.isIntheProcessOfPublication || book.isInTheQueueOfPublication): `, (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication));
+            //console.log(`book.publicationStatus: `, book.publicationStatus);
+            //console.log(`(book.isIntheProcessOfPublication || book.isInTheQueueOfPublication): `, (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication));
             let publicationStatus = 'none';
             if (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication) {
               publicationStatus = 'process';
@@ -133,7 +133,7 @@
               ver: book.pub_ver
             }
           });
-          console.log(`booksGrid: `, res);
+          //console.log(`booksGrid: `, res);
           return res;
         }
         return [];
@@ -194,7 +194,7 @@
         }
       },
       publish() {
-        console.log(`this.currentCollection: `, this.currentCollection);
+        //console.log(`this.currentCollection: `, this.currentCollection);
         // this.isPublishing = false;
         // this.isPublishingQueue = true;
         return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
@@ -202,7 +202,7 @@
           if (resp.status == 200 && resp.data.ok) {
             this.currentCollection.isInTheQueueOfPublication = true;
           }
-          console.log(resp);
+          //console.log(resp);
         });
       },
       ...mapActions(['removeCollection'])

@@ -1679,16 +1679,22 @@ export const store = new Vuex.Store({
           dispatch('getCollections');
           dispatch('getAlignBlocksLimit');
           state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
+            //console.log(`liveDB.startWatch.collection.data: `, data);
             if (data.action) {
               switch (data.action) {
                 case 'change':
                   if (data.collection) {
-                    let collection = state.bookCollectionsAll.find(c => {
+                    //console.log(`state.bookCollectionsAll: `, state.bookCollectionsAll.map((c)=>({id: c.id, ver: c.version})));
+                    const cIdx = state.bookCollectionsAll.findIndex(c => {
                       return c.id === data.collection.id;
                     });
-                    if (collection) {
-                      state.bookCollectionsAll[state.bookCollectionsAll.indexOf(collection)] = data.collection;
-                      commit('PREPARE_BOOK_COLLECTIONS');
+                    if (cIdx > -1) {
+                      const collection = state.bookCollectionsAll[cIdx];
+                      if (collection.version < data.collection.version) {
+                        console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version);
+                        state.bookCollectionsAll[cIdx] = data.collection;
+                        commit('PREPARE_BOOK_COLLECTIONS');
+                      }
                     }
                   }
                   break;
