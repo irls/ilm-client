@@ -237,7 +237,7 @@ class BookBlocks {
       this.meta.rid = bookList.meta['@rid'];
       if (Array.isArray(bookList.blocks)) {
         bookList.blocks.forEach((block)=>{
-          if(block.index  === '-1'){
+          if(block.index  === -1){
             console.log('block with negative index');
             console.log(block);
           }else{
