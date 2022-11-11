@@ -16,6 +16,7 @@ export default {
       this.playingBlock.blockid = blockId;
       this.playingBlock.partIdx = partIdx;
       this.playingBlock.state = 'play';
+      this.playingBlock.playingPauseAfter = false;
       this.playingBlockId = blockId;
     },
     
@@ -32,7 +33,34 @@ export default {
         this.playingBlock.blockid = null;
         this.playingBlock.partIdx = null;
         this.playingBlock.state = null;
+        this.playingBlock.playingPauseAfter = false;
       }
+    },
+    
+    playPause(blockid, length) {
+      this.setPlayingBlock(blockid);
+      this.playingBlock.playingPauseAfter = true;
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          return resolve();
+        }, length * 1000);
+      });
+    },
+    
+    stopPause() {
+      if (this.playingBlock.playingPauseAfter) {
+        this.playingBlock.state = 'pause';
+      }
+    },
+    
+    resumePause() {
+      if (this.playingBlock.playingPauseAfter) {
+        this.playingBlock.state = 'play';
+      }
+    },
+    
+    checkPlayingBlock(blockid) {
+      return this.playingBlock.state === 'play' && this.playingBlock.blockid === blockid;
     }
   }
 }
