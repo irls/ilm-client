@@ -194,15 +194,11 @@
         }
       },
       publish() {
-        //console.log(`this.currentCollection: `, this.currentCollection);
-        // this.isPublishing = false;
-        // this.isPublishingQueue = true;
         return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
         .then(resp => {
           if (resp.status == 200 && resp.data.ok) {
             this.currentCollection.isInTheQueueOfPublication = true;
           }
-          //console.log(resp);
         });
       },
       ...mapActions(['removeCollection'])
