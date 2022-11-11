@@ -23,6 +23,25 @@
     methods: {
       onAudioFab() {
         this.$emit('onAudioFab');
+      },
+      handleSpaceClick(e) {
+        if (e) {
+          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space'))) {
+            this.onAudioFab();
+            e.preventDefault();
+          }
+        }
+      }
+    },
+    watch: {
+      'playingBlock.playingPauseAfter': {
+        handler(val) {
+          if (val) {
+            document.body.addEventListener('keydown', this.handleSpaceClick);
+          } else {
+            document.body.removeEventListener('keydown', this.handleSpaceClick);
+          }
+        }
       }
     }
   }
