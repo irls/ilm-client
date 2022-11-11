@@ -1551,7 +1551,6 @@
           return cut_range;
         },
         fade() {
-          let playPosition = null;
           return this.pause()
             .then(() => {
               
@@ -1624,15 +1623,15 @@
               this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, this.audioFadeConfig.length]);
               this.addFadeSelectionLog();
               this.isModified = true;
-              if (playPosition) {
-                this.cursorPosition = playPosition;
-              }
+              this.cursorPosition = this.selection.start;
               let el = document.getElementById('resize-selection-left');
               let pos = el.getBoundingClientRect();
               if (window.innerWidth <= pos.left - 20) {
                 $('.playlist-tracks').scrollLeft(pos.left - ($('.playlist-tracks')[0].offsetWidth / 2));
               }
-              this.play(this.selection.start);
+              Vue.nextTick(() => {
+                this.play(this.selection.start);
+              });
             });
         },
         setAudioBuffer(new_buffer) {
