@@ -274,7 +274,8 @@ export const store = new Vuex.Store({
     playingBlock: {
       state: null,
       blockid: null,
-      partIdx: null
+      partIdx: null,
+      playingPauseAfter: false
     }
   },
 

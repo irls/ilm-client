@@ -2705,11 +2705,11 @@ export default {
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
+                this.$root.$off('from-audioeditor:play', this.onAudPlay);
+                this.stopPlayingBlock(this.block.blockid);
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
-                this.$root.$off('from-audioeditor:play', this.onAudPlay);
-                this.stopPlayingBlock(this.block.blockid);
             },
             on_newline: () => {
               let element = document.getElementById(this.block.blockid);
