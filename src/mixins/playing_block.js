@@ -33,6 +33,7 @@ export default {
         this.playingBlock.blockid = null;
         this.playingBlock.partIdx = null;
         this.playingBlock.state = null;
+        this.playingBlock.playingPauseAfter = false;
       }
     },
     

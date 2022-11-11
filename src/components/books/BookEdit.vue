@@ -2219,6 +2219,8 @@ export default {
                       });
                     }
                 });
+            } else {
+              this.stopPlayingBlock(blockid);
             }
           });
       },
