@@ -236,32 +236,17 @@ class BookBlocks {
       this.meta = bookList.meta;
       this.meta.rid = bookList.meta['@rid'];
       if (Array.isArray(bookList.blocks)) {
-        let firstBlock = null;
-
         bookList.blocks.forEach((block)=>{
-          if(block.index  === -1){
-            console.log('block with negative index');
-            console.log(block);
-          }else{
-            if(!firstBlock){
-              firstBlock = block;
-            }
-
-            this.listIds.push(block.blockid);
-            this.listRIds.push(block.rid);
-            this.listObjs.push({
-              blockRid: block.rid, blockId: block.blockid,
-              visible: false, blockView: {}
-            });
-            this.lookupList[block.rid] = new LookupBlock(block);
-          }
+          this.listIds.push(block.blockid);
+          this.listRIds.push(block.rid);
+          this.listObjs.push({
+            blockRid: block.rid, blockId: block.blockid,
+            visible: false, blockView: {}
+          });
+          this.lookupList[block.rid] = new LookupBlock(block);
           //this.blocksList[block.blockid] = new BookBlock(block);
         })
-        if(!firstBlock){
-          console.error('no block with index found');
-        }
-
-        this.setStartId(firstBlock.rid);
+        this.setStartId(bookList.blocks[0].rid)
       }
     }
   }
