@@ -3692,7 +3692,7 @@ Revert to original block audio?`,
       display: inline-block;
       padding: 21px 20px 9px 20px;
       .add-silence-dropdown.p-dropdown {
-        width: 47px;
+        width: 48px;
         .p-dropdown-trigger {
           .pi-chevron-down::before {
             left: 70%;
@@ -3968,7 +3968,7 @@ Revert to original block audio?`,
     width: 62px;
   }
   .fade-percent-dropdown.p-dropdown {
-    width: 56px;
+    width: 58px;
   }
   .selection-tooltips {
     position: absolute;
