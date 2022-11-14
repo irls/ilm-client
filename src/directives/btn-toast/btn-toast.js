@@ -73,7 +73,7 @@ function create(el) {
 }
 
 function remove(toast) {
-  if (toast && toast.parentElement) {
+  if (toast && toast.parentElement && toast.parentElement === document.body) {
     document.body.removeChild(toast);
   }
 }
