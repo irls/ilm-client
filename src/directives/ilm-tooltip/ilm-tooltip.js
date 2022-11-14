@@ -33,6 +33,10 @@ function onMouseLeave(event) {
 
 function onClick(event) {
   hide(event.currentTarget);
+  let ilmTooltip = event.currentTarget.$_ilmTooltip;
+  if (!event.currentTarget.disabled && ilmTooltip && !ilmTooltip.closeOnClick) {
+    show(event.currentTarget);
+  }
 }
 
 /*function bindScrollListener(el) {
@@ -147,7 +151,7 @@ function getTooltipElement(el) {
 const IlmTooltip = {
   bind(el, binding) {
     el.$_ilmTooltip = binding;
-    el.$_ilmTooltip.classList = {};
+    el.$_ilmTooltip = _.assign(el.$_ilmTooltip, {classList: {}, closeOnClick: true});
     //console.log(el.className, binding.value, el.$_ilmTooltip);
     if (typeof binding.value !== 'string') {
       if (binding.value.valueSource) {
@@ -157,6 +161,9 @@ const IlmTooltip = {
         el.$_ilmTooltip.classList = lodash.cloneDeep(binding.value.classList);
       }
       el.$_ilmTooltip.value = lodash.cloneDeep(binding.value.value);
+      if (binding.value.hasOwnProperty('closeOnClick')) {
+        el.$_ilmTooltip.closeOnClick = binding.value.closeOnClick;
+      }
     }
     bindEvents(el);
   },
@@ -176,6 +183,9 @@ const IlmTooltip = {
         el.$_ilmTooltip.classList = lodash.cloneDeep(binding.value.classList);
       }
       el.$_ilmTooltip.value = lodash.cloneDeep(binding.value.value);
+      if (binding.value.hasOwnProperty('closeOnClick')) {
+        el.$_ilmTooltip.closeOnClick = binding.value.closeOnClick;
+      }
     } else {
       el.$_ilmTooltip.value = binding.value;
     }
