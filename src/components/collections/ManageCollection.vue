@@ -107,11 +107,17 @@
       },
       booksGrid() {
         if (this.currentCollection.books instanceof Object) {
-          const res = this.currentCollection.books_list.map((book)=>{
-            //console.log(`book.publicationStatus: `, book.publicationStatus);
-            //console.log(`(book.isIntheProcessOfPublication || book.isInTheQueueOfPublication): `, (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication));
+          const res = this.currentCollection.books_list
+          .filter((book)=>{
+            return (book.isIntheProcessOfPublication
+                 || book.isInTheQueueOfPublication
+                 || book.publicationStatus == 'error');
+          })
+          .map((book)=>{
             let publicationStatus = 'none';
-            if (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication) {
+            if (book.isInTheQueueOfPublication) {
+              publicationStatus = 'done';
+            } else if (book.isIntheProcessOfPublication) {
               publicationStatus = 'process';
             } else {
               switch(book.publicationStatus) {

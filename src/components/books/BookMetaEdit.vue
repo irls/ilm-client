@@ -584,34 +584,33 @@
 import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex'
 import { BlockTypes, BlockTypesAlias } from '../../store/bookBlock'
-import superlogin from 'superlogin-client'
-import BookDownload from './BookDownload'
-import BookEditCoverModal from './BookEditCoverModal'
+import superlogin           from 'superlogin-client'
+import BookDownload         from './BookDownload'
+import BookEditCoverModal   from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
-import AudioImport from '../audio/AudioImport'
-import BookToc from './BookToc'
-import _ from 'lodash'
-import PouchDB from 'pouchdb'
-import axios from 'axios'
+import AudioImport          from '../audio/AudioImport'
+import BookToc              from './BookToc'
+import _                    from 'lodash'
+import axios                from 'axios'
 import { modal, accordion, panel } from 'vue-strap'
-import task_controls  from '../../mixins/task_controls.js'
-import api_config     from '../../mixins/api_config.js'
-import access         from '../../mixins/access.js'
-import { Languages }  from "../../mixins/lang_config.js"
-import time_methods   from '../../mixins/time_methods.js';
-import number_methods from "../../mixins/number_methods.js"
-import toc_methods    from '../../mixins/toc_methods.js';
-import { VueTabs, VTab } from 'vue-nav-tabs'
+import task_controls        from '../../mixins/task_controls.js'
+import api_config           from '../../mixins/api_config.js'
+import access               from '../../mixins/access.js'
+import { Languages }        from "../../mixins/lang_config.js"
+import time_methods         from '../../mixins/time_methods.js';
+import number_methods       from "../../mixins/number_methods.js"
+import toc_methods          from '../../mixins/toc_methods.js';
+import { VueTabs, VTab }    from 'vue-nav-tabs'
 //import VueTextareaAutosize from 'vue-textarea-autosize'
-import BookAssignments from './details/BookAssignments';
-import BookWorkflow from './details/BookWorkflow';
-import BookPublish from './details/BookPublish';
-import SplitPreview from './details/SplitPreview';
-import BlockStyleLabels from './details/BlockStyleLabels';
-import CompleteAudioExport from './details/CompleteAudioExport';
-import PauseAfterBlock from './details/PauseAfterBlock';
-import VTagSuggestion from './details/HashTag';
-import ResizableTextarea from '../generic/ResizableTextarea';
+import BookAssignments      from './details/BookAssignments';
+import BookWorkflow         from './details/BookWorkflow';
+import BookPublish          from './details/BookPublish';
+import SplitPreview         from './details/SplitPreview';
+import BlockStyleLabels     from './details/BlockStyleLabels';
+import CompleteAudioExport  from './details/CompleteAudioExport';
+import PauseAfterBlock      from './details/PauseAfterBlock';
+import VTagSuggestion       from './details/HashTag';
+import ResizableTextarea    from '../generic/ResizableTextarea';
 
 var BPromise = require('bluebird');
 
@@ -859,9 +858,10 @@ export default {
     allowMetadataEdit: {
       get() {
         //do not allow to edit metadata while book is in Publish Queue:
-        if (this.currentBookMeta.isInTheQueueOfPublication === true || this.currentBookMeta.isIntheProcessOfPublication === true)
-            return false;
-
+        const {isInTheQueueOfPublication, isIntheProcessOfPublication} = this.currentBookMeta;
+        if (isInTheQueueOfPublication === true || isIntheProcessOfPublication === true) {
+          return false;
+        }
         return this.tc_allowMetadataEdit();
       }
     },
@@ -1431,65 +1431,6 @@ export default {
         return BPromise.reject(err);
       });
 
-    },
-
-    liveUpdateOld (key, value) {
-      var dbPath = superlogin.getDbUrl('ilm_content_meta')
-      if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
-
-      var keys = key.split('.');
-      key = keys[0];
-      if (keys.length > 1) {
-          this.currentBook[keys[0]][keys[1]] = value;
-          value = this.currentBook[keys[0]];
-      }
-      //console.log('key', key, value);
-
-      var update = {
-        [key]: value
-      }
-
-      // Batch updates
-      if (key === 'language') {
-        update.voices = false;
-      }
-
-      //console.log('update', update);
-      //if (true) return;
-      var db = new PouchDB(dbPath)
-      var api = db.hoodieApi()
-
-      this.freeze('updateBookMeta');
-      return api.update(this.currentBookid, update)
-      .then(doc => {
-        if (key == 'numbering') {
-          this.unfreeze('updateBookMeta');
-          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-          //this.$root.$emit('from-book-meta:upd-toc', true);
-        }
-        //console.log('success DB update: ', doc)
-        let updateVersion = {minor: true};
-        switch(key) {
-          case 'styles':
-          case 'numbering':
-            updateVersion = {major: true};
-            break;
-        }
-        return this.updateBookVersion(updateVersion)
-          .then(() => {
-            //this.unfreeze('updateBookMeta');
-            return BPromise.resolve(doc);
-          })
-          .catch(err => {
-            //console.log(err);
-            this.unfreeze('updateBookMeta');
-            return BPromise.reject(err);
-          });
-      }).catch(err => {
-        //console.log('error DB pdate: ', err)
-        this.unfreeze('updateBookMeta');
-        return BPromise.reject(err)
-      })
     },
 
     languageName (code) {
