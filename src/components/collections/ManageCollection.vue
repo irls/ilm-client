@@ -39,9 +39,13 @@
 
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
-          <p>Published: Ver. {{pubVersionDate}}</p>
-          <p>Unpublished: {{currVersionDate}}</p>
-          <p>{{currentCollection.id}} - {{currentCollection.isInTheQueueOfPublication}}</p>
+          <p v-if="pubVersion && pubVersion.length">
+            Published: Ver. {{pubVersion}} {{pubVersionDate}}
+          </p>
+          <p v-if="pubVersion !== currVersion">
+            Unpublished: Ver. {{currVersion}} {{currVersionDate}}
+          </p>
+          <p>{{currentCollection.id}} - Q: {{currentCollection.isInTheQueueOfPublication}} - P: {{currentCollection.isPublished}}</p>
           <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
           <button v-else class="btn btn-primary" @click="publish">Publish</button>
         </fieldset>
@@ -158,6 +162,19 @@
           return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
         }
         return '';
+      },
+      pubVersion() {
+        //DD Mon YYYY
+        if (this.currentCollection.pubVersion && this.currentCollection.pubVersion.length) {
+          return this.currentCollection.pubVersion;
+        }
+        return '1.0';
+      },
+      currVersion() {
+        if (this.currentCollection.currVersion && this.currentCollection.currVersion.length) {
+          return this.currentCollection.currVersion;
+        }
+        return '1.0';
       },
     },
     methods: {
