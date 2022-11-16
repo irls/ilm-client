@@ -2707,6 +2707,9 @@ export default {
                 this.audCleanClasses(this.block._id, {});
                 this.$root.$off('from-audioeditor:play', this.onAudPlay);
                 this.stopPlayingBlock(this.block.blockid);
+                if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[this.blockPartIdx + 1] && this.block.parts[this.blockPartIdx + 1].audiosrc) {
+                  this.playSubblockPause(this.block.blockid);
+                }
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }

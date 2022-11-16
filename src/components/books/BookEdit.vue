@@ -2228,7 +2228,10 @@ export default {
       goToAudioBlock(block) {
         return new Promise((resolve, reject) => {
           let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
-          if (elementBack && elementBack) {
+          if (!elementBack) {
+            elementBack = document.querySelector(`[id="s-${block.blockid}"]`);
+          }
+          if (elementBack) {
             let elementFront = this.$refs.blocks.find(blk => {
               return blk.block && blk.block.blockid === block.blockid;
             });
@@ -2253,33 +2256,35 @@ export default {
                 return resolve(subRef);
               }
             } else {
-              elementBack.scrollIntoView();
-              let checks = 0;
-              let checkBlockLoaded = setInterval(() => {
-                let ref = this.$refs.blocks.find(blk => {
-                  return blk.block && blk.block.blockid === block.blockid;
-                });
-                ++checks;
-                try {
-                  if (ref && ref.$el) {
-                    let subRef = ref.getSubblockRef(elementIndex);
-                    if (subRef) {
+              this.scrollToBlock(block.blockid);
+              Vue.nextTick(() => {
+                let checks = 0;
+                let checkBlockLoaded = setInterval(() => {
+                  let ref = this.$refs.blocks.find(blk => {
+                    return blk.block && blk.block.blockid === block.blockid;
+                  });
+                  ++checks;
+                  try {
+                    if (ref && ref.$el) {
+                      let subRef = ref.getSubblockRef(elementIndex);
+                      if (subRef) {
+                        clearInterval(checkBlockLoaded);
+                        return resolve(subRef);
+                      }
+                    }
+                    if (checks > 10) {
                       clearInterval(checkBlockLoaded);
-                      return resolve(subRef);
+                      return resolve();
+                    }
+                  } catch(e) {
+                    console.log('ERROR', e);
+                    if (checks > 10) {
+                      clearInterval(checkBlockLoaded);
+                      return resolve();
                     }
                   }
-                  if (checks > 10) {
-                    clearInterval(checkBlockLoaded);
-                    return resolve();
-                  }
-                } catch(e) {
-                  console.log('ERROR', e);
-                  if (checks > 10) {
-                    clearInterval(checkBlockLoaded);
-                    return resolve();
-                  }
-                }
-              }, 100);
+                }, 100);
+              });
             }
           }
         });
