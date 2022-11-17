@@ -1,57 +1,59 @@
 <template>
   <fieldset class="publish">
-  <!-- Fieldset Legend -->
-  <section v-if="!isInCollection">
+    <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
-    <div v-if="currentBookMeta.publishedVersion">
-      Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
-    </div>
-    <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
-      Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
-    </div>
-    <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
-      <span style="color: red">Publication failed</span>
-    </div>
-    <div v-if="disabledBlocks.ranges.length > 0">
-      <template v-if="disabledBlocksQuery">
-        <div class="preloader-spinner"></div>
-      </template>
-      <template v-else>
-      {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range
-        <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
-          <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
-          &nbsp;-&nbsp;
-          <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
-          <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
-        </template>
-      </template>
-    </div>
-    <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
-      <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
-        Publish
-      </button>
-      <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
-        Publish
-      </button>
-      <span v-if="isPublishing" class="align-preloader -small"></span>
-    </div>
-  </section>
-  <section v-if="isInCollection">
-    <div v-if="currentBookMeta.publishedVersion">
-      Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
-    </div>
-    <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
-      Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
-    </div>
-    <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
-      <span style="color: red">Publication failed</span>
-    </div>
 
-    <input type="checkbox" v-on:click.prevent="checkCollectionPublish" v-model="isPublishingQueue">Ready for publication</input>
-    <span v-if="isPublishing" class="align-preloader -small"></span>
-  </section>
+    <section v-if="!isInCollection">
+      <div v-if="currentBookMeta.publishedVersion">
+        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+      </div>
+      <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
+        Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
+      </div>
+      <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
+        <span style="color: red">Publication failed</span>
+      </div>
+      <div v-if="disabledBlocks.ranges.length > 0">
+        <template v-if="disabledBlocksQuery">
+          <div class="preloader-spinner"></div>
+        </template>
+        <template v-else>
+        {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range
+          <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
+            <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
+            &nbsp;-&nbsp;
+            <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
+            <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+          </template>
+        </template>
+      </div>
+      <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
+        <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+        <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
+          Publish
+        </button>
+        <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
+          Publish
+        </button>
+        <span v-if="isPublishing" class="align-preloader -small"></span>
+      </div>
+    </section>
+
+    <section v-if="isInCollection" class="collection-section">
+      <div v-if="currentBookMeta.publishedVersion">
+        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+      </div>
+      <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
+        Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
+      </div>
+      <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
+        <span style="color: red">Publication failed</span>
+      </div>
+
+      <input type="checkbox" v-on:click.prevent="checkCollectionPublish" v-model="isPublishingQueue"> Ready for publication</input>
+      <span v-if="isPublishing" class="align-preloader -small"></span>
+    </section>
   </fieldset>
 </template>
 <script>
@@ -372,5 +374,8 @@
     background-repeat: no-repeat;
     text-align: center;
     background-position: center center;
+  }
+  .collection-section {
+    padding-top: 10px;
   }
 </style>
