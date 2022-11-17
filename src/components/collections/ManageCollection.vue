@@ -90,7 +90,8 @@
           {title: 'Version', path: 'ver', addClass: 'book-version'},
         ],
         selectedBooks: [],
-        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        pubStatusErrors : ['error','failed','not found']
       }
     },
     components: {
@@ -111,11 +112,14 @@
       },
       booksGrid() {
         if (this.currentCollection.books instanceof Object) {
+          console.log(`this.currentCollection.books_list: `, this.currentCollection.books_list);
           const res = this.currentCollection.books_list
           .filter((book)=>{
             return (book.isIntheProcessOfPublication
                  || book.isInTheQueueOfPublication
-                 || book.publicationStatus == 'error');
+                 || this.pubStatusErrors.some((err)=>book.publicationStatus.toLowerCase().includes(err))
+                 || (book.version && book.version !== book.publishedVersion)
+            );
           })
           .map((book)=>{
             let publicationStatus = 'none';
@@ -126,7 +130,7 @@
             } else {
               switch(book.publicationStatus) {
                 case 'done' : {
-                  publicationStatus = 'done';
+                  //publicationStatus = 'done';
                 } break;
                 case '' : {
                   publicationStatus = 'none';
@@ -140,7 +144,7 @@
               bookid: book.bookid,
               ready: publicationStatus,
               title: book.title,
-              ver: book.pub_ver
+              ver: 'v. '+book.version
             }
           });
           //console.log(`booksGrid: `, res);
