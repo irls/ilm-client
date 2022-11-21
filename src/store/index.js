@@ -617,6 +617,12 @@ export const store = new Vuex.Store({
     },
     blockAudiosrcConfig: state => {
       return state.blockAudiosrcConfig;
+    },
+    bookMetaById: state => (bookId) => {
+      if (!state.books_meta) {
+        return null;
+      }
+      return state.books_meta.find(meta => meta.bookid == bookId);
     }
   },
 
