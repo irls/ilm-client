@@ -55,11 +55,11 @@
 </template>
 <script>
   import {mapActions, mapGetters} from 'vuex';
-  import LinkBook from './LinkBook';
+  import LinkBook      from './LinkBook';
   import { Languages } from "../../mixins/lang_config.js";
-  import Grid from '../generic/Grid';
-  import api_config     from '../../mixins/api_config.js';
-  import axios from 'axios';
+  import api_config    from '../../mixins/api_config.js';
+  import Grid          from '../generic/Grid';
+  import axios         from 'axios';
 
   export default {
     name: 'ManageCollection',
@@ -70,12 +70,12 @@
         headers: [
           {title: 'Ready', path: 'ready', addClass: 'book-status',
             html (val) {
-              switch(val) {
+              switch(val.status) {
                 case 'done' : {
                   return `<i class='fa fa-check' style="color: darkseagreen;"></i>`;
                 } break;
                 case 'error' : {
-                  return `<i class='fa fa-warning' style="color: rgb(217 83 79);"></i>`;
+                  return `<i class='fa fa-warning' data-tooltip="${val.tooltip}" style="color: rgb(217 83 79);"></i>`;
                 } break;
                 case 'process' : {
                   return `<i class='fa fa-spinner fa-spin'></i>`;
@@ -117,7 +117,7 @@
           .filter((book)=>{
             return (book.isIntheProcessOfPublication
                  || book.isInTheQueueOfPublication
-                 || this.pubStatusErrors.some((err)=>book.publicationStatus.toLowerCase().includes(err))
+                 || (book.publicationStatus && this.pubStatusErrors.some((err)=>book.publicationStatus.toLowerCase().includes(err)))
                  || (book.version && book.version !== book.publishedVersion)
             );
           })
@@ -142,7 +142,10 @@
             }
             return {
               bookid: book.bookid,
-              ready: publicationStatus,
+              ready: {
+                status: publicationStatus,
+                tooltip: book.publicationStatus
+              },
               title: book.title,
               ver: 'v. '+book.version
             }
