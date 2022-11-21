@@ -7,7 +7,7 @@ Features:
   * Optional custom renderers for individual columns
 -->
 <template>
-  <div>
+  <div ref="grid_component_ref">
   <table class="table table-striped table-bordered table-hover" v-if="!draggable">
     <thead>
       <tr>
@@ -90,8 +90,9 @@ Features:
 </template>
 
 <script>
-  import draggable from 'vuedraggable';
-  import Vue from 'vue';
+  import draggable    from 'vuedraggable';
+  import Tooltip      from 'primevue/tooltip';
+  import Vue          from 'vue';
   export default {
     props: {
       data: Array, // Unfiltered table data
@@ -125,6 +126,18 @@ Features:
       },
       'rowsPerPage' (a, b) { // Reset to page 0 when items per page changes
         this.currentPage = 0
+      },
+      'data' () {
+        Vue.nextTick(()=>{
+          const hasTooltipElements = (this.$refs.grid_component_ref).querySelectorAll('[data-tooltip]');
+          if (hasTooltipElements.length) {
+            console.log(`hasTooltipElements: `, hasTooltipElements);
+            for (let el of hasTooltipElements) {
+              //Tooltip.unbind(el);
+              Tooltip.bind(el, {value: el.dataset.tooltip, modifiers: {top: true}});
+            }
+          }
+        })
       }
     },
     computed: {
