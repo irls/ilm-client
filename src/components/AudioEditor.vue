@@ -829,7 +829,7 @@
 
               $('.playlist-overlay').on('mousedown', (e) => {
                 //console.log('this.mouseSelection', e.which, this.mouseSelection.start, this.mouseSelection.end);
-                if (e.which !== 1) {
+                if (e.button !== 0) {
                   return;
                 }
 
@@ -1870,7 +1870,12 @@
         },
         _showSelectionBordersOnClick(ev) {
           ev.preventDefault();
-          this._showSelectionBorders(false);
+          window.requestAnimationFrame(() => {
+            if (ev.button && ev.button === 2 && (typeof this.selection.start !== 'undefined' || typeof this.selection.end !== 'undefined')) {
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            }
+          });
+          //this._showSelectionBorders(false);
           return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
@@ -2403,8 +2408,19 @@
           });
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.open(e);
-            $('body').one('click', this.$refs.waveformContext.close);
+            $('body').one('click', () => {
+              this.$refs.waveformContext.close();
+              this.contextPosition = null;
+            });
           }
+          let hasSelection = $('.selection.segment').length > 0;
+          Vue.nextTick(() => {
+            window.requestAnimationFrame(() => {
+              if (hasSelection) {
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              }
+            });
+          });
         },
         setSelectionStart(val, event) {
           //if (this.mode == 'file') {
