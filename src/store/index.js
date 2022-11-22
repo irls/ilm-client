@@ -4807,7 +4807,7 @@ export const store = new Vuex.Store({
           if (response.status === 200) {
             if (response && response.data && response.data.blocks) {
               //if (response.data.blocks.length <= 300) {
-                response.data.blocks.forEach(block => {
+                response.data.blocks.forEach((block, idx) => {
                   state.storeListO.updBlockByRid(block.rid, {
                     status: block.status
                   });
@@ -4816,6 +4816,14 @@ export const store = new Vuex.Store({
                     blk.voicework = block.voicework;
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
+                    
+                    if (blk.isChanged) {
+                      response.data.blocks[idx] = _.assign(response.data.blocks[idx], {
+                        footnotes: blk.footnotes,
+                        isChanged: blk.isChanged,
+                        type: blk.type,
+                      });
+                    }
                   } catch (e) {
 
                   }
