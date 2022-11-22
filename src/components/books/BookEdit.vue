@@ -98,7 +98,8 @@
 
   </div>
   <!--<div class="container-block">   -->
-
+  <AudioFAB 
+    @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -114,10 +115,12 @@ import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
+import playing_block from '../../mixins/playing_block.js';
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import { prepareForFilter } from '@src/filters/search.js';
+import AudioFAB from './details/AudioFAB';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -289,11 +292,12 @@ export default {
         }
       }
   },
-  mixins: [access, taskControls, api_config],
+  mixins: [access, taskControls, api_config, playing_block],
   components: {
     SelectionModal,
     BookBlockView, BookBlockPreview, vueSlider,
-      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
+      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div'),
+      AudioFAB
   },
   methods: {
     ...mapActions([
@@ -2199,69 +2203,91 @@ export default {
 
       playNextBlock(blockid) {
         let currentBlock = this.parlist.get(blockid);
+        let pauseAfter = this.playPause(blockid, currentBlock.pause_after);
         this.findNextAudioblock([blockid])
           .then(block => {
             //console.log(block);
             if (block) {
-              let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
-              if (elementBack && elementBack) {
-                let elementFront = this.$refs.blocks.find(blk => {
-                  return blk.block && blk.block.blockid === block.blockid;
-                });
-                let elementIndex = 0;
-                if (block.voicework === 'narration' && block.parts.length > 0) {
-                  let part = block.parts.find(p => {
-                    return p.audiosrc;
-                  });
-                  if (part) {
-                    elementIndex = block.parts.indexOf(part);
-                  }
-                }
-                if (elementFront) {
-                  let subRef = elementFront.getSubblockRef(elementIndex, false);
-                  if (subRef && subRef.$el) {//#
-                    let lastW = subRef.$el.querySelector('w:first-child');
-                    let visible = lastW && this.checkFullyVisible(lastW);
-                    if (!visible) {
-                      //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
-                      elementBack.scrollIntoView();
-                    }
-                    setTimeout(() => {
-                      subRef.audPlay();
-                    }, currentBlock.pause_after * 1000);
-                  }
-                } else {
-                  elementBack.scrollIntoView();
-                  setTimeout(() => {
-                    let checks = 0;
-                    let checkBlockLoaded = setInterval(() => {
-                      let ref = this.$refs.blocks.find(blk => {
-                        return blk.block && blk.block.blockid === block.blockid;
+              return pauseAfter
+                .then(() => {
+                  if (this.checkPlayingBlock(blockid)) {
+                    return this.goToAudioBlock(block)
+                      .then(subRef => {
+                        if (subRef && this.checkPlayingBlock(blockid)) {
+                          subRef.audPlay();
+                        }
                       });
-                      ++checks;
-                      try {
-                        if (ref && ref.$el) {
-                          let subRef = ref.getSubblockRef(elementIndex);
-                          if (subRef) {
-                            subRef.audPlay();
-                            clearInterval(checkBlockLoaded);
-                          }
-                        }
-                        if (checks > 10) {
-                          clearInterval(checkBlockLoaded);
-                        }
-                      } catch(e) {
-                        console.log('ERROR', e);
-                        if (checks > 10) {
-                          clearInterval(checkBlockLoaded);
-                        }
-                      }
-                    }, 100);
-                  }, currentBlock.pause_after * 1000);
-                }
-              }
+                    }
+                });
+            } else {
+              this.stopPlayingBlock(blockid);
             }
           });
+      },
+      
+      goToAudioBlock(block) {
+        return new Promise((resolve, reject) => {
+          let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
+          if (!elementBack) {
+            elementBack = document.querySelector(`[id="s-${block.blockid}"]`);
+          }
+          if (elementBack) {
+            let elementFront = this.$refs.blocks.find(blk => {
+              return blk.block && blk.block.blockid === block.blockid;
+            });
+            let elementIndex = 0;
+            if (block.voicework === 'narration' && block.parts.length > 0) {
+              let part = block.parts.find(p => {
+                return p.audiosrc;
+              });
+              if (part) {
+                elementIndex = block.parts.indexOf(part);
+              }
+            }
+            if (elementFront) {
+              let subRef = elementFront.getSubblockRef(elementIndex, false);
+              if (subRef && subRef.$el) {//#
+                let lastW = subRef.$el.querySelector('w:first-child');
+                let visible = lastW && this.checkFullyVisible(lastW);
+                if (!visible) {
+                  //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
+                  elementBack.scrollIntoView();
+                }
+                return resolve(subRef);
+              }
+            } else {
+              this.scrollToBlock(block.blockid);
+              Vue.nextTick(() => {
+                let checks = 0;
+                let checkBlockLoaded = setInterval(() => {
+                  let ref = this.$refs.blocks.find(blk => {
+                    return blk.block && blk.block.blockid === block.blockid;
+                  });
+                  ++checks;
+                  try {
+                    if (ref && ref.$el) {
+                      let subRef = ref.getSubblockRef(elementIndex);
+                      if (subRef) {
+                        clearInterval(checkBlockLoaded);
+                        return resolve(subRef);
+                      }
+                    }
+                    if (checks > 10) {
+                      clearInterval(checkBlockLoaded);
+                      return resolve();
+                    }
+                  } catch(e) {
+                    console.log('ERROR', e);
+                    if (checks > 10) {
+                      clearInterval(checkBlockLoaded);
+                      return resolve();
+                    }
+                  }
+                }, 100);
+              });
+            }
+          }
+        });
       },
 
       checkFullyVisible(el) {
@@ -2342,6 +2368,45 @@ export default {
           }
           console.log(`startId: `, this.startId);
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+        }
+      },
+      
+      onAudioFab() {
+        if (this.playingBlock.playingPauseAfter) {
+          switch (this.playingBlock.state) {
+            case 'play':
+              this.stopPause();
+              break;
+            case 'pause':
+              return this.findNextAudioblock([this.playingBlock.blockid])
+                .then((block) => {
+                  return this.goToAudioBlock(block);
+                })
+                .then(subRef => {
+                  if (subRef) {
+                    this.resumePause();
+                    subRef.audPlay();
+                  }
+                });
+              break;
+          }
+          return;
+        }
+        let component = this.$refs.blocks.find(blk => {
+          return blk.block.blockid === this.playingBlock.blockid;
+        });
+        if (component && this.playingBlock.partIdx !== null) {
+          component = component.$refs.blocks[this.playingBlock.partIdx];
+        }
+        if (component) {
+          switch (this.playingBlock.state) {
+            case 'pause':
+              component.audResume(this.playingBlock.blockid);
+              break;
+            case 'play':
+              component.audPause();
+              break;
+          }
         }
       }
   },
