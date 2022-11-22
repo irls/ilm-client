@@ -2199,10 +2199,14 @@ export default {
 
       playNextBlock(blockid) {
         let currentBlock = this.parlist.get(blockid);
-        this.findNextAudioblock([blockid])
-          .then(block => {
+        Promise.all([this.findNextAudioblock([blockid]), this.findNextAudioblock([blockid, true])])
+          .then(prepare => {
             //console.log(block);
+            let [block, audioBlock] = prepare;
             if (block) {
+              if (block.type === 'hr' && !audioBlock) {
+                return;
+              }
               let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
               if (elementBack && elementBack) {
                 let elementFront = this.$refs.blocks.find(blk => {
