@@ -49,6 +49,11 @@ export default {
       });
     },
     
+    playSubblockPause(blockid, length) {
+      this.setPlayingBlock(blockid);
+      this.playingBlock.playingPauseAfter = true;
+    },
+    
     stopPause() {
       if (this.playingBlock.playingPauseAfter) {
         this.playingBlock.state = 'pause';
