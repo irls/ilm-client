@@ -2700,7 +2700,7 @@ export default {
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
-                this.pausePlayingBlock();
+                this.pausePlayingBlock(this.block.blockid, this.blockPartIdx);
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
