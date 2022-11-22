@@ -20,8 +20,10 @@ export default {
       this.playingBlockId = blockId;
     },
     
-    pausePlayingBlock() {
-      this.playingBlock.state = 'pause';
+    pausePlayingBlock(blockid, partIdx) {
+      if (this.playingBlock.blockid === blockid && (this.playingBlock.partIdx === null || this.playingBlock.partIdx === partIdx)) {
+        this.playingBlock.state = 'pause';
+      }
     },
     
     resumePlayingBlock() {
