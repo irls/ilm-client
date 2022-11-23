@@ -4278,7 +4278,7 @@ export const store = new Vuex.Store({
           return Promise.resolve(response);
         })
     },
-    generateCompleteAudio({state, commit}) {
+    generateCompleteAudio({state, commit}, blockcount) {
       if (state.currentBookMeta.bookid) {
         state.currentBookMeta.complete_audio_time = -1;
         let selection = {};
@@ -4288,6 +4288,7 @@ export const store = new Vuex.Store({
         if (state.blockSelection.end._id) {
           selection.end = state.blockSelection.end._id;
         }
+        selection.lastBuildBlocksCount = blockcount ? blockcount : 0;
         return axios.post(`${state.API_URL}books/complete_audio/${state.currentBookMeta.bookid}`, {
           selection: selection,
           format: 'm4a'
