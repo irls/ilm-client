@@ -91,12 +91,14 @@
               <div>
                 <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
                 <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
-                <dropdown 
-                  v-model="fadePercent" 
-                  :options="fadePercents" 
-                  scrollHeight="410px" 
-                  class="fade-percent-dropdown"/>
-                <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
+                <div class="dropdown-controls">
+                  <dropdown 
+                    v-model="fadePercent" 
+                    :options="fadePercents" 
+                    scrollHeight="410px" 
+                    class="fade-percent-dropdown"/>
+                  <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
+                </div>
               </div>
             </template>
             <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
@@ -246,7 +248,7 @@
           playbackRate: 1,
           playbackRates: [],
           fadePercent: '',
-          fadePercents: ['95%', '90%', '75%', '50%', '25%', '10%', '5%'],
+          fadePercents: ['to 95%', 'to 90%', 'to 75%', 'to 50%', 'to 25%', 'to 10%', 'to 5%'],
           fadeSelectionLog: []
         }
       },
@@ -486,7 +488,7 @@
               fadePercent = this.user.audioFadeConfig[this.currentBookMeta.bookid].percent;
             }
           }*/
-          this.fadePercent = `${fadePercent}%`;
+          this.fadePercent = `to ${fadePercent}%`;
           $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`)
 
           if (this.$refs.waveformContext) {
@@ -688,13 +690,18 @@
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
+              // do not select less than 0.2 sec
               if (self.mode === 'file' && Math.abs(end - start) < 0.2 &&
                       typeof self.selection.start !== 'undefined' &&
                       typeof self.selection.end !== 'undefined' &&
                       (self.selection.start != start ||
                       self.selection.end != end)) {
-
-                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                self.selection.start = self._round(self.selection.start, 2);
+                self.selection.end = self._round(self.selection.end, 2);
+                if (self.selection.start != start ||
+                      self.selection.end != end) {
+                  self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                }
                 return;
               }
               if (!is_single_cursor) {
@@ -824,7 +831,7 @@
 
               $('.playlist-overlay').on('mousedown', (e) => {
                 //console.log('this.mouseSelection', e.which, this.mouseSelection.start, this.mouseSelection.end);
-                if (e.which !== 1) {
+                if (e.button !== 0) {
                   return;
                 }
 
@@ -1865,7 +1872,12 @@
         },
         _showSelectionBordersOnClick(ev) {
           ev.preventDefault();
-          this._showSelectionBorders(false);
+          window.requestAnimationFrame(() => {
+            if (ev.button && ev.button === 2 && (typeof this.selection.start !== 'undefined' || typeof this.selection.end !== 'undefined')) {
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            }
+          });
+          //this._showSelectionBorders(false);
           return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
@@ -2398,8 +2410,19 @@
           });
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.open(e);
-            $('body').one('click', this.$refs.waveformContext.close);
+            $('body').one('click', () => {
+              this.$refs.waveformContext.close();
+              this.contextPosition = null;
+            });
           }
+          let hasSelection = $('.selection.segment').length > 0;
+          Vue.nextTick(() => {
+            window.requestAnimationFrame(() => {
+              if (hasSelection) {
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              }
+            });
+          });
         },
         setSelectionStart(val, event) {
           //if (this.mode == 'file') {
@@ -3061,7 +3084,7 @@ Revert to original block audio?`,
           this.fadeSelectionLog = [];
         },
         getClearFadePercent() {
-          return parseInt(this.fadePercent);
+          return parseInt(this.fadePercent.replace(/^\D*/, ''));
         },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
@@ -3274,7 +3297,7 @@ Revert to original block audio?`,
             this.fadeSelectionLog.forEach(log => {
               startPercent = log.percent * startPercent / 100;
             });
-            return `Faded ${this._round(startPercent, 0)}%`;
+            return `Faded to ${this._round(startPercent, 0)}%`;
           },
           cache: false
         },
@@ -3685,7 +3708,7 @@ Revert to original block audio?`,
       /*width: 265px;*/
       &>div:not(.p-dropdown) {
         display: inline-block;
-        padding: 0px 10px;
+        /*padding: 0px 10px;*/
       }
       input[type="number"] {
         width: 40px;
@@ -3946,8 +3969,12 @@ Revert to original block audio?`,
   .playbackrate-dropdown.p-dropdown {
     width: 62px;
   }
-  .fade-percent-dropdown.p-dropdown {
-    width: 58px;
+  .dropdown-controls {
+    display: inline-block;
+    padding: 0px 20px;
+    .fade-percent-dropdown.p-dropdown {
+      width: 75px;
+    }
   }
   .selection-tooltips {
     position: absolute;

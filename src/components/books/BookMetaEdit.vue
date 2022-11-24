@@ -776,7 +776,8 @@ export default {
       currentBookCollection: 'currentBookCollection',
       alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
-      currentBookCollection: 'currentBookCollection'
+      currentBookCollection: 'currentBookCollection',
+      playingBlock: 'playingBlock'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -1914,7 +1915,7 @@ export default {
                   if (isCouplet) {// send content for update, to parse content for couplet
                     updateBody['content'] = pBlock.content;
                   }
-                  updatePromises.push(this.putBlockPart([updateBody, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged()])
+                  updatePromises.push(this.putBlockPart([updateBody, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged() || (this.playingBlock.blockid === pBlock.blockid && this.playingBlock.partIdx !== null)])
                     .then(() => {
                       if (isCouplet) {
                         this.$root.$emit(`block-state-refresh-${pBlock.blockid}`);

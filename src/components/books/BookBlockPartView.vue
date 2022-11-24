@@ -377,6 +377,7 @@ import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
+import playing_block      from '../../mixins/playing_block.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
@@ -464,7 +465,7 @@ export default {
     'split-block-menu': SplitBlockMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
-  mixins: [taskControls, apiConfig, access],
+  mixins: [taskControls, apiConfig, access, playing_block],
   computed: {
       isLocked: {
         get () {
@@ -2026,6 +2027,7 @@ export default {
           this.isAudStarted = false;
           this.isAudPaused = false;
           this.audCleanClasses(block_id, ev);
+          this.stopPlayingBlock(this.block.blockid);
         }
       },
       audCleanClasses: function(block_id, ev) {
@@ -2685,23 +2687,32 @@ export default {
                 //this.player.audio_element.volume = 0;
                 this.$root.$on('readalong:playBlock', this.onAudPlay);
                 this.$root.$on('from-audioeditor:play', this.onAudPlay);
+                if (!this.isAudPartStarted) {
+                  this.setPlayingBlock(this.block.blockid, this.blockPartIdx);
+                }
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
+                this.pausePlayingBlock(this.block.blockid, this.blockPartIdx);
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
                 this.$root.$emit('readalong:playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
+                this.resumePlayingBlock();
             },
             on_complete: ()=>{
                 this.$root.$off('readalong:playBlock', this.onAudPlay);
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
+                this.$root.$off('from-audioeditor:play', this.onAudPlay);
+                this.stopPlayingBlock(this.block.blockid);
+                if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[this.blockPartIdx + 1] && this.block.parts[this.blockPartIdx + 1].audiosrc) {
+                  this.playSubblockPause(this.block.blockid);
+                }
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
-                this.$root.$off('from-audioeditor:play', this.onAudPlay);
             },
             on_newline: () => {
               let element = document.getElementById(this.block.blockid);
@@ -3199,6 +3210,9 @@ export default {
         }
       },
       clickAwayFromAudioControl(e){
+        if (e.target && (e.target.classList.contains('audio-fab') || (e.target.parentElement && e.target.parentElement.classList.contains('audio-fab')))) {
+          return;
+        }
         const mouseOnContainer = e.target.closest('[data-audio-controls]');
         if (!mouseOnContainer || e.target.hasAttribute('data-show-editor')) {
           if (this.isAudStarted) {
