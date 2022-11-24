@@ -635,6 +635,12 @@ export const store = new Vuex.Store({
     },
     playingBlock: state => {
       return state.playingBlock;
+    },
+    bookMetaById: state => (bookId) => {
+      if (!state.books_meta) {
+        return null;
+      }
+      return state.books_meta.find(meta => meta.bookid == bookId);
     }
   },
 

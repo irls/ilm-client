@@ -99,7 +99,7 @@
     },
     mixins: [api_config],
     computed: {
-      ...mapGetters(['currentCollection', 'allowCollectionsEdit']),
+      ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'bookMetaById']),
 
       languages() {
         return Languages;
@@ -111,9 +111,10 @@
         return 0;
       },
       booksGrid() {
+        let books = [];
         if (this.currentCollection.books instanceof Object) {
-          console.log(`this.currentCollection.books_list: `, this.currentCollection.books_list);
-          const res = this.currentCollection.books_list
+          console.log(`this.currentCollection: `, this.currentCollection);
+          books = this.currentCollection.books_list
           .filter((book)=>{
             return (book.isIntheProcessOfPublication
                  || book.isInTheQueueOfPublication
@@ -150,10 +151,33 @@
               ver: 'v. '+book.version
             }
           });
-          //console.log(`booksGrid: `, res);
-          return res;
+          //console.log(`booksGrid: `, books);
         }
-        return [];
+
+        //-- Search for published but removed books -- { --//
+        let deletedBooks = [];
+        if (this.currentCollection.pubBooksEntities
+          && this.currentCollection.pubBooksEntities.length) {
+          this.currentCollection.pubBooksEntities.forEach((pBook)=>{
+            if (this.currentCollection.bookids.indexOf(pBook.bookId) < 0) {
+              const bookMeta = this.bookMetaById(pBook.bookId);
+              if (bookMeta) {
+                deletedBooks.push({
+                  bookid: pBook.bookId,
+                  ready: {
+                    status: 'done',
+                    tooltip: ''
+                  },
+                  title: bookMeta.title,
+                  ver: 'Removed'
+                })
+              }
+            }
+          })
+        }
+        //console.log(`deletedBooks = : `, deletedBooks);
+        //-- } -- end -- Search for published but removed books --//
+        return [...deletedBooks, ...books];
       },
       pubVersionDate() {
         //DD Mon YYYY
