@@ -112,7 +112,7 @@
                       </li>
                       <li class="separator"></li>
                       <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
-                      <li @click="showModal('block-html')">
+                      <li @click="openEditBlockHtml()">
                         <i class="fa fa-code" aria-hidden="true"></i>
                         {{editBlockHTMLLabel}}
                       </li>
@@ -649,6 +649,7 @@ import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../stor
 import BookBlockPartView from './BookBlockPartView';
 import LockedBlockActions from './block/LockedBlockActions';
 import FlagComment        from './block/FlagComment';
+import EditHTMLModal      from './block/EditHTML';
 //import { tabs, tab } from 'vue-strap';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
@@ -4542,6 +4543,37 @@ Save text changes and realign the Block?`,
 
       resetListenCompressed() {
         this.block.resetAudiosrcConfig();
+      },
+      
+      openEditBlockHtml() {
+        let screenWidth = window.screen.width - 100;
+        this.$modal.show(EditHTMLModal, {
+          //text: this.narrationBlockContent,
+          //cancelRecording: this.cancelRecording,
+          //stopRecording: this._stopRecording,
+          //pauseRecording: this.pauseRecording,
+          //resumeRecording: this.resumeRecording,
+          blockLang: this.getBlockLang,
+          editBlockHTMLLabel: this.editBlockHTMLLabel,
+          parnumCompNotHidden: this.parnumCompNotHidden, 
+          shortBlockid: this.shortBlockid, 
+          wordsRange: this.wordsRange, 
+          block: this.block, 
+          audioUrl: this.audioUrl, 
+          compressedAudioUrl: this.compressedAudioUrl, 
+          hasPendingContentChanges: this.hasPendingContentChanges, 
+          blockHtmlHeader: this.blockHtmlHeader, 
+          disabled: !this.adminOrLibrarian || this.isSplittedBlock,
+          adminOrLibrarian: this.adminOrLibrarian
+        },
+        {
+          clickToClose: false,
+          resizable: false,
+          draggable: false,
+          scrollable: false,
+          height: 'auto',
+          width: screenWidth + 'px'
+        });
       }
   },
   watch: {
@@ -5846,7 +5878,7 @@ Save text changes and realign the Block?`,
     }
   }
 
-  .block-html-modal {
+  /*.block-html-modal {
     .modal-header {
       width: 100%;
       .modal-close-button {
@@ -5857,7 +5889,6 @@ Save text changes and realign the Block?`,
     .modal-body {
       overflow: visible;
       .CodeMirror-rtl, .CodeMirror-rtl * {
-        /*direction: rtl; */
         text-align: right;
       }
       .block-content-update-pending {
@@ -5881,14 +5912,6 @@ Save text changes and realign the Block?`,
           background-color: white;
           border: 1px solid gray;
         }
-        /** {
-          color: #dfdfdf;
-        }*/
-        /*.CodeMirror-code {
-          * {
-            color: gray;
-          }
-        }*/
       }
     }
     .modal-footer {
@@ -5896,7 +5919,6 @@ Save text changes and realign the Block?`,
         float: left;
       }
       .copy-block-html-content {
-        /*display: none;*/
         height: 0px;
         width: 0px;
         resize: none;
@@ -5908,7 +5930,7 @@ Save text changes and realign the Block?`,
     textarea.block-html {
       width: 100%;
       height: 330px;
-      resize: none;/*vertical*/
+      resize: none;
       direction: ltr;
     }
     .modal-title {
@@ -5931,9 +5953,6 @@ Save text changes and realign the Block?`,
         li {
           .p-tabview-nav-link {
             font-size: 1.2em;
-            /*&:first-child {
-              font-weight: bolder;
-            }*/
               border: solid #dee2e6;
               border-top-color: rgb(222, 226, 230);
               border-top-width: medium;
@@ -5965,9 +5984,6 @@ Save text changes and realign the Block?`,
     }
 
     .tab-pane {
-      /*div {
-        margin: 15px 0px 5px 0px;
-      }*/
       .CodeMirror-wrap {
         height: 430px;
       }
@@ -5986,7 +6002,7 @@ Save text changes and realign the Block?`,
     .scrtabs-tab-scroll-arrow {
       border: none;
     }
-  }
+  }*/
 /*ilm-block
 .block-html-modal {
 }*/
