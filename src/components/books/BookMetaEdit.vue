@@ -894,9 +894,9 @@ export default {
 
     currentBookCategory: {
       get() {
-        if (typeof this.currentBookCollection.category !== 'undefined') {
+        /*if (typeof this.currentBookCollection.category !== 'undefined') {
           return this.currentBookCollection.category;
-        }
+        }*/
         return this.currentBook.category;
       },
       set(value) {
@@ -909,9 +909,9 @@ export default {
         if (!this.allowMetadataEdit) {
           return true;
         }
-        if (typeof this.currentBookCollection.category !== 'undefined') {
+        /*if (typeof this.currentBookCollection.category !== 'undefined') {
           return true;
-        }
+        }*/
         return false;
       }
     },
