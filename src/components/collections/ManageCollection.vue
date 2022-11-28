@@ -148,7 +148,7 @@
                 tooltip: book.publicationStatus
               },
               title: book.title,
-              ver: 'v. '+book.version
+              ver: 'v. '+ (book.version || '1.0')
             }
           });
           //console.log(`booksGrid: `, books);
