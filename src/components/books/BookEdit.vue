@@ -980,6 +980,9 @@ export default {
       });
 
     },
+    closeDialogWindow(){
+      this.$root.$emit("close-dialog");
+    },
     joinBlocks(block, block_Idx, direction) {
 
       switch(direction) {
@@ -1053,6 +1056,7 @@ export default {
               if (!elNext) {
                 this.scrollToBlock(blockBefore.blockid);
               }
+              this.closeDialogWindow() //close modal window about confirm to join of blocks
               return this.blocksJoin({
                 resultBlock_id: blockBefore.blockid,
                 donorBlock_id: block.blockid
@@ -1160,6 +1164,7 @@ export default {
                 elNext.isAudioChanged = false;
               }
               //elNext.evFromAudioeditorClosed(blockAfter.blockid);
+              this.closeDialogWindow() //close modal window about confirm to join of blocks
               return this.blocksJoin({
                 resultBlock_id: block.blockid,
                 donorBlock_id: blockAfter.blockid
@@ -1202,15 +1207,17 @@ export default {
     },
 
     unableJoinMessage() {
+      this.closeDialogWindow() //close modal window about confirm to join of blocks
       this.$root.$emit('show-modal', {
-        title: 'Blocks with different types can\'t be joined',
-        text: '',
+        title: 'Different Type',
+        text: 'Blocks with different types can\'t be joined.',
         buttons: [
           {
-            title: 'Close',
+            title: 'Ok',
             handler: () => {
               this.$root.$emit('hide-modal');
             },
+            'class': 'btn btn-primary'
           }
         ],
         class: ['align-modal']
@@ -1218,16 +1225,18 @@ export default {
     },
 
     unableToJoinVoiceworkMessage() {
+      this.closeDialogWindow() //close  modal window about confirm to join of blocks
       this.$root.$emit('show-modal', {
-        title: 'Blocks with different voicework type can’t be joined.',
-        text: '',
+        title: 'Different Voicework',
+        text: 'Blocks with different voicework types can\'t be joined.',
         buttons: [
           {
-            title: 'Close',
+            title: 'Ok',
             handler: () => {
               this.$root.$emit('hide-modal');
             },
-          }
+            'class': 'btn btn-primary'
+          },
         ],
         class: ['align-modal']
       });
