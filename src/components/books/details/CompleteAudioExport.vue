@@ -2,9 +2,9 @@
   <fieldset class="complete-audio" v-if="allowExport">
     <legend>Export selected range</legend>
     <div>
-      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="generateCompleteAudio" :disabled="isGenerating">Build</button>
-      <button class="btn btn-primary" v-else v-on:click="generateCompleteAudio" :disabled="isGenerating">Rebuild</button>
-      &nbsp;&nbsp;{{blocksCountForExport}} block(s) 
+      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Build</button>
+      <button class="btn btn-primary" v-else v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Rebuild</button>
+      &nbsp;&nbsp;{{blocksCountForExport}} block(s)
       <span v-if="blockSelection.start && blockSelection.start._id">
         in range 
         <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - 
