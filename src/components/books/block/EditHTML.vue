@@ -57,19 +57,24 @@
   import TabView from 'primevue/tabview';
   import TabPanel from 'primevue/tabpanel';
   import { codemirror } from 'vue-codemirror';
+  import Vue from 'vue';
   
   import('codemirror/lib/codemirror.css');
   import('codemirror/mode/xml/xml.js');
   import('codemirror/theme/base16-light.css');
   export default {
-    props: ['blockLang', 'editBlockHTMLLabel', 'parnumCompNotHidden', 'shortBlockid', 'wordsRange', 'block', 'audioUrl', 'compressedAudioUrl', 'hasPendingContentChanges', 'blockHtmlHeader', 'disabled', 'adminOrLibrarian'],
+    data() {
+      return {
+        
+      }
+    },
+    props: ['blockLang', 'editBlockHTMLLabel', 'parnumCompNotHidden', 'shortBlockid', 'wordsRange', 'block', 'audioUrl', 'compressedAudioUrl', 'disabled', 'adminOrLibrarian', 'blockHtmlProps', 'blockParts', 'subBlockParnumComp'],
     components: {
       'TabView': TabView,
       'TabPanel': TabPanel,
       'codemirror': codemirror
     },
     mounted() {
-      console.log('MOUNTED HTML HERE');
       this.setHtml();
     },
     methods: {
@@ -98,22 +103,10 @@
         return cmOptions;
       },
       setHtml() {
-        let content = this.block.content || "";
-        if (!this.block.getIsSplittedBlock() && this.isChanged) {
-          content = this.$refs.blocks[0].$refs.blockContent.innerHTML;
-        }
-        //content = content.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1');
-
-        this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(content);
+        this.$refs['block-html' + this.block.blockid].codemirror.doc.setValue(this.blockHtmlProps.blockHTML);
         if (this.block.getIsSplittedBlock()) {
           this.block.parts.forEach((p, pIdx) => {
-            let ref = this.$refs.blocks.find(r => {
-              return r.blockPartIdx === pIdx;
-            });
-            if (ref) {
-              content = p.isChanged ? ref.$refs.blockContent.innerHTML : p.content;
-              this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(content/*.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1')*/);
-            }
+            this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.setValue(this.blockHtmlProps.partsHTML[pIdx]/*.replace(/<f[^>]+?>([\s\S]*?)<\/f>/img, '$1')*/);
           });
         }
         if (!this.block.getIsSplittedBlock()) {
@@ -122,9 +115,9 @@
       },
       onBlockHTMLTabChange(ev) {
         if (ev.index === 0) {
-          $(`#${this.block.blockid} .copy-block-html`).show();
+          $(`.block-html-modal .copy-block-html`).show();
         } else {
-          $(`#${this.block.blockid} .copy-block-html`).hide();
+          $(`.block-html-modal .copy-block-html`).hide();
         }
         if (ev.index > 0) {
           Vue.nextTick(() => {
@@ -140,7 +133,48 @@
         this.$emit('close');
       },
       setPartsHtml() {
-        
+        this.blockHtmlProps.isSet = true;
+        if (!this.block.getIsSplittedBlock()) {
+          this.blockHtmlProps.blockHTML = this.$refs[`block-html${this.block.blockid}`].codemirror.doc.getValue();
+        } else {
+          this.block.parts.forEach((p, pIdx) => {
+            this.blockHtmlProps.partsHTML[pIdx] = this.$refs[`block-part-${pIdx}-html`][0].codemirror.doc.getValue();
+          });
+        }
+        this.$emit('close');
+      },
+      copyBlockHtml() {
+        let content = this.$refs['block-html' + this.block.blockid].codemirror.doc.getValue();
+        let el = this.$refs['copy-block-html-content'];
+        el.innerText = this.blockHtmlHeader + content + '</div>';
+        el.select();
+        document.execCommand('copy');
+        el.innerText = '';
+        return;
+      }
+    },
+    computed: {
+      hasPendingContentChanges: {
+        get() {
+          let p = this.block.parts.find(bp => {
+            return bp.content_changed === true;
+          });
+          return p ? true : false;
+        },
+        cache: false
+      },
+      blockHtmlHeader: {
+        get() {
+          let audiosrc = this.block.getAudiosrc('m4a', true) || '';
+          if (audiosrc) {
+            audiosrc = audiosrc.substring(0, audiosrc.lastIndexOf('?'));
+          }
+          let blockData = `data-audiosrc="${audiosrc}"`;
+          if (this.block.updated) blockData += ` data-last_modified="${this.block.updated}"`;
+          if (audiosrc) blockData += ` data-audiohash="${this.block.audioHash || ''}"`;
+          let header = `<div id="${this.shortBlockid}" ${blockData}>`;
+          return header;
+        }
       }
     }
   }
