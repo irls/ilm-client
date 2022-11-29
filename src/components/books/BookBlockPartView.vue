@@ -4203,6 +4203,14 @@ Join subblocks?`,
           }
         }
       },
+      'isAudPaused': {
+        handler(val) {
+          if (!val && this.isAudStarted) {
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.handleAudioControl);
+          }
+        }
+      },
       'approveWaiting': {
         handler(val) {
           //console.log(this.block._id, 'approveWaiting', val);
