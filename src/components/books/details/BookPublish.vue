@@ -112,18 +112,17 @@
             mandatoryFields.push('Author EN (author English translation)');
         }
 
-        if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
-
-          if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
-              canPublish = false;
-              mandatoryFields.push('Category');
-          }
-
-          if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
-              canPublish = false;
-              mandatoryFields.push('URL slug');
-          }
+        //if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
+        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+            canPublish = false;
+            mandatoryFields.push('Category');
         }
+
+        if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
+            canPublish = false;
+            mandatoryFields.push('URL slug');
+        }
+        //}
 
         if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
           canPublish = false;
