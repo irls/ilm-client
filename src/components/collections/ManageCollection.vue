@@ -91,7 +91,8 @@
         ],
         selectedBooks: [],
         txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        pubStatusErrors : ['error','failed','not found']
+        pubStatusErrors : ['error','failed','not found'],
+        isShowTime: true
       }
     },
     components: {
@@ -112,6 +113,7 @@
       },
       booksGrid() {
         let books = [];
+        const { pubBooksEntities = [] } = this.currentCollection;
         if (this.currentCollection.books instanceof Object) {
           console.log(`this.currentCollection: `, this.currentCollection);
           books = this.currentCollection.books_list
@@ -141,6 +143,11 @@
                 } break;
               };
             }
+            let version = 'v. '+ (book.version || '1.0');
+            if (pubBooksEntities.length == 0 || !pubBooksEntities.find((pBook)=>pBook.bookId == book.bookid)) {
+              version = 'New';
+            }
+
             return {
               bookid: book.bookid,
               ready: {
@@ -148,7 +155,7 @@
                 tooltip: book.publicationStatus
               },
               title: book.title,
-              ver: 'v. '+ (book.version || '1.0')
+              ver: version
             }
           });
           //console.log(`booksGrid: `, books);
@@ -156,9 +163,8 @@
 
         //-- Search for published but removed books -- { --//
         let deletedBooks = [];
-        if (this.currentCollection.pubBooksEntities
-          && this.currentCollection.pubBooksEntities.length) {
-          this.currentCollection.pubBooksEntities.forEach((pBook)=>{
+        if (pubBooksEntities.length) {
+          pubBooksEntities.forEach((pBook)=>{
             if (this.currentCollection.bookids.indexOf(pBook.bookId) < 0) {
               const bookMeta = this.bookMetaById(pBook.bookId);
               if (bookMeta) {
@@ -183,14 +189,14 @@
         //DD Mon YYYY
         if (this.currentCollection.pubVersionDate) {
           const uDate = new Date(this.currentCollection.pubVersionDate);
-          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
+          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear() + (this.isShowTime ? ` ${uDate.getHours()}:${uDate.getMinutes()}:${uDate.getSeconds()}` : '');
         }
         return '';
       },
       currVersionDate() {
         if (this.currentCollection.currVersionDate) {
           const uDate = new Date(this.currentCollection.currVersionDate);
-          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
+          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear() + (this.isShowTime ? ` ${uDate.getHours()}:${uDate.getMinutes()}:${uDate.getSeconds()}` : '');
         }
         return '';
       },
