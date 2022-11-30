@@ -4284,9 +4284,17 @@ export const store = new Vuex.Store({
         let selection = {};
         if (state.blockSelection.start._id) {
           selection.start = state.blockSelection.start._id;
+        } else {
+          selection.start = state.storeList.entries().next().value[0]
         }
         if (state.blockSelection.end._id) {
           selection.end = state.blockSelection.end._id;
+        } else {
+          let countUntilLastBlock = 0;
+          for (const element of state.storeList.entries()) {
+            if(countUntilLastBlock == state.storeList.size - 1 ){selection.end = element[0]}
+            countUntilLastBlock++;
+          }
         }
         selection.lastBuildBlocksCount = blockcount ? blockcount : 0;
         return axios.post(`${state.API_URL}books/complete_audio/${state.currentBookMeta.bookid}`, {
