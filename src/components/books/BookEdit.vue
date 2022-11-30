@@ -2212,6 +2212,7 @@ export default {
             let [block, audioBlock] = prepare;
             if (block) {
               if (block.type === 'hr' && !audioBlock) {
+                this.stopPlayingBlock(blockid);
                 return;
               }
               return pauseAfter
