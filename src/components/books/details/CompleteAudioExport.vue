@@ -2,9 +2,9 @@
   <fieldset class="complete-audio" v-if="allowExport">
     <legend>Export selected range</legend>
     <div>
-      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="generateCompleteAudio" :disabled="isGenerating">Build</button>
-      <button class="btn btn-primary" v-else v-on:click="generateCompleteAudio" :disabled="isGenerating">Rebuild</button>
-      &nbsp;&nbsp;{{blocksCountForExport}} block(s) 
+      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Build</button>
+      <button class="btn btn-primary" v-else v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Rebuild</button>
+      &nbsp;&nbsp;{{blocksCountForExport}} block(s)
       <span v-if="blockSelection.start && blockSelection.start._id">
         in range 
         <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - 
@@ -14,9 +14,11 @@
     <div class="align-preloader -small" v-if="isGenerating"></div>
     <template v-else>
       <div v-if="currentBookMeta.complete_audio_time && currentBookMeta.complete_audio_time !== -1" class="build-time">
-        <span>Latest build: {{convertTime(currentBookMeta.complete_audio_time, true)}} {{currentBookMeta.lastBuildBlocksCount}} block(s)
-           <a v-on:click="goToBlock(currentBookMeta.firstBlockRange)">{{formatBlockName(currentBookMeta.firstBlockRange)}}</a> -
-           <a v-on:click="goToBlock(currentBookMeta.lastBlockRange)">{{formatBlockName(currentBookMeta.lastBlockRange)}} </a>
+        <span>Latest build: {{convertTime(currentBookMeta.complete_audio_time, true)}}
+          <p v-if="currentBookMeta.firstBlockRange"> {{currentBookMeta.lastBuildBlocksCount}} block(s)
+           <a v-on:click="goToBlock(currentBookMeta.firstBlockRange)">{{getIdShort(currentBookMeta.firstBlockRange)}}</a> -
+           <a v-on:click="goToBlock(currentBookMeta.lastBlockRange)">{{getIdShort(currentBookMeta.lastBlockRange)}} </a>
+        </p>
         </span>
       </div>
     </template>
@@ -82,7 +84,7 @@
       startGenerateCompleteAudio () {
         this.generateCompleteAudio([this.blocksCountForExport])
       },
-      formatBlockName (nameBlock) {
+      getIdShort (nameBlock) {
           return nameBlock.split('-')[1];
       },
     },
@@ -102,6 +104,9 @@
     }
     a {
       cursor: pointer;
+    }
+    p {
+      display:inline;
     }
   }
 </style>
