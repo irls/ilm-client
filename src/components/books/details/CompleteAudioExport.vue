@@ -14,9 +14,11 @@
     <div class="align-preloader -small" v-if="isGenerating"></div>
     <template v-else>
       <div v-if="currentBookMeta.complete_audio_time && currentBookMeta.complete_audio_time !== -1" class="build-time">
-        <span>Latest build: {{convertTime(currentBookMeta.complete_audio_time, true)}} {{currentBookMeta.lastBuildBlocksCount}} block(s)
+        <span>Latest build: {{convertTime(currentBookMeta.complete_audio_time, true)}}
+          <p v-if="currentBookMeta.firstBlockRange"> {{currentBookMeta.lastBuildBlocksCount}} block(s)
            <a v-on:click="goToBlock(currentBookMeta.firstBlockRange)">{{getIdShort(currentBookMeta.firstBlockRange)}}</a> -
            <a v-on:click="goToBlock(currentBookMeta.lastBlockRange)">{{getIdShort(currentBookMeta.lastBlockRange)}} </a>
+        </p>
         </span>
       </div>
     </template>
@@ -102,6 +104,9 @@
     }
     a {
       cursor: pointer;
+    }
+    p {
+      display:inline;
     }
   }
 </style>
