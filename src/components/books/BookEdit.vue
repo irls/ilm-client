@@ -2204,10 +2204,14 @@ export default {
       playNextBlock(blockid) {
         let currentBlock = this.parlist.get(blockid);
         let pauseAfter = this.playPause(blockid, currentBlock.pause_after);
-        this.findNextAudioblock([blockid])
-          .then(block => {
+        Promise.all([this.findNextAudioblock([blockid]), this.findNextAudioblock([blockid, true])])
+          .then(prepare => {
             //console.log(block);
+            let [block, audioBlock] = prepare;
             if (block) {
+              if (block.type === 'hr' && !audioBlock) {
+                return;
+              }
               return pauseAfter
                 .then(() => {
                   if (this.checkPlayingBlock(blockid)) {
