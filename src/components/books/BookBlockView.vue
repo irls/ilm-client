@@ -4384,7 +4384,6 @@ Save text changes and realign the Block?`,
       },
       
       openEditBlockHtml() {
-        let screenWidth = window.screen.width - 100;
         let blockHtmlProps = {
           blockHTML: this.block.content || "",
           partsHTML: [],
@@ -4424,7 +4423,7 @@ Save text changes and realign the Block?`,
           draggable: false,
           scrollable: false,
           height: 'auto',
-          width: screenWidth + 'px'
+          width: '90%'
         },
         {
           'closed': () => {
