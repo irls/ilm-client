@@ -1634,7 +1634,6 @@
               
               this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
               this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, calculatedFadeLength]);
-              //docker run --rm -v "/tmp/5def766e74730ae61b4e55642b15ddc6":/data dockerffmpeg fadeInFadeOutPercent.sh "/data/0.wav" "/data/0.wav_fade.wav" 1.39 1.6 50 0.01
               this.addFadeSelectionLog();
               this.isModified = true;
               this.cursorPosition = this.selection.start;
