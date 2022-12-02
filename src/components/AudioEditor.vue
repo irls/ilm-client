@@ -1563,13 +1563,19 @@
             .then(() => {
               
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+              
+              let selectionLength = this._round(this.selection.end - this.selection.start, 2);
 
-              let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              let silence = new Float32Array((selectionLength) * original_buffer.sampleRate);
               
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               
-              let fadeLength = this.audioFadeConfig.length * original_buffer.sampleRate;
+              let calculatedFadeLength = this.audioFadeConfig.length;
+              if (selectionLength < this.audioFadeConfig.shortLength) {
+                calculatedFadeLength = this._round(this.audioFadeConfig.shortPercent * selectionLength / 100, 2);
+              }
+              let fadeLength = calculatedFadeLength * original_buffer.sampleRate;
               let fadePercent = this.getClearFadePercent();
               let removePercent = (100 - fadePercent);
               for (let i = 0; i <= fadeLength; ++i) {
@@ -1628,7 +1634,7 @@
               
               
               this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
-              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, this.audioFadeConfig.length]);
+              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, calculatedFadeLength]);
               this.addFadeSelectionLog();
               this.isModified = true;
               this.cursorPosition = this.selection.start;
@@ -3295,7 +3301,7 @@ Revert to original block audio?`,
             if (!this.hasSelection || this.isSinglePointSelection) {
               return true;
             }
-            return typeof this.selection.start !== 'undefined' && typeof this.selection.end !== 'undefined' && this._round(this.selection.end - this.selection.start, 2) >= this._round(this.audioFadeConfig.length * 2, 2) ? false : true;
+            return false;
           },
           cache: false
         },
