@@ -1414,6 +1414,8 @@ export default {
       this.$root.$on(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
 
       this.$root.$on("close-dialog", () =>{
+
+        console.log("created close-dialog")
         this.$root.$emit('hide-modal');
       })
       Vue.nextTick(() => {
@@ -1478,7 +1480,8 @@ export default {
       this.$root.$off(`save-block:${this.block.blockid}`);
 
     }
-       // this.$root.$off("close-dialog");
+    console.log("destroyed close-dialog")
+    this.$root.$off("close-dialog");
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
