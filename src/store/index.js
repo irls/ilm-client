@@ -1695,11 +1695,15 @@ export const store = new Vuex.Store({
             const bIdx = state.books_meta.findIndex(c => {
               return c.bookid === data.meta.bookid;
             });
-            if (bIdx > -1) {
-              console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]);
+            if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
+              console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              state.books_meta[bIdx]['@version'] = data.meta['@version'];
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].published = data.meta.published;
+              state.books_meta[bIdx].publishedVersion = data.meta.publishedVersion;
+              state.books_meta[bIdx].version = data.meta.version;
+              state.books_meta[bIdx].publishLog = data.meta.publishLog;
               commit('PREPARE_BOOK_COLLECTIONS');
             }
             // const collection = state.bookCollectionsAll[cIdx];
@@ -1925,16 +1929,16 @@ export const store = new Vuex.Store({
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
+                commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
+                let allowPublish = state.adminOrLibrarian;
+                commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+                let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+                commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+                if (data.meta.hasOwnProperty('coverimgURL')) {
+                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
+                }
+                dispatch('getCurrentJobInfo');
               }
-              commit('SET_CURRENTBOOK_META', data.meta)
-              let allowPublish = state.adminOrLibrarian;
-              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
-              let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
-              commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
-              if (data.meta.hasOwnProperty('coverimgURL')) {
-                commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
-              }
-              dispatch('getCurrentJobInfo');
             }
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
@@ -2140,7 +2144,8 @@ export const store = new Vuex.Store({
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
             if (state.currentBookMeta.collection_id && state.currentCollection) {
-              state.currentCollection.updateBook(response.data);
+              //state.currentCollection.updateBook(response.data);
+              commit('PREPARE_BOOK_COLLECTIONS');
             }
 
             return Promise.resolve(response.data);
