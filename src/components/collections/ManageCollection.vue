@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="collection-meta-wrap">
     <div class="collection-meta col-sm-12">
       <div class="c-info-block">
         <h5 class="c-title">{{currentCollection.title}}</h5>
@@ -23,7 +23,7 @@
         @close_modal="linkBookModal = false"
         :languages="languages"></linkBook>
 
-        <fieldset>
+        <fieldset class="ready-books-list">
           <legend>Ready for publication</legend>
           <Grid id="books-in-collection"
             ref="books_in_collection"
@@ -266,7 +266,7 @@
   }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
   .c-info-block {
     padding-left: 10px;
   }
@@ -284,9 +284,29 @@
   .c-publication-action {
     padding: 10px;
   }
+  .collection-meta-wrap {
+    height: 100%;
+    .collection-meta {
+      display: flex;
+      flex-direction: column;
+
+      .ready-books-list {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 100px;
+      }
+    }
+  }
 </style>
 
 <style>
+  #p-manageCollection {
+    height: 100%;
+  }
+  #books-in-collection {
+    /*max-height: 500px;*/
+    overflow-y: auto;
+  }
   #books-in-collection thead th {
     background-color: silver;
   }

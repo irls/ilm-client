@@ -8,9 +8,7 @@
         </template>
       </div>
 
-      <div class="row" style="height: 0">
       <div class="download-area col-sm-6">
-      </div>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
@@ -2396,7 +2394,7 @@ select.text-danger#categorySelection, input.text-danger{
   }
 
   .sidebar-bookmeta {
-    width: 96%;
+    width: 100%;
   }
 
   .editing-wrapper {
@@ -2620,6 +2618,16 @@ select.text-danger#categorySelection, input.text-danger{
 
   .outline-0 {
     outline: 0;
+  }
+
+  .meta-edit-tabs.vue-tabs {
+    height: 100%;
+
+    .tab-content {
+      height: 100%;
+      margin-top: -44px;
+      padding-top: 44px;
+    }
   }
 
   .meta-edit-tabs.vue-tabs .disabled legend{
