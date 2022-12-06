@@ -168,6 +168,7 @@ export default {
   }
 
   .p-component.p-tooltip {
+    max-width: 20.0rem;
     .p-tooltip-text {
       font-size: 1.4rem;
     }

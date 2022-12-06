@@ -126,18 +126,32 @@ Features:
       },
       'rowsPerPage' (a, b) { // Reset to page 0 when items per page changes
         this.currentPage = 0
-      },
-      'data' () {
-        Vue.nextTick(()=>{
-          const hasTooltipElements = (this.$refs.grid_component_ref).querySelectorAll('[data-tooltip]');
-          if (hasTooltipElements.length) {
-            console.log(`hasTooltipElements: `, hasTooltipElements);
-            for (let el of hasTooltipElements) {
-              //Tooltip.unbind(el);
-              Tooltip.bind(el, {value: el.dataset.tooltip, modifiers: {top: true}});
-            }
-          }
-        })
+      }
+    },
+    mounted() {
+      const hasTooltipElements = (this.$refs.grid_component_ref).querySelectorAll('[data-tooltip]');
+      if (hasTooltipElements.length) {
+        for (let el of hasTooltipElements) {
+          Tooltip.bind(el, {value: el.dataset.tooltip, modifiers: {top: true}});
+        }
+      }
+    },
+    beforeUpdate() {
+      const hasTooltipElements = (this.$refs.grid_component_ref).querySelectorAll('[data-tooltip]');
+      if (hasTooltipElements.length) {
+        for (let el of hasTooltipElements) {
+          try {
+            Tooltip.unbind(el);
+          } catch(err) {}
+        }
+      }
+    },
+    updated() {
+      const hasTooltipElements = (this.$refs.grid_component_ref).querySelectorAll('[data-tooltip]');
+      if (hasTooltipElements.length) {
+        for (let el of hasTooltipElements) {
+          Tooltip.bind(el, {value: el.dataset.tooltip, modifiers: {top: true}});
+        }
       }
     },
     computed: {
