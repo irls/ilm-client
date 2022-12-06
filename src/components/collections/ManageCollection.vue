@@ -5,15 +5,14 @@
         <h5 class="c-title">{{currentCollection.title}}</h5>
         {{collectionBooksLength}} books
       </div>
-      <div v-if="allowCollectionsEdit" class="c-action-block">
-
+      <div class="c-action-block">
         <div class="c-action-button">
-          <button class="btn btn-primary" v-on:click="linkBookModal = true"><!--btn-default-->
+          <button :disabled="!allowCollectionsEdit" class="btn btn-primary" v-on:click="linkBookModal = true"><!--btn-default-->
             <i class="fa fa-plus"></i>&nbsp;Add to collection
           </button>
         </div>
         <div class="c-action-button">
-          <button class="btn btn-danger" v-on:click="remove(true)">
+          <button :disabled="!allowCollectionsEdit" class="btn btn-danger" v-on:click="remove(true)">
             Unpublish Collection
           </button>
         </div>
@@ -72,13 +71,13 @@
             html (val) {
               switch(val.status) {
                 case 'done' : {
-                  return `<i class='fa fa-check' style="color: darkseagreen;"></i>`;
+                  return `<i class='fa fa-check' data-tooltip="Ready for publication" style="color: darkseagreen;"></i>`;
                 } break;
                 case 'error' : {
                   return `<i class='fa fa-warning' data-tooltip="${val.tooltip}" style="color: rgb(217 83 79);"></i>`;
                 } break;
                 case 'process' : {
-                  return `<i class='fa fa-spinner fa-spin'></i>`;
+                  return `<i class='fa fa-spinner fa-spin' data-tooltip="Publishing..."></i>`;
                 } break;
                 default : {
                   return ``;

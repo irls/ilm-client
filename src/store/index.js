@@ -1740,6 +1740,7 @@ export const store = new Vuex.Store({
               state.books_meta[bIdx]['@version'] = data.meta['@version'];
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
+              state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
               state.books_meta[bIdx].published = data.meta.published;
               state.books_meta[bIdx].publishedVersion = data.meta.publishedVersion;
               state.books_meta[bIdx].version = data.meta.version;
