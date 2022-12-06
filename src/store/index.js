@@ -348,7 +348,12 @@ export const store = new Vuex.Store({
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
     audiobookWatch: state => state.audiobookWatch,
-    allowCollectionsEdit: state => state.isAdmin || state.isLibrarian,
+    allowCollectionsEdit: state => {
+      if (state.currentCollection.isInTheQueueOfPublication) {
+        return false;
+      }
+      return state.isAdmin || state.isLibrarian
+    },
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     currentCollectionId: state => state.currentCollectionId,

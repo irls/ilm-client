@@ -40,10 +40,10 @@
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
           <p v-if="pubVersion && pubVersion.length">
-            Published: Ver. {{pubVersion}} {{pubVersionDate}}
+            Published: <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
           <p v-if="pubVersion !== currVersion">
-            Unpublished: Ver. {{currVersion}} {{currVersionDate}}
+            Unpublished: <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
           </p>
           <p>{{currentCollection.id}} - Q: {{currentCollection.isInTheQueueOfPublication}} - P: {{currentCollection.isPublished}}</p>
           <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
@@ -283,6 +283,9 @@
   }
   .c-publication-action {
     padding: 10px;
+  }
+  i.p-margin-left {
+    margin-left: 10px;
   }
   .collection-meta-wrap {
     height: 100%;
