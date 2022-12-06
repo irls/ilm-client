@@ -14,7 +14,7 @@
         </div>
         <div class="c-action-button">
           <button class="btn btn-danger" v-on:click="remove(true)">
-            Remove collection
+            Unpublish Collection
           </button>
         </div>
 
