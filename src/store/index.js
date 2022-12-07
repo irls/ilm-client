@@ -262,8 +262,8 @@ export const store = new Vuex.Store({
     watched:{
       'metaV':null
     },
-    suspiciousWordsHighlight: suspiciousWordsHighlight,
     setSelectedBlocksAsyncResult : [],
+    suspiciousWordsHighlight: suspiciousWordsHighlight,
     blockAudiosrcConfig: {
       
     },
