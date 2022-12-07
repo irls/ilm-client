@@ -4767,11 +4767,11 @@ ${blockStore.updated > data.block.updated}`);
             if (Array.isArray(response.data)) {
               response.data.forEach(b => {
                 let block = state.storeList.get(b.blockid);
-                if (block) {
+                if (block && block.updated < b.updated) {
+                  console.log(`set ${state.blockSelection.start._id}, ${b.pause_after}, ${b.updated}, ${block.updated}`)
                   block.setUpdated(b.updated);
                   block.setPauseAfter(b.pause_after);
                   block.status.marked = b.status.marked;
-                  console.log(`set ${state.blockSelection.start._id}, ${b.pause_after}, ${b.updated}`)
                 }
               });
             }
