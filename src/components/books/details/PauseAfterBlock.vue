@@ -485,12 +485,29 @@
           });
         }
       },
-      'blockSelection': {
+      /*'blockSelection': {
         handler(val) {
           this.resetPause();
           this.recalcBlocks();
         },
         deep: true
+      },*/
+      'blockSelection.start._id': {
+        handler(val, oldVal) {
+          if (val) {
+            this.resetPause();
+            this.recalcBlocks();
+          }
+        }
+      },
+      'blockSelection.end._id': {
+        handler(val, oldVal) {
+          let singleSelection = !oldVal && val === this.blockSelection.start._id;
+          if (this.blockSelection.start._id && this.blockSelection.end._id && (this.blockSelection.start._id !== this.blockSelection.end._id || !singleSelection)) {
+            this.resetPause();
+            this.recalcBlocks();
+          }
+        }
       },
       'styleProps': {
         handler() {
