@@ -7,7 +7,7 @@ import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
 import { Collection } from './collection'
-import { SuspiciousWordsHighlight } from './suspiciousWordsHighlight';
+import suspiciousWordsHighlight from './suspiciousWordsHighlight';
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -262,6 +262,7 @@ export const store = new Vuex.Store({
     watched:{
       'metaV':null
     },
+    suspiciousWordsHighlight: suspiciousWordsHighlight,
     setSelectedBlocksAsyncResult : [],
     suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
     blockAudiosrcConfig: {
