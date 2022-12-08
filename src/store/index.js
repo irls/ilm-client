@@ -1337,10 +1337,6 @@ export const store = new Vuex.Store({
       }
       let blockStore = state.storeList.get(data.block.blockid);
       if (blockStore && data.block) {
-        console.log(`${data.block.blockid}
-blockStore: ${blockStore.pause_after}, ${blockStore.updated}
-data.block: ${data.block.pause_after}, ${data.block.updated}
-${blockStore.updated > data.block.updated}`);
         if (blockStore.updated > data.block.updated) {
           ['pause_after'].forEach(field => {// do not update these fields, maybe just return from update
             data.block[field] = blockStore[field];
@@ -4768,7 +4764,6 @@ ${blockStore.updated > data.block.updated}`);
               response.data.forEach(b => {
                 let block = state.storeList.get(b.blockid);
                 if (block && block.updated < b.updated) {
-                  console.log(`set ${state.blockSelection.start._id}, ${b.pause_after}, ${b.updated}, ${block.updated}`)
                   block.setUpdated(b.updated);
                   block.setPauseAfter(b.pause_after);
                   block.status.marked = b.status.marked;
