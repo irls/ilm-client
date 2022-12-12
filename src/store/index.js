@@ -4857,7 +4857,10 @@ export const store = new Vuex.Store({
 
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
-        return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
+        const reqBookid = bookid ? bookid : state.currentBookid;
+        console.log(`loadBookTocSections.reqBookid: `, reqBookid);
+        if (!reqBookid) return Promise.resolve({});
+        return axios.get(`${state.API_URL}toc_section/book/${reqBookid}/all`)
           .then(data => {
             //console.log(data);
             commit('set_book_toc_sections', data.data.sections);
