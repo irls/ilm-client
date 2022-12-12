@@ -41,12 +41,12 @@
           <p v-if="pubVersion && pubVersion.length">
             Published: <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
-          <p v-if="pubVersion !== currVersion">
+          <p v-if="!currentCollection.isPublished || hasReadyBooks">
             Unpublished: <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
           </p>
-          <p>{{currentCollection.id}} - Q: {{currentCollection.isInTheQueueOfPublication}} - P: {{currentCollection.isPublished}}</p>
+
           <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
-          <button v-else class="btn btn-primary" @click="publish">Publish</button>
+          <button v-else :disabled="isPubDisabled" class="btn btn-primary" @click="publish">Publish</button> <span style="color: white">{{currentCollection.id}} - Q: {{currentCollection.isInTheQueueOfPublication}} - P: {{currentCollection.isPublished}}</span>
         </fieldset>
 
     </div>
@@ -109,6 +109,55 @@
           return Object.keys(this.currentCollection.books).length;
         }
         return 0;
+      },
+      readyBooks() {
+        let books = [];
+        if (this.currentCollection.books instanceof Object) {
+          books = this.currentCollection.books_list
+          .filter((book)=>{
+            return (book.isIntheProcessOfPublication
+                 || book.isInTheQueueOfPublication
+            );
+          })
+        }
+        return books;
+      },
+      deletedBooks() {
+        const { pubBooksEntities = [] } = this.currentCollection;
+        let deletedBooks = [];
+        if (pubBooksEntities.length) {
+          pubBooksEntities.forEach((pBook)=>{
+            if (this.currentCollection.bookids.indexOf(pBook.bookId) < 0) {
+              const bookMeta = this.bookMetaById(pBook.bookId);
+              if (bookMeta) {
+                deletedBooks.push( pBook.bookId)
+              }
+            }
+          })
+        }
+        return deletedBooks;
+      },
+      hasReadyBooks() {
+        const books = this.readyBooks;
+        const deletedBooks = this.deletedBooks;
+        return [...books, ...deletedBooks].length > 0;
+      },
+      hasReadyOnlyPublished() {
+        const books = this.readyBooks;
+        const deletedBooks = this.deletedBooks;
+        if (deletedBooks.length) return false;
+        if (books.length) {
+          const { pubBooksEntities = [] } = this.currentCollection;
+          console.log(`pubBooksEntities: `, pubBooksEntities);
+          const readyBooks = books.map((pBook)=>pBook.bookid);
+          const pubBooks = pubBooksEntities.map((pBook)=>pBook.bookId);
+          console.log(`pubBooks: `, pubBooks, readyBooks);
+          return readyBooks.every((bookId)=>(pubBooks.indexOf(bookId) >= 0))
+        }
+        return false;
+      },
+      isPubDisabled() {
+        return !(!this.currentCollection.isPublished || this.hasReadyBooks);
       },
       booksGrid() {
         let books = [];
@@ -188,14 +237,18 @@
         //DD Mon YYYY
         if (this.currentCollection.pubVersionDate) {
           const uDate = new Date(this.currentCollection.pubVersionDate);
-          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear() + (this.isShowTime ? ` ${uDate.getHours()}:${uDate.getMinutes()}:${uDate.getSeconds()}` : '');
+          return this.formatDate(uDate);
         }
         return '';
       },
       currVersionDate() {
+        if (this.hasReadyBooks) {
+          const uDate = new Date();
+          return this.formatDate(uDate);
+        }
         if (this.currentCollection.currVersionDate) {
           const uDate = new Date(this.currentCollection.currVersionDate);
-          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear() + (this.isShowTime ? ` ${uDate.getHours()}:${uDate.getMinutes()}:${uDate.getSeconds()}` : '');
+          return this.formatDate(uDate);
         }
         return '';
       },
@@ -207,6 +260,20 @@
         return '1.0';
       },
       currVersion() {
+        if (this.hasReadyBooks) {
+          console.log(`hasReadyOnlyPublished: `, this.hasReadyOnlyPublished);
+          const versions = this.pubVersion.split('.');
+          if (versions && versions.length == 2) {
+            if (this.hasReadyOnlyPublished) {
+              versions[0] = parseInt(versions[0]);
+              versions[1] = (parseInt(versions[1]) + 1);
+            } else {
+              versions[0] = (parseInt(versions[0]) + 1);
+              versions[1] = 0;
+            }
+            return versions[0] + '.' + versions[1];
+          }
+        }
         if (this.currentCollection.currVersion && this.currentCollection.currVersion.length) {
           return this.currentCollection.currVersion;
         }
@@ -214,6 +281,9 @@
       },
     },
     methods: {
+      formatDate(date) {
+        return date.getDate() + ' ' + this.txt_months[date.getMonth()] + ' ' + date.getFullYear() + (this.isShowTime ? ` ${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}:${('0'+date.getSeconds()).slice(-2)}` : '');
+      },
       remove(showMessage = false) {
         if (showMessage) {
           let booksLength = this.collectionBooksLength;
