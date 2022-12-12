@@ -89,13 +89,13 @@
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Delete block</li>
                       <!--<li>Split block</li>-->
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="sureToJoinBlocksWithPrevious()">
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
                         <i class="fa fa-angle-double-up" aria-hidden="true"></i>
                         Join with previous block</li>
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="sureToJoinBlocksWithNext()">
+                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="joinWithNext()">
                         <i class="fa fa-angle-double-down" aria-hidden="true"></i>
                         Join with next block</li>
                       <li v-else class="disabled">
@@ -3585,29 +3585,6 @@ Save text changes and realign the Block?`,
           this.pushChange('class');
         }
       },
-      sureToJoinBlocksWithPrevious() {
-        let thisVueComponent = this //needed to save reference to variable in async function
-        this.$root.$emit('show-modal', {
-          title: 'Join blocks',
-          text: 'Task Assignments and Styles for the lower block will be discarded.\n'+'Join blocks?',
-          buttons: [
-            {
-              title: 'Cancel',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-              },
-            },
-            {
-              title: 'Join',
-              async handler () {
-                await thisVueComponent.joinWithPrevious();
-              },
-              'class': 'btn btn-primary'
-            }
-          ],
-          class: ['align-modal']
-        });
-      },
       joinWithPrevious() {
         this.joinBlocks(this.block, this.blockId, 'previous')
         .then(()=>{
@@ -3616,29 +3593,6 @@ Save text changes and realign the Block?`,
             this.highlightSuspiciousWords();
           })
           .catch(() => {})
-      },
-      sureToJoinBlocksWithNext() {
-        let thisVueComponent = this //needed to save reference to variable in async function
-        this.$root.$emit('show-modal', {
-          title: 'Join blocks',
-          text: 'Task Assignments and Styles for the lower block will be discarded.\n'+'Join blocks?',
-          buttons: [
-            {
-              title: 'Cancel',
-              handler: () => {
-                this.$root.$emit('hide-modal');
-              },
-            },
-            {
-              title: 'Join',
-              async handler () {
-                await thisVueComponent.joinWithNext();
-              },
-              'class': 'btn btn-primary'
-            }
-          ],
-          class: ['align-modal']
-        });
       },
       joinWithNext() {
         this.joinBlocks(this.block, this.blockId, 'next')
