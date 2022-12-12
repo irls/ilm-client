@@ -4,7 +4,7 @@
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
 
-    <section v-if="!isInCollection">
+    <section v-if="!isInCollection" class="publish-section">
       <div v-if="currentBookMeta.publishedVersion">
         Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
       </div>
@@ -40,18 +40,28 @@
       </div>
     </section>
 
-    <section v-if="isInCollection" class="collection-section">
+    <section v-if="isInCollection" class="publish-section">
       <div v-if="currentBookMeta.publishedVersion">
         Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
       </div>
       <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
         Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
       </div>
+
       <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
         <span style="color: red">Publication failed</span>
       </div>
 
-      <input type="checkbox" v-on:click.prevent="checkCollectionPublish" v-model="isPublishingQueue"> Ready for publication</input>
+      <button disabled class="btn btn-primary" v-if="isPublishing">Already in queue</button>
+
+      <label class="collection-publish-box" v-if="!isPublishing && publishButtonStatus">
+        <input type="checkbox" v-on:click.prevent="checkCollectionPublish" v-model="isPublishingQueue"> Ready for publication</input>
+      </label>
+
+      <label class="collection-publish-box disabled" v-else-if="!isPublishing && !publishButtonStatus">
+        <input type="checkbox" disabled> Ready for publication</input>
+      </label>
+
       <span v-if="isPublishing" class="align-preloader -small"></span>
     </section>
   </fieldset>
@@ -374,7 +384,17 @@
     text-align: center;
     background-position: center center;
   }
-  .collection-section {
+  .publish-section {
     padding-top: 10px;
+    .collection-publish-box {
+      font-weight: 400;
+      margin-bottom: 0px;
+
+      &.disabled {
+        cursor: not-allowed;
+        opacity: 0.8;
+      }
+    }
   }
+
 </style>
