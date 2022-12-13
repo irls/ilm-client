@@ -42,17 +42,17 @@
           <td>
             <div class="authors">
               <div class="author-row" v-if="collection.author && collection.author.length === 0">
-                <input v-model="collection.author[0]" 
-                  v-on:change="update('author', $event)" 
+                <input v-model="collection.author[0]"
+                  v-on:change="update('author', $event)"
                   :disabled="!allowCollectionsEdit"
                   >
                 <div class="dropdown" v-if="collection.author && collection.author.length === 0">
-                  <div v-on:click="toggleShowUnknownAuthor()" 
+                  <div v-on:click="toggleShowUnknownAuthor()"
                     class="dropdown-button" >
                     <i class="fa fa-angle-down" ></i>
                   </div>
-                  <div class="dropdown-content" 
-                    v-if="showUnknownAuthor && allowCollectionsEdit" 
+                  <div class="dropdown-content"
+                    v-if="showUnknownAuthor && allowCollectionsEdit"
                     v-on:click="setUnknownAuthor()" >Unknown</div>
                 </div>
               </div>
@@ -63,7 +63,7 @@
                     <div v-on:click="toggleShowUnknownAuthor()" class="dropdown-button">
                       <i class="fa fa-angle-down" ></i>
                     </div>
-                    <div class="dropdown-content" v-if="showUnknownAuthor && allowCollectionsEdit" 
+                    <div class="dropdown-content" v-if="showUnknownAuthor && allowCollectionsEdit"
                       v-on:click="setUnknownAuthor()" >Unknown</div>
                   </div>
                   <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="[{'disabled': i == 0 && collection.author.length == 1}, 'remove-author']">
@@ -84,17 +84,17 @@
           <td>
             <div class="authors">
               <div class="author-row">
-                <input v-model="collection.author_en" 
-                  v-on:change="update('author_en', $event)" 
+                <input v-model="collection.author_en"
+                  v-on:change="update('author_en', $event)"
                   :disabled="!allowCollectionsEdit"
                   >
                 <div class="dropdown">
-                  <div v-on:click="toggleShowUnknownAuthorEn()" 
+                  <div v-on:click="toggleShowUnknownAuthorEn()"
                     class="dropdown-button" >
                     <i class="fa fa-angle-down" ></i>
                   </div>
-                  <div class="dropdown-content" 
-                    v-if="showUnknownAuthorEn && allowCollectionsEdit" 
+                  <div class="dropdown-content"
+                    v-if="showUnknownAuthorEn && allowCollectionsEdit"
                     v-on:click="setUnknownAuthorEn()" >Unknown</div>
                 </div>
               </div>
@@ -106,7 +106,7 @@
             Language
           </td>
           <td>
-            <select class="form-control" v-model="collection.language" 
+            <select class="form-control" v-model="collection.language"
               v-on:change="update('language', $event)"
               :disabled="!allowCollectionsEdit || collectionBooksLength > 0" >
               <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
@@ -140,11 +140,11 @@
             Difficulty
           </td>
           <td>
-            <input 
-              v-model="collection.difficulty" 
-              v-on:change="updateDifficulty($event)" 
-              :disabled="!allowCollectionsEdit" 
-              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['difficulty'] !== ''}]" 
+            <input
+              v-model="collection.difficulty"
+              v-on:change="updateDifficulty($event)"
+              :disabled="!allowCollectionsEdit"
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['difficulty'] !== ''}]"
               v-on:keydown="validateNumberInput('difficulty', $event)"  />
             <span class="validation-error" v-if="currentCollection.validationErrors['difficulty']">{{ currentCollection.validationErrors['difficulty'] }}</span>
           </td>
@@ -162,11 +162,11 @@
             Weight
           </td>
           <td>
-            <input 
-              v-model="collection.weight" 
-              v-on:change="updateWeight($event)" 
-              :disabled="!allowCollectionsEdit" 
-              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['weight'] !== ''}]" 
+            <input
+              v-model="collection.weight"
+              v-on:change="updateWeight($event)"
+              :disabled="!allowCollectionsEdit"
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['weight'] !== ''}]"
               v-on:keydown="validateNumberInput('weight', $event)" />
             <span class="validation-error" v-if="currentCollection.validationErrors['weight']">{{currentCollection.validationErrors['weight']}}</span>
           </td>
@@ -379,7 +379,7 @@
       watch: {
         'currentCollection': {
           handler(val, oldVal) {
-            
+
             this.init();
             //if (this.$refs.collectionDescription) {
               //Vue.nextTick(() => {
@@ -447,23 +447,23 @@
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
   }
-  
+
   /* Properties editor area */
   table.properties {
-    margin:0; 
-    padding:0; 
-    width:100%; 
+    margin:0;
+    padding:0;
+    width:100%;
     font-size: 1em;
-    border-collapse: separate; 
+    border-collapse: separate;
     border-spacing: 3px;
     td {
       &:nth-child(1) {
-        width: 30%; 
-        padding: 3px; 
+        width: 30%;
+        padding: 3px;
         margin:0;
       }
       &:nth-child(2) {
-        width: auto; 
+        width: auto;
         text-align: right !important;
       }
     }
@@ -506,7 +506,7 @@
       }
     }
   }
-  
+
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}

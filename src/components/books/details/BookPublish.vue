@@ -1,41 +1,69 @@
 <template>
   <fieldset class="publish">
-  <!-- Fieldset Legend -->
+    <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
-    <div v-if="currentBookMeta.publishedVersion">
-      Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
-    </div>
-    <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
-      Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
-    </div>
-    <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
-      <span style="color: red">Publication failed</span>
-    </div>
-    <div v-if="disabledBlocks.ranges.length > 0">
-      <template v-if="disabledBlocksQuery">
-        <div class="preloader-spinner"></div>
-      </template>
-      <template v-else>
-      {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range 
-        <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
-          <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
-          &nbsp;-&nbsp;
-          <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
-          <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+
+    <section v-if="!isInCollection" class="publish-section">
+      <div v-if="currentBookMeta.publishedVersion">
+        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+      </div>
+      <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
+        Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
+      </div>
+      <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
+        <span style="color: red">Publication failed</span>
+      </div>
+      <div v-if="disabledBlocks.ranges.length > 0">
+        <template v-if="disabledBlocksQuery">
+          <div class="preloader-spinner"></div>
         </template>
-      </template>
-    </div>
-    <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
-      <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-      <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
-        Publish
-      </button>
-      <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
-        Publish
-      </button>
+        <template v-else>
+        {{disabledBlocks.blocks.length}}&nbsp;block(s) disabled in range
+          <template v-for="(range, rangeIdx) in disabledBlocks.ranges">
+            <a v-on:click="goToBlock(range.start.blockid)" class="go-to-block">{{range.start.shortid}}</a>
+            &nbsp;-&nbsp;
+            <a v-on:click="goToBlock(range.end.blockid)" class="go-to-block">{{range.end.shortid}}</a>
+            <template v-if="rangeIdx < disabledBlocks.ranges.length - 1">, </template>
+          </template>
+        </template>
+      </div>
+      <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
+        <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+        <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
+          Publish
+        </button>
+        <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
+          Publish
+        </button>
+        <span v-if="isPublishing" class="align-preloader -small"></span>
+      </div>
+    </section>
+
+    <section v-if="isInCollection" class="publish-section">
+      <div v-if="currentBookMeta.publishedVersion">
+        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+      </div>
+      <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
+        Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
+      </div>
+
+      <div v-if="currentBookMeta.publicationStatus && (currentBookMeta.publicationStatus.includes('Error') || currentBookMeta.publicationStatus.includes('failed'))" >
+        <span style="color: red">Publication failed</span>
+      </div>
+
+      <button disabled class="btn btn-primary" v-if="isPublishing">Already in queue</button>
+
+      <label class="collection-publish-box" v-if="!isPublishing && publishButtonStatus">
+        <input type="checkbox" v-on:click.prevent="checkCollectionPublish" v-model="isPublishingQueue"> Ready for publication</input>
+      </label>
+
+      <label class="collection-publish-box disabled" v-else-if="!isPublishing && !publishButtonStatus">
+        <input type="checkbox" disabled> Ready for publication</input>
+      </label>
+
       <span v-if="isPublishing" class="align-preloader -small"></span>
-    </div>
+    </section>
   </fieldset>
 </template>
 <script>
@@ -57,7 +85,7 @@
     mixins: [api_config, access],
     components: {BlocksDisable},
     methods: {
-      checkPublish() {
+      checkPublish(successCallback = null) {
         this.$emit('checkPublish');
 
         let title = '';
@@ -94,6 +122,7 @@
             mandatoryFields.push('Author EN (author English translation)');
         }
 
+        //if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
         if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
             canPublish = false;
             mandatoryFields.push('Category');
@@ -103,6 +132,7 @@
             canPublish = false;
             mandatoryFields.push('URL slug');
         }
+        //}
 
         if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
           canPublish = false;
@@ -192,7 +222,12 @@
                   title: 'Publish',
                   handler: () => {
                       this.$root.$emit('hide-modal');
-                      this.publish();
+                      if (successCallback) {
+                        successCallback();
+                      }
+                      else {
+                        this.publish();
+                      }
                   },
                   'class': 'btn btn-primary'
               }
@@ -218,6 +253,27 @@
               this.currentBookMeta.isInTheQueueOfPublication = true;
             }
           });
+      },
+      checkCollectionPublish(ev) {
+        if (this.currentBookMeta) {
+          if (!this.currentBookMeta.isInTheQueueOfPublication) {
+            this.checkPublish(()=>{
+              return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/add_in_collection_publish')
+              .then(resp => {
+                if (resp.status == 200 && resp.data.ok) {
+                  this.currentBookMeta.isInTheQueueOfPublication = true;
+                  }
+                });
+            });
+          } else {
+            return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/rem_from_collection_publish')
+            .then(resp => {
+              if (resp.status == 200 && resp.data.ok) {
+                this.currentBookMeta.isInTheQueueOfPublication = false;
+              }
+            });
+          }
+        }
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
@@ -263,6 +319,15 @@
         },
         cache: false
       },
+      isInCollection: {
+        get() {
+          return this.currentBookMeta
+              && this.currentBookMeta.collection
+              && this.currentBookMeta.collection.length
+              && this.currentBookMeta.collection_id
+              && this.currentBookMeta.collection_id.length
+        }
+      },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
@@ -275,6 +340,8 @@
       }
       this.getDisabledBlocks();
       this.$root.$on('book-reimported', this.getDisabledBlocks);
+      console.log(`this.currentBookMeta: `, this.currentBookMeta);
+      console.log(`publishButtonStatus: `, this.publishButtonStatus);
     },
     beforeDestroy() {
       this.$root.$off('book-reimported', this.getDisabledBlocks);
@@ -317,4 +384,17 @@
     text-align: center;
     background-position: center center;
   }
+  .publish-section {
+    padding-top: 10px;
+    .collection-publish-box {
+      font-weight: 400;
+      margin-bottom: 0px;
+
+      &.disabled {
+        cursor: not-allowed;
+        opacity: 0.8;
+      }
+    }
+  }
+
 </style>

@@ -1410,6 +1410,7 @@ export default {
         //console.log('onSelect');
       },
       onClick: function($event) {
+        // return;
 //         $('.medium-editor-toolbar').each(function(){
 //           $(this).css('display', 'inline-block');
 //         });
@@ -1976,6 +1977,8 @@ export default {
         }
       },
       audPlayFromSelection() {
+        console.log('audPlay')
+
         if (this.player) {
           this.isAudPartStarted = false;
           this.player.loadBlock(this.block._id);
@@ -1988,6 +1991,7 @@ export default {
         this.$refs.blockCntx.close();
       },
       audPlaySelection() {
+        console.log('audPlaySelection')
         if (this.player) {
           this.audStop(this.block._id);
           this.player.loadBlock(this.block._id);
@@ -2010,17 +2014,20 @@ export default {
         this.$refs.blockCntx.close();
       },
       audPause: function(block_id, ev) {
+        console.log('audPause')
         if (this.player) {
           this.player.pause();
         }
       },
       audResume: function(block_id, ev) {
+        console.log('audResume')
         if (this.player) {
           this.audCleanClasses(block_id, ev);
           this.player.resume();
         }
       },
       audStop: function(block_id, ev) {
+        console.log('audStop')
         if (this.player) {
           this.isAudPartStarted = false;
           this.player.pause();
@@ -4193,6 +4200,14 @@ Join subblocks?`,
             document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
             document.body.addEventListener('keydown', this.handleAudioControl);
             document.body.addEventListener('click', this.clickAwayFromAudioControl);
+          }
+        }
+      },
+      'isAudPaused': {
+        handler(val) {
+          if (!val && this.isAudStarted) {
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.handleAudioControl);
           }
         }
       },
