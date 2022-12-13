@@ -1221,7 +1221,7 @@ export default {
       let thisVueComponent = this //needed to save reference to variable in async function
       this.$root.$emit('show-modal', {
         title: 'Join blocks',
-        text: 'Task Assignments and Styles for the lower block will be discarded.\n'+'Join blocks?',
+        text: 'Task Assignments and Styles for the lower block will be discarded.<br> Join blocks?',
         buttons: [
           {
             title: 'Cancel',
@@ -1238,7 +1238,7 @@ export default {
             'class': 'btn btn-primary'
           }
         ],
-        class: ['align-modal']
+        class: ['sureJoin align-modal']
       });
     },
 
@@ -2745,6 +2745,9 @@ export default {
 }
 </script>
 <style lang="less">
+  .sureJoin {
+    width: 450px !important;
+  }
   #narrateStartCountdown {
       display: none;
       position: fixed;
