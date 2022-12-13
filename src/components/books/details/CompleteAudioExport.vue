@@ -1,22 +1,27 @@
 <template>
   <fieldset class="complete-audio" v-if="allowExport">
     <legend>Export selected range</legend>
-    <div class="align-preloader -small" v-if="isGenerating"></div>
-    <template v-else>
-      <div v-if="currentBookMeta.complete_audio_time && currentBookMeta.complete_audio_time !== -1" class="build-time">
-        <span>Last build: {{convertTime(currentBookMeta.complete_audio_time, true)}}</span>
-      </div>
-    </template>
     <div>
-      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="generateCompleteAudio" :disabled="isGenerating">Build</button>
-      <button class="btn btn-primary" v-else v-on:click="generateCompleteAudio" :disabled="isGenerating">Rebuild</button>
-      &nbsp;&nbsp;{{blocksCountForExport}} block(s) 
+      <button class="btn btn-primary" v-if="!currentBookMeta.complete_audio" v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Build</button>
+      <button class="btn btn-primary" v-else v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Rebuild</button>
+      &nbsp;&nbsp;{{blocksCountForExport}} block(s)
       <span v-if="blockSelection.start && blockSelection.start._id">
         in range 
         <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - 
         <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
       </span>
     </div>
+    <div class="align-preloader -small" v-if="isGenerating"></div>
+    <template v-else>
+      <div v-if="currentBookMeta.complete_audio_time && currentBookMeta.complete_audio_time !== -1" class="build-time">
+        <span>Latest build: {{convertTime(currentBookMeta.complete_audio_time, true)}}
+          <p v-if="currentBookMeta.firstBlockRange"> {{currentBookMeta.lastBuildBlocksCount}} block(s)
+           <a v-on:click="goToBlock(currentBookMeta.firstBlockRange)">{{getIdShort(currentBookMeta.firstBlockRange)}}</a> -
+           <a v-on:click="goToBlock(currentBookMeta.lastBlockRange)">{{getIdShort(currentBookMeta.lastBlockRange)}} </a>
+        </p>
+        </span>
+      </div>
+    </template>
     <div>
       <a :href="this.API_URL + 'download/complete_audio?path=' + currentBookMeta.complete_audio" v-if="currentBookMeta.complete_audio && !isGenerating" target="_blank" class="btn btn-primary">
         Download
@@ -75,8 +80,14 @@
       ...mapGetters(['currentBookMeta', 'currentBookCounters', 'blockSelection', 'bookCompleteAudioTime', 'selectedBlocks', 'storeList'])
     },
     methods: {
-      ...mapActions(['generateCompleteAudio'])
-    }
+      ...mapActions(['generateCompleteAudio']),
+      startGenerateCompleteAudio () {
+        this.generateCompleteAudio([this.blocksCountForExport])
+      },
+      getIdShort (nameBlock) {
+          return nameBlock.split('-')[1];
+      },
+    },
   }
 </script>
 <style lang="less">
@@ -87,11 +98,15 @@
     div {
       margin: 7px 0px;
       &.build-time {
-        height: 41px;
+        height: 30px;
+        margin-top: 15px;
       }
     }
     a {
       cursor: pointer;
+    }
+    p {
+      display:inline;
     }
   }
 </style>
