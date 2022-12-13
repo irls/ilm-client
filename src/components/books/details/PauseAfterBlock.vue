@@ -72,7 +72,8 @@
         range: [],
         blockList: [],
         player: null,
-        nowPlaying: false
+        nowPlaying: false,
+        lastEvent: null
       }
     },
     mounted() {
@@ -113,7 +114,15 @@
             //console.log('ON INPUT', val, typeof val);
             val = this.parseFloatToFixed(val);
             //if (this.pause != val) {
-              this.$emit('setPauseAfter', this.blockType, val);
+            this.lastEvent = `${val}-${Date.now()}`;
+            let currentEvent = this.lastEvent;
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                if (currentEvent === this.lastEvent) {
+                  this.$emit('setPauseAfter', this.blockType, val);
+                }
+              }, 400);
+            });
             //}
           }
         }
