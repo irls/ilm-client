@@ -36,13 +36,14 @@
   import {mapGetters, mapActions} from 'vuex';
   import api_config from '../../../mixins/api_config.js';
   import access from '../../../mixins/access.js'
+  import time_methods from "../../../mixins/time_methods";
   export default {
     name: 'CompleteAudioExport',
     data() {
       return {}
     },
-    props: ['convertTime', 'goToBlock'],
-    mixins: [api_config, access],
+    props: ['goToBlock'],
+    mixins: [api_config, access, time_methods],
     computed: {
       isGenerating: {
         get() {
@@ -85,7 +86,7 @@
         this.generateCompleteAudio([this.blocksCountForExport])
       },
       getIdShort (nameBlock) {
-          return nameBlock.split('-')[1];
+        return nameBlock.split('-')[1];
       },
     },
   }
