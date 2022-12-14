@@ -121,7 +121,7 @@
                 if (currentEvent === this.lastEvent) {
                   this.$emit('setPauseAfter', this.blockType, val);
                 }
-              }, 400);
+              }, 300);
             });
             //}
           }
