@@ -961,20 +961,22 @@ export const store = new Vuex.Store({
       state.bookCollections.forEach((c, idx) => {
         let pages = 0;
         let books = [];
-        c.bookids.forEach(b => {
-          let book = booksList.find(_b => _b.bookid === b);
-          if (book) {
-            pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
-            if (book.importStatus == 'staging' && book.blocksCount <= 2){
-              if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-                book.importStatus = 'staging_empty'
-              } else if (!book.publishLog.updateTime){
-                book.importStatus = 'staging_empty'
+        if (c.bookids && Array.isArray(c.bookids)) {
+          c.bookids.forEach(b => {
+            let book = booksList.find(_b => _b.bookid === b);
+            if (book) {
+              pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
+              if (book.importStatus == 'staging' && book.blocksCount <= 2){
+                if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+                  book.importStatus = 'staging_empty'
+                } else if (!book.publishLog.updateTime){
+                  book.importStatus = 'staging_empty'
+                }
               }
+              books.push(book);
             }
-            books.push(book);
-          }
-        });
+          });
+        }
 
         c.pages = pages;
         if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
