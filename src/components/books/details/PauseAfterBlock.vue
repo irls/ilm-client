@@ -121,7 +121,7 @@
                 if (currentEvent === this.lastEvent) {
                   this.$emit('setPauseAfter', this.blockType, val);
                 }
-              }, 300);
+              }, 200);
             });
             //}
           }
@@ -188,6 +188,17 @@
         if (this.pause >= this.min + this.interval) {
           this.pause = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
         }
+      },
+      defer(func, val, time = 300) {
+        this.lastEvent = `${val}-${Date.now()}`;
+        let currentEvent = this.lastEvent;
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (currentEvent === this.lastEvent) {
+              func.call(this);
+            }
+          }, time);
+        });
       },
       parseFloatToFixed(val, precision = 1) {
         if (val && (val % 1 !== 0 || typeof val === 'string')) {
