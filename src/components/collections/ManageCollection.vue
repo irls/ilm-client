@@ -12,7 +12,7 @@
           </button>
         </div>
         <div class="c-action-button">
-          <button :disabled="!allowCollectionsEdit" class="btn btn-danger" v-on:click="remove(true)">
+          <button :disabled="!allowUnpublishCollection" class="btn btn-danger" v-on:click="remove(true)">
             Unpublish Collection
           </button>
         </div>
@@ -279,6 +279,12 @@
         }
         return '1.0';
       },
+      allowUnpublishCollection: {
+        get() {
+          return this.allowCollectionsEdit && this.collectionBooksLength;
+        },
+        cache: false
+      }
     },
     methods: {
       formatDate(date) {
@@ -286,10 +292,9 @@
       },
       remove(showMessage = false) {
         if (showMessage) {
-          let booksLength = this.collectionBooksLength;
           this.$root.$emit('show-modal', {
-            title: '',
-            text: `Remove ${this.currentCollection.title} Collection${booksLength ? ' and unlink ' + booksLength + ' Books' : ''}?`,
+            title: 'Unpublish Collection',
+            text: `Unpublish ${this.currentCollection.title} Collection and unlink ${this.collectionBooksLength} Books?`,
             buttons: [
               {
                 title: 'Cancel',
@@ -299,7 +304,7 @@
                 class: ['btn btn-default']
               },
               {
-                title: 'Remove',
+                title: 'Unpublish',
                 handler: () => {
                   this.$root.$emit('hide-modal');
                   this.remove(false);

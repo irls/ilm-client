@@ -5102,7 +5102,6 @@ export const store = new Vuex.Store({
             return _c.id === state.currentCollection.id;
           });
           if (c) {
-            state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(c), 1);
             commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve(response);
