@@ -8,7 +8,7 @@
       <div class="c-action-block">
         <div class="c-action-button">
           <button :disabled="!allowCollectionsEdit" class="btn btn-primary" v-on:click="linkBookModal = true"><!--btn-default-->
-            <i class="fa fa-plus"></i>&nbsp;Add to collection
+            <i class="fa fa-plus"></i>&nbsp;Add to Collection
           </button>
         </div>
         <div class="c-action-button">
