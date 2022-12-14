@@ -5019,10 +5019,11 @@ export const store = new Vuex.Store({
       }
       return axios.delete(`${state.API_URL}collection/${state.currentCollection._id}`)
         .then((response) => {
-          let c = state.bookCollectionsAll.find(_c => {
+          let c = state.bookCollectionsAll.findIndex(_c => {
             return _c.id === state.currentCollection.id;
           });
           if (c) {
+            state.bookCollectionsAll[c] = response.data;
             commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve(response);
