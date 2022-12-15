@@ -148,10 +148,8 @@
         if (deletedBooks.length) return false;
         if (books.length) {
           const { pubBooksEntities = [] } = this.currentCollection;
-          console.log(`pubBooksEntities: `, pubBooksEntities);
           const readyBooks = books.map((pBook)=>pBook.bookid);
           const pubBooks = pubBooksEntities.map((pBook)=>pBook.bookId);
-          console.log(`pubBooks: `, pubBooks, readyBooks);
           return readyBooks.every((bookId)=>(pubBooks.indexOf(bookId) >= 0))
         }
         return false;
@@ -163,7 +161,6 @@
         let books = [];
         const { pubBooksEntities = [] } = this.currentCollection;
         if (this.currentCollection.books instanceof Object) {
-          console.log(`this.currentCollection: `, this.currentCollection);
           books = this.currentCollection.books_list
           .filter((book)=>{
             return (book.isIntheProcessOfPublication

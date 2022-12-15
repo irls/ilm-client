@@ -1212,7 +1212,6 @@ export default {
         }
 
         if (this.currentBookMeta.title == ''){
-          console.log('bookid', this.currentBookMeta.bookid);
           this.requiredFields[this.currentBookMeta.bookid]['title'] = true;
         }
 
