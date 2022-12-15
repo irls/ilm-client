@@ -51,7 +51,7 @@
         });
       },
       clear() {
-        this.$refs.fileInput.value = null;
+        this.$refs.fileInput.value = '';
       }
     },
     beforeDestroy() {
