@@ -325,12 +325,122 @@
         }
       },
       publish() {
-        return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
-        .then(resp => {
-          if (resp.status == 200 && resp.data.ok) {
-            this.currentCollection.isInTheQueueOfPublication = true;
-          }
-        });
+        const checkResult = this.checkMandatoryFields();
+        if (true === checkResult) {
+          this.showPublishConfirmPopup(()=>{
+            // TODO move into store action
+            return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
+            .then(resp => {
+              if (resp.status == 200 && resp.data.ok) {
+                this.currentCollection.isInTheQueueOfPublication = true;
+              }
+            });
+          })
+        } else {
+          this.showPublishFailPopup(checkResult);
+        }
+        return true;
+
+      },
+      checkMandatoryFields() {
+        if (!this.currentCollection) return false;
+        //console.log(`publish.checkMandatoryFields.currentCollection: `, this.currentCollection);
+
+        this.currentCollection.validationErrors = {};
+        const defaultMessage = 'Define ';
+        const defaultCategory = ['story', 'Stories']; // means there is no category assigned
+        let mandatoryFields = [];
+
+        //-- Check mandatory fields -- { --//
+        if (!this.currentCollection.title
+          || this.currentCollection.title.trim().length == 0)
+        {
+          mandatoryFields.push('Title');
+          this.currentCollection.validationErrors.title = defaultMessage + 'Title';
+        }
+        if (this.currentCollection.language !== 'en'
+          && (!this.currentCollection.title_en
+             || this.currentCollection.title_en.trim().length == 0))
+        {
+          mandatoryFields.push('Title_en');
+          this.currentCollection.validationErrors.title_en = defaultMessage + 'Title_en';
+        }
+        if (!this.currentCollection.slug
+          || this.currentCollection.slug.trim().length == 0)
+        {
+          mandatoryFields.push('URL slug');
+          this.currentCollection.validationErrors.slug = defaultMessage + 'URL slug';
+        }
+        if (!this.currentCollection.category
+          || this.currentCollection.category.trim().length == 0
+          || defaultCategory.includes(this.currentCollection.category))
+        {
+          mandatoryFields.push('Category');
+          this.currentCollection.validationErrors.category = defaultMessage + 'Category';
+        }
+        if (!this.currentCollection.difficulty
+          || this.currentCollection.difficulty.toString().trim().length == 0)
+        {
+          mandatoryFields.push('Difficulty');
+          this.currentCollection.validationErrors.difficulty = defaultMessage + 'Difficulty';
+        }
+        if (!this.currentCollection.weight
+          || this.currentCollection.weight.toString().trim().length == 0)
+        {
+          mandatoryFields.push('Weight');
+          this.currentCollection.validationErrors.weight = defaultMessage + 'Weight';
+        }
+        //-- } -- end -- Check mandatory fields --//
+
+        if(mandatoryFields.length > 0) {
+          return mandatoryFields;
+        }
+        return true;
+      },
+      showPublishFailPopup(mandatoryFields = []) {
+        const popup = {
+          title: 'Publication failed',
+          text: 'Collection meta is incomplete. Define "' + mandatoryFields.join('", "') + '" before publishing',
+          buttons: [
+            {
+              title: 'Ok',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+            },
+          ],
+          class: ['align-modal']
+        };
+        this.$root.$emit('show-modal', popup);
+      },
+      showPublishConfirmPopup(successCallback) {
+        const popup = {
+          title: 'Publish the Collection?',
+          //text: '',
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+            },
+            {
+              title: 'Publish',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                if (successCallback) {
+                  successCallback();
+                }
+                else {
+                  this.publish();
+                }
+              },
+              'class': 'btn btn-primary'
+            }
+          ],
+          class: ['align-modal']
+        };
+        this.$root.$emit('show-modal', popup);
       },
       ...mapActions(['removeCollection'])
     }

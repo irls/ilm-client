@@ -100,7 +100,7 @@
 
         //Book meta is incomplete. Define Title, Author, Title EN (title English translation), Author EN (author English translation) Category, and URL Slug before publishing
 
-        console.log('meta', this.currentBookMeta);
+        //console.log('meta', this.currentBookMeta);
 
         if (this.currentBookMeta.title == ''){
             canPublish = false;
@@ -123,7 +123,7 @@
         }
 
         //if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
-        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)) {
             canPublish = false;
             mandatoryFields.push('Category');
         }

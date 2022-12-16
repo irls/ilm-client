@@ -16,7 +16,12 @@
             Title
           </td>
           <td>
-            <input v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" />
+            <input v-model="collection.title"
+                  v-on:change="update('title', $event)"
+                  v-on:keydown="cleanError('title')"
+                  :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.title}]"/>
+            <span class="validation-error" v-if="currentCollection.validationErrors.title">{{ currentCollection.validationErrors.title}}</span>
           </td>
         </tr>
         <tr v-if="collection.language !== 'en'">
@@ -24,7 +29,12 @@
             Title EN
           </td>
           <td>
-            <input v-model="collection.title_en" v-on:change="update('title_en', $event)" :disabled="!allowCollectionsEdit" />
+            <input v-model="collection.title_en"
+                  v-on:change="update('title_en', $event)"
+                  v-on:keydown="cleanError('title_en')"
+                  :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.title_en}]"/>
+            <span class="validation-error" v-if="currentCollection.validationErrors.title_en">{{ currentCollection.validationErrors.title_en}}</span>
           </td>
         </tr>
         <tr>
@@ -115,9 +125,14 @@
         </tr>
       </table>
     </fieldset>
-    <fieldset>
+    <fieldset class="properties">
       <legend>URL slug</legend>
-      <input v-model="collection.slug" :class="['collection-slug', {'-is-manual': collection.slug_status === 0}]" :disabled="!allowCollectionsEdit" v-on:change="update('slug', $event)" :title="collection.slug" />
+      <input v-model="collection.slug"
+            :class="['collection-slug', {'-is-manual': collection.slug_status === 0}, {'-has-error': currentCollection.validationErrors.slug}]"
+            :disabled="!allowCollectionsEdit || (collection && collection.hasOwnProperty('pubVersionDate') && collection.pubVersionDate.length > 0)"
+            v-on:change="update('slug', $event)" :title="collection.slug"
+            v-on:keydown="cleanError('slug')"/>
+      <span class="validation-error" v-if="currentCollection.validationErrors.slug">{{ currentCollection.validationErrors.slug}}</span>
     </fieldset>
     <fieldset>
       <table class="properties">
@@ -126,13 +141,14 @@
             Category
           </td>
           <td>
-            <select  class="form-control" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors.category}]" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
               <template v-for="(data, index) in bookCategories">
                 <optgroup :label="data.group">
                   <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
                 </optgroup>
               </template>
             </select>
+            <span class="validation-error" v-if="currentCollection.validationErrors.category">{{ currentCollection.validationErrors['category'] }}</span>
           </td>
         </tr>
         <tr>
@@ -144,7 +160,7 @@
               v-model="collection.difficulty"
               v-on:change="updateDifficulty($event)"
               :disabled="!allowCollectionsEdit"
-              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['difficulty'] !== ''}]"
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors.difficulty}]"
               v-on:keydown="validateNumberInput('difficulty', $event)"  />
             <span class="validation-error" v-if="currentCollection.validationErrors['difficulty']">{{ currentCollection.validationErrors['difficulty'] }}</span>
           </td>
@@ -166,7 +182,7 @@
               v-model="collection.weight"
               v-on:change="updateWeight($event)"
               :disabled="!allowCollectionsEdit"
-              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['weight'] !== ''}]"
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors.weight}]"
               v-on:keydown="validateNumberInput('weight', $event)" />
             <span class="validation-error" v-if="currentCollection.validationErrors['weight']">{{currentCollection.validationErrors['weight']}}</span>
           </td>
@@ -242,8 +258,18 @@
           this.resetCollectionImage();
           this.$refs.collectionDescription.setValue(this.collection.description);
         },
+        cleanError(key) {
+          if (this.currentCollection.validationErrors
+            && this.currentCollection.validationErrors[key]) {
+            delete this.currentCollection.validationErrors[key];
+          }
+        },
         update(key, event) {
           let value = key === 'author' ? this.currentCollection.author : event.target.value;
+          if (this.currentCollection.validationErrors
+            && this.currentCollection.validationErrors[key]) {
+            delete this.currentCollection.validationErrors[key];
+          }
           this.liveUpdate(key, value);
         },
         change(field) {
@@ -547,7 +573,7 @@
     margin: 0;
   }
   table.properties {
-    input {
+    input, select.form-control {
       &.-has-error {
         border: 2px solid red;
         outline-color: red;
@@ -557,6 +583,13 @@
       width: 100% !important;
       color: red;
       float: left !important;
+    }
+  }
+  fieldset.properties {
+    span.validation-error {
+      width: 100%;
+      color: red;
+      text-align: right;
     }
   }
 </style>

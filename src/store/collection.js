@@ -101,8 +101,6 @@ class Collection {
     }
     return true;
   }
-
-
 }
 
 export { Collection }

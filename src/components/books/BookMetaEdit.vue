@@ -1230,9 +1230,6 @@ export default {
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
           this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
         }
-
-
-
     },
 
     updateCollection(event) {
