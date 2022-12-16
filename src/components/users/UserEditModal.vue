@@ -12,10 +12,16 @@
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
-          <input type="text" class="form-control" placeholder="Real Name" v-model="user.name">
+        <div class="wrapper">
+          <input type="text" class="form-control" :maxlength="30" placeholder="Real Name" v-model="user.name">
+          <span>{{user.name}}/30</span>
+        </div>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-          <input type="text" class="form-control" placeholder="Email" name="email" v-model="user.email">
+        <div class="wrapper">
+          <input type="text" class="form-control" :maxlength="40" placeholder="Email" name="email" v-model="user.email">
+          <span>{{user.email}}/40</span>
+        </div>
           <div v-if="errors.email" v-for="err in errors.email" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
@@ -195,6 +201,33 @@ export default {
   color: red; margin: .5em;
   border-radius: 5px;
   margin-left: 12%;
+}
+
+.wrapper {
+  background #FFFFFF;
+  display: flex;
+  margin-inline-start: 44px;
+  margin-inline-end: 11px;
+  align-items: center;
+  position: relative;
+  input {
+    flex-grow: 1;
+    min-width: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    height: 32px;
+  }
+  span {
+    flex-shrink: 0;
+    padding: 0 10px;
+    position: absolute;
+    right: 0;
+    height: 32px;
+    line-height: 32px;
+    width: 50px;
+    text-align right;
+    color: #99999b;
+  }
 }
 
 </style>
