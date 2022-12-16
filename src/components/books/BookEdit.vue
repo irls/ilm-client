@@ -1228,6 +1228,7 @@ export default {
             handler: () => {
               this.$root.$emit('hide-modal');
             },
+            class: ['btn btn-default']
           },
           {
             title: 'Join',
@@ -1238,7 +1239,7 @@ export default {
             'class': 'btn btn-primary'
           }
         ],
-        class: ['sureJoin align-modal']
+        class: ['sureJoin', 'align-modal']
       });
     },
 
