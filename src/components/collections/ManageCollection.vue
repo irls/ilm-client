@@ -384,12 +384,12 @@
           mandatoryFields.push('Difficulty');
           this.currentCollection.validationErrors.difficulty = defaultMessage + 'Difficulty';
         }
-        if (!this.currentCollection.weight
+        /*if (!this.currentCollection.weight
           || this.currentCollection.weight.toString().trim().length == 0)
         {
           mandatoryFields.push('Weight');
           this.currentCollection.validationErrors.weight = defaultMessage + 'Weight';
-        }
+        }*/
         //-- } -- end -- Check mandatory fields --//
 
         if(mandatoryFields.length > 0) {
@@ -400,7 +400,7 @@
       showPublishFailPopup(mandatoryFields = []) {
         const popup = {
           title: 'Publication failed',
-          text: 'Collection meta is incomplete. Define "' + mandatoryFields.join('", "') + '" before publishing',
+          text: 'Collection meta is incomplete. Define ' + mandatoryFields.join(', ') + ' before publishing',
           buttons: [
             {
               title: 'Ok',
@@ -475,9 +475,10 @@
       flex-direction: column;
 
       .ready-books-list {
-        flex: 1;
+        /*flex: 1;*/
         overflow-y: auto;
         min-height: 100px;
+        max-height: 100%;
       }
     }
   }
