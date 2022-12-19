@@ -590,6 +590,7 @@
       width: 100%;
       color: red;
       text-align: right;
+      display: inline-block;
     }
   }
 </style>
