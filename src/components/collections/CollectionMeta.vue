@@ -240,7 +240,9 @@
             this.collection = {};
           }
           this.resetCollectionImage();
-          this.$refs.collectionDescription.setValue(this.collection.description);
+          if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
+            this.$refs.collectionDescription.setValue(this.collection.description);
+          }
         },
         update(key, event) {
           let value = key === 'author' ? this.currentCollection.author : event.target.value;
