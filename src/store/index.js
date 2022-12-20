@@ -1725,6 +1725,7 @@ export const store = new Vuex.Store({
         });
 
         dispatch('getSuspiciousWordsCharacters');
+        dispatch('updateBooksList');
     },
 
     destroyDB ({ state, commit, dispatch }) {
