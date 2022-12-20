@@ -256,7 +256,9 @@
             this.collection = {};
           }
           this.resetCollectionImage();
-          this.$refs.collectionDescription.setValue(this.collection.description);
+          if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
+            this.$refs.collectionDescription.setValue(this.collection.description);
+          }
         },
         cleanError(key) {
           if (this.currentCollection.validationErrors
