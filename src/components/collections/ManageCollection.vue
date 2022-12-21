@@ -399,7 +399,7 @@
       },
       showPublishFailPopup(mandatoryFields = []) {
         const popup = {
-          title: 'Publication failed',
+          title: 'Publication error',
           text: 'Collection meta is incomplete. Define ' + mandatoryFields.join(', ') + ' before publishing',
           buttons: [
             {

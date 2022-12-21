@@ -347,6 +347,7 @@
           this.liveUpdate('author_en', this.collection.author_en);
         },
         updateDifficulty($event) {
+          $event.target.value = ($event.target.value).replace(',', '.');
           let val = $event.target.value;
           if (!this.currentCollection.setValidateDifficulty(val)) {
             return false;
@@ -355,6 +356,7 @@
           return this.liveUpdate('difficulty', val);
         },
         updateWeight(event) {
+          $event.target.value = ($event.target.value).replace(',', '.');
           let val = event.target.value;
           if (!this.currentCollection.setValidateWeight(val)) {
             return false;
