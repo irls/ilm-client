@@ -5,37 +5,53 @@ const difficultyRange = [1, 14.99];
 
 class Collection {
   constructor(data) {
-    this._id = data._id || '';
-    this.books = data.books || {};
-    this.state = data.state || "";
-    this.title = data.title || "";
-    this.language = data.language || "en";
+    this.version     = data.version || 1;
+    this._id         = data._id || '';
+    this.books       = data.books || {};
+    this.state       = data.state || "";
+    this.title       = data.title || "";
+    this.language    = data.language || "en";
     this.description = data.description || "";
-    this.createdAt = data.createdAt || null;
-    this.updatedAt = data.updatedAt || null;
-    this.id = data.id || null;
-    this.coverimg = data.coverimg || null;
-    this.bookids = data.bookids || [];
+    this.createdAt   = data.createdAt || null;
+    this.updatedAt   = data.updatedAt || null;
+    this.id          = data.id || null;
+    this.coverimg    = data.coverimg || null;
+    this.bookids     = data.bookids || [];
     this.coverimgURL = data.coverimgURL || "";
-    this.title_en = data.title_en || '';
-    this.subtitle = data.subtitle || '';
-    this.author = Array.isArray(data.author) ? data.author : [];
-    this.author_en = data.author_en || '';
-    this.category = data.category || '';
-    this.slug = data.slug || '';
-    this.translator = data.translator || '';
-    this.difficulty = data.difficulty || null;
-    this.weight = data.weight || null;
+    this.title_en    = data.title_en || '';
+    this.subtitle    = data.subtitle || '';
+    this.author      = Array.isArray(data.author) ? data.author : [];
+    this.author_en   = data.author_en || '';
+    this.category    = data.category || '';
+    this.slug        = data.slug || '';
+    this.translator  = data.translator || '';
+    this.difficulty  = data.difficulty || null;
+    this.weight      = data.weight || null;
     this.slug_status = data.hasOwnProperty('slug_status') ? data.slug_status : 1;// 1 - auto, 0 - manual
-    this.books_list = data.books_list || [];
-    this.pages = data.pages || 0;
-    
+    this.books_list  = data.books_list || [];
+    this.pages       = data.pages || 0;
+
+    /*if(typeof this.difficulty == 'number') {
+      this.difficulty = this.difficulty.toFixed(2);
+    }*/
+
     this.validationErrors = {
       difficulty: '',
       weight: ''
     };
+
+    //-- Publication section -- { --//
+    this.isInTheQueueOfPublication = data.isInTheQueueOfPublication || false;
+    this.isPublished               = data.isPublished               || false;
+    this.currVersion               = data.currVersion               || '';
+    this.currVersionDate           = data.currVersionDate           || '';
+    this.pubVersion                = data.pubVersion                || '0.0';
+    this.pubVersionDate            = data.pubVersionDate            || '';
+    this.pubBooksEntities          = data.pubBooksEntities          || [];
+    this.pubBooksHistory           = data.pubBooksHistory           || [];
+    //-- } -- end -- Publication section --//
   }
-  
+
   sortBooks() {
     //console.log('SORTING', this._id, this.books_list.length);
     /*this.books_list.forEach(b => {
@@ -58,7 +74,7 @@ class Collection {
       }
     });
   }
-  
+
   updateBook(book) {
     if (book && book.bookid) {
       let index = this.books_list.findIndex(b => {
@@ -70,7 +86,7 @@ class Collection {
       }
     }
   }
-  
+
   setValidateWeight(value) {
     let errorMessage = 'Allowed range ' + weightRange[0] + ' - ' + weightRange[1];
     this.weight = value;
@@ -80,7 +96,7 @@ class Collection {
     }
     return true;
   }
-  
+
   setValidateDifficulty(value) {
     this.difficulty = value;
     if (!value || !/^\d{1,2}([\.\,]\d{1,2})?$/.test(value) || value < difficultyRange[0] || value > difficultyRange[1]) {
@@ -89,8 +105,6 @@ class Collection {
     }
     return true;
   }
-  
-  
 }
 
 export { Collection }

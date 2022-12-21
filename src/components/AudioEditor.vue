@@ -1248,6 +1248,7 @@
           this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           //this.clearSelection();
           this.isModified = true;
+          this.clearSelection();
         },
         _changeWordPositions(new_positions, index) {
           new_positions.start = this._round(new_positions.start, 2);
@@ -1562,13 +1563,19 @@
             .then(() => {
               
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+              
+              let selectionLength = this._round(this.selection.end - this.selection.start, 2);
 
-              let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              let silence = new Float32Array((selectionLength) * original_buffer.sampleRate);
               
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               
-              let fadeLength = this.audioFadeConfig.length * original_buffer.sampleRate;
+              let calculatedFadeLength = this.audioFadeConfig.length;
+              if (selectionLength < this.audioFadeConfig.shortLength) {
+                calculatedFadeLength = this._round(this.audioFadeConfig.shortPercent * selectionLength / 100, 2);
+              }
+              let fadeLength = calculatedFadeLength * original_buffer.sampleRate;
               let fadePercent = this.getClearFadePercent();
               let removePercent = (100 - fadePercent);
               for (let i = 0; i <= fadeLength; ++i) {
@@ -1627,7 +1634,7 @@
               
               
               this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
-              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, this.audioFadeConfig.length]);
+              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, calculatedFadeLength]);
               this.addFadeSelectionLog();
               this.isModified = true;
               this.cursorPosition = this.selection.start;
@@ -2394,34 +2401,41 @@
           if (this.editingLocked) {
             return false;
           }
-          if (this.mode === 'file' &&
-                  typeof this.selection.start !== 'undefined' &&
-                  typeof this.selection.end !== 'undefined') {
-            let t = setInterval(() => {
-              if ($('.selection.point').length > 0) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                clearInterval(t);
+          let replay = this.isPlaying;
+          this.pause()
+            .then(() => {
+              if (this.mode === 'file' &&
+                      typeof this.selection.start !== 'undefined' &&
+                      typeof this.selection.end !== 'undefined') {
+                let t = setInterval(() => {
+                  if ($('.selection.point').length > 0) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                    clearInterval(t);
+                  }
+                }, 50);
               }
-            }, 50);
-          }
-          this.contextPosition = e.clientX;
-          $('.medium-editor-toolbar').each(function(){
-              $(this).css('display', 'none');
-          });
-          if (this.$refs.waveformContext) {
-            this.$refs.waveformContext.open(e);
-            $('body').one('click', () => {
-              this.$refs.waveformContext.close();
-              this.contextPosition = null;
-            });
-          }
-          let hasSelection = $('.selection.segment').length > 0;
-          Vue.nextTick(() => {
-            window.requestAnimationFrame(() => {
-              if (hasSelection) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this.contextPosition = e.clientX;
+              $('.medium-editor-toolbar').each(function(){
+                  $(this).css('display', 'none');
+              });
+              if (this.$refs.waveformContext) {
+                this.$refs.waveformContext.open(e);
+                $('body').one('click', () => {
+                  this.$refs.waveformContext.close();
+                  this.contextPosition = null;
+                });
               }
-            });
+              let hasSelection = $('.selection.segment').length > 0;
+              Vue.nextTick(() => {
+                window.requestAnimationFrame(() => {
+                  if (hasSelection) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  }
+                  if (replay) {
+                    this.play();
+                  }
+                });
+              });
           });
         },
         setSelectionStart(val, event) {
@@ -3287,7 +3301,7 @@ Revert to original block audio?`,
             if (!this.hasSelection || this.isSinglePointSelection) {
               return true;
             }
-            return typeof this.selection.start !== 'undefined' && typeof this.selection.end !== 'undefined' && this._round(this.selection.end - this.selection.start, 2) >= this._round(this.audioFadeConfig.length * 2, 2) ? false : true;
+            return false;
           },
           cache: false
         },

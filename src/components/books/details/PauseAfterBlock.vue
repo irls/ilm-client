@@ -72,7 +72,9 @@
         range: [],
         blockList: [],
         player: null,
-        nowPlaying: false
+        nowPlaying: false,
+        lastEvent: null,
+        lastIncrement: null
       }
     },
     mounted() {
@@ -106,6 +108,9 @@
       pauseValueChange(val) {
           //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
         if (this.pauseUpdateEmitted) {
+          if (val !== this.lastIncrement) {
+            this.lastIncrement = null;
+          }
           let blk = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
             return b.pause_after != val;
           }) : false;
@@ -113,7 +118,19 @@
             //console.log('ON INPUT', val, typeof val);
             val = this.parseFloatToFixed(val);
             //if (this.pause != val) {
+            //this.lastEvent = `${val}-${Date.now()}`;
+            //let currentEvent = this.lastEvent;
+            if (this.lastIncrement === null) {
               this.$emit('setPauseAfter', this.blockType, val);
+            } else {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                  if (this.lastIncrement === val) {
+                    this.$emit('setPauseAfter', this.blockType, val);
+                  }
+                }, 200);
+              });
+            }
             //}
           }
         }
@@ -172,13 +189,26 @@
           this.pauseValueChange(this.pause);
           this.resetPause();
         } else if (this.pause <= this.max - this.interval) {
-          this.pause = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) + this.interval);
+          this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) + this.interval);
+          this.pause = this.lastIncrement;
         }
       },
       decreasePause() {
         if (this.pause >= this.min + this.interval) {
-          this.pause = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
+          this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
+          this.pause = this.lastIncrement;
         }
+      },
+      defer(func, val, time = 300) {
+        this.lastEvent = `${val}-${Date.now()}`;
+        let currentEvent = this.lastEvent;
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (currentEvent === this.lastEvent) {
+              func.call(this);
+            }
+          }, time);
+        });
       },
       parseFloatToFixed(val, precision = 1) {
         if (val && (val % 1 !== 0 || typeof val === 'string')) {
@@ -485,12 +515,29 @@
           });
         }
       },
-      'blockSelection': {
+      /*'blockSelection': {
         handler(val) {
           this.resetPause();
           this.recalcBlocks();
         },
         deep: true
+      },*/
+      'blockSelection.start._id': {
+        handler(val, oldVal) {
+          if (val) {
+            this.resetPause();
+            this.recalcBlocks();
+          }
+        }
+      },
+      'blockSelection.end._id': {
+        handler(val, oldVal) {
+          let singleSelection = !oldVal && val === this.blockSelection.start._id;
+          if (this.blockSelection.start._id && this.blockSelection.end._id && (this.blockSelection.start._id !== this.blockSelection.end._id || !singleSelection)) {
+            this.resetPause();
+            this.recalcBlocks();
+          }
+        }
       },
       'styleProps': {
         handler() {

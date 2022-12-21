@@ -1,5 +1,7 @@
 //import axios from 'axios';
 
+let swhInstance;
+
 const SUSPICIOUS_WORD_CLASS = 'suspicious-word';
 let element = document.createElement('span');
 
@@ -125,6 +127,11 @@ class SuspiciousWordsHighlight {
   }
 }
 
-export {
-  SuspiciousWordsHighlight
+var getInstance = function() {
+  if (!swhInstance) {
+    swhInstance = new SuspiciousWordsHighlight();
+  }
+  return swhInstance;
 }
+
+module.exports = getInstance()

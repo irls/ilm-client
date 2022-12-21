@@ -49,6 +49,7 @@ class liveDB {
   }
 
   startWatch(key, className, params, callback) {
+    console.log(`[liveDB]:startWatch for ${key}`);
     if (this.keys[className] && this.keys[className] != key) {
       this.stopWatch(className);
     }
@@ -59,7 +60,7 @@ class liveDB {
       socket.emit('start-watch', {class: className, params: params, key: key, subscriber: this.subscriber_id});
 
       socket.on('data-change-' + key, (data) => {
-        //console.log('data-change-' + key, data);
+        console.log(`[liveDB]:data-chang for ${key}`);
         callback.call(this, data);
       });
       socket.on('stop-watch-all-' + key, (data) => {
