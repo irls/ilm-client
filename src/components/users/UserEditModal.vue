@@ -14,13 +14,13 @@
       <div class="form-group"><span class="input-group-addon"></span>
         <div class="wrapper">
           <input type="text" class="form-control" :maxlength="30" placeholder="Real Name" v-model="user.name">
-          <span>{{user.name}}/30</span>
+          <span>{{user.name ? user.name.length : 0}}/30</span>
         </div>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
         <div class="wrapper">
           <input type="text" class="form-control" :maxlength="40" placeholder="Email" name="email" v-model="user.email">
-          <span>{{user.email}}/40</span>
+          <span>{{user.email ? user.email.length : 0}}/40</span>
         </div>
           <div v-if="errors.email" v-for="err in errors.email" class="error-message" v-text="err"></div>
       </div>
@@ -132,6 +132,8 @@ export default {
 
   .v--modal-box.v--modal
     overflow: visible
+    width: 555px !important;
+    left: 30% !important;
 
   .modal-js-dialog
     width: 400px
@@ -140,7 +142,7 @@ export default {
     .modal-header
       position: relative
       border-bottom: 0 solid #e5e5e5
-      width: 370px
+      width: 525px
       .modal-title
         display: inline-block
         font-size: 18px
@@ -163,9 +165,11 @@ export default {
         margin-top: -2px
 
     .modal-body
-      margin-top: 20px
+      margin-top: 20px;
+      padding: 10px;
       .form-group
         margin-bottom: 10px
+        width: 510px;
         .input-group-addon
           width: 1%
           float: left
@@ -189,11 +193,11 @@ export default {
           color: #333
           margin: 0 10px
         .form-control
-          min-width: 312px
+          min-width: 455px
           .btn-content
             margin: 2px 0
     .modal-footer
-      width: 370px
+      width: 525px
   .v--modal
     top: 0px !important;
 
@@ -204,6 +208,7 @@ export default {
 }
 
 .wrapper {
+  width: 455px;
   background #FFFFFF;
   display: flex;
   margin-inline-start: 44px;

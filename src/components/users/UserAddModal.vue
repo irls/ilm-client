@@ -160,7 +160,8 @@ export default {
 
   .v--modal-box.v--modal
     overflow: visible
-    width: 420px!important;
+    width: 555px !important;
+    left: 30% !important;
 
   .modal-js-dialog
     margin: 10px
@@ -168,7 +169,7 @@ export default {
     .modal-header
       position: relative
       border-bottom: 0 solid #e5e5e5
-      width: 400px
+      width: 525px
       .modal-title
         display: inline-block
         font-size: 18px
@@ -195,7 +196,7 @@ export default {
       padding: 10px;
       .form-group
         margin-bottom: 10px
-        width: 390px;
+        width: 510px;
         .input-group-addon
           width: 1%
           float: left
@@ -219,11 +220,11 @@ export default {
           color: #333
           margin: 0 10px
         .form-control
-          min-width: 335px
+          min-width: 455px
           .btn-content
             margin: 2px 0
     .modal-footer
-      width: 400px
+      width: 525px
   .v--modal
     top: 0px !important;
 
@@ -238,7 +239,7 @@ input {
   }
 }
 .wrapper {
-  width: 335px;
+  width: 455px;
   background #FFFFFF;
   display: flex;
   margin-inline-start: 44px;

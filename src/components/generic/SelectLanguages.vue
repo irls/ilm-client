@@ -95,8 +95,8 @@ export default {
         overflow-x: hidden;
         /*top: -150px;*/
         /*height: auto;*/
-        left: 340px;
-        top: -277px;
+        left: 490px;
+        top: -220px;
       }
       &.open {
         .dropdown-toggle {
