@@ -35,7 +35,7 @@ class Collection {
       this.difficulty = this.difficulty.toFixed(2);
     }*/
 
-    this.validationErrors = {
+    this.validationErrors = data.validationErrors || {
       difficulty: '',
       weight: ''
     };

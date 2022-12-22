@@ -1662,8 +1662,13 @@ export const store = new Vuex.Store({
                   if (cIdx > -1) {
                     const collection = state.bookCollectionsAll[cIdx];
                     if (collection.version < data.collection.version) {
-                      console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version);
-                      state.bookCollectionsAll[cIdx] = data.collection;
+                      console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version, /*collection*/);
+                      if (collection.validationErrors
+                        && collection.validationErrors.slug
+                        && data.collection.slug.trim().length) {
+                        delete collection.validationErrors.slug;
+                      }
+                      state.bookCollectionsAll[cIdx] = {...collection, ...data.collection};
                       commit('PREPARE_BOOK_COLLECTIONS');
                     }
                   }
@@ -4999,6 +5004,9 @@ export const store = new Vuex.Store({
             }).forEach(k => {
               state.currentCollection[k] = data[k];
             });
+            if (response.data.hasOwnProperty('version')) {
+              state.currentCollection.version = response.data.version;
+            }
             if (response.data.hasOwnProperty('slug')) {
               state.currentCollection['slug'] = response.data.slug;
             }

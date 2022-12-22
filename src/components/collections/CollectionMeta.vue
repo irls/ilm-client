@@ -284,19 +284,17 @@
           return this.updateCollection(update)
             .then(() => {
               this.collection[field] = value;
-              this.collection.slug =this.currentCollection.slug;
+              this.collection.slug = this.currentCollection.slug;
               this.collection.slug_status = this.currentCollection.slug_status;
-            });
+             });
         },
         publish() {
-          let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
+          /*let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
           let api = this.$store.state.auth.getHttp();
           let self = this;
           api.post(api_url, {}, {}).then(function(response){
             self.reloadCollection();
-          }).catch((err) => {
-
-          });
+          }).catch((err) => {});*/
         },
         changeCoverModal() {
           if (!this.allowCollectionsEdit) {
