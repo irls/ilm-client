@@ -149,7 +149,7 @@
 
 
         if(!canPublish){
-          title = 'Publication failed';
+          title = 'Publication error';
           text = 'Book meta is incomplete. Define ' + mandatoryFields.join(", ") + ' before publishing';
 
           buttons = [
