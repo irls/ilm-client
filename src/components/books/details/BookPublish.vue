@@ -6,7 +6,7 @@
 
     <section v-if="!isInCollection" class="publish-section">
       <div v-if="currentBookMeta.publishedVersion">
-        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+        {{publishedLabel}}  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
       </div>
       <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
         Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
@@ -42,7 +42,7 @@
 
     <section v-if="isInCollection" class="publish-section">
       <div v-if="currentBookMeta.publishedVersion">
-        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+        {{publishedLabel}}  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
       </div>
       <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
         Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
@@ -328,7 +328,19 @@
               && this.currentBookMeta.collection_id.length
         }
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian']),
+      publishedLabel: {
+        get() {
+          const prevCollection = this.isBookWasPublishedInCollection({
+            bookId: this.currentBookMeta.bookid,
+            currCollId: this.currentBookMeta.collection_id
+          })
+          if (prevCollection) {
+            return `Published in "${prevCollection.title}" collection:`
+          }
+          return 'Published:';
+        }
+      },
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
@@ -340,8 +352,8 @@
       }
       this.getDisabledBlocks();
       this.$root.$on('book-reimported', this.getDisabledBlocks);
-      console.log(`this.currentBookMeta: `, this.currentBookMeta);
-      console.log(`publishButtonStatus: `, this.publishButtonStatus);
+      //console.log(`this.currentBookMeta: `, this.currentBookMeta);
+      //console.log(`publishButtonStatus: `, this.publishButtonStatus);
     },
     beforeDestroy() {
       this.$root.$off('book-reimported', this.getDisabledBlocks);

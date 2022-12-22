@@ -646,6 +646,28 @@ export const store = new Vuex.Store({
         return null;
       }
       return state.books_meta.find(meta => meta.bookid == bookId);
+    },
+
+    isBookWasPublishedInCollection: state => (payload) => {
+      //console.log(`isBookWasPublishedInCollection: `, payload.bookId, payload.currCollId);
+      const {bookId, currCollId = false} = payload;
+      const prevCollection = state.bookCollectionsAll.find(collection => {
+        const { pubBooksEntities = [] } = collection;
+        if (pubBooksEntities.length == 0) return false;
+        return pubBooksEntities.find((pubBook)=>{
+          return pubBook.bookId === bookId
+        });
+      });
+      //console.log(`prevCollection: `, prevCollection);
+      if (prevCollection) {
+        if (currCollId && currCollId === prevCollection._id) {
+          return false;
+        }
+        const res = prevCollection.pubBooksEntities.find((book)=>book.bookId===bookId);
+        res.title = prevCollection.title;
+        res._id = prevCollection._id;
+        return res;
+      } else return false;
     }
   },
 
