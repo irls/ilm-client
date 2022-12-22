@@ -178,6 +178,7 @@
                  || book.isInTheQueueOfPublication
                  || (book.publicationStatus && this.pubStatusErrors.some((err)=>book.publicationStatus.toLowerCase().includes(err)))
                  || (book.version && book.version !== book.publishedVersion)
+                 || book.version === ''
             );
           })
           .map((book)=>{
