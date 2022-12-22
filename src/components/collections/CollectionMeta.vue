@@ -97,6 +97,7 @@
                 <input v-model="collection.author_en"
                   v-on:change="update('author_en', $event)"
                   :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.author_en}]"
                   >
                 <div class="dropdown">
                   <div v-on:click="toggleShowUnknownAuthorEn()"
@@ -107,6 +108,7 @@
                     v-if="showUnknownAuthorEn && allowCollectionsEdit"
                     v-on:click="setUnknownAuthorEn()" >Unknown</div>
                 </div>
+                <span class="validation-error" v-if="currentCollection.validationErrors.author_en">{{ currentCollection.validationErrors.author_en}}</span>
               </div>
             </div>
           </td>

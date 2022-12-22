@@ -375,8 +375,15 @@
           && (!this.currentCollection.title_en
              || this.currentCollection.title_en.trim().length == 0))
         {
-          mandatoryFields.push('Title EN');
+          mandatoryFields.push('Title EN (title English translation)');
           this.currentCollection.validationErrors.title_en = defaultMessage + 'Title EN';
+        }
+        if (this.currentCollection.language !== 'en'
+          && (!this.currentCollection.author_en
+             || this.currentCollection.author_en.trim().length == 0))
+        {
+          mandatoryFields.push('Author EN (author English translation)');
+          this.currentCollection.validationErrors.author_en = defaultMessage + 'Author EN';
         }
         if (!this.currentCollection.slug
           || this.currentCollection.slug.trim().length == 0)
