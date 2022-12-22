@@ -375,7 +375,7 @@
           && (!this.currentCollection.title_en
              || this.currentCollection.title_en.trim().length == 0))
         {
-          mandatoryFields.push('Title_en');
+          mandatoryFields.push('Title EN');
           this.currentCollection.validationErrors.title_en = defaultMessage + 'Title EN';
         }
         if (!this.currentCollection.slug
