@@ -353,9 +353,9 @@
           val = this.parseFloatToFixed(val, 2);
           return this.liveUpdate('difficulty', val);
         },
-        updateWeight(event) {
+        updateWeight($event) {
           $event.target.value = ($event.target.value).replace(',', '.');
-          let val = event.target.value;
+          let val = $event.target.value;
           if (!this.currentCollection.setValidateWeight(val)) {
             return false;
           }
