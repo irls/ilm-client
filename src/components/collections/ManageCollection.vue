@@ -15,7 +15,8 @@
           <button :class="['btn btn-danger', {'disabled' : !allowUnpublishCollection}]"
               :disabled="!allowUnpublishCollection"
               v-on:click="remove(true)">
-            Unpublish Collection
+            <span v-if="hasAnyBooks">Unpublish Collection</span>
+            <span v-else>Unpublished</span>
           </button>
         </div>
 
@@ -105,6 +106,9 @@
 
       languages() {
         return Languages;
+      },
+      hasAnyBooks() {
+        return this.collectionBooksLength > 0 || this.collectionPubBooksLength > 0;
       },
       collectionBooksLength() {
         if (this.currentCollection.books instanceof Object) {
