@@ -330,13 +330,23 @@
       },
       publishedLabel: {
         get() {
-          const prevCollection = this.isBookWasPublishedInCollection({
+          const pubCollection = this.isBookWasPublishedInCollection({
             bookId: this.currentBookMeta.bookid,
-            currCollId: this.currentBookMeta.collection_id
+            /*currCollId: this.currentBookMeta.collection_id*/
           })
-          if (prevCollection) {
-            return `Published in "${prevCollection.title}" collection:`
+          if (pubCollection) {
+            if (pubCollection._id !== this.currentBookMeta.collection_id) {
+              return `Published in "${pubCollection.title}" collection:`
+            } else {
+              return 'Published:';
+            }
           }
+          const {publishedVersion = ''} = this.currentBookMeta;
+          if (!pubCollection && this.isInCollection
+            && publishedVersion !== 'false' && publishedVersion !== '') {
+            return 'Published out of collection:';
+          }
+          //if (this.isInCollection )
           return 'Published:';
         }
       },
