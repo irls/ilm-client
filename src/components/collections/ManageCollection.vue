@@ -45,7 +45,9 @@
             Published: <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
           <p v-if="!currentCollection.isPublished || hasReadyBooks">
-            Unpublished: <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
+            <span v-if="hasAnyBooks">Unpublished: </span>
+            <span v-else>Unpublished updates: </span>
+            <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
           </p>
 
           <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
