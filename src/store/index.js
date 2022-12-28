@@ -1336,6 +1336,13 @@ export const store = new Vuex.Store({
         state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
       }
       let blockStore = state.storeList.get(data.block.blockid);
+      if (blockStore && data.block) {
+        if (blockStore.updated > data.block.updated) {
+          ['pause_after'].forEach(field => {// do not update these fields, maybe just return from update
+            data.block[field] = blockStore[field];
+          });
+        }
+      }
       if (data.block.blockid
         && state.audioTasksQueue.block.blockId
         && state.audioTasksQueue.block.blockId === data.block.blockid
@@ -4765,7 +4772,7 @@ export const store = new Vuex.Store({
             if (Array.isArray(response.data)) {
               response.data.forEach(b => {
                 let block = state.storeList.get(b.blockid);
-                if (block) {
+                if (block && block.updated < b.updated) {
                   block.setUpdated(b.updated);
                   block.setPauseAfter(b.pause_after);
                   block.status.marked = b.status.marked;
