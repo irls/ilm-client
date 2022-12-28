@@ -1475,7 +1475,6 @@ export default {
       this.$root.$off(`save-block:${this.block.blockid}`);
 
     }
-
     this.destroyEditor();
     this.$root.$off('prepare-alignment', this._saveContent);
     this.$root.$off('from-styles:styles-change-' + this.block.blockid, this.setClasses);
@@ -3592,8 +3591,8 @@ Save text changes and realign the Block?`,
             this.tc_loadBookTask(this.block.bookid);
             this.getCurrentJobInfo();
             this.highlightSuspiciousWords();
-        })
-        .catch(()=>{})
+          })
+          .catch(() => {})
       },
       joinWithNext() {
         this.joinBlocks(this.block, this.blockId, 'next')
