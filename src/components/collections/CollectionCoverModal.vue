@@ -20,7 +20,7 @@
             <div class="col-md-12">
 //
               <div>
-                <button type="button" class="clear" data-dismiss="modal" aria-label="Clear" v-on:click="clear()">
+                <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i>
                 </button>
               </div>
@@ -32,7 +32,7 @@
               <div class="col-sm-8">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -100,16 +100,16 @@
           }
           this.createImage(files[0]);
         },
-//
-        clear() {
-          this.uploadImage = file;
-          var reader = new FileReader();
-          
-          
-          reader.onload = e => {this.uploadURL = e.target.result};
-          reader.readAsDataURL(file);
+/*
+        resetInput () {
+         // this.$refs.form.reset()
+          this.$refs["form"].value = "";
         },
-//
+*/
+        resetInput () {
+          this.uploadURL = "";
+        },
+        
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
