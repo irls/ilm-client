@@ -42,11 +42,12 @@
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
           <p v-if="pubVersion && pubVersion.length && pubVersionDate && pubVersionDate.length">
-            Published: <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
+            <span v-if="hasAnyBooks">Published: </span>
+            <span v-else>Unpublished updates: </span>
+            <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
           <p v-if="!currentCollection.isPublished || hasReadyBooks">
-            <span v-if="hasAnyBooks">Unpublished: </span>
-            <span v-else>Unpublished updates: </span>
+            <span>Unpublished: </span>
             <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
           </p>
 
