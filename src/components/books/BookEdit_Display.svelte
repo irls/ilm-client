@@ -29,6 +29,7 @@
   import { beforeUpdate, createEventDispatcher, tick } from 'svelte';//onMount,tick
   import VirtualList from '../generic/VirtualList.svelte';
   import BookBlockDisplay from './BookBlockDisplay.svelte';
+  import suspiciousWordsHighlight from '../../store/suspiciousWordsHighlight.js';
 
   export let lang = 'en';
   export let blocksList = {};
@@ -227,7 +228,15 @@
           return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
         }
       );
-      viewObj.content = viewObj.content.replace(/(<[^>]+)(suspicious-word)/g, '$1');
+      viewObj.content = suspiciousWordsHighlight.clearText(viewObj.content);
+      if (Array.isArray(viewObj.footnotes)) {
+        viewObj.footnotes.forEach((ftn) => {
+          ftn.content = suspiciousWordsHighlight.clearText(ftn.content);
+        });
+      }
+      if (viewObj.description) {
+        viewObj.description = suspiciousWordsHighlight.clearText(viewObj.description);
+      }
 
       viewObj.viewOutPaddings = getOutPaddings(block);
       viewObj.viewIllustration = getIllustration(block);
