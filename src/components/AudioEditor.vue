@@ -1248,6 +1248,7 @@
           this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           //this.clearSelection();
           this.isModified = true;
+          this.clearSelection();
         },
         _changeWordPositions(new_positions, index) {
           new_positions.start = this._round(new_positions.start, 2);
