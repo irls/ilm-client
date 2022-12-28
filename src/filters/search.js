@@ -69,7 +69,8 @@ const replaceSpecials = (str, isWithSpace = false) => {
 };
 
 const replaceSuperscript = (str = '') => {
-  return str.replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*?<\/sup>/mig, '')
+  return str.replace(/class=\"service-info\"/mig, '')
+            .replace(/<sup\s+data-idx=\"[^\"]+\"[^>]*>.*?<\/sup>/mig, '')
             .replace(/<sup\s+data-pg=\"[^\"]+\"[^>]*>.*?<\/sup>/mig, '')
             .replace(/<sup>.*?<\/sup>/mig, '')
             .replace(/<sub>.*?<\/sub>/mig, '');

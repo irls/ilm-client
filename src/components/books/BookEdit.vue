@@ -98,7 +98,8 @@
 
   </div>
   <!--<div class="container-block">   -->
-
+  <AudioFAB 
+    @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -114,10 +115,12 @@ import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
+import playing_block from '../../mixins/playing_block.js';
 import axios from 'axios'
 import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import { prepareForFilter } from '@src/filters/search.js';
+import AudioFAB from './details/AudioFAB';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
@@ -289,11 +292,12 @@ export default {
         }
       }
   },
-  mixins: [access, taskControls, api_config],
+  mixins: [access, taskControls, api_config, playing_block],
   components: {
     SelectionModal,
     BookBlockView, BookBlockPreview, vueSlider,
-      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div')
+      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div'),
+      AudioFAB
   },
   methods: {
     ...mapActions([
@@ -319,6 +323,7 @@ export default {
         let checkMeta = this.parlistO.meta || {};
         checkMeta = checkMeta.bookid || false;
         const bookid = this.$route.params.bookid;
+        //this.$store.commit('SET_CURRENTBOOK_ID', bookid);
         let loadType = 'load';
         if (!checkMeta || checkMeta !== bookid || !this.parlist.values().next().value || this.$route.params.task_type) {
           console.log('loadBookMounted', loadType);
@@ -1034,62 +1039,7 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
-              this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
-              this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-              this.freeze('joinBlocks');
-              if ((elBlock && elBlock.getIsAudioEditing()) ||
-                      (elNext && elNext.getIsAudioEditing())) {
-                this.$root.$emit('for-audioeditor:force-close');
-              }
-              if (elBlock) {
-                elBlock.isAudioChanged = false;
-              }
-              //elBlock.evFromAudioeditorClosed(block.blockid);
-              if (elNext) {
-                elNext.isAudioChanged = false;
-              }
-              //elNext.evFromAudioeditorClosed(blockBefore.blockid);
-              if (!elNext) {
-                this.scrollToBlock(blockBefore.blockid);
-              }
-              return this.blocksJoin({
-                resultBlock_id: blockBefore.blockid,
-                donorBlock_id: block.blockid
-              })
-              .then((response)=>{
-                this.clearBlockLock({block: blockBefore, force: true});
-                this.getDisabledBlocks();
-
-                if (response.data.ok && response.data.blocks) {
-                  if (response.data.blocks.updatedBlock) {
-                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-                  }
-                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
-                  }
-                }
-
-                this.putNumBlockOBatchProxy({bookId: block.bookid})
-                  .then(() => {
-                    if (['header', 'title'].indexOf(block.type) !== -1) {
-                      this.loadBookToc({bookId: block.bookid, isWait: true})
-                    }
-                  });
-                this.refreshTmpl();
-                this.unfreeze('joinBlocks');
-                this.getCurrentJobInfo();
-                this.$store.commit('set_selected_blocks');
-                Vue.nextTick(() => {
-                  elNext.highlightSuspiciousWords();
-                });
-                return Promise.resolve();
-              })
-              .catch((err)=>{
-                this.refreshTmpl();
-                this.clearBlockLock({block: blockBefore, force: true});
-                this.unfreeze('joinBlocks');
-                return Promise.reject(err);
-              })
+              this.sureToJoinBlocks('previous',elBlock, elNext, block, blockBefore);
             }
           })
         } break;
@@ -1144,72 +1094,164 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
-              this.freeze('joinBlocks');
-              this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-              this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
-              if ((elBlock && elBlock.getIsAudioEditing()) ||
-                      (elNext && elNext.getIsAudioEditing())) {
-                this.$root.$emit('for-audioeditor:force-close');
-              }
-              if (elBlock) {
-                elBlock.isAudioChanged = false;
-              }
-              //elBlock.evFromAudioeditorClosed(block.blockid);
-              if (elNext) {
-                elNext.isAudioChanged = false;
-              }
-              //elNext.evFromAudioeditorClosed(blockAfter.blockid);
-              return this.blocksJoin({
-                resultBlock_id: block.blockid,
-                donorBlock_id: blockAfter.blockid
-              })
-              .then((response)=>{
-                this.clearBlockLock({block: block, force: true});
-                this.getDisabledBlocks();
-
-                if (response.data.ok && response.data.blocks) {
-                  if (response.data.blocks.updatedBlock) {
-                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-                  }
-                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
-                  }
-                }
-
-                this.putNumBlockOBatchProxy({bookId: block.bookid})
-                  .then(() => {
-                    if (['header', 'title'].indexOf(block.type) !== -1) {
-                      this.loadBookToc({bookId: block.bookid, isWait: true});
-                    }
-                  });
-                //this.refreshTmpl();
-                this.unfreeze('joinBlocks');
-                this.getCurrentJobInfo();
-                this.$store.dispatch('set_selected_blocks');
-                return Promise.resolve();
-              })
-              .catch((err)=>{
-                this.refreshTmpl();
-                this.clearBlockLock({block: block, force: true});
-                this.unfreeze('joinBlocks');
-                return Promise.reject(err);
-              })
+              this.sureToJoinBlocks('next',elBlock, elNext, block, blockAfter);
             }
            })
         } break;
       };
     },
 
-    unableJoinMessage() {
+    continueToJoinWithPrevious(elBlock, elNext, block, blockBefore) {
+      this.$root.$emit("hide-modal");//close modal window about confirm to join of blocks
+      this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
+      this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+      this.freeze('joinBlocks');
+      if ((elBlock && elBlock.getIsAudioEditing()) ||
+        (elNext && elNext.getIsAudioEditing())) {
+        this.$root.$emit('for-audioeditor:force-close');
+      }
+      if (elBlock) {
+        elBlock.isAudioChanged = false;
+      }
+      //elBlock.evFromAudioeditorClosed(block.blockid);
+      if (elNext) {
+        elNext.isAudioChanged = false;
+      }
+      //elNext.evFromAudioeditorClosed(blockBefore.blockid);
+      if (!elNext) {
+        this.scrollToBlock(blockBefore.blockid);
+      }
+      return this.blocksJoin({
+        resultBlock_id: blockBefore.blockid,
+        donorBlock_id: block.blockid
+      })
+        .then((response)=>{
+          this.clearBlockLock({block: blockBefore, force: true});
+          this.getDisabledBlocks();
+
+          if (response.data.ok && response.data.blocks) {
+            if (response.data.blocks.updatedBlock) {
+              this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+            }
+            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+            }
+          }
+
+          this.putNumBlockOBatchProxy({bookId: block.bookid})
+            .then(() => {
+              if (['header', 'title'].indexOf(block.type) !== -1) {
+                this.loadBookToc({bookId: block.bookid, isWait: true})
+              }
+            });
+          this.refreshTmpl();
+          this.unfreeze('joinBlocks');
+          this.getCurrentJobInfo();
+          this.$store.dispatch('set_selected_blocks');
+          Vue.nextTick(() => {
+            elNext.highlightSuspiciousWords();
+          });
+          return Promise.resolve();
+        })
+        .catch((err)=>{
+          this.refreshTmpl();
+          this.clearBlockLock({block: blockBefore, force: true});
+          this.unfreeze('joinBlocks');
+          return Promise.reject(err);
+        })
+
+    },
+    continueToJoinWithNext(elBlock, elNext, block, blockAfter ){
+      this.$root.$emit("hide-modal");//close modal window about confirm to join of blocks
+      this.freeze('joinBlocks');
+      this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+      this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
+      if ((elBlock && elBlock.getIsAudioEditing()) ||
+        (elNext && elNext.getIsAudioEditing())) {
+        this.$root.$emit('for-audioeditor:force-close');
+      }
+      if (elBlock) {
+        elBlock.isAudioChanged = false;
+      }
+      //elBlock.evFromAudioeditorClosed(block.blockid);
+      if (elNext) {
+        elNext.isAudioChanged = false;
+      }
+      //elNext.evFromAudioeditorClosed(blockAfter.blockid);
+      return this.blocksJoin({
+        resultBlock_id: block.blockid,
+        donorBlock_id: blockAfter.blockid
+      })
+        .then((response)=>{
+          this.clearBlockLock({block: block, force: true});
+          this.getDisabledBlocks();
+
+          if (response.data.ok && response.data.blocks) {
+            if (response.data.blocks.updatedBlock) {
+              this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+            }
+            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+            }
+          }
+
+          this.putNumBlockOBatchProxy({bookId: block.bookid})
+            .then(() => {
+              if (['header', 'title'].indexOf(block.type) !== -1) {
+                this.loadBookToc({bookId: block.bookid, isWait: true});
+              }
+            });
+          //this.refreshTmpl();
+          this.unfreeze('joinBlocks');
+          this.getCurrentJobInfo();
+          this.$store.dispatch('set_selected_blocks');
+          return Promise.resolve();
+        })
+        .catch((err)=>{
+          this.refreshTmpl();
+          this.clearBlockLock({block: block, force: true});
+          this.unfreeze('joinBlocks');
+          return Promise.reject(err);
+        })
+    },
+
+    sureToJoinBlocks(direction, elBlock, elNext, blockFirst, blockSecond ) {
+      let thisVueComponent = this //needed to save reference to variable in async function
       this.$root.$emit('show-modal', {
-        title: 'Blocks with different types can\'t be joined',
-        text: '',
+        title: 'Join blocks',
+        text: 'Task Assignments and Styles for the lower block will be discarded.<br> Join blocks?',
         buttons: [
           {
-            title: 'Close',
+            title: 'Cancel',
             handler: () => {
               this.$root.$emit('hide-modal');
             },
+            class: ['btn btn-default']
+          },
+          {
+            title: 'Join',
+            handler: () => {
+              if(direction === 'previous')  thisVueComponent.continueToJoinWithPrevious(elBlock, elNext, blockFirst, blockSecond);
+              else thisVueComponent.continueToJoinWithNext(elBlock, elNext, blockFirst, blockSecond);
+            },
+            'class': 'btn btn-primary'
+          }
+        ],
+        class: ['sureJoin', 'align-modal']
+      });
+    },
+
+    unableJoinMessage() {
+      this.$root.$emit('show-modal', {
+        title: 'Different Type',
+        text: 'Blocks with different types can\'t be joined',
+        buttons: [
+          {
+            title: 'Ok',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+            'class': 'btn btn-primary'
           }
         ],
         class: ['align-modal']
@@ -1218,15 +1260,16 @@ export default {
 
     unableToJoinVoiceworkMessage() {
       this.$root.$emit('show-modal', {
-        title: 'Blocks with different voicework type can’t be joined.',
-        text: '',
+        title: 'Different Voicework',
+        text: 'Blocks with different voicework types can\'t be joined',
         buttons: [
           {
-            title: 'Close',
+            title: 'Ok',
             handler: () => {
               this.$root.$emit('hide-modal');
             },
-          }
+            'class': 'btn btn-primary'
+          },
         ],
         class: ['align-modal']
       });
@@ -1252,7 +1295,6 @@ export default {
     async setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
-// debugger;
       switch (type) {
         case 'start':
           if (status) {
@@ -1771,7 +1813,7 @@ export default {
             break;
           default:
             task = Promise.resolve();
-            console.log('Not implemented type', record.type, record);
+            //console.log('Not implemented type', record.type, record);
             break;
         }
         if (block.getIsSplittedBlock()) {
@@ -2198,69 +2240,96 @@ export default {
 
       playNextBlock(blockid) {
         let currentBlock = this.parlist.get(blockid);
-        this.findNextAudioblock([blockid])
-          .then(block => {
+        let pauseAfter = this.playPause(blockid, currentBlock.pause_after);
+        Promise.all([this.findNextAudioblock([blockid]), this.findNextAudioblock([blockid, true])])
+          .then(prepare => {
             //console.log(block);
+            let [block, audioBlock] = prepare;
             if (block) {
-              let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
-              if (elementBack && elementBack) {
-                let elementFront = this.$refs.blocks.find(blk => {
-                  return blk.block && blk.block.blockid === block.blockid;
-                });
-                let elementIndex = 0;
-                if (block.voicework === 'narration' && block.parts.length > 0) {
-                  let part = block.parts.find(p => {
-                    return p.audiosrc;
-                  });
-                  if (part) {
-                    elementIndex = block.parts.indexOf(part);
-                  }
-                }
-                if (elementFront) {
-                  let subRef = elementFront.getSubblockRef(elementIndex, false);
-                  if (subRef && subRef.$el) {//#
-                    let lastW = subRef.$el.querySelector('w:first-child');
-                    let visible = lastW && this.checkFullyVisible(lastW);
-                    if (!visible) {
-                      //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
-                      elementBack.scrollIntoView();
-                    }
-                    setTimeout(() => {
-                      subRef.audPlay();
-                    }, currentBlock.pause_after * 1000);
-                  }
-                } else {
-                  elementBack.scrollIntoView();
-                  setTimeout(() => {
-                    let checks = 0;
-                    let checkBlockLoaded = setInterval(() => {
-                      let ref = this.$refs.blocks.find(blk => {
-                        return blk.block && blk.block.blockid === block.blockid;
-                      });
-                      ++checks;
-                      try {
-                        if (ref && ref.$el) {
-                          let subRef = ref.getSubblockRef(elementIndex);
-                          if (subRef) {
-                            subRef.audPlay();
-                            clearInterval(checkBlockLoaded);
-                          }
-                        }
-                        if (checks > 10) {
-                          clearInterval(checkBlockLoaded);
-                        }
-                      } catch(e) {
-                        console.log('ERROR', e);
-                        if (checks > 10) {
-                          clearInterval(checkBlockLoaded);
-                        }
-                      }
-                    }, 100);
-                  }, currentBlock.pause_after * 1000);
-                }
+              if (block.type === 'hr' && !audioBlock) {
+                this.stopPlayingBlock(blockid);
+                return;
               }
+              return pauseAfter
+                .then(() => {
+                  if (this.checkPlayingBlock(blockid)) {
+                    return this.goToAudioBlock(block)
+                      .then(subRef => {
+                        if (subRef && this.checkPlayingBlock(blockid)) {
+                          subRef.audPlay();
+                        }
+                      });
+                    }
+                });
+            } else {
+              this.stopPlayingBlock(blockid);
             }
           });
+      },
+      
+      goToAudioBlock(block) {
+        return new Promise((resolve, reject) => {
+          let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
+          if (!elementBack) {
+            elementBack = document.querySelector(`[id="s-${block.blockid}"]`);
+          }
+          if (elementBack) {
+            let elementFront = this.$refs.blocks.find(blk => {
+              return blk.block && blk.block.blockid === block.blockid;
+            });
+            let elementIndex = 0;
+            if (block.voicework === 'narration' && block.parts.length > 0) {
+              let part = block.parts.find(p => {
+                return p.audiosrc;
+              });
+              if (part) {
+                elementIndex = block.parts.indexOf(part);
+              }
+            }
+            if (elementFront) {
+              let subRef = elementFront.getSubblockRef(elementIndex, false);
+              if (subRef && subRef.$el) {//#
+                let lastW = subRef.$el.querySelector('w:first-child');
+                let visible = lastW && this.checkFullyVisible(lastW);
+                if (!visible) {
+                  //subRef.$refs['viewBlock'].scrollIntoView({behavior: 'smooth'});
+                  elementBack.scrollIntoView();
+                }
+                return resolve(subRef);
+              }
+            } else {
+              this.scrollToBlock(block.blockid);
+              Vue.nextTick(() => {
+                let checks = 0;
+                let checkBlockLoaded = setInterval(() => {
+                  let ref = this.$refs.blocks.find(blk => {
+                    return blk.block && blk.block.blockid === block.blockid;
+                  });
+                  ++checks;
+                  try {
+                    if (ref && ref.$el) {
+                      let subRef = ref.getSubblockRef(elementIndex);
+                      if (subRef) {
+                        clearInterval(checkBlockLoaded);
+                        return resolve(subRef);
+                      }
+                    }
+                    if (checks > 10) {
+                      clearInterval(checkBlockLoaded);
+                      return resolve();
+                    }
+                  } catch(e) {
+                    console.log('ERROR', e);
+                    if (checks > 10) {
+                      clearInterval(checkBlockLoaded);
+                      return resolve();
+                    }
+                  }
+                }, 100);
+              });
+            }
+          }
+        });
       },
 
       checkFullyVisible(el) {
@@ -2342,6 +2411,45 @@ export default {
           console.log(`startId: `, this.startId);
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
+      },
+      
+      onAudioFab() {
+        if (this.playingBlock.playingPauseAfter) {
+          switch (this.playingBlock.state) {
+            case 'play':
+              this.stopPause();
+              break;
+            case 'pause':
+              return this.findNextAudioblock([this.playingBlock.blockid])
+                .then((block) => {
+                  return this.goToAudioBlock(block);
+                })
+                .then(subRef => {
+                  if (subRef) {
+                    this.resumePause();
+                    subRef.audPlay();
+                  }
+                });
+              break;
+          }
+          return;
+        }
+        let component = this.$refs.blocks.find(blk => {
+          return blk.block.blockid === this.playingBlock.blockid;
+        });
+        if (component && this.playingBlock.partIdx !== null) {
+          component = component.$refs.blocks[this.playingBlock.partIdx];
+        }
+        if (component) {
+          switch (this.playingBlock.state) {
+            case 'pause':
+              component.audResume(this.playingBlock.blockid);
+              break;
+            case 'play':
+              component.audPause();
+              break;
+          }
+        }
       }
   },
   events: {
@@ -2398,7 +2506,8 @@ export default {
       this.$root.$on('from-block-part-view:on-input', this.correctCurrentEditHeight);
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
-        e.preventDefault();
+        if (e.target.hasAttribute('data-except-link-prevent')) return;
+        e.preventDefault(); //else
       });
 
       this.$root.$on('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
@@ -2635,6 +2744,9 @@ export default {
 }
 </script>
 <style lang="less">
+  .sureJoin {
+    width: 450px !important;
+  }
   #narrateStartCountdown {
       display: none;
       position: fixed;

@@ -216,7 +216,7 @@
                     <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
 
                     <p v-for="comment in part.comments" class="flag-comment">
-                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
+                      <FlagComment :comment="comment"/>
                     </p>
 
                     <textarea v-if="part.status !== 'hidden'"
@@ -272,7 +272,7 @@
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
                       <i class="icon-menu -split-to-sub"></i>Split for narration
                     </li>
-                    <li @click="splitIntoBlocks($event)" class="icon-menu-item" v-if="splitIntoBlocksAllowed">
+                    <li @click="splitIntoBlocks($event)" class="icon-menu-item -split-to-par" v-if="splitIntoBlocksAllowed">
                       <i class="icon-menu -split-to-par"></i>Split into 2 paragraphs
                     </li>
                   </template>
@@ -296,7 +296,7 @@
                     <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
                       <i class="icon-menu -listen-compressed"></i>Listen compressed
                     </li>
-                    <li class="icon-menu-item" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
+                    <li class="icon-menu-item -listen-uncompressed" v-if="isCompressedAudioSet" v-on:click="setListenUncompressed()">
                       <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
                     </li>
                   </template>
@@ -372,10 +372,12 @@ import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import LockedBlockActions from './block/LockedBlockActions';
+import FlagComment        from './block/FlagComment';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
+import playing_block      from '../../mixins/playing_block.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
@@ -453,15 +455,17 @@ export default {
     }
   },
   components: {
-    UploadImage, LockedBlockActions,
-      'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'block-flag-popup': BlockFlagPopup,
-      //'modal': modal,
-      'split-block-menu': SplitBlockMenu
+    UploadImage,
+    LockedBlockActions,
+    FlagComment,
+    'block-menu': BlockMenu,
+    'block-cntx-menu': BlockContextMenu,
+    'block-flag-popup': BlockFlagPopup,
+    //'modal': modal,
+    'split-block-menu': SplitBlockMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason'],
-  mixins: [taskControls, apiConfig, access],
+  mixins: [taskControls, apiConfig, access, playing_block],
   computed: {
       isLocked: {
         get () {
@@ -2023,6 +2027,7 @@ export default {
           this.isAudStarted = false;
           this.isAudPaused = false;
           this.audCleanClasses(block_id, ev);
+          this.stopPlayingBlock(this.block.blockid);
         }
       },
       audCleanClasses: function(block_id, ev) {
@@ -2682,23 +2687,32 @@ export default {
                 //this.player.audio_element.volume = 0;
                 this.$root.$on('readalong:playBlock', this.onAudPlay);
                 this.$root.$on('from-audioeditor:play', this.onAudPlay);
+                if (!this.isAudPartStarted) {
+                  this.setPlayingBlock(this.block.blockid, this.blockPartIdx);
+                }
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
+                this.pausePlayingBlock(this.block.blockid, this.blockPartIdx);
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
                 this.$root.$emit('readalong:playBlock', `${this.block.blockid}-${this.blockPartIdx}`);
+                this.resumePlayingBlock();
             },
             on_complete: ()=>{
                 this.$root.$off('readalong:playBlock', this.onAudPlay);
                 this.isAudStarted = false;
                 this.isAudPaused = false;
                 this.audCleanClasses(this.block._id, {});
+                this.$root.$off('from-audioeditor:play', this.onAudPlay);
+                this.stopPlayingBlock(this.block.blockid);
+                if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[this.blockPartIdx + 1] && this.block.parts[this.blockPartIdx + 1].audiosrc) {
+                  this.playSubblockPause(this.block.blockid);
+                }
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
-                this.$root.$off('from-audioeditor:play', this.onAudPlay);
             },
             on_newline: () => {
               let element = document.getElementById(this.block.blockid);
@@ -3196,6 +3210,9 @@ export default {
         }
       },
       clickAwayFromAudioControl(e){
+        if (e.target && (e.target.classList.contains('audio-fab') || (e.target.parentElement && e.target.parentElement.classList.contains('audio-fab')))) {
+          return;
+        }
         const mouseOnContainer = e.target.closest('[data-audio-controls]');
         if (!mouseOnContainer || e.target.hasAttribute('data-show-editor')) {
           if (this.isAudStarted) {
@@ -4179,6 +4196,14 @@ Join subblocks?`,
           }
         }
       },
+      'isAudPaused': {
+        handler(val) {
+          if (!val && this.isAudStarted) {
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.handleAudioControl);
+          }
+        }
+      },
       'approveWaiting': {
         handler(val) {
           //console.log(this.block._id, 'approveWaiting', val);
@@ -4247,7 +4272,7 @@ Join subblocks?`,
 </script>
 
 <style lang='less'>
-.-split-to-par, .-split-to-sub{
+.-split-to-par,.-split-to-sub{
   font-size: 16px;
 }
    .-content-block {
@@ -4310,7 +4335,7 @@ Join subblocks?`,
         }
         &.-listen-uncompressed {
           background: url(/static/listen-uncompressed.png);
-          background-size: 15px;
+          background-size: 16px;
         }
         &.-add-flag {
           background-color: transparent;

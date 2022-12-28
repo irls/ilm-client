@@ -11,6 +11,18 @@
       <div v-if="!this.$parent.preloader" class="close-player-container pull-right">
         <span class="close-player" v-on:click="close()">&times;</span>
       </div>
+      <div v-if="selection.start >= 0 && selection.end > 0" class="selection-tooltips">
+        <div class="selection-tooltip -start">
+          <button class="adjust-selection selection-decrease" v-on:click="decreaseSelectionStart()"></button>
+          <span class="selection-time">{{selectionStartH}}:{{selectionStartM}}:{{selectionStartS}}</span>
+          <button class="adjust-selection selection-increase" v-on:click="increaseSelectionStart()"></button>
+        </div>
+        <div class="selection-tooltip -end">
+          <button class="adjust-selection selection-decrease" v-on:click="decreaseSelectionEnd()"></button>
+          <span class="selection-time">{{selectionEndH}}:{{selectionEndM}}:{{selectionEndS}}</span>
+          <button class="adjust-selection selection-increase" v-on:click="increaseSelectionEnd()"></button>
+        </div>
+      </div>
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
@@ -18,25 +30,37 @@
 
         <div :class="['play-controls', '-' + mode]">
           <div class="hidden">cursorPosition: {{cursorPosition}}</div>
-          <i class="fa fa-play-circle-o" v-if="!isPlaying" v-on:click="play()"></i>
-          <i class="fa fa-pause-circle-o" v-if="isPlaying" v-on:click="pause()"></i>
+          <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
+          <button class="audio-btn -pause" v-if="isPlaying" v-on:click="pause()"></button>
           <div class="speed-controls" v-if="mode === 'block'">
-            <span>Speed</span>
-            <input type="number" v-model="playbackRate" min="0.75" max="1.25" step="0.05" />
+            <dropdown 
+              v-model="playbackRate" 
+              :options="playbackRates" 
+              scrollHeight="410px" 
+              @change="onPlaybackRateChange"
+              class="playbackrate-dropdown"/>
           </div>
         </div>
-        <div :class="['play-controls', '-' + mode]">
-          <i class="fa fa-step-backward" v-on:click="goToStart()"></i>
-          <i class="fa fa-step-forward" v-on:click="goToEnd()"></i>
+        <div :class="['play-controls seek-controls', '-' + mode]">
+          <button class="audio-btn -go-to-start" v-on:click="goToStart()"></button>
+          <button class="audio-btn -go-to-end" v-on:click="goToEnd()"></button>
         </div>
         <div class="zoom-controls">
-          <i :class="['fa', 'fa-search-plus', {'disabled': !allowZoomIn}]" v-on:click="zoomIn()"></i>
-          <i :class="['fa', 'fa-search-minus', {'disabled': !allowZoomOut}]" v-on:click="zoomOut()"></i>
+          <button class="audio-btn -zoom-in" :disabled="!allowZoomIn" v-on:click="zoomIn()"></button>
+          <button class="audio-btn -zoom-out" :disabled="!allowZoomOut" v-on:click="zoomOut()"></button>
         </div>
-        <div class="selection-controls" v-bind:class="['-' + mode]">
+        <div class="silence-controls" v-if="mode == 'block' && !editingLocked">
+          <dropdown 
+            v-model="silenceLength" 
+            :options="silenceLengths" 
+            scrollHeight="auto"
+            class="add-silence-dropdown" />
+          <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
+        </div>
+        <div class="selection-controls" v-bind:class="['-' + mode]" v-if="mode === 'block'">
           <div class="hidden">{{origFilePositions}}
             {{selection}}</div>
-          <div v-if="selection.start >= 0" class="selection-display">
+          <div v-if="selection.start >= 0" class="selection-display hidden">
             <div>Selection Start</div>
             <div>
               <template v-if="mode == 'block'">
@@ -49,7 +73,7 @@
               </template>
             </div>
           </div>
-          <div v-if="selection.end >= 0" class="selection-display">
+          <div v-if="selection.end >= 0" class="selection-display hidden">
             <div>Selection End</div>
             <div>
               <template v-if="mode == 'block'">
@@ -63,41 +87,45 @@
             </div>
           </div>
           <template v-if="mode == 'block'">
-            <div>
-              <button class="btn btn-default" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection">Clear</button>
-              <template v-if="!editingLocked">
-                <button class="btn btn-primary" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection">Cut</button>
-                <button class="btn btn-primary" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection">Erase</button>
-              </template>
-            </div>
+            <template v-if="!editingLocked">
+              <div>
+                <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
+                <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
+                <div class="dropdown-controls">
+                  <dropdown 
+                    v-model="fadePercent" 
+                    :options="fadePercents" 
+                    scrollHeight="410px" 
+                    class="fade-percent-dropdown"/>
+                  <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
+                </div>
+              </div>
+            </template>
+            <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
           </template>
         </div>
-        <div class="selection-controls" v-if="mode == 'block' && !editingLocked">
-          <input type="number" step="0.1" v-model="silenceLength" />
-          <button class="btn btn-primary" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false">Add Silence</button>
-        </div>
         <template v-if="mode == 'block' && !isFootnote && !editingLocked">
-          <label v-if="isRevertDisabled" class="btn btn-default disabled">Revert</label>
-          <button v-else class="btn btn-default" v-on:click="revert(true)">Revert</button>
         </template>
-        <div class="audio-controls" v-if="isModifiedComputed && mode == 'block' && !editingLocked">
-          <button class="btn btn-default" v-if="actionsLog.length" v-on:click="undo()">Undo {{lastActionName}}</button>
-          <button class="btn btn-primary" v-on:click="save()"  :disabled="isSaveDisabled">Save</button>
-          <button class="btn btn-primary" v-on:click="saveAndRealign()" :disabled="isSaveDisabled">Save & Re-align</button>
+        <div class="audio-controls" v-if="mode == 'block' && !editingLocked">
+          <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName, closeOnClick: false}"></button>
+          <button class="audio-btn -save" v-on:click="save()"  :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save'"></button>
+          <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save & Re-align'"></button>
+          <button class="audio-btn -revert" :disabled="isRevertDisabled" v-on:click="revert(true)" v-ilm-tooltip.top="'Revert'"></button>
         </div>
         <div v-if="editingLocked" class="audio-controls blocked-message">
           {{editingLockedReason}}
         </div>
         <div class="audio-controls" v-if="mode == 'file'">
-          <button class="btn btn-default" :disabled="!isModifiedComputed" v-on:click="undo()">Undo</button>
-          <button class="btn btn-primary" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess">Align</button>
+          <button class="audio-btn -undo" :disabled="!isModifiedComputed" v-on:click="undo()" v-ilm-tooltip.top="'Undo'"></button>
+          <button class="audio-btn -align" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess" v-ilm-tooltip.top="'Align'"></button>
           <span v-else class="align-preloader -small"></span>
           <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
-          <span v-if="!hasAlignSelection" class="red-message">Define block range</span>
+          <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
           <template v-else>
-            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message">
-              {{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
+              {{selectionBlocksToAlign}}
             </span>
+            <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)" :data-blockid="blockSelection.start._id">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)" :data-blockid="blockSelection.end._id">{{blockSelection.end._id_short}}</a></div>
           </template>
         </div>
       </div>
@@ -143,15 +171,24 @@
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   import { setUpSource, onSourceEnded } from '../store/audio/AudioPlayout.js';
   import { updateEditor } from '../store/audio/AudioPlaylist.js';
+  import dropdown from 'primevue/dropdown';
+  import IlmTooltip from '../directives/ilm-tooltip/ilm-tooltip.js';
+  import '../directives/ilm-tooltip/ilm-tooltip.css';
+  import BtnToast from '../directives/btn-toast/btn-toast.js';
+  import '../directives/btn-toast/btn-toast.css';
   //var _Playout2 = _interopRequireDefault(_Playout);
   const SILENCE_VALUE = 0.005;
   const closeBracketsRegex = /[\)\]\}\﴿]/mg;
   const closeQuotesRegex = /[\”\’\»]/mg;
+  
+  Vue.directive('ilm-tooltip', IlmTooltip);
+  Vue.directive('btn-toast', BtnToast);
 
   export default {
       name: 'AudioEditor',
       components: {
-        'cntx-menu': BlockContextMenu
+        'cntx-menu': BlockContextMenu,
+        'dropdown': dropdown
       },
       mixins: [api_config, task_controls],
       data() {
@@ -172,6 +209,7 @@
           isPaused: false,
           isSingleWordPlaying: false,
           silenceLength: 0.1,
+          silenceLengths: [],
           audioContext: null,
           contentContainer: null,
           isModified: false,
@@ -207,7 +245,11 @@
           editingLocked: false,
           editingLockedReason: '',
           pausedAt: null,
-          playbackRate: 1
+          playbackRate: 1,
+          playbackRates: [],
+          fadePercent: '',
+          fadePercents: ['to 95%', 'to 90%', 'to 75%', 'to 50%', 'to 25%', 'to 10%', 'to 5%'],
+          fadeSelectionLog: []
         }
       },
       mounted() {
@@ -236,6 +278,16 @@
         this.$root.$on('for-audioeditor:flush', this.flush);
         this.$root.$on('for-audioeditor:lock-editing', this.setEditingLocked);
         this.$root.$on('readalong:playBlock', this.stop);
+        
+        for (let i = 1.25; i > 0.7; i-=0.05) {
+          this.playbackRates.push(this._round(i, 2));
+        }
+        
+        this.silenceLengths.push(2);
+        this.silenceLengths.push(1.5);
+        for (let i = 1; i >= 0.1; i-=0.1) {
+          this.silenceLengths.push(this._round(i, 1));
+        }
       },
       beforeDestroy() {
         if (this.audioContext) {
@@ -310,6 +362,15 @@
           let mode = bookAudiofile.id ? 'file' : 'block';
           if (mode === 'file') {
             this.setEditingLocked(false);
+            $('.waveform-playlist').on('mouseenter', 'span.blue-message', () => {
+              setTimeout(() => {
+                $('a.blue-message').on('click', (event) => {
+                  if (event && event.target && event.target.dataset) {
+                    this.goToBlock(event.target.dataset.blockid);
+                  }
+                });
+              });
+            });
           }
           let closingId = this.audiofileId;
           if (bookAudiofile.id) {
@@ -421,6 +482,14 @@
               this.playbackRate = this.user.bookPlaybackRate[this.currentBookMeta.bookid];
             }
           }
+          let fadePercent = this.audioFadeConfig.percent;
+          /*if (this.currentBookMeta && this.currentBookMeta.bookid && mode === 'block') {
+            if (this.user.audioFadeConfig && this.user.audioFadeConfig[this.currentBookMeta.bookid]) {
+              fadePercent = this.user.audioFadeConfig[this.currentBookMeta.bookid].percent;
+            }
+          }*/
+          this.fadePercent = `to ${fadePercent}%`;
+          $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`)
 
           if (this.$refs.waveformContext) {
             this.$refs.waveformContext.close();
@@ -496,7 +565,7 @@
             {
               src: this.audiofile,
               name: 'block-audio',
-              gain: 0.5,
+              gain: 1.1,
               waveOutlineColor: '#f3f3f3',
               customClass: 'block-audio',
               states: {
@@ -621,13 +690,18 @@
                 self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
                 return;
               }
+              // do not select less than 0.2 sec
               if (self.mode === 'file' && Math.abs(end - start) < 0.2 &&
                       typeof self.selection.start !== 'undefined' &&
                       typeof self.selection.end !== 'undefined' &&
                       (self.selection.start != start ||
                       self.selection.end != end)) {
-
-                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                self.selection.start = self._round(self.selection.start, 2);
+                self.selection.end = self._round(self.selection.end, 2);
+                if (self.selection.start != start ||
+                      self.selection.end != end) {
+                  self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
+                }
                 return;
               }
               if (!is_single_cursor) {
@@ -757,7 +831,7 @@
 
               $('.playlist-overlay').on('mousedown', (e) => {
                 //console.log('this.mouseSelection', e.which, this.mouseSelection.start, this.mouseSelection.end);
-                if (e.which !== 1) {
+                if (e.button !== 0) {
                   return;
                 }
 
@@ -1174,6 +1248,7 @@
           this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           //this.clearSelection();
           this.isModified = true;
+          this.clearSelection();
         },
         _changeWordPositions(new_positions, index) {
           new_positions.start = this._round(new_positions.start, 2);
@@ -1439,8 +1514,8 @@
           let first_list_index        = (start * original_buffer.sampleRate);
           let second_list_index       = (end * original_buffer.sampleRate);
           let second_list_mem_alloc   = (original_buffer.length - (end * original_buffer.sampleRate));
-          if (second_list_mem_alloc < 0) {
-            second_list_mem_alloc = 0;
+          if (second_list_mem_alloc < 1) {
+            second_list_mem_alloc = 1;
           }
 
           let new_buffer      = this.audiosourceEditor.ac.createBuffer(original_buffer.numberOfChannels, parseInt( first_list_index ) + parseInt( second_list_mem_alloc ), original_buffer.sampleRate);
@@ -1472,6 +1547,9 @@
           this.setAudioBuffer(new_buffer);
           //this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
           this.audiosourceEditor.activeTrack.duration-= end - start;
+          if (this.audiosourceEditor.activeTrack.duration < 0) {
+            this.audiosourceEditor.activeTrack.duration = 0;
+          }
           this.audiosourceEditor.duration = this.audiosourceEditor.activeTrack.duration;
           this.audioDuration = this._round(this.audiosourceEditor.duration, 2);
 
@@ -1479,6 +1557,96 @@
           this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
           this.audiosourceEditor.drawRequest();
           return cut_range;
+        },
+        fade() {
+          return this.pause()
+            .then(() => {
+              
+              let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+              
+              let selectionLength = this._round(this.selection.end - this.selection.start, 2);
+
+              let silence = new Float32Array((selectionLength) * original_buffer.sampleRate);
+              
+              silence.fill(SILENCE_VALUE);
+              let range = this.cutRangeAction(this.selection.start, this.selection.end);
+              
+              let calculatedFadeLength = this.audioFadeConfig.length;
+              if (selectionLength < this.audioFadeConfig.shortLength) {
+                calculatedFadeLength = this._round(this.audioFadeConfig.shortPercent * selectionLength / 100, 2);
+              }
+              let fadeLength = calculatedFadeLength * original_buffer.sampleRate;
+              let fadePercent = this.getClearFadePercent();
+              let removePercent = (100 - fadePercent);
+              for (let i = 0; i <= fadeLength; ++i) {
+                if (range[i]) {
+                  let currentPercent = i * removePercent / fadeLength;
+                  let currentDelta = currentPercent * Math.abs(range[i]) / 100;
+                  let currentValue;
+                  if (range[i] < 0) {
+                    currentValue = range[i] + currentDelta;
+                  } else if (range[i] > 0) {
+                    currentValue = range[i] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  silence[i] = currentValue;
+                }
+              }
+              let fadeInStart = range.length - fadeLength;
+              for (let i = 0; i <= fadeLength; ++i) {
+                //console.log(i, fadeInStart, range.length)
+                //console.log(range[i]);
+                let currentPercent = i * removePercent / fadeLength;
+                //console.log(currentPercent);
+                let rangePos = range.length - 1 - i;
+                if (range[rangePos]) {
+                  let currentDelta = currentPercent * Math.abs(range[rangePos]) / 100;
+                  let currentValue;
+                  if (range[rangePos] < 0) {
+                    currentValue = range[rangePos] + currentDelta;
+                  } else if (range[rangePos] > 0) {
+                    currentValue = range[rangePos] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  silence[rangePos] = currentValue;
+                }
+                //console.log('===========', silence[i]);
+              }
+              
+              for (let i = fadeLength + 1; i < fadeInStart; ++i) {
+                if (range[i]) {
+                  let currentDelta = removePercent * Math.abs(range[i]) / 100;
+                  let currentValue;
+                  if (range[i] < 0) {
+                    currentValue = range[i] + currentDelta;
+                  } else if (range[i] > 0) {
+                    currentValue = range[i] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  silence[i] = currentValue;
+                }
+              }
+              
+              this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
+              
+              
+              this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
+              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, calculatedFadeLength]);
+              this.addFadeSelectionLog();
+              this.isModified = true;
+              this.cursorPosition = this.selection.start;
+              let el = document.getElementById('resize-selection-left');
+              let pos = el.getBoundingClientRect();
+              if (window.innerWidth <= pos.left - 20) {
+                $('.playlist-tracks').scrollLeft(pos.left - ($('.playlist-tracks')[0].offsetWidth / 2));
+              }
+              Vue.nextTick(() => {
+                this.play(this.selection.start);
+              });
+            });
         },
         setAudioBuffer(new_buffer) {
           if (this.audiosourceEditor && this.audiosourceEditor.activeTrack) {
@@ -1538,6 +1706,7 @@
           //this.undoLocal();
           //return;
           if (this.mode === 'block') {
+            this.popFadeSelectionLog();
             return this.pause()
               .then(() => {
                 let make_event = !this.audioTasksQueue.running;
@@ -1710,7 +1879,12 @@
         },
         _showSelectionBordersOnClick(ev) {
           ev.preventDefault();
-          this._showSelectionBorders(false);
+          window.requestAnimationFrame(() => {
+            if (ev.button && ev.button === 2 && (typeof this.selection.start !== 'undefined' || typeof this.selection.end !== 'undefined')) {
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            }
+          });
+          //this._showSelectionBorders(false);
           return false;
         },
         _showSelectionBorders(scroll_to_selection = false) {
@@ -1843,25 +2017,26 @@
           if (new_selection.end > this._round(this.audiosourceEditor.activeTrack.duration, 1)) {
             new_selection.end = this._round(this.audiosourceEditor.activeTrack.duration, 1)
           }
-          if (this._round(new_selection.start, 1) == this._round(new_selection.end, 1) && field == 's') {
+          if (this._round(new_selection.start, 2) == this._round(new_selection.end, 2) && field == 's') {
             switch (part) {
               case 'start':
-                new_selection.end+= 0.1;
-                if (new_selection.end > this._round(this.audiosourceEditor.activeTrack.duration, 1)) {
+                new_selection.end+= 0.01;
+                if (new_selection.end > this._round(this.audiosourceEditor.activeTrack.duration, 2)) {
                   return;
                 }
                 break;
               case 'end':
-                new_selection.start-= 0.1;
+                new_selection.start-= 0.01;
                 if (new_selection.start < 0) {
                   return;
                 }
                 break;
             }
-            new_selection.end = this._round(new_selection.end, 1);
-            new_selection.start = this._round(new_selection.start, 1);
+            new_selection.end = this._round(new_selection.end, 2);
+            new_selection.start = this._round(new_selection.start, 2);
           }
           if (new_selection.start >= 0 && new_selection.start < new_selection.end) {
+            this.clearFadeSelectionLog();
             //this._setSelectionOnWaveform();
             if (this.selection.end == new_selection.start) {
               this.setSelectionEnd(new_selection.end);
@@ -1992,6 +2167,10 @@
                       $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
                     });
                   }
+                  break;
+                case 'fade':
+                  this.cutRangeAction(record.selection.start, record.selection.end);
+                  this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
                   break;
               }
             } else {
@@ -2222,24 +2401,42 @@
           if (this.editingLocked) {
             return false;
           }
-          if (this.mode === 'file' &&
-                  typeof this.selection.start !== 'undefined' &&
-                  typeof this.selection.end !== 'undefined') {
-            let t = setInterval(() => {
-              if ($('.selection.point').length > 0) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                clearInterval(t);
+          let replay = this.isPlaying;
+          this.pause()
+            .then(() => {
+              if (this.mode === 'file' &&
+                      typeof this.selection.start !== 'undefined' &&
+                      typeof this.selection.end !== 'undefined') {
+                let t = setInterval(() => {
+                  if ($('.selection.point').length > 0) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                    clearInterval(t);
+                  }
+                }, 50);
               }
-            }, 50);
-          }
-          this.contextPosition = e.clientX;
-          $('.medium-editor-toolbar').each(function(){
-              $(this).css('display', 'none');
+              this.contextPosition = e.clientX;
+              $('.medium-editor-toolbar').each(function(){
+                  $(this).css('display', 'none');
+              });
+              if (this.$refs.waveformContext) {
+                this.$refs.waveformContext.open(e);
+                $('body').one('click', () => {
+                  this.$refs.waveformContext.close();
+                  this.contextPosition = null;
+                });
+              }
+              let hasSelection = $('.selection.segment').length > 0;
+              Vue.nextTick(() => {
+                window.requestAnimationFrame(() => {
+                  if (hasSelection) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  }
+                  if (replay) {
+                    this.play();
+                  }
+                });
+              });
           });
-          if (this.$refs.waveformContext) {
-            this.$refs.waveformContext.open(e);
-            $('body').one('click', this.$refs.waveformContext.close);
-          }
         },
         setSelectionStart(val, event) {
           //if (this.mode == 'file') {
@@ -2349,8 +2546,19 @@
           if (this.selection.end >= this.audioDuration && this.mode === 'block') {
 
             setTimeout(() => {
-              $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
-            }, 500)
+              let resizeRight = document.getElementById('resize-selection-right');
+              if (resizeRight) {
+                let win = window,
+                  d = document,
+                  e = d.documentElement,
+                  g = d.getElementsByTagName('body')[0],
+                  w = win.innerWidth || e.clientWidth || g.clientWidth;
+                let offset = resizeRight.getBoundingClientRect();
+                if (offset.left < w) {
+                  $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
+                }
+              }
+            }, 500);
           }
         }, 30),
 
@@ -2812,6 +3020,86 @@ Revert to original block audio?`,
             return false;
           }
         },
+        onPlaybackRateChange() {
+          //console.log(this.playbackRate);
+          $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`);
+        },
+        decreaseSelectionStart() {
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.start > 0) {
+            this.selectionStartS = this._round(this.selectionStartS, 2) - 0.01;
+          }
+        },
+        increaseSelectionStart() {
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.start < this.audioDuration) {
+            this.selectionStartS = this._round(this.selectionStartS, 2) + 0.01;
+            //this.setSelectionStart(start + 0.1);
+          }
+        },
+        decreaseSelectionEnd() {
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.end > 0) {
+            this.selectionEndS = this._round(this.selectionEndS, 2) - 0.01;
+          }
+        },
+        increaseSelectionEnd() {
+          if (this.processRun) {
+            return false;
+          }
+          if (this.selection.end < this.audioDuration) {
+            this.selectionEndS = this._round(this.selectionEndS, 2) + 0.01;
+          }
+        },
+        showSelectionTooltip() {
+          if ($('.selection-tooltip.-start').length > 0) {
+            let left = this.selection.start * this.audiosourceEditor.sampleRate /  this.audiosourceEditor.samplesPerPixel - this.playlistScrollPosition;
+            let right = this.selection.end * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel - this.playlistScrollPosition;
+            let win = window,
+              d = document,
+              e = d.documentElement,
+              g = d.getElementsByTagName('body')[0],
+              w = win.innerWidth || e.clientWidth || g.clientWidth;
+            let elWidth = right - left;
+            let minWidth = parseInt($('.selection-tooltips').css('min-width'));
+            if (elWidth < minWidth) {
+              right = left + minWidth;
+            }
+            if (left < 0 || w - right < 0) {
+              if (left < 0) {
+                left = 0;
+              }
+              if (w - right < 0) {
+                right = w;
+              }
+              if (right - left < minWidth) {
+                if (left > 0) {
+                  left = right - minWidth;
+                }
+              }
+              elWidth = right - left;
+            }
+            $('.selection-tooltips').css('left', `${left}px`).width(`${elWidth}px`);
+          }
+        },
+        addFadeSelectionLog() {
+          this.fadeSelectionLog.push({percent: this.getClearFadePercent()});
+        },
+        popFadeSelectionLog() {
+          this.fadeSelectionLog.pop();
+        },
+        clearFadeSelectionLog() {
+          this.fadeSelectionLog = [];
+        },
+        getClearFadePercent() {
+          return parseInt(this.fadePercent.replace(/^\D*/, ''));
+        },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
 
@@ -2844,7 +3132,7 @@ Revert to original block audio?`,
             if (typeof this.selection.start == 'undefined') {
               return false;
             }
-            return this._numToTime(this._round(this.selection.start % 60))
+            return this._numToTime(this._round(this.selection.start % 60, 2));
           },
           set(value) {
             this._emitSelection('start', 's', value);
@@ -2877,7 +3165,7 @@ Revert to original block audio?`,
             if (typeof this.selection.end == 'undefined') {
               return false
             }
-            return this._numToTime(this._round(this.selection.end % 60))
+            return this._numToTime(this._round(this.selection.end % 60, 2));
           },
           set(value) {
             this._emitSelection('end', 's', value);
@@ -2977,13 +3265,23 @@ Revert to original block audio?`,
                 case 'insert_silence':
                   return 'Silence';
                   break;
+                case 'fade':
+                  return 'Fade';
+                  break;
+                case 'manual_boundaries':
+                  return 'Pin';
+                  break;
               }
+              return '';
             }
           },
           cache: false
         },
         isSaveDisabled: {
           get() {
+            if (!this.isModifiedComputed) {
+              return true;
+            }
             if (this.audioTasksQueue.running) {
               return true;
             } else {
@@ -2995,6 +3293,25 @@ Revert to original block audio?`,
         isEmpty: {
           get() {
                return (!this.audiosourceEditor || !this.audiosourceEditor.tracks || this.audiosourceEditor.tracks.length == 0) && !this.processRun;
+          },
+          cache: false
+        },
+        isFadeDisabled: {
+          get() {
+            if (!this.hasSelection || this.isSinglePointSelection) {
+              return true;
+            }
+            return false;
+          },
+          cache: false
+        },
+        rangeFadePercent: {
+          get() {
+            let startPercent = 100;
+            this.fadeSelectionLog.forEach(log => {
+              startPercent = log.percent * startPercent / 100;
+            });
+            return `Faded to ${this._round(startPercent, 0)}%`;
           },
           cache: false
         },
@@ -3010,7 +3327,8 @@ Revert to original block audio?`,
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
           coupletSeparator: 'coupletSeparator',
           allowAlignBlocksLimit: 'allowAlignBlocksLimit',
-          user: 'user'
+          user: 'user',
+          audioFadeConfig: 'audioFadeConfig'
         })
       },
       watch: {
@@ -3047,6 +3365,9 @@ Revert to original block audio?`,
               let pos = this.cursorPosition * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel;
               $('#cursor-position').css('left', pos);
             }
+            Vue.nextTick(() => {
+              this.showSelectionTooltip();
+            });
           }
         },
         'blockSelection.start._id': {
@@ -3083,6 +3404,7 @@ Revert to original block audio?`,
         'selection': {
           handler(val, oldVal) {
 
+            let clearFadeLog = val instanceof Object && val.hasOwnProperty('start') && val.hasOwnProperty('end') && (!oldVal || (val.start !== oldVal.start || val.end !== oldVal.end));
             Vue.nextTick(() => {
               //return;
               //$('[id="resize-selection-right"]')
@@ -3099,8 +3421,12 @@ Revert to original block audio?`,
                 this.cursorPosition = typeof this.selection.start === 'number' && !isNaN(this.selection.start) ? this.selection.start : this.cursorPosition;
                 this._showSelectionBorders();
               }
+              this.showSelectionTooltip();
             })
             this.smoothSelection(val, oldVal);
+            if (clearFadeLog) {
+              this.clearFadeSelectionLog();
+            }
           },
           deep: true
         },
@@ -3157,12 +3483,31 @@ Revert to original block audio?`,
               }
             }
           }
+        },
+        'playlistScrollPosition': {
+          handler(val) {
+            this.showSelectionTooltip();
+          }
         }
+        /*'fadePercent': {
+          handler(val) {
+            if (this.currentBookMeta && this.currentBookMeta.bookid && this.mode === 'block') {
+              let audioFadeConfig = {};
+              let clearPercent = this.getClearFadePercent();
+              audioFadeConfig[this.currentBookMeta.bookid] = Object.assign({}, this.audioFadeConfig);
+              if (!this.user.audioFadeConfig || !this.user.audioFadeConfig[this.currentBookMeta.bookid] || this.user.audioFadeConfig[this.currentBookMeta.bookid].percent !== clearPercent) {
+                audioFadeConfig[this.currentBookMeta.bookid].percent = parseFloat(parseFloat(clearPercent).toFixed(0));
+                this.updateUser([this.user._id, {audioFadeConfig: audioFadeConfig}]);
+              }
+            }
+          }
+        }*/
       }
   }
 </script>
 <style lang="less">
   @waveform-height: 80px;
+  @audio-btn: "/static/audio_editor/";
   .waveform {
       max-height: @waveform-height;
       .resize-selection {
@@ -3178,16 +3523,6 @@ Revert to original block audio?`,
   }
   .waveform-playlist {
     background-color: #d9d9d9;
-    .blue-message {
-        color: blue;
-        display: inline-block;
-        padding: 1px 3px;
-    }
-    a.blue-message {
-        font-weight: bold;
-        text-decoration: underline;
-        cursor: pointer;
-    }
     .red-message {
         color: red;
         display: inline-block;
@@ -3330,8 +3665,7 @@ Revert to original block audio?`,
     -webkit-user-select: none;
     .play-controls {
       display: inline-block;
-      padding: 17px 25px;
-      /*width: 200px;*/
+      padding: 17px 15px;
       i {
         font-size: 29px;
         color: #0089ff;
@@ -3340,7 +3674,7 @@ Revert to original block audio?`,
       }
       .speed-controls {
         display: inline-block;
-        width: 50px;
+        width: 70px;
         margin: -13px 2px -3px 5px;
         span {
           display: block;
@@ -3351,10 +3685,13 @@ Revert to original block audio?`,
         }
       }
     }
+    .seek-controls {
+      width: 115px;
+    }
     .zoom-controls {
       display: inline-block;
       padding: 17px 14px;
-      /*width: 120px;*/
+      width: 115px;
       i {
         font-size: 29px;
         color: #0089ff;
@@ -3366,13 +3703,26 @@ Revert to original block audio?`,
         }
       }
     }
+    .silence-controls {
+      width: 163px;
+      display: inline-block;
+      padding: 21px 20px 9px 20px;
+      .add-silence-dropdown.p-dropdown {
+        width: 48px;
+        .p-dropdown-trigger {
+          .pi-chevron-down::before {
+            left: 70%;
+          }
+        }
+      }
+    }
     .selection-controls {
       display: inline-block;
       padding: 21px 20px 9px 20px;
-      /*width: 500px;*/
-      &>div {
+      /*width: 265px;*/
+      &>div:not(.p-dropdown) {
         display: inline-block;
-        padding: 0px 10px;
+        /*padding: 0px 10px;*/
       }
       input[type="number"] {
         width: 40px;
@@ -3392,13 +3742,77 @@ Revert to original block audio?`,
     }
     .audio-controls {
       display: inline-block;
+      float: right;
+      margin: 18px 30px;
+      height: 70px;
       &.blocked-message {
         color: gray;
-        padding: 0px 15px;
+        padding: 0px 0px;
+        float: none;
       }
     }
-    >div:not(.audio-controls) {
+    >div:not(.audio-controls, .seek-controls) {
       border-right: solid 2px #b1b1b1;
+    }
+    .p-dropdown {
+      height: 34px;
+      vertical-align: middle;
+      .p-inputtext {
+        font-size: inherit;
+      }
+    }
+    .speed-controls, .silence-controls, .selection-controls {
+      .p-dropdown {
+        .p-dropdown-panel {
+          border-radius: 5px;
+        }
+        .p-dropdown-items-wrapper {
+          box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
+          &::-webkit-scrollbar {
+            width: 10px;
+          }
+          &::-webkit-scrollbar-track {
+            background: white;
+            border-radius: 10px;
+          }
+          &::-webkit-scrollbar-thumb {
+            background: #D9D9D9;
+            border-radius: 9999px;
+            width: 2px;
+            background-clip: padding-box;
+            border: 4px solid rgba(0, 0, 0, 0);
+          }
+          .p-dropdown-items {
+            border-radius: 5px;
+          }
+          .p-dropdown-item {
+            &.p-highlight {
+              background: inherit;
+              font-weight: bolder;
+            }
+          }
+        }
+      }
+    }
+    .p-dropdown {
+      .p-inputtext {
+        /*padding: 5px 3px;*/
+      }
+      .p-dropdown-trigger {
+        width: 15px;
+        .pi-chevron-down::before {
+          content: '';
+          position: absolute;
+          left: 75%;
+          top: 13px;
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top: 6px solid #000;
+          clear: both;
+        }
+      }
     }
   }
   .cursor-position {
@@ -3461,5 +3875,193 @@ Revert to original block audio?`,
     .btn.btn-default {
       display: none;
     }
+  }
+  .audio-btn {
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
+    border: none;
+    width: 41px;
+    height: 34px;
+    margin: 1px 3px;
+    &[disabled] {
+      cursor: not-allowed;
+    }
+    &.-play {
+      background: url("@{audio-btn}play.png");
+    }
+    &.-pause {
+      background: url("@{audio-btn}pause.png");
+    }
+    &.-go-to-start {
+      background: url("@{audio-btn}go-to-start.png");
+    }
+    &.-go-to-end {
+      background: url("@{audio-btn}go-to-end.png");
+    }
+    &.-zoom-in {
+      background: url("@{audio-btn}zoom-in.png");
+      &[disabled] {
+        background: url("@{audio-btn}zoom-in-disabled.png");
+      }
+    }
+    &.-zoom-out {
+      background: url("@{audio-btn}zoom-out.png");
+      &[disabled] {
+        background: url("@{audio-btn}zoom-out-disabled.png");
+      }
+    }
+    &.-fade {
+      background: url("@{audio-btn}fade.png");
+      width: 49px;
+      &[disabled] {
+        background: url("@{audio-btn}fade-disabled.png");
+      }
+    }
+    &.-clear {
+      background: url("@{audio-btn}clear.png");
+      &[disabled] {
+        background: url("@{audio-btn}clear-disabled.png");
+      }
+    }
+    &.-erase {
+      background: url("@{audio-btn}erase.png");
+      &[disabled] {
+        background: url("@{audio-btn}erase-disabled.png");
+      }
+    }
+    &.-cut {
+      background: url("@{audio-btn}cut.png");
+      &[disabled] {
+        background: url("@{audio-btn}cut-disabled.png");
+      }
+    }
+    &.-add-silence {
+      background: url("@{audio-btn}add-silence.png");
+      width: 63px;
+      &[disabled] {
+        background: url("@{audio-btn}add-silence-disabled.png");
+      }
+    }
+    &.-revert{
+      background: url("@{audio-btn}revert.png");
+      &[disabled] {
+        background: url("@{audio-btn}revert-disabled.png");
+      }
+    }
+    &.-save {
+      background: url("@{audio-btn}save.png");
+      &[disabled] {
+        background: url("@{audio-btn}save-disabled.png");
+      }
+    }
+    &.-save-and-realign {
+      background: url("@{audio-btn}save-and-realign.png");
+      width: 91px;
+      &[disabled] {
+        background: url("@{audio-btn}save-and-realign-disabled.png");
+      }
+    }
+    &.-undo {
+      background: url("@{audio-btn}undo.png");
+      &[disabled] {
+        background: url("@{audio-btn}undo-disabled.png");
+      }
+    }
+    &.-align {
+      background: url("@{audio-btn}align.png");
+      &[disabled] {
+        background: url("@{audio-btn}align-disabled.png");
+      }
+    }
+  }
+  .play-controls, .zoom-controls {
+    .audio-btn {
+      width: 34px;
+    }
+  }
+  .playbackrate-dropdown.p-dropdown {
+    width: 62px;
+  }
+  .dropdown-controls {
+    display: inline-block;
+    padding: 0px 20px;
+    .fade-percent-dropdown.p-dropdown {
+      width: 75px;
+    }
+  }
+  .selection-tooltips {
+    position: absolute;
+    z-index: 999;
+    top: -29px;
+    left: 595.35px;
+    min-width: 275px;
+    .selection-tooltip {
+      display: inline-block;
+      background: rgb(186, 232, 195);
+      border-radius: 4px 4px 0px 0px;
+      padding: 4px 5px;
+      &.-start {
+        float: left;
+      }
+      &.-end {
+        float: right;
+      }
+      .adjust-selection {
+        width: 20px;
+        height: 19px;
+        border: none;
+        vertical-align: middle;
+        &.selection-decrease {
+          background: url("@{audio-btn}selection-decrease.png");
+        }
+        &.selection-increase {
+          background: url("@{audio-btn}selection-increase.png");
+        }
+      }
+      .selection-time {
+        padding: 0px 0px;
+        display: inline-block;
+        font-weight: 700;
+        min-width: 77px;
+        text-align: center;
+      }
+    }
+  }
+  .define-block-range {
+    border: 1.7px solid #FF4343;
+    /*transform: matrix(1, 0, 0, -1, 0, 0);*/
+    padding: 1px 1px;
+    border-radius: 15px;
+    color: #FF4343;
+    cursor: pointer;
+    width: 22px;
+    display: inline-block;
+    text-align: center;
+    height: 22px;
+    vertical-align: middle;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  span.blue-message {
+    color: #2D76B0;
+    border: 1.7px solid #2D76B0;
+    padding: 1px 1px;
+    border-radius: 15px;
+    cursor: pointer;
+    width: 22px;
+    display: inline-block;
+    text-align: center;
+    height: 22px;
+    vertical-align: middle;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  a.blue-message {
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
+    color: #2D76B0;
   }
 </style>

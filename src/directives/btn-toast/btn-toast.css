@@ -1,0 +1,18 @@
+.btn-toast {
+  z-index: 10000;
+  position: absolute;
+  display: none;
+  padding: 0.25em 0.5rem;
+  max-width: 12.5rem;
+}
+.btn-toast .btn-toast-text {
+  font-size: 1.4rem;
+  background: #F0F0F0;
+  color: #000000;
+  padding: 0.5rem 0.5rem;
+  box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
+  border-radius: 4px;
+  white-space: pre-line;
+  word-break: break-word;
+  font-weight: 400;
+}
