@@ -18,7 +18,13 @@
         <div id="upload_pane" class="tab-pane fade in">
           <div class="row">
             <div class="col-md-12">
-
+//
+              <div>
+                <button type="button" class="clear" data-dismiss="modal" aria-label="Clear" v-on:click="clear()">
+                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                </button>
+              </div>
+//
               <div class="col-sm-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
@@ -41,6 +47,11 @@
           </div>
         </div>
       </div>
+// 
+      <div class="modal-footer">
+        <button class="btn btn-primary" v-on:click="cencel()">Cencel</button>
+      </div>
+//
       <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
@@ -89,7 +100,16 @@
           }
           this.createImage(files[0]);
         },
-
+//
+        clear() {
+          this.uploadImage = file;
+          var reader = new FileReader();
+          
+          
+          reader.onload = e => {this.uploadURL = e.target.result};
+          reader.readAsDataURL(file);
+        },
+//
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -114,6 +134,12 @@
               this.close();
             });
         },
+//
+        cencel() {
+          this.$emit('closed');
+          this.$modal.hide('import-collection-cover')
+        },
+//
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
