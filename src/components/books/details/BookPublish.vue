@@ -6,7 +6,7 @@
 
     <section v-if="!isInCollection" class="publish-section">
       <div v-if="currentBookMeta.publishedVersion">
-        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+        {{publishedLabel}}  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
       </div>
       <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
         Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
@@ -42,7 +42,7 @@
 
     <section v-if="isInCollection" class="publish-section">
       <div v-if="currentBookMeta.publishedVersion">
-        Published:  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
+        {{publishedLabel}}  Ver. {{currentBookMeta.publishedVersion}} &nbsp; {{publishDate}}
       </div>
       <div v-if="currentBookMeta.publishedVersion != currentBookMeta.version || !currentBookMeta.version">
         Unpublished: Ver. {{ currentBookMeta.version ? currentBookMeta.version : '1.0' }} &nbsp; {{updateDate}}
@@ -149,7 +149,7 @@
 
 
         if(!canPublish){
-          title = 'Publication failed';
+          title = 'Publication error';
           text = 'Book meta is incomplete. Define ' + mandatoryFields.join(", ") + ' before publishing';
 
           buttons = [
@@ -328,7 +328,29 @@
               && this.currentBookMeta.collection_id.length
         }
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian']),
+      publishedLabel: {
+        get() {
+          const pubCollection = this.isBookWasPublishedInCollection({
+            bookId: this.currentBookMeta.bookid,
+            /*currCollId: this.currentBookMeta.collection_id*/
+          })
+          if (pubCollection) {
+            if (pubCollection._id !== this.currentBookMeta.collection_id) {
+              return `Published in "${pubCollection.title}" collection:`
+            } else {
+              return 'Published:';
+            }
+          }
+          const {publishedVersion = ''} = this.currentBookMeta;
+          if (!pubCollection && this.isInCollection
+            && publishedVersion !== 'false' && publishedVersion !== '') {
+            return 'Published out of collection:';
+          }
+          //if (this.isInCollection )
+          return 'Published:';
+        }
+      },
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
@@ -340,8 +362,8 @@
       }
       this.getDisabledBlocks();
       this.$root.$on('book-reimported', this.getDisabledBlocks);
-      console.log(`this.currentBookMeta: `, this.currentBookMeta);
-      console.log(`publishButtonStatus: `, this.publishButtonStatus);
+      //console.log(`this.currentBookMeta: `, this.currentBookMeta);
+      //console.log(`publishButtonStatus: `, this.publishButtonStatus);
     },
     beforeDestroy() {
       this.$root.$off('book-reimported', this.getDisabledBlocks);

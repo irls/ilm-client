@@ -12,8 +12,11 @@
           </button>
         </div>
         <div class="c-action-button">
-          <button :disabled="!allowUnpublishCollection" class="btn btn-danger" v-on:click="remove(true)">
-            Unpublish Collection
+          <button :class="['btn btn-danger', {'disabled' : !allowUnpublishCollection}]"
+              :disabled="!allowUnpublishCollection"
+              v-on:click="remove(true)">
+            <span v-if="hasAnyBooks">Unpublish Collection</span>
+            <span v-else>Unpublished</span>
           </button>
         </div>
 
@@ -39,10 +42,13 @@
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
           <p v-if="pubVersion && pubVersion.length && pubVersionDate && pubVersionDate.length">
-            Published: <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
+            <span v-if="hasAnyBooks">Published: </span>
+            <span v-else>Unpublished updates: </span>
+            <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
           <p v-if="!currentCollection.isPublished || hasReadyBooks">
-            Unpublished: <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
+            <span>Unpublished: </span>
+            <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
           </p>
 
           <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
@@ -104,11 +110,18 @@
       languages() {
         return Languages;
       },
+      hasAnyBooks() {
+        return this.collectionBooksLength > 0 || this.collectionPubBooksLength > 0;
+      },
       collectionBooksLength() {
         if (this.currentCollection.books instanceof Object) {
           return Object.keys(this.currentCollection.books).length;
         }
         return 0;
+      },
+      collectionPubBooksLength() {
+        const { pubBooksEntities = [] } = this.currentCollection;
+        return pubBooksEntities.length;
       },
       readyBooks() {
         let books = [];
@@ -155,7 +168,12 @@
         return false;
       },
       isPubDisabled() {
-        return !(!this.currentCollection.isPublished || this.hasReadyBooks);
+      //console.log(`isPubDisabled: `, this.currentCollection.isPublished, this.hasReadyBooks, this.collectionBooksLength, this.collectionPubBooksLength);
+        if (this.currentCollection.isPublished && (!this.hasReadyBooks && this.collectionBooksLength)) return true;
+        if (this.hasReadyBooks && this.collectionBooksLength) return false;
+        if (this.collectionBooksLength == 0) return true;
+        if (this.collectionPubBooksLength == 0) return true;
+        return false;
       },
       booksGrid() {
         let books = [];
@@ -167,6 +185,7 @@
                  || book.isInTheQueueOfPublication
                  || (book.publicationStatus && this.pubStatusErrors.some((err)=>book.publicationStatus.toLowerCase().includes(err)))
                  || (book.version && book.version !== book.publishedVersion)
+                 || book.version === ''
             );
           })
           .map((book)=>{
@@ -254,7 +273,7 @@
         if (this.currentCollection.pubVersion && this.currentCollection.pubVersion.length) {
           return this.currentCollection.pubVersion;
         }
-        return '1.0';
+        return '';
       },
       currVersion() {
         if (this.hasReadyBooks) {
@@ -278,7 +297,9 @@
       },
       allowUnpublishCollection: {
         get() {
-          return this.allowCollectionsEdit && this.collectionBooksLength;
+          if (this.pubVersionDate.length == 0) return false;
+          return this.allowCollectionsEdit
+              && (this.collectionBooksLength || this.collectionPubBooksLength);
         },
         cache: false
       }
@@ -362,8 +383,15 @@
           && (!this.currentCollection.title_en
              || this.currentCollection.title_en.trim().length == 0))
         {
-          mandatoryFields.push('Title_en');
-          this.currentCollection.validationErrors.title_en = defaultMessage + 'Title_en';
+          mandatoryFields.push('Title EN (title English translation)');
+          this.currentCollection.validationErrors.title_en = defaultMessage + 'Title EN';
+        }
+        if (this.currentCollection.language !== 'en'
+          && (!this.currentCollection.author_en
+             || this.currentCollection.author_en.trim().length == 0))
+        {
+          mandatoryFields.push('Author EN (author English translation)');
+          this.currentCollection.validationErrors.author_en = defaultMessage + 'Author EN';
         }
         if (!this.currentCollection.slug
           || this.currentCollection.slug.trim().length == 0)
@@ -480,6 +508,11 @@
         min-height: 100px;
         max-height: 100%;
       }
+    }
+  }
+  .c-action-button {
+    .disabled {
+      opacity: 0.5;
     }
   }
 </style>

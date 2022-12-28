@@ -798,13 +798,19 @@ export default {
 
     collectionsList: {
       get() {
-        let list = [{'_id': '', 'title' :''}];
+        let list = [];
         this.bookCollections.forEach(c => {
           if (c.language == this.currentBookMeta.language) {
-            list.push(c);
+            if (c.title.trim().length == 0) {
+              const coll = Object.assign({}, c);
+              coll.title = coll._id;
+              list.push(coll);
+            }
+            else list.push(c);
           }
         });
-        return list;
+        list.sort((a, b) => a.title.localeCompare(b.title));
+        return [...[{'_id': '', 'title' :'---Remove from collection---'}], ...list];
       }
     },
     getDemoStatus(){ // build, rebuild, progress, failed

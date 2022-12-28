@@ -646,6 +646,28 @@ export const store = new Vuex.Store({
         return null;
       }
       return state.books_meta.find(meta => meta.bookid == bookId);
+    },
+
+    isBookWasPublishedInCollection: state => (payload) => {
+      //console.log(`isBookWasPublishedInCollection: `, payload.bookId, payload.currCollId);
+      const {bookId, currCollId = false} = payload;
+      const prevCollection = state.bookCollectionsAll.find(collection => {
+        const { pubBooksEntities = [] } = collection;
+        if (pubBooksEntities.length == 0) return false;
+        return pubBooksEntities.find((pubBook)=>{
+          return pubBook.bookId === bookId
+        });
+      });
+      //console.log(`prevCollection: `, prevCollection);
+      if (prevCollection) {
+        if (currCollId && currCollId === prevCollection._id) {
+          return false;
+        }
+        const res = prevCollection.pubBooksEntities.find((book)=>book.bookId===bookId);
+        res.title = prevCollection.title;
+        res._id = prevCollection._id;
+        return res;
+      } else return false;
     }
   },
 
@@ -1696,8 +1718,13 @@ export const store = new Vuex.Store({
                   if (cIdx > -1) {
                     const collection = state.bookCollectionsAll[cIdx];
                     if (collection.version < data.collection.version) {
-                      console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version);
-                      state.bookCollectionsAll[cIdx] = data.collection;
+                      console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version, /*collection*/);
+                      if (collection.validationErrors
+                        && collection.validationErrors.slug
+                        && data.collection.slug.trim().length) {
+                        delete collection.validationErrors.slug;
+                      }
+                      state.bookCollectionsAll[cIdx] = {...collection, ...data.collection};
                       commit('PREPARE_BOOK_COLLECTIONS');
                     }
                   }
@@ -5078,6 +5105,9 @@ export const store = new Vuex.Store({
             }).forEach(k => {
               state.currentCollection[k] = data[k];
             });
+            if (response.data.hasOwnProperty('version')) {
+              state.currentCollection.version = response.data.version;
+            }
             if (response.data.hasOwnProperty('slug')) {
               state.currentCollection['slug'] = response.data.slug;
             }

@@ -97,6 +97,7 @@
                 <input v-model="collection.author_en"
                   v-on:change="update('author_en', $event)"
                   :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.author_en}]"
                   >
                 <div class="dropdown">
                   <div v-on:click="toggleShowUnknownAuthorEn()"
@@ -107,6 +108,7 @@
                     v-if="showUnknownAuthorEn && allowCollectionsEdit"
                     v-on:click="setUnknownAuthorEn()" >Unknown</div>
                 </div>
+                <span class="validation-error" v-if="currentCollection.validationErrors.author_en">{{ currentCollection.validationErrors.author_en}}</span>
               </div>
             </div>
           </td>
@@ -286,19 +288,17 @@
           return this.updateCollection(update)
             .then(() => {
               this.collection[field] = value;
-              this.collection.slug =this.currentCollection.slug;
+              this.collection.slug = this.currentCollection.slug;
               this.collection.slug_status = this.currentCollection.slug_status;
-            });
+             });
         },
         publish() {
-          let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
+          /*let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
           let api = this.$store.state.auth.getHttp();
           let self = this;
           api.post(api_url, {}, {}).then(function(response){
             self.reloadCollection();
-          }).catch((err) => {
-
-          });
+          }).catch((err) => {});*/
         },
         changeCoverModal() {
           if (!this.allowCollectionsEdit) {
@@ -355,9 +355,9 @@
           val = this.parseFloatToFixed(val, 2);
           return this.liveUpdate('difficulty', val);
         },
-        updateWeight(event) {
+        updateWeight($event) {
           $event.target.value = ($event.target.value).replace(',', '.');
-          let val = event.target.value;
+          let val = $event.target.value;
           if (!this.currentCollection.setValidateWeight(val)) {
             return false;
           }
