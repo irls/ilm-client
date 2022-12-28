@@ -2400,34 +2400,41 @@
           if (this.editingLocked) {
             return false;
           }
-          if (this.mode === 'file' &&
-                  typeof this.selection.start !== 'undefined' &&
-                  typeof this.selection.end !== 'undefined') {
-            let t = setInterval(() => {
-              if ($('.selection.point').length > 0) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                clearInterval(t);
+          let replay = this.isPlaying;
+          this.pause()
+            .then(() => {
+              if (this.mode === 'file' &&
+                      typeof this.selection.start !== 'undefined' &&
+                      typeof this.selection.end !== 'undefined') {
+                let t = setInterval(() => {
+                  if ($('.selection.point').length > 0) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                    clearInterval(t);
+                  }
+                }, 50);
               }
-            }, 50);
-          }
-          this.contextPosition = e.clientX;
-          $('.medium-editor-toolbar').each(function(){
-              $(this).css('display', 'none');
-          });
-          if (this.$refs.waveformContext) {
-            this.$refs.waveformContext.open(e);
-            $('body').one('click', () => {
-              this.$refs.waveformContext.close();
-              this.contextPosition = null;
-            });
-          }
-          let hasSelection = $('.selection.segment').length > 0;
-          Vue.nextTick(() => {
-            window.requestAnimationFrame(() => {
-              if (hasSelection) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this.contextPosition = e.clientX;
+              $('.medium-editor-toolbar').each(function(){
+                  $(this).css('display', 'none');
+              });
+              if (this.$refs.waveformContext) {
+                this.$refs.waveformContext.open(e);
+                $('body').one('click', () => {
+                  this.$refs.waveformContext.close();
+                  this.contextPosition = null;
+                });
               }
-            });
+              let hasSelection = $('.selection.segment').length > 0;
+              Vue.nextTick(() => {
+                window.requestAnimationFrame(() => {
+                  if (hasSelection) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  }
+                  if (replay) {
+                    this.play();
+                  }
+                });
+              });
           });
         },
         setSelectionStart(val, event) {
