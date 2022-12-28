@@ -837,6 +837,31 @@ export default {
         },
         set(val) {
           if (val && val !== this.block.voicework) {
+            if (this.block.getIsSplittedBlock()) {
+              let hasChangedPart = this.$refs.blocks.find(blk => {
+                return blk.isChanged;
+              });
+              if (this.isChanged || hasChangedPart) {
+                this.voiceworkSel = this.block.voicework;
+                this.$root.$emit('show-modal', {
+                  title: 'Unsaved Changes',
+                  text: `Block has unsaved changes.<br>
+Save or discard your changes to continue editing`,
+                  buttons: [
+                    {
+                      title: 'Ok',
+                      handler: () => {
+                        this.$root.$emit('hide-modal');
+                      },
+                      class: ['btn btn-primary']
+                    }
+                  ],
+                  class: ['align-modal']
+                });
+                this.$forceUpdate();
+                return;
+              }
+            }
             this.voiceworkChange = val;
             this.currentBookCounters.voiceworks_for_remove = 0;
             if (true/*!this.block.status.marked && this.currentJobInfo.text_cleanup*/) {
