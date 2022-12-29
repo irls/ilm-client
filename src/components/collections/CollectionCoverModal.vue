@@ -161,7 +161,8 @@
               this.uploadImage = '';
             }
           }
-        }*/
+        }
+        */
       }
   }
 </script>
