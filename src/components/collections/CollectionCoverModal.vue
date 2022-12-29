@@ -18,13 +18,13 @@
         <div id="upload_pane" class="tab-pane fade in">
           <div class="row">
             <div class="col-md-12">
-//
+
               <div>
                 <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i>
                 </button>
               </div>
-//
+
               <div class="col-sm-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
@@ -47,11 +47,11 @@
           </div>
         </div>
       </div>
-// 
+
       <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="cencel()">Cencel</button>
       </div>
-//
+
       <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
