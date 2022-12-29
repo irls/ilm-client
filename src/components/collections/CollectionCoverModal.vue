@@ -23,17 +23,16 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-              <div class="col-sm-8">
+              <div class="col-sm-6">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  <input v-model='write' class="reset-input" type="text" v-reset-input>
                 </div>
-                <div>
+                <span>
                 <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i>
                 </button>
-                </div>
+                </span>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
