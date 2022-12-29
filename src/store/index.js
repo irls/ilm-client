@@ -7,7 +7,7 @@ import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
 import { Collection } from './collection'
-import { SuspiciousWordsHighlight } from './suspiciousWordsHighlight';
+import suspiciousWordsHighlight from './suspiciousWordsHighlight';
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -262,8 +262,8 @@ export const store = new Vuex.Store({
     watched:{
       'metaV':null
     },
-    suspiciousWordsHighlight: new SuspiciousWordsHighlight(),
     setSelectedBlocksAsyncResult : [],
+    suspiciousWordsHighlight: suspiciousWordsHighlight,
     blockAudiosrcConfig: {
       
     },
@@ -360,7 +360,12 @@ export const store = new Vuex.Store({
     tc_tasksByBlock: state => state.tc_tasksByBlock,
     tc_userTasks: state => state.tc_userTasks,
     audiobookWatch: state => state.audiobookWatch,
-    allowCollectionsEdit: state => state.isAdmin || state.isLibrarian,
+    allowCollectionsEdit: state => {
+      if (state.currentCollection.isInTheQueueOfPublication) {
+        return false;
+      }
+      return state.isAdmin || state.isLibrarian
+    },
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     currentCollectionId: state => state.currentCollectionId,
@@ -635,6 +640,34 @@ export const store = new Vuex.Store({
     },
     playingBlock: state => {
       return state.playingBlock;
+    },
+    bookMetaById: state => (bookId) => {
+      if (!state.books_meta) {
+        return null;
+      }
+      return state.books_meta.find(meta => meta.bookid == bookId);
+    },
+
+    isBookWasPublishedInCollection: state => (payload) => {
+      //console.log(`isBookWasPublishedInCollection: `, payload.bookId, payload.currCollId);
+      const {bookId, currCollId = false} = payload;
+      const prevCollection = state.bookCollectionsAll.find(collection => {
+        const { pubBooksEntities = [] } = collection;
+        if (pubBooksEntities.length == 0) return false;
+        return pubBooksEntities.find((pubBook)=>{
+          return pubBook.bookId === bookId
+        });
+      });
+      //console.log(`prevCollection: `, prevCollection);
+      if (prevCollection) {
+        if (currCollId && currCollId === prevCollection._id) {
+          return false;
+        }
+        const res = prevCollection.pubBooksEntities.find((book)=>book.bookId===bookId);
+        res.title = prevCollection.title;
+        res._id = prevCollection._id;
+        return res;
+      } else return false;
     }
   },
 
@@ -950,20 +983,22 @@ export const store = new Vuex.Store({
       state.bookCollections.forEach((c, idx) => {
         let pages = 0;
         let books = [];
-        c.bookids.forEach(b => {
-          let book = booksList.find(_b => _b.bookid === b);
-          if (book) {
-            pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
-            if (book.importStatus == 'staging' && book.blocksCount <= 2){
-              if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-                book.importStatus = 'staging_empty'
-              } else if (!book.publishLog.updateTime){
-                book.importStatus = 'staging_empty'
+        if (c.bookids && Array.isArray(c.bookids)) {
+          c.bookids.forEach(b => {
+            let book = booksList.find(_b => _b.bookid === b);
+            if (book) {
+              pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
+              if (book.importStatus == 'staging' && book.blocksCount <= 2){
+                if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
+                  book.importStatus = 'staging_empty'
+                } else if (!book.publishLog.updateTime){
+                  book.importStatus = 'staging_empty'
+                }
               }
+              books.push(book);
             }
-            books.push(book);
-          }
-        });
+          });
+        }
 
         c.pages = pages;
         if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
@@ -1336,6 +1371,13 @@ export const store = new Vuex.Store({
         state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
       }
       let blockStore = state.storeList.get(data.block.blockid);
+      if (blockStore && data.block) {
+        if (blockStore.updated > data.block.updated) {
+          ['pause_after'].forEach(field => {// do not update these fields, maybe just return from update
+            data.block[field] = blockStore[field];
+          });
+        }
+      }
       if (data.block.blockid
         && state.audioTasksQueue.block.blockId
         && state.audioTasksQueue.block.blockId === data.block.blockid
@@ -1422,7 +1464,7 @@ export const store = new Vuex.Store({
     set_user(state, user) {
       state.user = user;
     },
-    
+
     set_blockAudiosrcConfig(state, audiosrc_config) {
       state.blockAudiosrcConfig = audiosrc_config;
     },
@@ -1610,22 +1652,23 @@ export const store = new Vuex.Store({
         //commit('set_localDB', { dbProp: 'metaDB', dbName: 'metaDB' });
         //commit('set_localDB', { dbProp: 'contentDB', dbName: 'contentDB' });
         //commit('set_localDB', { dbProp: 'tasksDB', dbName: 'tasksDB' });
-        commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
+        //commit('set_localDB', { dbProp: 'librariesDB', dbName: 'librariesDB' });
 
         //commit('set_remoteDB', { dbProp: 'metaRemoteDB', dbName: ILM_CONTENT_META });
         //commit('set_remoteDB', { dbProp: 'contentRemoteDB', dbName: ILM_CONTENT });
         //commit('set_remoteDB', { dbProp: 'filesRemoteDB', dbName: ILM_CONTENT_FILES });
         //commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
-        commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
+        //commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
 
-        state.librariesDB.replicate.from(state.librariesRemoteDB)
-          .on('complete', () => {
-            dispatch('updateLibrariesList');
-            state.librariesDB.sync(state.librariesRemoteDB, {live: true, retry: true})
-              .on('change', () => {
-                dispatch('updateLibrariesList');
-            });
-          });
+        // state.librariesDB.replicate.from(state.librariesRemoteDB)
+        //   .on('complete', () => {
+        //     dispatch('updateLibrariesList');
+        //     state.librariesDB.sync(state.librariesRemoteDB, {live: true, retry: true})
+        //       .on('change', () => {
+        //         dispatch('updateLibrariesList');
+        //     });
+        //   });
+
         axios.get(state.API_URL + 'me')
           .then(response => {
             if (response) {
@@ -1647,102 +1690,105 @@ export const store = new Vuex.Store({
           })
           .catch(err => console.log(err));
 
-
-//          state.librariesDB.replicate.from(state.librariesRemoteDB, {
-//          /*filter: '_view',
-//          view: 'filters_byLibrarian/byLibrarian',
-//          query_params: {
-//            key: "librarian2"
-//          }*/
-//          filter: 'filters_byLibrarian/byLibrarian',
-//          query_params: {
-//            user_id: "librarian2"
-//          }
-//        })
-//          .on('complete', () => {
-//            dispatch('updateLibrariesList');
-//
-//            setInterval(function() {
-//              state.librariesDB.replicate.from(state.librariesRemoteDB, {
-//              filter: 'filters_byLibrarian/byLibrarian',
-//              query_params: {
-//                user_id: "librarian2"
-//              }})
-//              .on('complete', () => {
-//                console.log('COMPLETE');
-//                dispatch('updateLibrariesList');
-//              })
-//              .on('change', (changes) => {
-//                console.log(changes);
-//                dispatch('updateLibrariesList');
-//              });
-//            }, 10000);
-//            /*state.librariesDB.sync(state.librariesRemoteDB, {
-//              live: true,
-//              retry: true,
-//              filter: 'filters_byLibrarian/byLibrarian',
-//          query_params: {
-//            user_id: "librarian2"
-//          }
-//            })
-//            .on('change', (change) => {
-//              console.log(change);
-//              dispatch('updateLibrariesList');
-//            });*/
-//          });
-
-          dispatch('getTaskTypes')
-            .then(() => {
-              dispatch('tc_loadBookTask', 'all');
-            });
-          dispatch('getConfig', 'custom')
+        dispatch('getTaskTypes')
+          .then(() => {
+            dispatch('tc_loadBookTask', 'all');
+          });
+          
+        dispatch('getConfig', 'custom')
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
               commit('set_couplet_separator', config.couplet_separator);
               commit('set_blockAudiosrcConfig', config.block_audiosrc_config);
             })
-          dispatch('getBookCategories');
-          dispatch('getCollections');
-          dispatch('getAlignBlocksLimit');
-          state.liveDB.startWatch('collection', 'collection', {}, (data) => {
-            //console.log(data);
-            if (data.action) {
-              switch (data.action) {
-                case 'change':
-                  if (data.collection) {
-                    let collection = state.bookCollectionsAll.find(c => {
-                      return c.id === data.collection.id;
-                    });
-                    if (collection) {
-                      state.bookCollectionsAll[state.bookCollectionsAll.indexOf(collection)] = data.collection;
-                      commit('PREPARE_BOOK_COLLECTIONS');
-                    }
-                  }
-                  break;
-                case 'create':
-                  if (data.collection && data.collection._id !== state.currentCollectionId) {
-                    dispatch('getCollections');
-                  }
-                  break;
-                case 'delete':
-                  if (data.collection) {
-                    let collection = state.bookCollectionsAll.find(c => {
-                      return c._id === data.collection._id;
-                    });
-                    if (collection) {
-                      if (data.collection._id === state.currentCollectionId) {
-                        commit('SET_CURRENT_COLLECTION', false);
+            
+        dispatch('getBookCategories');
+        dispatch('getCollections');
+        dispatch('getAlignBlocksLimit');
+        
+        state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
+          //console.log(`liveDB.startWatch.collection.data: `, data);
+          if (data.action) {
+            switch (data.action) {
+              case 'change':
+                if (data.collection) {
+                  //console.log(`state.bookCollectionsAll: `, state.bookCollectionsAll.map((c)=>({id: c.id, ver: c.version})));
+                  const cIdx = state.bookCollectionsAll.findIndex(c => {
+                    return c.id === data.collection.id;
+                  });
+                  if (cIdx > -1) {
+                    const collection = state.bookCollectionsAll[cIdx];
+                    if (collection.version < data.collection.version) {
+                      console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version, /*collection*/);
+                      if (collection.validationErrors
+                        && collection.validationErrors.slug
+                        && data.collection.slug.trim().length) {
+                        delete collection.validationErrors.slug;
                       }
-                      state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(collection), 1);
+                      state.bookCollectionsAll[cIdx] = {...collection, ...data.collection};
                       commit('PREPARE_BOOK_COLLECTIONS');
                     }
                   }
-                  break;
-              }
+                }
+                break;
+              case 'create':
+                if (data.collection && data.collection._id !== state.currentCollectionId) {
+                  dispatch('getCollections');
+                }
+                break;
+              case 'delete':
+                if (data.collection) {
+                  let collection = state.bookCollectionsAll.find(c => {
+                    return c._id === data.collection._id;
+                  });
+                  if (collection) {
+                    if (data.collection._id === state.currentCollectionId) {
+                      commit('SET_CURRENT_COLLECTION', false);
+                    }
+                    state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(collection), 1);
+                    commit('PREPARE_BOOK_COLLECTIONS');
+                  }
+                }
+                break;
             }
+          }
+        });
+
+        console.log(`liveDB.startWatch.pubMetaV: `);
+        state.liveDB.startWatch('pubMetaV', 'pubMetaV', {bookid: 'pubMetaV'}, (data) => {
+          console.log(`liveDB.startWatch.pubMetaV.data: `, data);
+          const cIdx = state.bookCollectionsAll.findIndex(c => {
+            return c.id === data.meta.collection;
           });
-      dispatch('getSuspiciousWordsCharacters');
-      dispatch('getAudioFadeConfig');
+
+          if (cIdx > -1) {
+            const bIdx = state.books_meta.findIndex(c => {
+              return c.bookid === data.meta.bookid;
+            });
+            if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
+              console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
+              state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
+              state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
+              state.books_meta[bIdx].published = data.meta.published;
+              state.books_meta[bIdx].publishedVersion = data.meta.publishedVersion;
+              state.books_meta[bIdx].version = data.meta.version;
+              state.books_meta[bIdx].publishLog = data.meta.publishLog;
+              commit('PREPARE_BOOK_COLLECTIONS');
+            }
+            // const collection = state.bookCollectionsAll[cIdx];
+            // if (collection.version < data.collection.version) {
+            //   console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version);
+            //   state.bookCollectionsAll[cIdx] = data.collection;
+            //   commit('PREPARE_BOOK_COLLECTIONS');
+            // }
+
+          }
+       });
+       
+       dispatch('getSuspiciousWordsCharacters');
+       dispatch('getAudioFadeConfig');
+       dispatch('updateBooksList');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -1780,6 +1826,7 @@ export const store = new Vuex.Store({
       state.liveDB.stopWatch('job');
       state.liveDB.stopWatch('blockV');
       state.liveDB.stopWatch('collection');
+      state.liveDB.stopWatch('pubMetaV');
     },
     // logout event
     disconnectDB ({ state, commit }) {
@@ -1949,22 +1996,24 @@ export const store = new Vuex.Store({
 
           state.watched['metaV'] = book_id;
 
+          console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
+            console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+              // console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
+                commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
+                let allowPublish = state.adminOrLibrarian;
+                commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+                let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+                commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+                if (data.meta.hasOwnProperty('coverimgURL')) {
+                  commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
+                }
+                dispatch('getCurrentJobInfo');
               }
-              commit('SET_CURRENTBOOK_META', data.meta)
-              let allowPublish = state.adminOrLibrarian;
-              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
-              let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
-              commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
-              if (data.meta.hasOwnProperty('coverimgURL')) {
-                commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: data.meta.coverimgURL});
-              }
-              dispatch('getCurrentJobInfo');
             }
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
@@ -2170,7 +2219,8 @@ export const store = new Vuex.Store({
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
             if (state.currentBookMeta.collection_id && state.currentCollection) {
-              state.currentCollection.updateBook(response.data);
+              //state.currentCollection.updateBook(response.data);
+              commit('PREPARE_BOOK_COLLECTIONS');
             }
 
             return Promise.resolve(response.data);
@@ -4287,16 +4337,25 @@ export const store = new Vuex.Store({
           return Promise.resolve(response);
         })
     },
-    generateCompleteAudio({state, commit}) {
+    generateCompleteAudio({state, commit}, blockcount) {
       if (state.currentBookMeta.bookid) {
         state.currentBookMeta.complete_audio_time = -1;
         let selection = {};
         if (state.blockSelection.start._id) {
           selection.start = state.blockSelection.start._id;
+        } else {
+          selection.start = state.storeList.entries().next().value[0]
         }
         if (state.blockSelection.end._id) {
           selection.end = state.blockSelection.end._id;
+        } else {
+          let countUntilLastBlock = 0;
+          for (const element of state.storeList.entries()) {
+            if(countUntilLastBlock == state.storeList.size - 1 ){selection.end = element[0]}
+            countUntilLastBlock++;
+          }
         }
+        selection.lastBuildBlocksCount = blockcount ? blockcount : 0;
         return axios.post(`${state.API_URL}books/complete_audio/${state.currentBookMeta.bookid}`, {
           selection: selection,
           format: 'm4a'
@@ -4756,7 +4815,7 @@ export const store = new Vuex.Store({
             if (Array.isArray(response.data)) {
               response.data.forEach(b => {
                 let block = state.storeList.get(b.blockid);
-                if (block) {
+                if (block && block.updated < b.updated) {
                   block.setUpdated(b.updated);
                   block.setPauseAfter(b.pause_after);
                   block.status.marked = b.status.marked;
@@ -4897,7 +4956,10 @@ export const store = new Vuex.Store({
 
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
-        return axios.get(`${state.API_URL}toc_section/book/${bookid ? bookid : state.currentBookid}/all`)
+        const reqBookid = bookid ? bookid : state.currentBookid;
+        console.log(`loadBookTocSections.reqBookid: `, reqBookid);
+        if (!reqBookid) return Promise.resolve({});
+        return axios.get(`${state.API_URL}toc_section/book/${reqBookid}/all`)
           .then(data => {
             //console.log(data);
             commit('set_book_toc_sections', data.data.sections);
@@ -5034,6 +5096,9 @@ export const store = new Vuex.Store({
             }).forEach(k => {
               state.currentCollection[k] = data[k];
             });
+            if (response.data.hasOwnProperty('version')) {
+              state.currentCollection.version = response.data.version;
+            }
             if (response.data.hasOwnProperty('slug')) {
               state.currentCollection['slug'] = response.data.slug;
             }
@@ -5054,11 +5119,11 @@ export const store = new Vuex.Store({
       }
       return axios.delete(`${state.API_URL}collection/${state.currentCollection._id}`)
         .then((response) => {
-          let c = state.bookCollectionsAll.find(_c => {
+          let c = state.bookCollectionsAll.findIndex(_c => {
             return _c.id === state.currentCollection.id;
           });
           if (c) {
-            state.bookCollectionsAll.splice(state.bookCollectionsAll.indexOf(c), 1);
+            state.bookCollectionsAll[c] = response.data;
             commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve(response);
@@ -5263,7 +5328,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    findNextAudioblock({state}, [blockid]) {
+    findNextAudioblock({state}, [blockid, audioOnly = false]) {
       let crossId = state.storeListO.getOutId(blockid);
       if (crossId) {
         for (let idx = 0; idx < state.storeList.size; idx++) {
@@ -5272,7 +5337,7 @@ export const store = new Vuex.Store({
             let hasPart = block.voicework === 'narration' && block.parts.length > 0 ? block.parts.find(p => {
               return p.audiosrc;
             }) : false;
-            if ((block.audiosrc || hasPart || block.type === 'hr') && !block.disabled) {
+            if ((block.audiosrc || hasPart || (block.type === 'hr' && !audioOnly)) && !block.disabled) {
               return Promise.resolve(block);
             }
             crossId = state.storeListO.getOutId(block.blockid);

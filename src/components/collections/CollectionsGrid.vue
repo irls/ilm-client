@@ -10,7 +10,9 @@
       :filter-key="''">
     </Grid> -->
     <div v-for="collection in collectionsPage" class="collection-container">
-      <div class="collection-title" :class="['collection-row', {'selected': currentCollection._id == collection._id}]" v-on:click="rowClick(collection, $event)">
+      <div v-on:click="rowClick(collection, $event)"
+        :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
+        :data-id="collection._id">
         <span slot="header" class="collection-title" @click.prevent.self>
           <i class="fa fa-book"></i>&nbsp;
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
@@ -107,60 +109,36 @@
           return collection.book_match || collection.bookids.indexOf(this.currentBookMeta.bookid) !== -1;
         },
         moveBook(collection, data) {
-          if (this.allowCollectionsEdit &&
-                  typeof data.from !== 'undefined' &&
-                  typeof data.to !== 'undefined' &&
-                  data.from != data.to) {
-
-
-            var dbPath = superlogin.getDbUrl('ilm_collections');
-            var db = new PouchDB(dbPath);
-            return db.get(collection._id)
-              .then(c => {
-                if (c.books[data.to] && c.books[data.from]) {
-                  let new_books = [];
-                  c.books.forEach((b, i) => {
-                    if (i == data.to) {
-                      if (data.to < data.from) {
-                        new_books.push(c.books[data.from]);
-                        new_books.push(b);
-                      } else {
-                        new_books.push(b);
-                        new_books.push(c.books[data.from]);
-                      }
-                    } else if (i != data.from) {
-                      new_books.push(b);
-                    }
-                  });
-                  c.books = new_books;
-                  db.put(c)
-                    .then(doc => {
-                    }).catch(err => {
-                      console.log(err);
-                    });
-                }
-              })
-              .catch(err => {});
+          if (this.allowCollectionsEdit
+            && typeof data.from !== 'undefined'
+            && typeof data.to !== 'undefined'
+            && data.from != data.to) {
           }
         },
         ...mapActions(['updateBooksList'])
       },
       mounted() {
-        this.updateBooksList();
-        if (this.$route && this.$route.params && this.$route.params.bookid) {
-          let hasBook = this.selectedBooks.findIndex(b => {
-            return b.bookid === this.$route.params.bookid;
-          });
-          if (hasBook === -1) {
-            let book = this.allBooks.find(b => {
-              return b.bookid === this.$route.params.bookid;
-            });
-            if (book) {
-              this.selectBook(book);
-              this.scrollToRow(book.bookid);
+        this.updateBooksList()
+        .then(()=>{
+          if (this.$route && this.$route.params) {
+            if (this.$route.params.bookid) {
+              let hasBook = this.selectedBooks.findIndex(b => {
+                return b.bookid === this.$route.params.bookid;
+              });
+              if (hasBook === -1) {
+                let book = this.allBooks.find(b => {
+                  return b.bookid === this.$route.params.bookid;
+                });
+                if (book) {
+                  this.selectBook(book);
+                  this.scrollToRow(book.bookid);
+                }
+              }
+            } else if (this.$route.params.collectionid) {
+              this.scrollToRow(this.$route.params.collectionid);
             }
           }
-        }
+        })
       },
       computed: {
         ...mapGetters([

@@ -1039,62 +1039,7 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
-              this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
-              this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-              this.freeze('joinBlocks');
-              if ((elBlock && elBlock.getIsAudioEditing()) ||
-                      (elNext && elNext.getIsAudioEditing())) {
-                this.$root.$emit('for-audioeditor:force-close');
-              }
-              if (elBlock) {
-                elBlock.isAudioChanged = false;
-              }
-              //elBlock.evFromAudioeditorClosed(block.blockid);
-              if (elNext) {
-                elNext.isAudioChanged = false;
-              }
-              //elNext.evFromAudioeditorClosed(blockBefore.blockid);
-              if (!elNext) {
-                this.scrollToBlock(blockBefore.blockid);
-              }
-              return this.blocksJoin({
-                resultBlock_id: blockBefore.blockid,
-                donorBlock_id: block.blockid
-              })
-              .then((response)=>{
-                this.clearBlockLock({block: blockBefore, force: true});
-                this.getDisabledBlocks();
-
-                if (response.data.ok && response.data.blocks) {
-                  if (response.data.blocks.updatedBlock) {
-                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-                  }
-                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
-                  }
-                }
-
-                this.putNumBlockOBatchProxy({bookId: block.bookid})
-                  .then(() => {
-                    if (['header', 'title'].indexOf(block.type) !== -1) {
-                      this.loadBookToc({bookId: block.bookid, isWait: true})
-                    }
-                  });
-                this.refreshTmpl();
-                this.unfreeze('joinBlocks');
-                this.getCurrentJobInfo();
-                this.$store.dispatch('set_selected_blocks');
-                Vue.nextTick(() => {
-                  elNext.highlightSuspiciousWords();
-                });
-                return Promise.resolve();
-              })
-              .catch((err)=>{
-                this.refreshTmpl();
-                this.clearBlockLock({block: blockBefore, force: true});
-                this.unfreeze('joinBlocks');
-                return Promise.reject(err);
-              })
+              this.sureToJoinBlocks('previous',elBlock, elNext, block, blockBefore);
             }
           })
         } break;
@@ -1149,72 +1094,164 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
-              this.freeze('joinBlocks');
-              this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-              this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
-              if ((elBlock && elBlock.getIsAudioEditing()) ||
-                      (elNext && elNext.getIsAudioEditing())) {
-                this.$root.$emit('for-audioeditor:force-close');
-              }
-              if (elBlock) {
-                elBlock.isAudioChanged = false;
-              }
-              //elBlock.evFromAudioeditorClosed(block.blockid);
-              if (elNext) {
-                elNext.isAudioChanged = false;
-              }
-              //elNext.evFromAudioeditorClosed(blockAfter.blockid);
-              return this.blocksJoin({
-                resultBlock_id: block.blockid,
-                donorBlock_id: blockAfter.blockid
-              })
-              .then((response)=>{
-                this.clearBlockLock({block: block, force: true});
-                this.getDisabledBlocks();
-
-                if (response.data.ok && response.data.blocks) {
-                  if (response.data.blocks.updatedBlock) {
-                    this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-                  }
-                  if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-                    this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
-                  }
-                }
-
-                this.putNumBlockOBatchProxy({bookId: block.bookid})
-                  .then(() => {
-                    if (['header', 'title'].indexOf(block.type) !== -1) {
-                      this.loadBookToc({bookId: block.bookid, isWait: true});
-                    }
-                  });
-                //this.refreshTmpl();
-                this.unfreeze('joinBlocks');
-                this.getCurrentJobInfo();
-                this.$store.dispatch('set_selected_blocks');
-                return Promise.resolve();
-              })
-              .catch((err)=>{
-                this.refreshTmpl();
-                this.clearBlockLock({block: block, force: true});
-                this.unfreeze('joinBlocks');
-                return Promise.reject(err);
-              })
+              this.sureToJoinBlocks('next',elBlock, elNext, block, blockAfter);
             }
            })
         } break;
       };
     },
 
-    unableJoinMessage() {
+    continueToJoinWithPrevious(elBlock, elNext, block, blockBefore) {
+      this.$root.$emit("hide-modal");//close modal window about confirm to join of blocks
+      this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
+      this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+      this.freeze('joinBlocks');
+      if ((elBlock && elBlock.getIsAudioEditing()) ||
+        (elNext && elNext.getIsAudioEditing())) {
+        this.$root.$emit('for-audioeditor:force-close');
+      }
+      if (elBlock) {
+        elBlock.isAudioChanged = false;
+      }
+      //elBlock.evFromAudioeditorClosed(block.blockid);
+      if (elNext) {
+        elNext.isAudioChanged = false;
+      }
+      //elNext.evFromAudioeditorClosed(blockBefore.blockid);
+      if (!elNext) {
+        this.scrollToBlock(blockBefore.blockid);
+      }
+      return this.blocksJoin({
+        resultBlock_id: blockBefore.blockid,
+        donorBlock_id: block.blockid
+      })
+        .then((response)=>{
+          this.clearBlockLock({block: blockBefore, force: true});
+          this.getDisabledBlocks();
+
+          if (response.data.ok && response.data.blocks) {
+            if (response.data.blocks.updatedBlock) {
+              this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+            }
+            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+            }
+          }
+
+          this.putNumBlockOBatchProxy({bookId: block.bookid})
+            .then(() => {
+              if (['header', 'title'].indexOf(block.type) !== -1) {
+                this.loadBookToc({bookId: block.bookid, isWait: true})
+              }
+            });
+          this.refreshTmpl();
+          this.unfreeze('joinBlocks');
+          this.getCurrentJobInfo();
+          this.$store.dispatch('set_selected_blocks');
+          Vue.nextTick(() => {
+            elNext.highlightSuspiciousWords();
+          });
+          return Promise.resolve();
+        })
+        .catch((err)=>{
+          this.refreshTmpl();
+          this.clearBlockLock({block: blockBefore, force: true});
+          this.unfreeze('joinBlocks');
+          return Promise.reject(err);
+        })
+
+    },
+    continueToJoinWithNext(elBlock, elNext, block, blockAfter ){
+      this.$root.$emit("hide-modal");//close modal window about confirm to join of blocks
+      this.freeze('joinBlocks');
+      this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+      this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
+      if ((elBlock && elBlock.getIsAudioEditing()) ||
+        (elNext && elNext.getIsAudioEditing())) {
+        this.$root.$emit('for-audioeditor:force-close');
+      }
+      if (elBlock) {
+        elBlock.isAudioChanged = false;
+      }
+      //elBlock.evFromAudioeditorClosed(block.blockid);
+      if (elNext) {
+        elNext.isAudioChanged = false;
+      }
+      //elNext.evFromAudioeditorClosed(blockAfter.blockid);
+      return this.blocksJoin({
+        resultBlock_id: block.blockid,
+        donorBlock_id: blockAfter.blockid
+      })
+        .then((response)=>{
+          this.clearBlockLock({block: block, force: true});
+          this.getDisabledBlocks();
+
+          if (response.data.ok && response.data.blocks) {
+            if (response.data.blocks.updatedBlock) {
+              this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+            }
+            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
+            }
+          }
+
+          this.putNumBlockOBatchProxy({bookId: block.bookid})
+            .then(() => {
+              if (['header', 'title'].indexOf(block.type) !== -1) {
+                this.loadBookToc({bookId: block.bookid, isWait: true});
+              }
+            });
+          //this.refreshTmpl();
+          this.unfreeze('joinBlocks');
+          this.getCurrentJobInfo();
+          this.$store.dispatch('set_selected_blocks');
+          return Promise.resolve();
+        })
+        .catch((err)=>{
+          this.refreshTmpl();
+          this.clearBlockLock({block: block, force: true});
+          this.unfreeze('joinBlocks');
+          return Promise.reject(err);
+        })
+    },
+
+    sureToJoinBlocks(direction, elBlock, elNext, blockFirst, blockSecond ) {
+      let thisVueComponent = this //needed to save reference to variable in async function
       this.$root.$emit('show-modal', {
-        title: 'Blocks with different types can\'t be joined',
-        text: '',
+        title: 'Join blocks',
+        text: 'Task Assignments and Styles for the lower block will be discarded.<br> Join blocks?',
         buttons: [
           {
-            title: 'Close',
+            title: 'Cancel',
             handler: () => {
               this.$root.$emit('hide-modal');
             },
+            class: ['btn btn-default']
+          },
+          {
+            title: 'Join',
+            handler: () => {
+              if(direction === 'previous')  thisVueComponent.continueToJoinWithPrevious(elBlock, elNext, blockFirst, blockSecond);
+              else thisVueComponent.continueToJoinWithNext(elBlock, elNext, blockFirst, blockSecond);
+            },
+            'class': 'btn btn-primary'
+          }
+        ],
+        class: ['sureJoin', 'align-modal']
+      });
+    },
+
+    unableJoinMessage() {
+      this.$root.$emit('show-modal', {
+        title: 'Different Type',
+        text: 'Blocks with different types can\'t be joined',
+        buttons: [
+          {
+            title: 'Ok',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+            'class': 'btn btn-primary'
           }
         ],
         class: ['align-modal']
@@ -1223,15 +1260,16 @@ export default {
 
     unableToJoinVoiceworkMessage() {
       this.$root.$emit('show-modal', {
-        title: 'Blocks with different voicework type can’t be joined.',
-        text: '',
+        title: 'Different Voicework',
+        text: 'Blocks with different voicework types can\'t be joined',
         buttons: [
           {
-            title: 'Close',
+            title: 'Ok',
             handler: () => {
               this.$root.$emit('hide-modal');
             },
-          }
+            'class': 'btn btn-primary'
+          },
         ],
         class: ['align-modal']
       });
@@ -1257,7 +1295,6 @@ export default {
     async setRangeSelection(block, type, status, shift = false) {
       //console.log('setRangeSelection', block, type, status, shift);
       let newSelection = Object.assign({}, this.blockSelection);
-// debugger;
       switch (type) {
         case 'start':
           if (status) {
@@ -2204,10 +2241,15 @@ export default {
       playNextBlock(blockid) {
         let currentBlock = this.parlist.get(blockid);
         let pauseAfter = this.playPause(blockid, currentBlock.pause_after);
-        this.findNextAudioblock([blockid])
-          .then(block => {
+        Promise.all([this.findNextAudioblock([blockid]), this.findNextAudioblock([blockid, true])])
+          .then(prepare => {
             //console.log(block);
+            let [block, audioBlock] = prepare;
             if (block) {
+              if (block.type === 'hr' && !audioBlock) {
+                this.stopPlayingBlock(blockid);
+                return;
+              }
               return pauseAfter
                 .then(() => {
                   if (this.checkPlayingBlock(blockid)) {
@@ -2702,6 +2744,9 @@ export default {
 }
 </script>
 <style lang="less">
+  .sureJoin {
+    width: 450px !important;
+  }
   #narrateStartCountdown {
       display: none;
       position: fixed;

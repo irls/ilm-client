@@ -4,7 +4,7 @@
       Define block range
     </div>
     <div v-else>
-      {{selectedBlocks.length}}&nbsp;block(s) in range 
+      {{selectedBlocks.length}}&nbsp;block(s) in range
       <a v-on:click="goToBlock(blockSelection.start._id)" class="go-to-block">{{blockSelection.start._id_short}}</a>
       &nbsp;-&nbsp;
       <a v-on:click="goToBlock(blockSelection.end._id)" class="go-to-block">{{blockSelection.end._id_short}}</a>
@@ -77,7 +77,7 @@
     /* width: 100%; */
     margin: 0px -10px 0px -10px;
     padding: 0px 10px 10px 10px;
-    
+
     .red-message {
       color: red;
     }
