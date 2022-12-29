@@ -23,17 +23,16 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-              <div class="col-sm-7">
+              <div class="col-sm-8">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
-
-                <div class="col-sm-1">
+                <div>
                 <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i>
                 </button>
-              </div>
+                </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
@@ -50,11 +49,9 @@
 
       <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="cencel()">Cencel</button>
-      </div>
-
-      <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
+
     </modal>
   </div>
 </template>
