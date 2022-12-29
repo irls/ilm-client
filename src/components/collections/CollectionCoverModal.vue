@@ -24,10 +24,10 @@
               </div>
 
               <div class="col-sm-6">
-                <div class="input-group">
+                <span class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                </div>
+                </span>
                 <span>
                 <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i>
