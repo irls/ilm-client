@@ -19,21 +19,21 @@
           <div class="row">
             <div class="col-md-12">
 
-              <div>
-                <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
-                  <i class="fa fa-trash-o" aria-hidden="true"></i>
-                </button>
-              </div>
-
               <div class="col-sm-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-              <div class="col-sm-8">
+              <div class="col-sm-6">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
+
+                <div class="col-sm-2">
+                <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
+                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                </button>
+              </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
