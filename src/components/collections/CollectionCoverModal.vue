@@ -18,7 +18,13 @@
         <div id="upload_pane" class="tab-pane fade in">
           <div class="row">
             <div class="col-md-12">
-
+//
+              <div>
+                <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
+                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                </button>
+              </div>
+//
               <div class="col-sm-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
@@ -26,7 +32,7 @@
               <div class="col-sm-8">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -41,6 +47,11 @@
           </div>
         </div>
       </div>
+// 
+      <div class="modal-footer">
+        <button class="btn btn-primary" v-on:click="cencel()">Cencel</button>
+      </div>
+//
       <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
@@ -89,7 +100,16 @@
           }
           this.createImage(files[0]);
         },
-
+/*
+        resetInput () {
+         // this.$refs.form.reset()
+          this.$refs["form"].value = "";
+        },
+*/
+        resetInput () {
+          this.uploadURL = "";
+        },
+        
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -114,6 +134,12 @@
               this.close();
             });
         },
+//
+        cencel() {
+          this.$emit('closed');
+          this.$modal.hide('import-collection-cover')
+        },
+//
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
