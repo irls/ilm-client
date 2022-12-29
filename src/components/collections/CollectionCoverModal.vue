@@ -27,10 +27,8 @@
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  <div>
                   <button class="input-group-addon" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i> </button>
-              </div>
               </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -182,6 +180,7 @@
     }
     .input-group {
       display: flex;
+      margin: 1px 3px;
     }
   }
 </style>
