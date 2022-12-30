@@ -276,7 +276,8 @@ export const store = new Vuex.Store({
       blockid: null,
       partIdx: null,
       playingPauseAfter: false
-    }
+    },
+    pauseAfterBlockXhr: null
   },
 
   getters: {
@@ -668,6 +669,9 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
+    },
+    pauseAfterBlockUpdate: state => {
+      return state.pauseAfterBlockXhr !== null;
     }
   },
 
@@ -4804,6 +4808,8 @@ export const store = new Vuex.Store({
     },
     setPauseAfter({state}, [blockType, value]) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        let xhrId = `${Date.now()}-${value}`;
+        state.pauseAfterBlockXhr = xhrId;
         return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_after`, {
           range: {start_id: state.blockSelection.start._id,
           end_id: state.blockSelection.end._id},
@@ -4812,6 +4818,9 @@ export const store = new Vuex.Store({
           mode: state.bookMode
         })
           .then((response) => {
+            if (state.pauseAfterBlockXhr !== xhrId) {
+              return Promise.resolve(false);
+            }
             if (Array.isArray(response.data)) {
               response.data.forEach(b => {
                 let block = state.storeList.get(b.blockid);
@@ -4822,10 +4831,14 @@ export const store = new Vuex.Store({
                 }
               });
             }
-            return Promise.resolve();
+            state.pauseAfterBlockXhr = null;
+            return Promise.resolve(true);
           })
           .catch(err => {
-
+            if (state.pauseAfterBlockXhr === xhrId) {
+              state.pauseAfterBlockXhr = null;
+            }
+            return Promise.reject(err);
           });
       }
     },

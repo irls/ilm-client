@@ -127,8 +127,11 @@
                 setTimeout(() => {
                   if (this.lastIncrement === val) {
                     this.$emit('setPauseAfter', this.blockType, val);
+                    setTimeout(() => {// avoid updates from live_db
+                      this.lastIncrement = null;
+                    }, 300);
                   }
-                }, 200);
+                }, 500);
               });
             }
             //}
@@ -144,6 +147,9 @@
         }
       },
       recalcPauseAfterRange(reset_pause = false) {
+        if (this.pauseAfterBlockUpdate) {
+          return false;
+        }
         let range = [];
         let selectedProps = this.styleProps.get(this.blockType);
         if (selectedProps) {
@@ -504,7 +510,8 @@
         storeList: 'storeList',
         storeListO: 'storeListO',
         bookMode: 'bookMode',
-        selectedBlocks: 'filteredSelectedBlocks'
+        selectedBlocks: 'filteredSelectedBlocks',
+        pauseAfterBlockUpdate: 'pauseAfterBlockUpdate'
       })
     },
     watch: {
@@ -539,9 +546,18 @@
           }
         }
       },
+      'blockSelection.refresh': {
+        handler() {
+          Vue.nextTick(() => {
+            if (this.lastIncrement === null) {
+              this.recalcPauseAfterRange(true);
+            }
+          });
+        }
+      },
       'styleProps': {
         handler() {
-          this.recalcPauseAfterRange(true);
+          //this.recalcPauseAfterRange(true);
           //this.pauseUpdateEmitted = false;
           //this.resetPause();
         },
