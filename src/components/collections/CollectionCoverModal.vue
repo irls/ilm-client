@@ -28,7 +28,7 @@
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  <button @click="resetInput"><i class="fa fa-trash-o"></i></button>
+                  <v-btn @click="resetInput"><i class="fa fa-trash-o"></i></v-btn>
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
