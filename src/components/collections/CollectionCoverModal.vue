@@ -28,8 +28,8 @@
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  <button class="output-group-addon" data-dismiss="modal" aria-label="Reset" @click="resetInput">
-                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                  <button class="output-group-addon" @click="resetInput">
+                  <i class="fa fa-trash-o"></i>
                 </button>
                 </div>
 
