@@ -182,7 +182,7 @@
       display: block !important;
     }
     .input-group {
-      display: inline-flex;
+      display: flex;
     }
   }
 </style>
