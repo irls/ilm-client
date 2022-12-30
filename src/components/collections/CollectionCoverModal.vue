@@ -24,13 +24,24 @@
               </div>
 
               <div class="col-sm-8">
+
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Upload</span>
+                  </div>
+                  <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="inputGroupFile01">
+                    <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                  </div>
+                </div>
+<!--
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                   <button class="input-group-addon" data-dismiss="modal" aria-label="Reset" @click="resetInput">
                   <i class="fa fa-trash-o" aria-hidden="true"></i> </button>
               </div>
-
+-->
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
                 <label class='btn btn-default' type="file">
@@ -45,7 +56,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-primary" v-on:click="cencel()">Cencel</button>
+        <button class="btn" v-on:click="cencel()">Cencel</button>
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
 
