@@ -23,7 +23,7 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-            <div class="col-sm-10">
+            <div class="col-sm-8">
 
               <div class="group">
 
@@ -188,7 +188,7 @@
       display: flex;
     }
     .input-group {
-      padding-right: 5px;
+      margin-right: auto;
     }
   }
 </style>
