@@ -29,7 +29,7 @@
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
-                <div>
+                <div class="deletebtn">
                   <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
                 </div>
               </div>
@@ -181,8 +181,11 @@
     .tab-pane {
       display: block !important;
     }
-    //.group {
-    //  display: flex;
-   // }
+    .group {
+      display: flex;
+    }
+    .deletebtn {
+      padding-left: 15px;
+    }
   }
 </style>
