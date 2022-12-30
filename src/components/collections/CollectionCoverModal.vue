@@ -24,15 +24,18 @@
               </div>
 
             <div class="col-sm-8">
+
               <div class="group">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
-                <div class="deletebtn">
+
+
                   <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+
                 </div>
-              </div>
+
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
                 <label class='btn btn-default' type="file">
@@ -184,8 +187,8 @@
     .group {
       display: flex;
     }
-    .deletebtn {
-      padding-left: 15px;
+    .input-group {
+      padding-right: 10px;
     }
   }
 </style>
