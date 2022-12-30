@@ -19,11 +19,11 @@
           <div class="row">
             <div class="col-md-12">
 
-              <div class="col-sm-4">
+              <div class="col-md-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-            <div class="col-sm-8">
+            <div class="col-md-8">
 
               <div class="group">
 
@@ -187,9 +187,10 @@
     .group {
       display: flex;
 
+
     }
     .input-group {
-      margin-block: auto;
+      margin-right: auto;
     }
   }
 </style>
