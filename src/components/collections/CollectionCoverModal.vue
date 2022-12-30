@@ -184,10 +184,12 @@
     .tab-pane {
       display: block !important;
     }
-
-    .input-group {
+    .group {
       display: flex;
-      margin-right: auto;
+
+    }
+    .input-group {
+      margin: auto;
     }
   }
 </style>
