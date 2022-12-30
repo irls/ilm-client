@@ -23,6 +23,7 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
+            <div class="col-sm-8">
               <div class="col-sm-6">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
@@ -38,12 +39,12 @@
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
-              <div class="col-sm-8">
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
                 </label>
-              </div>
+              
+            </div>
 
             </div>
           </div>
