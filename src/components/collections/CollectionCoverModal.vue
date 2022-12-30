@@ -189,7 +189,8 @@
 
     }
     .input-group {
-      margin: auto;
+      margin-right: auto;
+      padding: auto;
     }
   }
 </style>
