@@ -25,17 +25,15 @@
 
             <div class="col-sm-8">
 
-              
+              <div class="group">
 
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  <div class="forbtn">
-                    <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
-                  </div>
                 </div>
 
-                  
+                  <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -45,7 +43,7 @@
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
                 </label>
               
-           
+            </div>
 
             </div>
           </div>
@@ -186,12 +184,12 @@
     .tab-pane {
       display: block !important;
     }
-    .input-group {
+    .group {
       display: flex;
-    }
-    .forbtn {
-      margin-left: auto;
 
+    }
+    .input-group {
+      margin-right: auto;
     }
   }
 </style>
