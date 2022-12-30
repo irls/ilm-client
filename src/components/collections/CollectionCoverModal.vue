@@ -181,8 +181,8 @@
     .tab-pane {
       display: block !important;
     }
-    .group {
-      display: flex;
-    }
+    //.group {
+    //  display: flex;
+   // }
   }
 </style>
