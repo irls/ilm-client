@@ -189,7 +189,7 @@
 
     }
     .input-group {
-      margin-right: auto;
+      margin-right: 5px;
     }
   }
 </style>
