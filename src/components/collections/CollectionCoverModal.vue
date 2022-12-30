@@ -179,5 +179,8 @@
     .tab-pane {
       display: block !important;
     }
+    .input-group {
+      display: flex;
+    }
   }
 </style>
