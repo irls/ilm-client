@@ -26,8 +26,10 @@
             <div class="col-sm-8">
               
                 <div class="input-group">
+                  <div>
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  </div>
                   <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
                 </div>
 
@@ -181,8 +183,6 @@
     }
     .input-group {
       display: inline-flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
     }
   }
 </style>
