@@ -19,11 +19,11 @@
           <div class="row">
             <div class="col-md-12">
 
-              <div class="col-sm-6">
+              <div class="col-sm-5">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-            <div class="col-sm-6">
+            <div class="col-sm-7">
 
               <div class="group">
 
