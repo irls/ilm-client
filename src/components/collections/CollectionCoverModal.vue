@@ -23,17 +23,22 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-              <div class="col-sm-8">
+              <div class="col-sm-6">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  
-                  <span class="output-group-addon" aria-label="Reset" @click="resetInput">
-                  <i class="fa fa-trash-o" aria-hidden="true"></i> </span>>
+                </div>
+              </div>
+
+              <div class="col-sm-2">                
+                <button class="reset" data-dismiss="modal" aria-label="Reset" @click="resetInput">
+                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                </button>
               </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
+              <div class="col-sm-8">
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
