@@ -23,14 +23,14 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-            <div class="col-sm-8">
+            <div class="col-sm-10">
 
               <div class="group">
+
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
-
 
                   <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
 
@@ -188,7 +188,7 @@
       display: flex;
     }
     .input-group {
-      padding-right: 10px;
+      padding-right: 5px;
     }
   }
 </style>
