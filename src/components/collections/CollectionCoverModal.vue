@@ -186,7 +186,7 @@
     }
     .input-group {
       display: flex;
-      margin: 1px 3px;
+
     }
   }
 </style>
