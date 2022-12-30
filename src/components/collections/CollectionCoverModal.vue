@@ -180,7 +180,9 @@
       display: block !important;
     }
     .input-group {
-      display: flex;
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
     }
   }
 </style>
