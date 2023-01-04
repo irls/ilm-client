@@ -517,7 +517,8 @@
                       :blockType="blockType"
                       :styleValue="styleValue"
                       :styleProps="pausesAfterProps"
-                      @setPauseAfter="selectPauseAfter"></pause-after-block>
+                      @setPauseAfter="selectPauseAfter"
+                      ref="pauseAfterControl"></pause-after-block>
                   </fieldset>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
@@ -1899,21 +1900,26 @@ export default {
       }
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          /*let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
           idsArrayRange.forEach((blockRid)=>{
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock && oBlock.type === blockType) {
               let pBlock = this.storeList.get(oBlock.blockid);
               pBlock.pause_after = styleVal;
             }
-          })
+          })*/
           this.updateBookVersion({major: true});
         }
         return this.setPauseAfter([blockType, styleVal])
-          .then(() => {
-            this.tc_loadBookTask(this.currentBookMeta._id);
-            this.getCurrentJobInfo();
-            this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+          .then((update) => {
+            if (update) {
+              this.tc_loadBookTask(this.currentBookMeta._id);
+              this.getCurrentJobInfo();
+              this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+              Vue.nextTick(() => {
+                this.$refs.pauseAfterControl[0].recalcPauseAfterRange(true);
+              });
+            }
           });
       }
     },
