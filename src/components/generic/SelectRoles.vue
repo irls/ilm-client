@@ -85,6 +85,10 @@ export default {
         /*height: auto;*/
         left: 490px;
         top: -13px;
+        max-width: 300px;
+        input.form-control {
+          width: 200px !important;
+        }
       }
       &.open {
         .dropdown-toggle {
@@ -103,7 +107,7 @@ export default {
       }
     }
     .dropdown-toggle {
-      max-width: 312px;
+      max-width: 455px;
     }
   }
 </style>

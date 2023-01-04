@@ -4,7 +4,7 @@
     <section class="modal-js-dialog">
     <div class="modal-header">
       <button type="button" class="close" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
-      <h4 class="modal-title"><i class="fa fa-user"></i>Add User</h4><i class="fa fa-user user-icon"></i>
+      <h4 class="modal-title">Add User</h4><i class="fa fa-user user-icon"></i>
     </div>
     <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
@@ -174,6 +174,7 @@ export default {
         display: inline-block
         font-size: 18px
         margin-top: 17px
+        margin-left: 10px
         color: #00d1ff
         text-align: left
         float: left
@@ -220,7 +221,7 @@ export default {
           color: #333
           margin: 0 10px
         .form-control
-          min-width: 455px
+          width: 455px
           .btn-content
             margin: 2px 0
     .modal-footer
@@ -260,7 +261,7 @@ input {
     right: 0;
     height: 32px;
     line-height: 32px;
-    width: 50px;
+    width: 55px;
     text-align right;
     color: #99999b;
   }
