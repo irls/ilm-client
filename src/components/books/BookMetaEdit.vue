@@ -27,7 +27,7 @@
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
-            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
+            <textarea v-model='jobDescription' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000" class="jobinfo-description"></textarea>
           </fieldset>
           <fieldset class='hashtags' :disabled="!adminOrLibrarian">
             <legend>Project tags</legend>
@@ -732,6 +732,7 @@ export default {
         5: 'hr'
       },
       activeStyleTab: '',
+      jobDescription: ''
     }
   },
 
@@ -1007,6 +1008,7 @@ export default {
         }
       }
     }
+    this.jobDescription = this.currentJobInfo.description;
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1143,6 +1145,13 @@ export default {
         if (this.blockSelection.start._id && this.blockSelection.end._id) {
           //this.$refs.blockTypesTabs.render();
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+        }
+      }
+    },
+    'currentJobInfo.description': {
+      handler(val) {
+        if (!document.activeElement || !document.activeElement.classList.contains('jobinfo-description')) {
+          this.jobDescription = this.currentJobInfo.description;
         }
       }
     }
