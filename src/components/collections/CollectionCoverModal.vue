@@ -29,7 +29,7 @@
 
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input ref="form" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
 
                   <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
@@ -51,7 +51,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn" v-on:click="cencel()">Cencel</button>
+        <button class="btn" v-on:click="cancel()">Cancel</button>
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
 
@@ -135,7 +135,7 @@
             });
         },
 //
-        cencel() {
+        cancel() {
           this.$emit('closed');
           this.$modal.hide('import-collection-cover')
         },
