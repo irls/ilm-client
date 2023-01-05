@@ -85,7 +85,13 @@
         this.generateCompleteAudio([this.blocksCountForExport])
       },
       getIdShort (nameBlock) {
-          return nameBlock.split('-')[1];
+        const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
+        let _id_short = blockIdRgx.exec(nameBlock);
+        _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : nameBlock;
+        if (_id_short.length > 7) {
+          _id_short = _id_short.substr(0, 4) + '...' + _id_short.substr(_id_short.length - 4, 4);
+        }
+        return _id_short;
       },
     },
   }
