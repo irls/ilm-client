@@ -42,7 +42,7 @@
           <!-- <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link> -->
           <!-- <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link> -->
 
-          <li class="welcomeName">Welcome, {{$store.state.user.name}}!</li>
+          <li class="welcomeName">Welcome, {{ $store.state.user.name != undefined && $store.state.user.name != "" ? $store.state.user.name : $store.state.name }}!</li>
           <li v-if="$store.state.isLoggedIn" class="presentation"><a href="#" v-on:click.stop.prevent="$store.state.auth.logout()">Logout</a></li>
       </ul>
     </td></tr>
