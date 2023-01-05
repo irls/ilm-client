@@ -9,20 +9,20 @@
     <div class="modal-body">
       <div v-if="error" class="error-message" v-text="error"></div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
-        <div class="wrapper">
+        <div class="user-modal-wrapper">
           <input type="text" :class="['form-control', {'-has-error': errors.username}]" :maxlength="30" placeholder="Username" v-model="username">
           <span >{{username.length}}/30</span>
         </div>
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
-        <div class="wrapper">
+        <div class="user-modal-wrapper">
            <input type="text" :maxlength="30" placeholder="Real Name" class="form-control" v-model="name">
            <span >{{name.length}}/30</span>
         </div>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-        <div class="wrapper">
+        <div class="user-modal-wrapper">
           <input type="text" :class="['form-control', {'-has-error': errors.email}]" :maxlength="40" placeholder="Email" name="email" v-model="email">
           <span >{{email.length}}/40</span>
         </div>
@@ -239,7 +239,7 @@ input {
     border: 1px solid red;
   }
 }
-.wrapper {
+.user-modal-wrapper {
   width: 455px;
   background #FFFFFF;
   display: flex;
@@ -249,8 +249,8 @@ input {
   position: relative;
   input {
     flex-grow: 1;
-    min-width: 0 !important;
-    width: auto !important;
+    min-width: 0
+    width: auto;
     margin: 0 !important;
     height: 32px;
   }

@@ -12,13 +12,13 @@
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group"><span class="input-group-addon"></span>
-        <div class="wrapper">
+        <div class="user-modal-wrapper">
           <input type="text" class="form-control" :maxlength="30" placeholder="Real Name" v-model="user.name">
           <span>{{user.name ? user.name.length : 0}}/30</span>
         </div>
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
-        <div class="wrapper">
+        <div class="user-modal-wrapper">
           <input type="text" class="form-control" :maxlength="40" placeholder="Email" name="email" v-model="user.email">
           <span>{{user.email ? user.email.length : 0}}/40</span>
         </div>
@@ -136,7 +136,7 @@ export default {
     left: 30% !important;
 
   .modal-js-dialog
-    width: 400px
+    width: 535px
     margin: 10px
 
     .modal-header
@@ -208,7 +208,7 @@ export default {
   margin-left: 12%;
 }
 
-.wrapper {
+.user-modal-wrapper {
   width: 455px;
   background #FFFFFF;
   display: flex;
@@ -218,8 +218,8 @@ export default {
   position: relative;
   input {
     flex-grow: 1;
-    min-width: 0 !important;
-    width: auto !important;
+    min-width: 0
+    width: auto;
     margin: 0 !important;
     height: 32px;
   }
