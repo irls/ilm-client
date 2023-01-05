@@ -23,10 +23,17 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-              <div class="col-sm-8">
+            <div class="col-sm-8">
+
+              <div class="group">
+
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                </div>
+
+                  <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -35,15 +42,19 @@
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
                 </label>
-              </div>
+              
+            </div>
 
             </div>
           </div>
         </div>
       </div>
+
       <div class="modal-footer">
+        <button class="btn" v-on:click="cancel()">Cancel</button>
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
+
     </modal>
   </div>
 </template>
@@ -89,7 +100,16 @@
           }
           this.createImage(files[0]);
         },
-
+/*
+        resetInput () {
+         // this.$refs.form.reset()
+          this.$refs["form"].value = "";
+        },
+*/
+        resetInput () {
+          this.uploadURL = "";
+        },
+        
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -114,6 +134,12 @@
               this.close();
             });
         },
+//
+        cancel() {
+          this.$emit('closed');
+          this.$modal.hide('import-collection-cover')
+        },
+//
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
@@ -157,6 +183,13 @@
     }
     .tab-pane {
       display: block !important;
+    }
+    .group {
+      display: flex;
+
+    }
+    .input-group {
+      margin-right: 5px;
     }
   }
 </style>
