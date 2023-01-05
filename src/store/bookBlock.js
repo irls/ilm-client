@@ -1335,7 +1335,7 @@ const allFootnoteAttributes = ["voicework", "wordsRange", "language", "content",
 
 class FootNote {
   constructor(init) {
-    this.content = init.content || '<p></p>';
+    this.content = init.content || '';
     this.voicework = init.voicework || 'no_audio';
     this.language = init.language || '';
   }
