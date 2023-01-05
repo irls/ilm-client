@@ -746,6 +746,9 @@ export const store = new Vuex.Store({
       // state.currentBook = book
       // state.currentBook_dirty = false
       // state.currentBookMeta_dirty = false
+      if (!meta || (state.currentBookMeta && state.currentBookMeta.bookid !== meta.bookid)) {
+        this.commit('clear_blockSelection');
+      }
       if (meta) {
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
@@ -793,9 +796,6 @@ export const store = new Vuex.Store({
             //state.currentBookMeta[k] = meta[k];
           }
         });*/
-        if (state.currentBookid && state.currentBookid !== meta.bookid) {
-          this.dispatch('setBlockSelection', {start: {}, end: {}});
-        }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -826,7 +826,6 @@ export const store = new Vuex.Store({
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
-        this.dispatch('setBlockSelection', {start: {}, end: {}});
         this.dispatch('stopWatchLiveQueries');
       }
       this.commit('set_currentbook_executors');
@@ -1475,6 +1474,19 @@ export const store = new Vuex.Store({
 
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
+    },
+    
+    clear_blockSelection(state) {
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        let idsArrayRange = state.storeListO.ridsArrayRange(state.blockSelection.start._id, state.blockSelection.end._id);
+        idsArrayRange.forEach((blockRid)=>{
+          let oBlock = state.storeListO.get(blockRid);
+          if (oBlock) {
+            oBlock.checked = false;
+          }
+        });
+        this.dispatch('setBlockSelection', {start: {}, end: {}});
+      }
     }
   },
 
