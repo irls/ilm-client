@@ -84,14 +84,6 @@ export default {
     ...mapGetters(['tc_userTasks','livedbStatus']),
   },
 
-  /*
-  welcomeName: {
-    get () {
-      return this.$store.state.user.name
-
-    },
-  },
-*/
 }
 </script>
 
