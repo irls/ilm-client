@@ -31,6 +31,7 @@ export default {
       options: ROLES,
       selectedValue: [],
       search: ''
+      
     }
   },
 
