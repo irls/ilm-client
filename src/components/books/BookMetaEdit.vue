@@ -197,10 +197,13 @@
                   <td>Translated from</td>
                   <!--<td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td>-->
                   <td>
-                    <select class="form-control" v-model='currentBook.transfrom' v-on:change="updateWithDisabling('transfrom', $event)" :key="currentBookid" :disabled="!allowMetadataEdit">
-                      <option v-if="!languages.hasOwnProperty(currentBook.transfrom)" :value="currentBook.transfrom">{{ currentBook.transfrom }}</option>
-                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
-                    </select>
+                    <div class="trans-from-wrapper">
+                      <select id="select-field" class="form-control" v-model='currentBook.transfrom' v-on:change="updateWithDisabling('transfrom', $event)" :key="currentBookid" :disabled="!allowMetadataEdit">
+                        <option v-if="!languages.hasOwnProperty(currentBook.transfrom)" :value="currentBook.transfrom">{{ currentBook.transfrom }}</option>
+                        <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                      </select>
+                      <i class="pi pi-times" v-if="languages.hasOwnProperty(currentBook.transfrom)" v-on:click="updateWithDisabling('transfrom', '')"></i>
+                    </div>
                   </td>
                 </tr>
 
@@ -2222,6 +2225,14 @@ select.text-danger#categorySelection, input.text-danger{
   color: #000;
   border: 1px solid red!important;
   border-radius: 0px;
+}
+.trans-from-wrapper {
+  height: 31px;
+}
+.trans-from-wrapper i{
+  position: relative;
+  top: -27px;
+  left: -16px;
 }
 .meta-edit-tabs .nav-tabs-navigation {
   /*position: sticky;*/
