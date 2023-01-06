@@ -86,10 +86,10 @@ export default {
 
     welcomeName: {
       get () {
-      return !this.name != undefined && this.name != "" ? this.name : this.username
+      return this.user.name != undefined && this.user.name != "" ? this.user.name : this.user.username
       },
     },
-    ...mapGetters(['name', 'username']),
+    ...mapGetters(['user']),
   }
 }
 
