@@ -199,7 +199,6 @@
                   <td>
                     <div class="trans-from-wrapper">
                       <select id="select-field" class="form-control" v-model='currentBook.transfrom' v-on:change="updateWithDisabling('transfrom', $event)" :key="currentBookid" :disabled="!allowMetadataEdit">
-                        <option v-if="!languages.hasOwnProperty(currentBook.transfrom)" :value="currentBook.transfrom">{{ currentBook.transfrom }}</option>
                         <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                       </select>
                       <i class="pi pi-times" v-if="languages.hasOwnProperty(currentBook.transfrom)" v-on:click="updateWithDisabling('transfrom', '')"></i>
@@ -781,7 +780,6 @@ export default {
       currentBookCollection: 'currentBookCollection',
       alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
-      currentBookCollection: 'currentBookCollection',
       playingBlock: 'playingBlock'
     }),
     proofreadModeReadOnly: {
