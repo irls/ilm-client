@@ -87,7 +87,7 @@ export default {
 
     welcomeName: {
       get () {
-      return this.user.name != undefined && this.user.name != "" ? this.user.name : this.user._id 
+      return this.user.name != undefined && this.user.name != "" ? this.user.name : this.user.user_id 
       },
     },
     ...mapGetters(['user']),
