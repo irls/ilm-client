@@ -285,6 +285,12 @@ export default {
       this.uploadImage = this.img.coverimg || '';
     },
 
+
+    resetInput () {
+          this.uploadURL = "";
+        },
+
+
     onFilesChange (e) {
       this.errorCoverFileType = false
       var files = e.target.files || e.dataTransfer.files
