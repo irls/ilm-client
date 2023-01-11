@@ -15,7 +15,7 @@
           <button :class="['btn btn-danger', {'disabled' : !allowUnpublishCollection}]"
               :disabled="!allowUnpublishCollection"
               v-on:click="remove(true)">
-            <span v-if="hasAnyBooks">Unpublish Collection</span>
+            <span v-if="hasAnyBooks || neverPublished">Unpublish Collection</span>
             <span v-else>Unpublished</span>
           </button>
         </div>
@@ -257,6 +257,9 @@
         }
         return '';
       },
+      neverPublished() {
+        return this.pubVersionDate.length == 0;
+      },
       currVersionDate() {
         if (this.hasReadyBooks) {
           const uDate = new Date();
@@ -277,7 +280,6 @@
       },
       currVersion() {
         if (this.hasReadyBooks) {
-          console.log(`hasReadyOnlyPublished: `, this.hasReadyOnlyPublished);
           const versions = this.pubVersion.split('.');
           if (versions && versions.length == 2) {
             if (this.hasReadyOnlyPublished) {
