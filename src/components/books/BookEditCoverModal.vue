@@ -291,6 +291,7 @@ export default {
         },
 
 
+        
     onFilesChange (e) {
       this.errorCoverFileType = false
       var files = e.target.files || e.dataTransfer.files
