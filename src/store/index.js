@@ -384,6 +384,8 @@ export const store = new Vuex.Store({
     libraries: state => state.libraries,
     currentLibrary: state => state.currentLibrary,
     user: state => state.user,
+   // name: state => state.name,
+    // username: state => state.username,
     currentBookCounters: state => state.currentBookCounters,
     ttsVoices: state => {
       if (!state.currentBookMeta.language || state.currentBookMeta.language === '') return state.ttsVoices;
