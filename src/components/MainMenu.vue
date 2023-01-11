@@ -61,6 +61,7 @@
 </template>
 
 
+
 <script>
 import access from "../mixins/access.js"
 import { mapGetters } from 'vuex'
@@ -86,7 +87,7 @@ export default {
 
     welcomeName: {
       get () {
-      return this.user.name != undefined && this.user.name != "" ? this.user.name : this.user.username
+      return this.user.name != undefined && this.user.name != "" ? this.user.name : this.user._id 
       },
     },
     ...mapGetters(['user']),
