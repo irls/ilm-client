@@ -384,7 +384,7 @@ export default {
     },
 
     resetInput () {
-          this.URL = "";
+          this.uploadImage = "";
         },
 
     captureBookImage () {
