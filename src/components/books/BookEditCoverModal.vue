@@ -111,6 +111,7 @@
 
     <div class="modal-footer">
       <button class="btn" v-on:click="cancel()">Cancel</button>
+      
       <button class="btn btn-primary" type="button" 
         @click="save" 
         :disabled="!saveEnabled">Save</button>
@@ -291,6 +292,7 @@ export default {
         },
 
 
+        
     onFilesChange (e) {
       this.errorCoverFileType = false
       var files = e.target.files || e.dataTransfer.files
