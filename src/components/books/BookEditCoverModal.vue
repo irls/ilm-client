@@ -595,6 +595,10 @@ export default {
     height: 200px;
   }
 
+  .input-group {
+      margin-right: 5px;
+    }
+
 
 
 </style>
