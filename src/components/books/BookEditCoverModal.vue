@@ -595,7 +595,10 @@ export default {
     height: 200px;
   }
 
-  .input-group {
+  .group {
+      display: flex;
+    }
+    .input-group {
       margin-right: 5px;
     }
 
