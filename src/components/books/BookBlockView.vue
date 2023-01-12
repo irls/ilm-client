@@ -4311,6 +4311,15 @@ Save text changes and realign the Block?`,
         }
         this.$forceUpdate();
       },
+      fullRefresh() {
+        if (this.block.getIsSplittedBlock()) {
+          this.$refs.blocks.forEach(blk => {
+            blk.$forceUpdate();
+          });
+        } else {
+          this.$forceUpdate();
+        }
+      },
       getSubblockRef(index = 0) {
         if (Array.isArray(this.$refs.blocks) && this.$refs.blocks.length > 0 && this.$refs.blocks[index]) {
           return this.$refs.blocks[index];
