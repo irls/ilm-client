@@ -35,10 +35,16 @@
               </div>
 
               <div class="col-sm-8">
+                <div class="group">
+
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" v-on:input="onImageChange" />
                 </div>
+
+                <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+
+               </div>
 
                  <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
@@ -101,9 +107,10 @@
          <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
       </div>
 
-    </div> <!-- modal body -->
+    </div> <!--modal body -->
 
     <div class="modal-footer">
+      <button class="btn" v-on:click="cancel()">Cancel</button>
       <button class="btn btn-primary" type="button" 
         @click="save" 
         :disabled="!saveEnabled">Save</button>
@@ -277,6 +284,12 @@ export default {
 
       this.uploadImage = this.img.coverimg || '';
     },
+
+
+    resetInput () {
+          this.uploadURL = "";
+        },
+
 
     onFilesChange (e) {
       this.errorCoverFileType = false
