@@ -287,11 +287,6 @@ export default {
     },
 
 
-    resetInput () {
-          this.uploadURL = "";
-        },
-
-
         
     onFilesChange (e) {
       this.errorCoverFileType = false
@@ -387,6 +382,10 @@ export default {
         this.captureBookImage()
       }
     },
+
+    resetInput () {
+          this.uploadURL = "";
+        },
 
     captureBookImage () {
       var source = document.getElementById('bookCoverPreviewMain')
