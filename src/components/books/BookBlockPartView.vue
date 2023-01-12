@@ -1518,6 +1518,10 @@ export default {
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
+        if (this.isChanged && this.changes.includes('content')) {
+          
+          this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+        }
       },
       discardBlock: function(ev) {
         this.getBlock(this.block.blockid)
