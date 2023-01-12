@@ -42,7 +42,7 @@
                   <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" v-on:input="onImageChange" />
                 </div>
 
-                <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+                <button class="btn btn-default" v-on:click="resetInput"><i class="fa fa-trash-o"></i></button>
 
                </div>
 
@@ -384,7 +384,7 @@ export default {
     },
 
     resetInput () {
-          this.uploadURL = "";
+          this.URL = "";
         },
 
     captureBookImage () {
