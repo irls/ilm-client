@@ -315,9 +315,9 @@ export default {
     },
 
     uploadNewImageData () {
-    //  if (this.isUploading) {
-    //    return;
-    //  }
+      if (this.isUploading) {
+        return;
+      }
       //console.log('bookid:', bookid)
       // the book id is critical for the path
       let formData = new FormData();
@@ -372,6 +372,19 @@ export default {
     },
 
     save() {
+      if (this.uploadNewImageData().then(() => {
+        this.closeWithDelay();
+      }))
+        return
+
+      else {
+        // generate PNG image from preview using something like html2canvas
+        this.captureBookImage()
+      }
+    },
+
+/*
+    save() {
       if (this.uploadMode) { // user uploded or browesed for image
 
         this.uploadNewImageData().then(() => {
@@ -382,7 +395,7 @@ export default {
         this.captureBookImage()
       }
     },
-
+*/
     resetInput () {
           this.uploadImage = "";
         },
