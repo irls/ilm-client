@@ -333,11 +333,11 @@ export default {
         }
       }
 
-      this.isUploading = true;
+ /*     this.isUploading = true;
       this.fileChanged = false;
       this.uploadProgress = 'Uploading file';
       return this.updateBookCover({formData: formData, config: config})
-    /*    .then(doc => {
+        .then(doc => {
           this.isUploading = false;
           this.uploadProgress = '';
           this.uploadFile = null;
@@ -347,8 +347,8 @@ export default {
           this.uploadProgress = '';
           this.uploadFile = null;
           return Promise.resolve();
-        })
-      */  },
+      })
+    */        },
 
     uploadNewImageURL (url) {
       // console.log('loading url: ', url)
