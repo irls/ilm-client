@@ -315,9 +315,9 @@ export default {
     },
 
     uploadNewImageData () {
-      if (this.isUploading) {
-        return;
-      }
+    //  if (this.isUploading) {
+    //    return;
+    //  }
       //console.log('bookid:', bookid)
       // the book id is critical for the path
       let formData = new FormData();
@@ -600,7 +600,4 @@ export default {
     .input-group {
       margin-right: 5px;
     }
-
-
-
 </style>
