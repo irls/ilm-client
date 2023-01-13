@@ -237,7 +237,7 @@ export default {
   },
 
   activated () {
-    //  this.uploadImage = this.img.coverimg
+      this.uploadImage = this.img.coverimg
   },
 
   mounted () {
@@ -333,7 +333,7 @@ export default {
         }
       }
 
- /*     this.isUploading = true;
+      this.isUploading = true;
       this.fileChanged = false;
       this.uploadProgress = 'Uploading file';
       return this.updateBookCover({formData: formData, config: config})
@@ -347,8 +347,8 @@ export default {
           this.uploadProgress = '';
           this.uploadFile = null;
           return Promise.resolve();
-      })
-    */        },
+        })
+    },
 
     uploadNewImageURL (url) {
       // console.log('loading url: ', url)
@@ -383,19 +383,6 @@ export default {
       }
     },
 
-/*
-    save() {
-      if (this.uploadMode) { // user uploded or browesed for image
-
-        this.uploadNewImageData().then(() => {
-          this.closeWithDelay();
-        });
-      } else {
-        // generate PNG image from preview using something like html2canvas
-        this.captureBookImage()
-      }
-    },
-*/
     resetInput () {
           this.uploadImage = "";
         },
