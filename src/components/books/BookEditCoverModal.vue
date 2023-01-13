@@ -449,12 +449,12 @@ export default {
   },
   computed: {
     ...mapGetters(['currentBookMeta']),
-   // saveEnabled: {
-   //   get() {
-   //     return !this.isUploading && this.fileChanged;
-  //    },
-  //    cache: false
-  //  }
+    saveEnabled: {
+      get() {
+        return !this.isUploading && this.fileChanged;
+      },
+      cache: false
+    }
   }
 
 }
