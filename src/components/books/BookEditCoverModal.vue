@@ -337,7 +337,7 @@ export default {
       this.fileChanged = false;
       this.uploadProgress = 'Uploading file';
       return this.updateBookCover({formData: formData, config: config})
-        .then(doc => {
+    /*    .then(doc => {
           this.isUploading = false;
           this.uploadProgress = '';
           this.uploadFile = null;
@@ -348,7 +348,7 @@ export default {
           this.uploadFile = null;
           return Promise.resolve();
         })
-    },
+      */  },
 
     uploadNewImageURL (url) {
       // console.log('loading url: ', url)
@@ -372,12 +372,12 @@ export default {
     },
 
     save() {
-      if (this.uploadNewImageData().then(() => {
-        this.closeWithDelay();
-      }))
-        return
+      if (this.uploadMode) { // user uploded or browesed for image
 
-      else {
+        this.uploadNewImageData().then(() => {
+          this.closeWithDelay();
+        });
+      } else {
         // generate PNG image from preview using something like html2canvas
         this.captureBookImage()
       }
