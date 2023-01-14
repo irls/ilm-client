@@ -1477,7 +1477,7 @@ export const store = new Vuex.Store({
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
     },
-    
+
     clear_blockSelection(state) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
         let idsArrayRange = state.storeListO.ridsArrayRange(state.blockSelection.start._id, state.blockSelection.end._id);
@@ -1722,7 +1722,7 @@ export const store = new Vuex.Store({
         dispatch('getBookCategories');
         dispatch('getCollections');
         dispatch('getAlignBlocksLimit');
-        
+
         state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
           //console.log(`liveDB.startWatch.collection.data: `, data);
           if (data.action) {
@@ -4936,7 +4936,7 @@ export const store = new Vuex.Store({
           return Promise.resolve(response);
         })
         .catch(err => {
-          alert('An error occurred while voiceworks were in progress. ' + err );
+          alert('An error occurred while voiceworks were in progress. ');
           return Promise.reject(err);
         });
     },
