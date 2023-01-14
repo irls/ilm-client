@@ -4931,6 +4931,11 @@ export const store = new Vuex.Store({
                 }
               //}
             }
+
+            if (response && response.data && response.data.message) {
+              alert(response.data.message);
+            }
+
           }
           state.currentBookCounters.voiceworks_for_remove = 0;
           return Promise.resolve(response);
