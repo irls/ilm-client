@@ -4847,6 +4847,7 @@ export const store = new Vuex.Store({
           return Promise.resolve(response);
         })
         .catch(err => {
+          alert('An error occurred while voiceworks were in progress. ' + err );
           return Promise.reject(err);
         });
     },
