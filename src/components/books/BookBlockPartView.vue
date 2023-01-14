@@ -1518,6 +1518,10 @@ export default {
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
+        if (this.isChanged && this.changes.includes('content')) {
+          
+          this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+        }
       },
       discardBlock: function(ev) {
         this.getBlock(this.block.blockid)
@@ -2700,7 +2704,7 @@ export default {
             },
             on_pause: ()=>{
                 this.isAudPaused = true;
-                this.pausePlayingBlock();
+                this.pausePlayingBlock(this.block.blockid, this.blockPartIdx);
             },
             on_resume: ()=>{
                 this.isAudPaused = false;
@@ -2714,6 +2718,9 @@ export default {
                 this.audCleanClasses(this.block._id, {});
                 this.$root.$off('from-audioeditor:play', this.onAudPlay);
                 this.stopPlayingBlock(this.block.blockid);
+                if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[this.blockPartIdx + 1] && this.block.parts[this.blockPartIdx + 1].audiosrc) {
+                  this.playSubblockPause(this.block.blockid);
+                }
                 if (!this.isAudPartStarted) {
                   this.$emit('partAudioComplete', this.blockPartIdx);
                 }
@@ -4197,6 +4204,14 @@ Join subblocks?`,
             document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
             document.body.addEventListener('keydown', this.handleAudioControl);
             document.body.addEventListener('click', this.clickAwayFromAudioControl);
+          }
+        }
+      },
+      'isAudPaused': {
+        handler(val) {
+          if (!val && this.isAudStarted) {
+            document.body.removeEventListener('keydown', this.handleAudioControl);
+            document.body.addEventListener('keydown', this.handleAudioControl);
           }
         }
       },

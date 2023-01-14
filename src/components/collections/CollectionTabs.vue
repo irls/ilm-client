@@ -1,6 +1,6 @@
 <template>
   <vue-tabs ref="collectiontabs" class="meta-edit-tabs" @tab-change="onTabChange">
-    <vue-tab title="Manage collection" id="manageCollection">
+    <vue-tab title="Manage Collection" id="manageCollection">
       <ManageCollection @collectionRemoved="$emit('collectionRemoved')" v-if="tabIndex === 0"></ManageCollection>
     </vue-tab>
     <vue-tab title="Meta" id="collectionMeta">
@@ -34,5 +34,5 @@
   }
 </script>
 <style>
-  
+
 </style>

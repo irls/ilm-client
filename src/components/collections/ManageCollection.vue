@@ -1,20 +1,22 @@
 <template>
-  <div>
+  <div class="collection-meta-wrap">
     <div class="collection-meta col-sm-12">
       <div class="c-info-block">
         <h5 class="c-title">{{currentCollection.title}}</h5>
         {{collectionBooksLength}} books
       </div>
-      <div v-if="allowCollectionsEdit" class="c-action-block">
-
+      <div class="c-action-block">
         <div class="c-action-button">
-          <button class="btn btn-primary" v-on:click="linkBookModal = true"><!--btn-default-->
-            <i class="fa fa-plus"></i>&nbsp;Add to collection
+          <button :disabled="!allowCollectionsEdit" class="btn btn-primary" v-on:click="linkBookModal = true"><!--btn-default-->
+            <i class="fa fa-plus"></i>&nbsp;Add to Collection
           </button>
         </div>
         <div class="c-action-button">
-          <button class="btn btn-danger" v-on:click="remove(true)">
-            Remove collection
+          <button :class="['btn btn-danger', {'disabled' : !allowUnpublishCollection}]"
+              :disabled="!allowUnpublishCollection"
+              v-on:click="remove(true)">
+            <span v-if="hasAnyBooks || neverPublished">Unpublish Collection</span>
+            <span v-else>Unpublished</span>
           </button>
         </div>
 
@@ -23,7 +25,7 @@
         @close_modal="linkBookModal = false"
         :languages="languages"></linkBook>
 
-        <fieldset>
+        <fieldset class="ready-books-list">
           <legend>Ready for publication</legend>
           <Grid id="books-in-collection"
             ref="books_in_collection"
@@ -39,11 +41,18 @@
 
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
-          <p>Published: Ver. {{pubVersionDate}}</p>
-          <p>Unpublished: {{currVersionDate}}</p>
-          <p>{{currentCollection.id}} - {{currentCollection.isInTheQueueOfPublication}}</p>
+          <p v-if="pubVersion && pubVersion.length && pubVersionDate && pubVersionDate.length">
+            <span v-if="hasAnyBooks">Published: </span>
+            <span v-else>Unpublished updates: </span>
+            <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
+          </p>
+          <p v-if="!currentCollection.isPublished || hasReadyBooks">
+            <span>Unpublished: </span>
+            <b>Ver. {{currVersion}}</b> <i class="p-margin-left">{{currVersionDate}}</i>
+          </p>
+
           <span v-if="currentCollection.isInTheQueueOfPublication" class="align-preloader -small"></span>
-          <button v-else class="btn btn-primary" @click="publish">Publish</button>
+          <button v-else :disabled="isPubDisabled" class="btn btn-primary" @click="publish">Publish</button> <span style="color: white">{{currentCollection.id}} - Q: {{currentCollection.isInTheQueueOfPublication}} - P: {{currentCollection.isPublished}}</span>
         </fieldset>
 
     </div>
@@ -51,11 +60,11 @@
 </template>
 <script>
   import {mapActions, mapGetters} from 'vuex';
-  import LinkBook from './LinkBook';
+  import LinkBook      from './LinkBook';
   import { Languages } from "../../mixins/lang_config.js";
-  import Grid from '../generic/Grid';
-  import api_config     from '../../mixins/api_config.js';
-  import axios from 'axios';
+  import api_config    from '../../mixins/api_config.js';
+  import Grid          from '../generic/Grid';
+  import axios         from 'axios';
 
   export default {
     name: 'ManageCollection',
@@ -66,15 +75,15 @@
         headers: [
           {title: 'Ready', path: 'ready', addClass: 'book-status',
             html (val) {
-              switch(val) {
+              switch(val.status) {
                 case 'done' : {
-                  return `<i class='fa fa-check' style="color: darkseagreen;"></i>`;
+                  return `<i class='fa fa-check' data-tooltip="Ready for publication" style="color: darkseagreen;"></i>`;
                 } break;
                 case 'error' : {
-                  return `<i class='fa fa-warning' style="color: rgb(217 83 79);"></i>`;
+                  return `<i class='fa fa-warning' data-tooltip="${val.tooltip}" style="color: rgb(217 83 79);"></i>`;
                 } break;
                 case 'process' : {
-                  return `<i class='fa fa-spinner fa-spin'></i>`;
+                  return `<i class='fa fa-spinner fa-spin' data-tooltip="Publishing..."></i>`;
                 } break;
                 default : {
                   return ``;
@@ -86,7 +95,9 @@
           {title: 'Version', path: 'ver', addClass: 'book-version'},
         ],
         selectedBooks: [],
-        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        pubStatusErrors : ['error','failed','not found'],
+        isShowTime: true
       }
     },
     components: {
@@ -94,10 +105,13 @@
     },
     mixins: [api_config],
     computed: {
-      ...mapGetters(['currentCollection', 'allowCollectionsEdit']),
+      ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'bookMetaById']),
 
       languages() {
         return Languages;
+      },
+      hasAnyBooks() {
+        return this.collectionBooksLength > 0 || this.collectionPubBooksLength > 0;
       },
       collectionBooksLength() {
         if (this.currentCollection.books instanceof Object) {
@@ -105,18 +119,85 @@
         }
         return 0;
       },
-      booksGrid() {
+      collectionPubBooksLength() {
+        const { pubBooksEntities = [] } = this.currentCollection;
+        return pubBooksEntities.length;
+      },
+      readyBooks() {
+        let books = [];
         if (this.currentCollection.books instanceof Object) {
-          const res = this.currentCollection.books_list.map((book)=>{
-            //console.log(`book.publicationStatus: `, book.publicationStatus);
-            //console.log(`(book.isIntheProcessOfPublication || book.isInTheQueueOfPublication): `, (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication));
+          books = this.currentCollection.books_list
+          .filter((book)=>{
+            return (book.isIntheProcessOfPublication
+                 || book.isInTheQueueOfPublication
+            );
+          })
+        }
+        return books;
+      },
+      deletedBooks() {
+        const { pubBooksEntities = [] } = this.currentCollection;
+        let deletedBooks = [];
+        if (pubBooksEntities.length) {
+          pubBooksEntities.forEach((pBook)=>{
+            if (this.currentCollection.bookids.indexOf(pBook.bookId) < 0) {
+              const bookMeta = this.bookMetaById(pBook.bookId);
+              if (bookMeta) {
+                deletedBooks.push( pBook.bookId)
+              }
+            }
+          })
+        }
+        return deletedBooks;
+      },
+      hasReadyBooks() {
+        const books = this.readyBooks;
+        const deletedBooks = this.deletedBooks;
+        return [...books, ...deletedBooks].length > 0;
+      },
+      hasReadyOnlyPublished() {
+        const books = this.readyBooks;
+        const deletedBooks = this.deletedBooks;
+        if (deletedBooks.length) return false;
+        if (books.length) {
+          const { pubBooksEntities = [] } = this.currentCollection;
+          const readyBooks = books.map((pBook)=>pBook.bookid);
+          const pubBooks = pubBooksEntities.map((pBook)=>pBook.bookId);
+          return readyBooks.every((bookId)=>(pubBooks.indexOf(bookId) >= 0))
+        }
+        return false;
+      },
+      isPubDisabled() {
+      //console.log(`isPubDisabled: `, this.currentCollection.isPublished, this.hasReadyBooks, this.collectionBooksLength, this.collectionPubBooksLength);
+        if (this.currentCollection.isPublished && (!this.hasReadyBooks && this.collectionBooksLength)) return true;
+        if (this.hasReadyBooks && this.collectionBooksLength) return false;
+        if (this.collectionBooksLength == 0) return true;
+        if (this.collectionPubBooksLength == 0) return true;
+        return false;
+      },
+      booksGrid() {
+        let books = [];
+        const { pubBooksEntities = [] } = this.currentCollection;
+        if (this.currentCollection.books instanceof Object) {
+          books = this.currentCollection.books_list
+          .filter((book)=>{
+            return (book.isIntheProcessOfPublication
+                 || book.isInTheQueueOfPublication
+                 || (book.publicationStatus && this.pubStatusErrors.some((err)=>book.publicationStatus.toLowerCase().includes(err)))
+                 || (book.version && book.version !== book.publishedVersion)
+                 || book.version === ''
+            );
+          })
+          .map((book)=>{
             let publicationStatus = 'none';
-            if (book.isIntheProcessOfPublication || book.isInTheQueueOfPublication) {
+            if (book.isInTheQueueOfPublication) {
+              publicationStatus = 'done';
+            } else if (book.isIntheProcessOfPublication) {
               publicationStatus = 'process';
             } else {
               switch(book.publicationStatus) {
                 case 'done' : {
-                  publicationStatus = 'done';
+                  //publicationStatus = 'done';
                 } break;
                 case '' : {
                   publicationStatus = 'none';
@@ -126,41 +207,114 @@
                 } break;
               };
             }
+            let version = 'v. '+ (book.version || '1.0');
+            if (pubBooksEntities.length == 0 || !pubBooksEntities.find((pBook)=>pBook.bookId == book.bookid)) {
+              version = 'New';
+            }
+
             return {
               bookid: book.bookid,
-              ready: publicationStatus,
+              ready: {
+                status: publicationStatus,
+                tooltip: book.publicationStatus
+              },
               title: book.title,
-              ver: book.pub_ver
+              ver: version
             }
           });
-          //console.log(`booksGrid: `, res);
-          return res;
+          //console.log(`booksGrid: `, books);
         }
-        return [];
+
+        //-- Search for published but removed books -- { --//
+        let deletedBooks = [];
+        if (pubBooksEntities.length) {
+          pubBooksEntities.forEach((pBook)=>{
+            if (this.currentCollection.bookids.indexOf(pBook.bookId) < 0) {
+              const bookMeta = this.bookMetaById(pBook.bookId);
+              if (bookMeta) {
+                deletedBooks.push({
+                  bookid: pBook.bookId,
+                  ready: {
+                    status: 'done',
+                    tooltip: ''
+                  },
+                  title: bookMeta.title,
+                  ver: 'Removed'
+                })
+              }
+            }
+          })
+        }
+        //console.log(`deletedBooks = : `, deletedBooks);
+        //-- } -- end -- Search for published but removed books --//
+        return [...deletedBooks, ...books];
       },
       pubVersionDate() {
         //DD Mon YYYY
         if (this.currentCollection.pubVersionDate) {
           const uDate = new Date(this.currentCollection.pubVersionDate);
-          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
+          return this.formatDate(uDate);
         }
         return '';
+      },
+      neverPublished() {
+        return this.pubVersionDate.length == 0;
       },
       currVersionDate() {
+        if (this.hasReadyBooks) {
+          const uDate = new Date();
+          return this.formatDate(uDate);
+        }
         if (this.currentCollection.currVersionDate) {
           const uDate = new Date(this.currentCollection.currVersionDate);
-          return ' ' + uDate.getDate() + ' ' + this.txt_months[uDate.getMonth()] + ' ' + uDate.getFullYear();
+          return this.formatDate(uDate);
         }
         return '';
       },
+      pubVersion() {
+        //DD Mon YYYY
+        if (this.currentCollection.pubVersion && this.currentCollection.pubVersion.length) {
+          return this.currentCollection.pubVersion;
+        }
+        return '';
+      },
+      currVersion() {
+        if (this.hasReadyBooks) {
+          const versions = this.pubVersion.split('.');
+          if (versions && versions.length == 2) {
+            if (this.hasReadyOnlyPublished) {
+              versions[0] = parseInt(versions[0]);
+              versions[1] = (parseInt(versions[1]) + 1);
+            } else {
+              versions[0] = (parseInt(versions[0]) + 1);
+              versions[1] = 0;
+            }
+            return versions[0] + '.' + versions[1];
+          }
+        }
+        if (this.currentCollection.currVersion && this.currentCollection.currVersion.length) {
+          return this.currentCollection.currVersion;
+        }
+        return '1.0';
+      },
+      allowUnpublishCollection: {
+        get() {
+          if (this.pubVersionDate.length == 0) return false;
+          return this.allowCollectionsEdit
+              && (this.collectionBooksLength || this.collectionPubBooksLength);
+        },
+        cache: false
+      }
     },
     methods: {
+      formatDate(date) {
+        return date.getDate() + ' ' + this.txt_months[date.getMonth()] + ' ' + date.getFullYear() + (this.isShowTime ? ` ${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}:${('0'+date.getSeconds()).slice(-2)}` : '');
+      },
       remove(showMessage = false) {
         if (showMessage) {
-          let booksLength = this.collectionBooksLength;
           this.$root.$emit('show-modal', {
-            title: '',
-            text: `Remove ${this.currentCollection.title} Collection${booksLength ? ' and unlink ' + booksLength + ' Books' : ''}?`,
+            title: 'Unpublish Collection',
+            text: `Unpublish ${this.currentCollection.title} Collection and unlink ${this.collectionBooksLength} Books?`,
             buttons: [
               {
                 title: 'Cancel',
@@ -170,7 +324,7 @@
                 class: ['btn btn-default']
               },
               {
-                title: 'Remove',
+                title: 'Unpublish',
                 handler: () => {
                   this.$root.$emit('hide-modal');
                   this.remove(false);
@@ -194,19 +348,136 @@
         }
       },
       publish() {
-        return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
-        .then(resp => {
-          if (resp.status == 200 && resp.data.ok) {
-            this.currentCollection.isInTheQueueOfPublication = true;
-          }
-        });
+        const checkResult = this.checkMandatoryFields();
+        if (true === checkResult) {
+          this.showPublishConfirmPopup(()=>{
+            // TODO move into store action
+            return axios.post(this.API_URL + 'collection/' + encodeURIComponent(this.currentCollection.id) + '/publish')
+            .then(resp => {
+              if (resp.status == 200 && resp.data.ok) {
+                this.currentCollection.isInTheQueueOfPublication = true;
+              }
+            });
+          })
+        } else {
+          this.showPublishFailPopup(checkResult);
+        }
+        return true;
+
+      },
+      checkMandatoryFields() {
+        if (!this.currentCollection) return false;
+        //console.log(`publish.checkMandatoryFields.currentCollection: `, this.currentCollection);
+
+        this.currentCollection.validationErrors = {};
+        const defaultMessage = 'Define ';
+        const defaultCategory = ['story', 'Stories']; // means there is no category assigned
+        let mandatoryFields = [];
+
+        //-- Check mandatory fields -- { --//
+        if (!this.currentCollection.title
+          || this.currentCollection.title.trim().length == 0)
+        {
+          mandatoryFields.push('Title');
+          this.currentCollection.validationErrors.title = defaultMessage + 'Title';
+        }
+        if (this.currentCollection.language !== 'en'
+          && (!this.currentCollection.title_en
+             || this.currentCollection.title_en.trim().length == 0))
+        {
+          mandatoryFields.push('Title EN (title English translation)');
+          this.currentCollection.validationErrors.title_en = defaultMessage + 'Title EN';
+        }
+        if (this.currentCollection.language !== 'en'
+          && (!this.currentCollection.author_en
+             || this.currentCollection.author_en.trim().length == 0))
+        {
+          mandatoryFields.push('Author EN (author English translation)');
+          this.currentCollection.validationErrors.author_en = defaultMessage + 'Author EN';
+        }
+        if (!this.currentCollection.slug
+          || this.currentCollection.slug.trim().length == 0)
+        {
+          mandatoryFields.push('URL slug');
+          this.currentCollection.validationErrors.slug = defaultMessage + 'URL slug';
+        }
+        if (!this.currentCollection.category
+          || this.currentCollection.category.trim().length == 0
+          || defaultCategory.includes(this.currentCollection.category))
+        {
+          mandatoryFields.push('Category');
+          this.currentCollection.validationErrors.category = defaultMessage + 'Category';
+        }
+        if (!this.currentCollection.difficulty
+          || this.currentCollection.difficulty.toString().trim().length == 0)
+        {
+          mandatoryFields.push('Difficulty');
+          this.currentCollection.validationErrors.difficulty = defaultMessage + 'Difficulty';
+        }
+        /*if (!this.currentCollection.weight
+          || this.currentCollection.weight.toString().trim().length == 0)
+        {
+          mandatoryFields.push('Weight');
+          this.currentCollection.validationErrors.weight = defaultMessage + 'Weight';
+        }*/
+        //-- } -- end -- Check mandatory fields --//
+
+        if(mandatoryFields.length > 0) {
+          return mandatoryFields;
+        }
+        return true;
+      },
+      showPublishFailPopup(mandatoryFields = []) {
+        const popup = {
+          title: 'Publication error',
+          text: 'Collection meta is incomplete. Define ' + mandatoryFields.join(', ') + ' before publishing',
+          buttons: [
+            {
+              title: 'Ok',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+            },
+          ],
+          class: ['align-modal']
+        };
+        this.$root.$emit('show-modal', popup);
+      },
+      showPublishConfirmPopup(successCallback) {
+        const popup = {
+          title: 'Publish the Collection?',
+          //text: '',
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+            },
+            {
+              title: 'Publish',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                if (successCallback) {
+                  successCallback();
+                }
+                else {
+                  this.publish();
+                }
+              },
+              'class': 'btn btn-primary'
+            }
+          ],
+          class: ['align-modal']
+        };
+        this.$root.$emit('show-modal', popup);
       },
       ...mapActions(['removeCollection'])
     }
   }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
   .c-info-block {
     padding-left: 10px;
   }
@@ -224,9 +495,38 @@
   .c-publication-action {
     padding: 10px;
   }
+  i.p-margin-left {
+    margin-left: 10px;
+  }
+  .collection-meta-wrap {
+    height: 100%;
+    .collection-meta {
+      display: flex;
+      flex-direction: column;
+
+      .ready-books-list {
+        /*flex: 1;*/
+        overflow-y: auto;
+        min-height: 100px;
+        max-height: 100%;
+      }
+    }
+  }
+  .c-action-button {
+    .disabled {
+      opacity: 0.5;
+    }
+  }
 </style>
 
 <style>
+  #p-manageCollection {
+    height: 100%;
+  }
+  #books-in-collection {
+    /*max-height: 500px;*/
+    overflow-y: auto;
+  }
   #books-in-collection thead th {
     background-color: silver;
   }

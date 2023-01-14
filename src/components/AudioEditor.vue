@@ -91,12 +91,14 @@
               <div>
                 <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
                 <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
-                <dropdown 
-                  v-model="fadePercent" 
-                  :options="fadePercents" 
-                  scrollHeight="410px" 
-                  class="fade-percent-dropdown"/>
-                <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
+                <div class="dropdown-controls">
+                  <dropdown 
+                    v-model="fadePercent" 
+                    :options="fadePercents" 
+                    scrollHeight="410px" 
+                    class="fade-percent-dropdown"/>
+                  <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
+                </div>
               </div>
             </template>
             <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
@@ -246,7 +248,7 @@
           playbackRate: 1,
           playbackRates: [],
           fadePercent: '',
-          fadePercents: ['95%', '90%', '75%', '50%', '25%', '10%', '5%'],
+          fadePercents: ['to 95%', 'to 90%', 'to 75%', 'to 50%', 'to 25%', 'to 10%', 'to 5%'],
           fadeSelectionLog: []
         }
       },
@@ -486,7 +488,7 @@
               fadePercent = this.user.audioFadeConfig[this.currentBookMeta.bookid].percent;
             }
           }*/
-          this.fadePercent = `${fadePercent}%`;
+          this.fadePercent = `to ${fadePercent}%`;
           $('.playbackrate-dropdown .p-inputtext').html(`${this.playbackRate}x`)
 
           if (this.$refs.waveformContext) {
@@ -1246,6 +1248,7 @@
           this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
           //this.clearSelection();
           this.isModified = true;
+          this.clearSelection();
         },
         _changeWordPositions(new_positions, index) {
           new_positions.start = this._round(new_positions.start, 2);
@@ -1560,13 +1563,19 @@
             .then(() => {
               
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+              
+              let selectionLength = this._round(this.selection.end - this.selection.start, 2);
 
-              let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
+              let silence = new Float32Array((selectionLength) * original_buffer.sampleRate);
               
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               
-              let fadeLength = this.audioFadeConfig.length * original_buffer.sampleRate;
+              let calculatedFadeLength = this.audioFadeConfig.length;
+              if (selectionLength < this.audioFadeConfig.shortLength) {
+                calculatedFadeLength = this._round(this.audioFadeConfig.shortPercent * selectionLength / 100, 2);
+              }
+              let fadeLength = calculatedFadeLength * original_buffer.sampleRate;
               let fadePercent = this.getClearFadePercent();
               let removePercent = (100 - fadePercent);
               for (let i = 0; i <= fadeLength; ++i) {
@@ -1625,7 +1634,7 @@
               
               
               this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
-              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, this.audioFadeConfig.length]);
+              this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, calculatedFadeLength]);
               this.addFadeSelectionLog();
               this.isModified = true;
               this.cursorPosition = this.selection.start;
@@ -2392,34 +2401,41 @@
           if (this.editingLocked) {
             return false;
           }
-          if (this.mode === 'file' &&
-                  typeof this.selection.start !== 'undefined' &&
-                  typeof this.selection.end !== 'undefined') {
-            let t = setInterval(() => {
-              if ($('.selection.point').length > 0) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                clearInterval(t);
+          let replay = this.isPlaying;
+          this.pause()
+            .then(() => {
+              if (this.mode === 'file' &&
+                      typeof this.selection.start !== 'undefined' &&
+                      typeof this.selection.end !== 'undefined') {
+                let t = setInterval(() => {
+                  if ($('.selection.point').length > 0) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                    clearInterval(t);
+                  }
+                }, 50);
               }
-            }, 50);
-          }
-          this.contextPosition = e.clientX;
-          $('.medium-editor-toolbar').each(function(){
-              $(this).css('display', 'none');
-          });
-          if (this.$refs.waveformContext) {
-            this.$refs.waveformContext.open(e);
-            $('body').one('click', () => {
-              this.$refs.waveformContext.close();
-              this.contextPosition = null;
-            });
-          }
-          let hasSelection = $('.selection.segment').length > 0;
-          Vue.nextTick(() => {
-            window.requestAnimationFrame(() => {
-              if (hasSelection) {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+              this.contextPosition = e.clientX;
+              $('.medium-editor-toolbar').each(function(){
+                  $(this).css('display', 'none');
+              });
+              if (this.$refs.waveformContext) {
+                this.$refs.waveformContext.open(e);
+                $('body').one('click', () => {
+                  this.$refs.waveformContext.close();
+                  this.contextPosition = null;
+                });
               }
-            });
+              let hasSelection = $('.selection.segment').length > 0;
+              Vue.nextTick(() => {
+                window.requestAnimationFrame(() => {
+                  if (hasSelection) {
+                    this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                  }
+                  if (replay) {
+                    this.play();
+                  }
+                });
+              });
           });
         },
         setSelectionStart(val, event) {
@@ -3082,7 +3098,7 @@ Revert to original block audio?`,
           this.fadeSelectionLog = [];
         },
         getClearFadePercent() {
-          return parseInt(this.fadePercent);
+          return parseInt(this.fadePercent.replace(/^\D*/, ''));
         },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
         ...mapActions('userActions', ['updateUser'])
@@ -3285,7 +3301,7 @@ Revert to original block audio?`,
             if (!this.hasSelection || this.isSinglePointSelection) {
               return true;
             }
-            return typeof this.selection.start !== 'undefined' && typeof this.selection.end !== 'undefined' && this._round(this.selection.end - this.selection.start, 2) >= this._round(this.audioFadeConfig.length * 2, 2) ? false : true;
+            return false;
           },
           cache: false
         },
@@ -3295,7 +3311,7 @@ Revert to original block audio?`,
             this.fadeSelectionLog.forEach(log => {
               startPercent = log.percent * startPercent / 100;
             });
-            return `Faded ${this._round(startPercent, 0)}%`;
+            return `Faded to ${this._round(startPercent, 0)}%`;
           },
           cache: false
         },
@@ -3692,7 +3708,7 @@ Revert to original block audio?`,
       display: inline-block;
       padding: 21px 20px 9px 20px;
       .add-silence-dropdown.p-dropdown {
-        width: 47px;
+        width: 48px;
         .p-dropdown-trigger {
           .pi-chevron-down::before {
             left: 70%;
@@ -3706,7 +3722,7 @@ Revert to original block audio?`,
       /*width: 265px;*/
       &>div:not(.p-dropdown) {
         display: inline-block;
-        padding: 0px 10px;
+        /*padding: 0px 10px;*/
       }
       input[type="number"] {
         width: 40px;
@@ -3967,8 +3983,12 @@ Revert to original block audio?`,
   .playbackrate-dropdown.p-dropdown {
     width: 62px;
   }
-  .fade-percent-dropdown.p-dropdown {
-    width: 56px;
+  .dropdown-controls {
+    display: inline-block;
+    padding: 0px 20px;
+    .fade-percent-dropdown.p-dropdown {
+      width: 75px;
+    }
   }
   .selection-tooltips {
     position: absolute;

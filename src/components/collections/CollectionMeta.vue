@@ -16,7 +16,12 @@
             Title
           </td>
           <td>
-            <input v-model="collection.title" v-on:change="update('title', $event)" :disabled="!allowCollectionsEdit" />
+            <input v-model="collection.title"
+                  v-on:change="update('title', $event)"
+                  v-on:keydown="cleanError('title')"
+                  :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.title}]"/>
+            <span class="validation-error" v-if="currentCollection.validationErrors.title">{{ currentCollection.validationErrors.title}}</span>
           </td>
         </tr>
         <tr v-if="collection.language !== 'en'">
@@ -24,7 +29,12 @@
             Title EN
           </td>
           <td>
-            <input v-model="collection.title_en" v-on:change="update('title_en', $event)" :disabled="!allowCollectionsEdit" />
+            <input v-model="collection.title_en"
+                  v-on:change="update('title_en', $event)"
+                  v-on:keydown="cleanError('title_en')"
+                  :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.title_en}]"/>
+            <span class="validation-error" v-if="currentCollection.validationErrors.title_en">{{ currentCollection.validationErrors.title_en}}</span>
           </td>
         </tr>
         <tr>
@@ -42,17 +52,17 @@
           <td>
             <div class="authors">
               <div class="author-row" v-if="collection.author && collection.author.length === 0">
-                <input v-model="collection.author[0]" 
-                  v-on:change="update('author', $event)" 
+                <input v-model="collection.author[0]"
+                  v-on:change="update('author', $event)"
                   :disabled="!allowCollectionsEdit"
                   >
                 <div class="dropdown" v-if="collection.author && collection.author.length === 0">
-                  <div v-on:click="toggleShowUnknownAuthor()" 
+                  <div v-on:click="toggleShowUnknownAuthor()"
                     class="dropdown-button" >
                     <i class="fa fa-angle-down" ></i>
                   </div>
-                  <div class="dropdown-content" 
-                    v-if="showUnknownAuthor && allowCollectionsEdit" 
+                  <div class="dropdown-content"
+                    v-if="showUnknownAuthor && allowCollectionsEdit"
                     v-on:click="setUnknownAuthor()" >Unknown</div>
                 </div>
               </div>
@@ -63,7 +73,7 @@
                     <div v-on:click="toggleShowUnknownAuthor()" class="dropdown-button">
                       <i class="fa fa-angle-down" ></i>
                     </div>
-                    <div class="dropdown-content" v-if="showUnknownAuthor && allowCollectionsEdit" 
+                    <div class="dropdown-content" v-if="showUnknownAuthor && allowCollectionsEdit"
                       v-on:click="setUnknownAuthor()" >Unknown</div>
                   </div>
                   <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="[{'disabled': i == 0 && collection.author.length == 1}, 'remove-author']">
@@ -84,19 +94,21 @@
           <td>
             <div class="authors">
               <div class="author-row">
-                <input v-model="collection.author_en" 
-                  v-on:change="update('author_en', $event)" 
+                <input v-model="collection.author_en"
+                  v-on:change="update('author_en', $event)"
                   :disabled="!allowCollectionsEdit"
+                  :class="[{'-has-error': currentCollection.validationErrors.author_en}]"
                   >
                 <div class="dropdown">
-                  <div v-on:click="toggleShowUnknownAuthorEn()" 
+                  <div v-on:click="toggleShowUnknownAuthorEn()"
                     class="dropdown-button" >
                     <i class="fa fa-angle-down" ></i>
                   </div>
-                  <div class="dropdown-content" 
-                    v-if="showUnknownAuthorEn && allowCollectionsEdit" 
+                  <div class="dropdown-content"
+                    v-if="showUnknownAuthorEn && allowCollectionsEdit"
                     v-on:click="setUnknownAuthorEn()" >Unknown</div>
                 </div>
+                <span class="validation-error" v-if="currentCollection.validationErrors.author_en">{{ currentCollection.validationErrors.author_en}}</span>
               </div>
             </div>
           </td>
@@ -106,7 +118,7 @@
             Language
           </td>
           <td>
-            <select class="form-control" v-model="collection.language" 
+            <select class="form-control" v-model="collection.language"
               v-on:change="update('language', $event)"
               :disabled="!allowCollectionsEdit || collectionBooksLength > 0" >
               <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
@@ -115,9 +127,14 @@
         </tr>
       </table>
     </fieldset>
-    <fieldset>
+    <fieldset class="properties">
       <legend>URL slug</legend>
-      <input v-model="collection.slug" :class="['collection-slug', {'-is-manual': collection.slug_status === 0}]" :disabled="!allowCollectionsEdit" v-on:change="update('slug', $event)" :title="collection.slug" />
+      <input v-model="collection.slug"
+            :class="['collection-slug', {'-is-manual': collection.slug_status === 0}, {'-has-error': currentCollection.validationErrors.slug}]"
+            :disabled="!allowCollectionsEdit || (collection && collection.hasOwnProperty('pubVersionDate') && collection.pubVersionDate.length > 0)"
+            v-on:change="update('slug', $event)" :title="collection.slug"
+            v-on:keydown="cleanError('slug')"/>
+      <span class="validation-error" v-if="currentCollection.validationErrors.slug">{{ currentCollection.validationErrors.slug}}</span>
     </fieldset>
     <fieldset>
       <table class="properties">
@@ -126,13 +143,14 @@
             Category
           </td>
           <td>
-            <select  class="form-control" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors.category}]" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
               <template v-for="(data, index) in bookCategories">
                 <optgroup :label="data.group">
                   <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
                 </optgroup>
               </template>
             </select>
+            <span class="validation-error" v-if="currentCollection.validationErrors.category">{{ currentCollection.validationErrors['category'] }}</span>
           </td>
         </tr>
         <tr>
@@ -140,11 +158,11 @@
             Difficulty
           </td>
           <td>
-            <input 
-              v-model="collection.difficulty" 
-              v-on:change="updateDifficulty($event)" 
-              :disabled="!allowCollectionsEdit" 
-              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['difficulty'] !== ''}]" 
+            <input
+              v-model="collection.difficulty"
+              v-on:change="updateDifficulty($event)"
+              :disabled="!allowCollectionsEdit"
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors.difficulty}]"
               v-on:keydown="validateNumberInput('difficulty', $event)"  />
             <span class="validation-error" v-if="currentCollection.validationErrors['difficulty']">{{ currentCollection.validationErrors['difficulty'] }}</span>
           </td>
@@ -162,11 +180,11 @@
             Weight
           </td>
           <td>
-            <input 
-              v-model="collection.weight" 
-              v-on:change="updateWeight($event)" 
-              :disabled="!allowCollectionsEdit" 
-              :class="['number-text-input', {'-has-error': currentCollection.validationErrors['weight'] !== ''}]" 
+            <input
+              v-model="collection.weight"
+              v-on:change="updateWeight($event)"
+              :disabled="!allowCollectionsEdit"
+              :class="['number-text-input', {'-has-error': currentCollection.validationErrors.weight}]"
               v-on:keydown="validateNumberInput('weight', $event)" />
             <span class="validation-error" v-if="currentCollection.validationErrors['weight']">{{currentCollection.validationErrors['weight']}}</span>
           </td>
@@ -240,10 +258,22 @@
             this.collection = {};
           }
           this.resetCollectionImage();
-          this.$refs.collectionDescription.setValue(this.collection.description);
+          if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
+            this.$refs.collectionDescription.setValue(this.collection.description);
+          }
+        },
+        cleanError(key) {
+          if (this.currentCollection.validationErrors
+            && this.currentCollection.validationErrors[key]) {
+            delete this.currentCollection.validationErrors[key];
+          }
         },
         update(key, event) {
           let value = key === 'author' ? this.currentCollection.author : event.target.value;
+          if (this.currentCollection.validationErrors
+            && this.currentCollection.validationErrors[key]) {
+            delete this.currentCollection.validationErrors[key];
+          }
           this.liveUpdate(key, value);
         },
         change(field) {
@@ -258,19 +288,17 @@
           return this.updateCollection(update)
             .then(() => {
               this.collection[field] = value;
-              this.collection.slug =this.currentCollection.slug;
+              this.collection.slug = this.currentCollection.slug;
               this.collection.slug_status = this.currentCollection.slug_status;
-            });
+             });
         },
         publish() {
-          let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
+          /*let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
           let api = this.$store.state.auth.getHttp();
           let self = this;
           api.post(api_url, {}, {}).then(function(response){
             self.reloadCollection();
-          }).catch((err) => {
-
-          });
+          }).catch((err) => {});*/
         },
         changeCoverModal() {
           if (!this.allowCollectionsEdit) {
@@ -319,6 +347,7 @@
           this.liveUpdate('author_en', this.collection.author_en);
         },
         updateDifficulty($event) {
+          $event.target.value = ($event.target.value).replace(',', '.');
           let val = $event.target.value;
           if (!this.currentCollection.setValidateDifficulty(val)) {
             return false;
@@ -326,8 +355,9 @@
           val = this.parseFloatToFixed(val, 2);
           return this.liveUpdate('difficulty', val);
         },
-        updateWeight(event) {
-          let val = event.target.value;
+        updateWeight($event) {
+          $event.target.value = ($event.target.value).replace(',', '.');
+          let val = $event.target.value;
           if (!this.currentCollection.setValidateWeight(val)) {
             return false;
           }
@@ -379,7 +409,7 @@
       watch: {
         'currentCollection': {
           handler(val, oldVal) {
-            
+
             this.init();
             //if (this.$refs.collectionDescription) {
               //Vue.nextTick(() => {
@@ -447,23 +477,23 @@
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
   }
-  
+
   /* Properties editor area */
   table.properties {
-    margin:0; 
-    padding:0; 
-    width:100%; 
+    margin:0;
+    padding:0;
+    width:100%;
     font-size: 1em;
-    border-collapse: separate; 
+    border-collapse: separate;
     border-spacing: 3px;
     td {
       &:nth-child(1) {
-        width: 30%; 
-        padding: 3px; 
+        width: 30%;
+        padding: 3px;
         margin:0;
       }
       &:nth-child(2) {
-        width: auto; 
+        width: auto;
         text-align: right !important;
       }
     }
@@ -506,7 +536,7 @@
       }
     }
   }
-  
+
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}
@@ -547,7 +577,7 @@
     margin: 0;
   }
   table.properties {
-    input {
+    input, select.form-control {
       &.-has-error {
         border: 2px solid red;
         outline-color: red;
@@ -557,6 +587,14 @@
       width: 100% !important;
       color: red;
       float: left !important;
+    }
+  }
+  fieldset.properties {
+    span.validation-error {
+      width: 100%;
+      color: red;
+      text-align: right;
+      display: inline-block;
     }
   }
 </style>

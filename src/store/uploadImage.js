@@ -20,6 +20,7 @@ export default {
     height: state => id => state.imagesMap[id]? state.imagesMap[id].height : null,
     width: state => id => state.imagesMap[id]? state.imagesMap[id].width : null,
     file: state => id => state.imagesMap[id]? state.imagesMap[id].file : null,
+    imagesMap: state => state.imagesMap
   },
   mutations: {
     addImage(state, payload){

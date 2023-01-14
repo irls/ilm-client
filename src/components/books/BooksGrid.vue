@@ -169,7 +169,17 @@ export default {
   },
 
   mounted () {
-    this.updateBooksList()
+    let loadBooks = new Promise((resolve, reject) => {
+      if (this.allBooks.length === 0) {
+        return this.updateBooksList()
+          .then(() => {
+            return resolve();
+          })
+      } else {
+        return resolve();
+      }
+    });
+    return loadBooks
     .then(()=>{
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.goToBookPage(this.$route.params.bookid);
