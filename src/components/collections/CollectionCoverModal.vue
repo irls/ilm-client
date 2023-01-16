@@ -91,7 +91,7 @@
         },
 
         resetInput () {
-          this.uploadImage = "";
+          this.uploadURL = "";
         },
         
         createImage (file) {
@@ -129,7 +129,7 @@
         ...mapGetters(['currentCollection'])
       },
       watch: {
-        /*uploadImage: {
+        uploadImage: {
           handler(val) {
             if (val) {
               this.uploadURL = '';
@@ -144,7 +144,7 @@
               this.uploadImage = '';
             }
           }
-        }*/
+        }
       }
   }
 </script>
