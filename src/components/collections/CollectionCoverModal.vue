@@ -24,9 +24,16 @@
               </div>
 
               <div class="col-sm-8">
+
+              <div class="group">
+
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                </div>
+
+                  <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -42,6 +49,7 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn" v-on:click="cancel()">Cancel</button>
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
     </modal>
@@ -90,6 +98,10 @@
           this.createImage(files[0]);
         },
 
+        resetInput () {
+          this.uploadURL = "";
+        },
+
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -99,9 +111,7 @@
           reader.readAsDataURL(file);
         },
         save() {
-          if (!this.uploadImage && !this.uploadURL) {
-            return;
-          }
+        
           
           let formData = new FormData();
           if (this.uploadImage) {
@@ -114,6 +124,13 @@
               this.close();
             });
         },
+
+        cancel() {
+          this.$emit('closed');
+          this.$modal.hide('import-collection-cover')
+        },
+
+
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
@@ -157,6 +174,13 @@
     }
     .tab-pane {
       display: block !important;
+    }
+    .group {
+      display: flex;
+
+    }
+    .input-group {
+      margin-right: 5px;
     }
   }
 </style>
