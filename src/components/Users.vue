@@ -53,7 +53,7 @@
         </div>
         <div class="t-box">
           <select-roles
-            :selected="user.languages ? [...user.roles] : []"
+            :selected="user.roles ? [...user.roles] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
