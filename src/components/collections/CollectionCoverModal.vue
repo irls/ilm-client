@@ -89,12 +89,7 @@
           }
           this.createImage(files[0]);
         },
-/*
-        resetInput () {
-         // this.$refs.form.reset()
-          this.$refs["form"].value = "";
-        },
-*/
+
         resetInput () {
           this.uploadURL = "";
         },
@@ -108,9 +103,9 @@
           reader.readAsDataURL(file);
         },
         save() {
-          if (!this.uploadImage && !this.uploadURL) {
-            return;
-          }
+          //if (!this.uploadImage && !this.uploadURL) {
+          //  return;
+          //}
           
           let formData = new FormData();
           if (this.uploadImage) {
