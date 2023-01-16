@@ -102,6 +102,7 @@
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
+        
         save() {
           if (!this.uploadImage && !this.uploadURL) {
             return;
@@ -111,7 +112,7 @@
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
           }
-          /*formData.append('coverimgURL', this.uploadURL);*/
+          formData.append('coverimgURL', this.uploadURL);
           
           return this.updateCollectionCoverimg(formData)
             .then(response => {
