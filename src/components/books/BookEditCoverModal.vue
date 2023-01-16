@@ -21,7 +21,7 @@
          </ul>
        </div> -->
  
-       
+       <div class="tab-content">
          <!-- Selection tabs for Upload or Create forms -->
  
          <div id="upload_pane" :class="['tab-pane fade in image-upload-wrapper', {active: uploadMode}]">
@@ -42,7 +42,7 @@
                    <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" v-on:input="onImageChange" />
                  </div>
  
-                 <button class="btn btn-default" v-on:click="resetInput"><i class="fa fa-trash-o"></i></button>
+                 <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
  
                 </div>
  
@@ -107,13 +107,13 @@
           <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
        </div>
  
-     
+     </div> <!--modal body -->
  
      <div class="modal-footer">
        <button class="btn" v-on:click="cancel()">Cancel</button>
-       
        <button class="btn btn-primary" type="button" 
-         @click="save">Save</button>
+         @click="save" 
+         :disabled="!saveEnabled">Save</button>
      </div>
  
    </modal>
@@ -286,6 +286,11 @@
      },
  
  
+     resetInput () {
+           this.uploadURL = "";
+         },
+ 
+ 
          
      onFilesChange (e) {
        this.errorCoverFileType = false
@@ -381,10 +386,6 @@
          this.captureBookImage()
        }
      },
- 
-     resetInput () {
-           this.uploadImage = "";
-         },
  
      captureBookImage () {
        var source = document.getElementById('bookCoverPreviewMain')
@@ -593,11 +594,7 @@
      height: 200px;
    }
  
-   .group {
-       display: flex;
-     }
-     .input-group {
-       margin-right: 5px;
-     }
+ 
+ 
  </style>
  
