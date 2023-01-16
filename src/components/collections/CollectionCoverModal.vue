@@ -111,7 +111,7 @@
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
           }
-          formData.append('coverimgURL', this.uploadURL);
+          /*formData.append('coverimgURL', this.uploadURL);*/
           
           return this.updateCollectionCoverimg(formData)
             .then(response => {
@@ -129,7 +129,7 @@
         ...mapGetters(['currentCollection'])
       },
       watch: {
-        uploadImage: {
+        /*uploadImage: {
           handler(val) {
             if (val) {
               this.uploadURL = '';
@@ -144,7 +144,7 @@
               this.uploadImage = '';
             }
           }
-        }
+        }*/
       }
   }
 </script>
