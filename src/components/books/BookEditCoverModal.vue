@@ -236,7 +236,7 @@ export default {
   },
 
   activated() {
-      this.uploadImage = this.img.coverimg
+    //  this.uploadImage = this.img.coverimg
   },
 
   mounted() {

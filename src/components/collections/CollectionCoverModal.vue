@@ -91,7 +91,7 @@
         },
 
         resetInput () {
-          this.uploadURL = "";
+          this.uploadImage = "";
         },
         
         createImage (file) {
@@ -102,23 +102,6 @@
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
-        save() {
-          //if (!this.uploadImage && !this.uploadURL) {
-          //  return;
-          //}
-          
-          let formData = new FormData();
-          if (this.uploadImage) {
-            formData.append('coverimg', this.uploadImage, 'coverimg');
-          }
-          formData.append('coverimgURL', this.uploadURL);
-          
-          return this.updateCollectionCoverimg(formData)
-            .then(response => {
-              this.close();
-            });
-        },
-        /*
         save() {
           if (!this.uploadImage && !this.uploadURL) {
             return;
@@ -135,7 +118,7 @@
               this.close();
             });
         },
-        */
+       
         cancel() {
           this.$emit('closed');
           this.$modal.hide('import-collection-cover')
