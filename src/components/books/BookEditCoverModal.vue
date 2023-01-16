@@ -112,8 +112,7 @@
      <div class="modal-footer">
        <button class="btn" v-on:click="cancel()">Cancel</button>
        <button class="btn btn-primary" type="button" 
-         @click="save" 
-         :disabled="!saveEnabled">Save</button>
+         @click="save">Save</button>
      </div>
  
    </modal>
@@ -285,11 +284,9 @@
        this.uploadImage = this.img.coverimg || '';
      },
  
- 
      resetInput () {
-           this.uploadURL = "";
+           this.uploadImage = "";
          },
- 
  
          
      onFilesChange (e) {
