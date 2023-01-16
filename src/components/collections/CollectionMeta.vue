@@ -169,7 +169,7 @@
         </tr>
         <tr>
           <td>
-            Translator
+            Translated by
           </td>
           <td>
             <input v-model="collection.translator" v-on:change="update('translator', $event)" :disabled="!allowCollectionsEdit" />

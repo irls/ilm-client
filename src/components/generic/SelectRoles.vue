@@ -31,6 +31,7 @@ export default {
       options: ROLES,
       selectedValue: [],
       search: ''
+      
     }
   },
 
@@ -53,7 +54,7 @@ export default {
   mounted () {
     this.selectedValue = this.selected
   },
-  
+
   computed: {
     classList: {
       get() {
@@ -83,8 +84,12 @@ export default {
         overflow-y: auto;
         overflow-x: hidden;
         /*height: auto;*/
-        left: 340px;
-        top: -12px;
+        left: 490px;
+        top: -13px;
+        max-width: 300px;
+        input.form-control {
+          width: 200px !important;
+        }
       }
       &.open {
         .dropdown-toggle {
@@ -103,7 +108,7 @@ export default {
       }
     }
     .dropdown-toggle {
-      max-width: 312px;
+      max-width: 455px;
     }
   }
 </style>

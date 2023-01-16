@@ -42,7 +42,9 @@
           <!-- <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link> -->
           <!-- <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link> -->
 
-          <li>Welcome {{$store.state.user.name}}!</li>
+          <!--<li class="welcomeName">Welcome, {{ $store.state.user.name != undefined && $store.state.user.name != "" ? $store.state.user.name : $store.state.name }}!</li>-->
+          
+          <li class="welcomeName">Welcome, {{ welcomeName }}!</li>
           <li v-if="$store.state.isLoggedIn" class="presentation"><a href="#" v-on:click.stop.prevent="$store.state.auth.logout()">Logout</a></li>
       </ul>
     </td></tr>
@@ -64,7 +66,6 @@
 import access from "../mixins/access.js"
 import { mapGetters } from 'vuex'
 
-
 export default {
   mixins: [access],
   computed: {
@@ -82,9 +83,18 @@ export default {
       }
     },
     ...mapGetters(['tc_userTasks','livedbStatus']),
-  },
 
+
+    welcomeName: {
+      get () {
+      return this.user.name != undefined && this.user.name != "" ? this.user.name : this.user._id; 
+      },
+    },
+    ...mapGetters(['user']),
+  }
 }
+
+
 </script>
 
 <style lang="less">

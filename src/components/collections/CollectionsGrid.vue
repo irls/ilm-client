@@ -18,7 +18,7 @@
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
-      <Grid id='books_grid_grid'
+      <Grid id='books_grid'
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
           :columns="headers"

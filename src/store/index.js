@@ -14,9 +14,9 @@ PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
 import setBlocksDisabled from './modules/setBlocksDisabled';
+import tasks from './modules/tasks';
 import userActions from './modules/user';
 import alignActions from './modules/align';
-import tasks from './modules/tasks';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -75,9 +75,9 @@ export const store = new Vuex.Store({
     uploadImage,
     testAudioConvert,
     setBlocksDisabled,
+    tasks,
     userActions,
-    alignActions,
-    tasks
+    alignActions
   },
   state: {
     SelectionModalProgress:0,
@@ -265,18 +265,19 @@ export const store = new Vuex.Store({
     setSelectedBlocksAsyncResult : [],
     suspiciousWordsHighlight: suspiciousWordsHighlight,
     blockAudiosrcConfig: {
-      
+
     },
-    
+
     audioFadeConfig: {
-      
+
     },
     playingBlock: {
       state: null,
       blockid: null,
       partIdx: null,
       playingPauseAfter: false
-    }
+    },
+    pauseAfterBlockXhr: null
   },
 
   getters: {
@@ -383,6 +384,8 @@ export const store = new Vuex.Store({
     libraries: state => state.libraries,
     currentLibrary: state => state.currentLibrary,
     user: state => state.user,
+   // name: state => state.name,
+    // username: state => state.username,
     currentBookCounters: state => state.currentBookCounters,
     ttsVoices: state => {
       if (!state.currentBookMeta.language || state.currentBookMeta.language === '') return state.ttsVoices;
@@ -668,6 +671,9 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
+    },
+    pauseAfterBlockUpdate: state => {
+      return state.pauseAfterBlockXhr !== null;
     }
   },
 
@@ -742,6 +748,9 @@ export const store = new Vuex.Store({
       // state.currentBook = book
       // state.currentBook_dirty = false
       // state.currentBookMeta_dirty = false
+      if (!meta || (state.currentBookMeta && state.currentBookMeta.bookid !== meta.bookid)) {
+        this.commit('clear_blockSelection');
+      }
       if (meta) {
         if (meta.publishedVersion === 'false') {
           meta.publishedVersion = false;
@@ -789,9 +798,6 @@ export const store = new Vuex.Store({
             //state.currentBookMeta[k] = meta[k];
           }
         });*/
-        if (state.currentBookid && state.currentBookid !== meta.bookid) {
-          this.dispatch('setBlockSelection', {start: {}, end: {}});
-        }
         state.currentBookMeta = meta;
         state.currentBookMeta._id = meta.bookid;
         state.currentBookid = meta.bookid
@@ -822,7 +828,6 @@ export const store = new Vuex.Store({
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
-        this.dispatch('setBlockSelection', {start: {}, end: {}});
         this.dispatch('stopWatchLiveQueries');
       }
       this.commit('set_currentbook_executors');
@@ -1468,9 +1473,22 @@ export const store = new Vuex.Store({
     set_blockAudiosrcConfig(state, audiosrc_config) {
       state.blockAudiosrcConfig = audiosrc_config;
     },
-    
+
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
+    },
+
+    clear_blockSelection(state) {
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        let idsArrayRange = state.storeListO.ridsArrayRange(state.blockSelection.start._id, state.blockSelection.end._id);
+        idsArrayRange.forEach((blockRid)=>{
+          let oBlock = state.storeListO.get(blockRid);
+          if (oBlock) {
+            oBlock.checked = false;
+          }
+        });
+        this.dispatch('setBlockSelection', {start: {}, end: {}});
+      }
     }
   },
 
@@ -1570,6 +1588,7 @@ export const store = new Vuex.Store({
 
 
     async set_selected_blocksAsync({commit, state, dispatch}) {
+      console.log('ILM-5021-1')
 
       state.setSelectedBlocksAsyncResult = [];
       // dispatch('setSelectionModalProgressWidth')
@@ -1694,18 +1713,16 @@ export const store = new Vuex.Store({
           .then(() => {
             dispatch('tc_loadBookTask', 'all');
           });
-          
         dispatch('getConfig', 'custom')
-            .then(config => {
-              state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
-              commit('set_couplet_separator', config.couplet_separator);
-              commit('set_blockAudiosrcConfig', config.block_audiosrc_config);
-            })
-            
+          .then(config => {
+            state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
+            commit('set_couplet_separator', config.couplet_separator);
+            commit('set_blockAudiosrcConfig', config.block_audiosrc_config);
+          })
         dispatch('getBookCategories');
         dispatch('getCollections');
         dispatch('getAlignBlocksLimit');
-        
+
         state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
           //console.log(`liveDB.startWatch.collection.data: `, data);
           if (data.action) {
@@ -1782,13 +1799,13 @@ export const store = new Vuex.Store({
             //   state.bookCollectionsAll[cIdx] = data.collection;
             //   commit('PREPARE_BOOK_COLLECTIONS');
             // }
-
           }
-       });
-       
-       dispatch('getSuspiciousWordsCharacters');
-       dispatch('getAudioFadeConfig');
-       dispatch('updateBooksList');
+        });
+
+        dispatch('getSuspiciousWordsCharacters');
+        dispatch('getAudioFadeConfig');
+
+        dispatch('updateBooksList');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -2089,6 +2106,12 @@ export const store = new Vuex.Store({
 
     updateBookVersion({state, dispatch}, update) {
       let currMeta = state.currentBookMeta;
+
+      //ILM-4963:
+    	if (currMeta.hasOwnProperty('hashTags')){
+    		return dispatch('updateBookMeta', update);
+    	}
+
       if (currMeta.hasOwnProperty('publishLog')){
           update.publishLog = currMeta.publishLog || {publishTime: false, updateTime: false};
           update.publishLog.updateTime = Date();
@@ -3306,6 +3329,7 @@ export const store = new Vuex.Store({
     },
 
     async recountApprovedInRangeAsync({state, commit,dispatch}, selection = null) {
+      console.log('ILM-5021-2')
 
       let d = {};
       d.approved = 0;
@@ -3519,15 +3543,20 @@ export const store = new Vuex.Store({
                               });
                             }
                           }
+
                           if (state.bookMode === 'edit') {
                             block = state.suspiciousWordsHighlight.setSuspiciousHighlight(block);
                           }
                           if (blockStore.audiosrc_config) {
                             block.audiosrc_config = blockStore.audiosrc_config;
                           }
-                          store.commit('set_storeList', new BookBlock(block));
-                          dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
-                          return Promise.resolve();
+
+                          return dispatch('tasks/getByBlockid', [block.blockid])
+                          .then(() => {
+                            store.commit('set_storeList', new BookBlock(block));
+                            dispatch('checkInsertedBlocks', [blockStoreO.out, Array.isArray(block.out) ? block.out[0] : block.out])
+                            return Promise.resolve();
+                          })
                         })
                         .catch(err => {
                           console.log(err);
@@ -4580,8 +4609,6 @@ export const store = new Vuex.Store({
         .then((res) => {
           state.audioTasksQueue.queue.splice(0, runSize);
           state.audioTasksQueue.running = null;
-          //return dispatch('getBookAlign')
-            //.then(() => {
           let data = [];
           if (Array.isArray(res.data)) {
             data = res.data.filter(r => {
@@ -4625,7 +4652,6 @@ export const store = new Vuex.Store({
             dispatch('applyTasksQueue', [null]);
           }
           return Promise.resolve(data);
-            //});
 
         })
         .catch(err => {
@@ -4694,7 +4720,7 @@ export const store = new Vuex.Store({
               if (Array.isArray(response.data.parts) && response.data.parts.length !== block.parts.length) {
                 block.parts = response.data.parts;
               }
-              return Promise.resolve(response);
+              //return Promise.resolve(response);
             } else {
               //if (this.isCompleted) {
                 //this.tc_loadBookTask();
@@ -4724,8 +4750,9 @@ export const store = new Vuex.Store({
                 }
               })*/
               //return this.putBlock(this.block);
-              return Promise.resolve(response);
+              //return Promise.resolve(response);
             }
+            return dispatch('tasks/getByBlockid', [block.blockid]).then(() => response);
           }
         })
         .catch(err => {
@@ -4804,6 +4831,8 @@ export const store = new Vuex.Store({
     },
     setPauseAfter({state}, [blockType, value]) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        let xhrId = `${Date.now()}-${value}`;
+        state.pauseAfterBlockXhr = xhrId;
         return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_after`, {
           range: {start_id: state.blockSelection.start._id,
           end_id: state.blockSelection.end._id},
@@ -4812,6 +4841,9 @@ export const store = new Vuex.Store({
           mode: state.bookMode
         })
           .then((response) => {
+            if (state.pauseAfterBlockXhr !== xhrId) {
+              return Promise.resolve(false);
+            }
             if (Array.isArray(response.data)) {
               response.data.forEach(b => {
                 let block = state.storeList.get(b.blockid);
@@ -4822,10 +4854,14 @@ export const store = new Vuex.Store({
                 }
               });
             }
-            return Promise.resolve();
+            state.pauseAfterBlockXhr = null;
+            return Promise.resolve(true);
           })
           .catch(err => {
-
+            if (state.pauseAfterBlockXhr === xhrId) {
+              state.pauseAfterBlockXhr = null;
+            }
+            return Promise.reject(err);
           });
       }
     },
@@ -4875,7 +4911,7 @@ export const store = new Vuex.Store({
                     blk.voicework = block.voicework;
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
-                    
+
                     if (blk.isChanged) {
                       response.data.blocks[idx] = _.assign(response.data.blocks[idx], {
                         footnotes: blk.footnotes,
@@ -4895,11 +4931,17 @@ export const store = new Vuex.Store({
                 }
               //}
             }
+
+            if (response && response.data && response.data.message) {
+              alert(response.data.message);
+            }
+
           }
           state.currentBookCounters.voiceworks_for_remove = 0;
           return Promise.resolve(response);
         })
         .catch(err => {
+          alert('An error occurred while voiceworks were in progress. ');
           return Promise.reject(err);
         });
     },
@@ -5195,10 +5237,10 @@ export const store = new Vuex.Store({
             commit('set_alignBlocksLimit', value);
           }
           return Promise.resolve(value);
-        })
-        .catch(err => {
-          return Promise.reject(err);
-        });
+      })
+      .catch(err => {
+        return Promise.reject(err);
+      });
     },
 
     splitBlockToBlocks({state, dispatch, commit}, [blockid, update]) {
@@ -5360,7 +5402,7 @@ export const store = new Vuex.Store({
           }
         });
     },
-    
+
     getAudioFadeConfig({state, commit}) {
       return axios.get(`${state.API_URL}audio_config/fade`)
         .then(response => {

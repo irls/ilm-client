@@ -1392,6 +1392,7 @@ Save or discard your changes to continue editing`,
           });
         }
     }
+
     if (this.FtnAudio) {
       if (this.FtnAudio.isStarted || this.FtnAudio.isPaused) {
         this.FtnAudio.audStop();
@@ -3845,25 +3846,19 @@ Save text changes and realign the Block?`,
 
       },
       setRangeSelection(type, ev) {
-        if(!this.setRangeSelectionLock){
 
-          let checked;
-          if (ev === true || ev === false) checked = ev;
-          else checked = ev.target && ev.target.checked;
+        let checked;
+        if (ev === true || ev === false) checked = ev;
+        else checked = ev.target && ev.target.checked;
 
-          let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
-          if (ev.shiftKey) {
-            if (this.selectionStart && this.selectionStart != this.block._id) {
-              document.getSelection().removeAllRanges();
-            }
+        let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
+        if (ev.shiftKey) {
+          if (this.selectionStart && this.selectionStart != this.block._id) {
+            document.getSelection().removeAllRanges();
           }
-          this.setRangeSelectionLock = true;
-          setTimeout( () => {
-            this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
-          }, 500);
         }
-        //this.blockO.checked = checked;
+        this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+        // this.blockO.checked = checked;
       },
       updateVoicework() {
         if (!this.voiceworkChange) {
@@ -4310,6 +4305,15 @@ Save text changes and realign the Block?`,
           this.block.setContent(this.storeListById(this.block.blockid).getContent());
         }
         this.$forceUpdate();
+      },
+      fullRefresh() {
+        if (this.block.getIsSplittedBlock()) {
+          this.$refs.blocks.forEach(blk => {
+            blk.$forceUpdate();
+          });
+        } else {
+          this.$forceUpdate();
+        }
       },
       getSubblockRef(index = 0) {
         if (Array.isArray(this.$refs.blocks) && this.$refs.blocks.length > 0 && this.$refs.blocks[index]) {

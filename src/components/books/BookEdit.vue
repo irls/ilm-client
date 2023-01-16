@@ -164,6 +164,8 @@ export default {
 
       scrollToId: null,
 
+      voiceworkUpdating: false,
+      subscribeOnVoiceworkBlocker: null,
       searchDebounce: null,
       searchResultArray: [],
 
@@ -2339,8 +2341,8 @@ export default {
       },
 
       searchInBlocks(bookSearch) {
-        this.searchResultArray = [];
         if(bookSearch.string && bookSearch.string.trim().length > 2) {
+          this.searchResultArray = [];
           console.time('Search');
           let parserSearchArr = prepareForFilter(bookSearch.string, true).split(' ');
           parserSearchArr = parserSearchArr.filter((sEl)=>{
@@ -2365,10 +2367,16 @@ export default {
           //console.log(`this.searchResultArray: `, this.searchResultArray);
           console.timeEnd('Search');
         } else {
+          this.$refs.blocks.forEach(blkRef => {// force update cleared search results
+            if (blkRef.block && this.searchResultArray.includes(blkRef.block.blockid)) {
+              blkRef.fullRefresh();
+            }
+          });
           for (let blockId of this.parlistO.idsArray()) {
             const block = this.parlist.get(blockId);
             block.cleanFindMarks();
           }
+          this.searchResultArray = [];
         }
 
         bookSearch.resultCounter = this.searchResultArray.length;
@@ -2380,6 +2388,11 @@ export default {
           Vue.nextTick(()=>{
             bookSearch.searchPointer = -1;
             this.scrollSearchDown();
+            this.$refs.blocks.forEach(blkRef => {// update visible blocks
+              if (blkRef.block.blockid && this.searchResultArray.includes(blkRef.block.blockid)) {
+                blkRef.fullRefresh();
+              }
+            });
           });
         }
 

@@ -23,7 +23,9 @@
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
 
-              <div class="col-sm-8">
+
+            <div class="col-sm-8">
+
 
               <div class="group">
 
@@ -42,16 +44,19 @@
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
                 </label>
-              </div>
+              
+            </div>
 
             </div>
           </div>
         </div>
       </div>
+
       <div class="modal-footer">
         <button class="btn" v-on:click="cancel()">Cancel</button>
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
+
     </modal>
   </div>
 </template>
@@ -101,6 +106,7 @@
         resetInput () {
           this.uploadURL = "";
         },
+        
 
         createImage (file) {
           // console.log('*** Creating new image', file)
@@ -129,7 +135,6 @@
           this.$emit('closed');
           this.$modal.hide('import-collection-cover')
         },
-
 
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },

@@ -27,7 +27,7 @@
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
-            <textarea v-model='currentJobInfo.description' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000"></textarea>
+            <textarea v-model='jobDescription' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000" class="jobinfo-description"></textarea>
           </fieldset>
           <fieldset class='hashtags' :disabled="!adminOrLibrarian">
             <legend>Project tags</legend>
@@ -73,12 +73,12 @@
               <table class='properties'>
 
                 <tr class='bookid'>
-                  <td>Book Id</td>
+                  <td>Book ID</td>
                   <td class='disabled'>{{currentBook.bookid}}</td>
                 </tr>
 
                 <tr class="extid">
-                  <td>External Book Id</td>
+                  <td>External book ID</td>
                   <td class='disabled'>{{currentBook.extid}}
                     <!-- <input v-model="currentBook.extid" @input="updateExtid($event)" :disabled="!allowMetadataEdit" :class="[{'has-error': validationErrors['extid'].length}]"/>
                            <span class="validation-error" v-for="err in validationErrors['extid']">{{err}}</span> -->
@@ -93,7 +93,7 @@
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
-                  <td>Title EN</td>
+                  <td>Title en</td>
                   <td><input v-model='currentBook.title_en' v-on:change="updateWithDisabling('title_en', $event) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en']" class="validation-error">Define Title EN</span>
                   </td>
@@ -127,7 +127,7 @@
                 </tr>
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
-                  <td>Author EN</td>
+                  <td>Author en</td>
                   <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="update('author_en', $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
                                                 <div class="dropdown" v-if="allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
@@ -152,7 +152,7 @@
               </table>
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
-              <legend style="text-align: left;">URL Slug</legend>
+              <legend style="text-align: left;">URL slug</legend>
                   <input v-model='currentBook.slug' v-on:change="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
                   <br><span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug']" class="validation-error">Define URL Slug</span>
             </fieldset>
@@ -189,14 +189,21 @@
                 </tr>
 
                 <tr class='trans'>
-                  <td>Translator</td>
+                  <td>Translated by</td>
                   <td><input v-model='currentBook.translator'  v-on:change="updateWithDisabling('translator', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='transfrom'>
-                  <td>Tr From</td>
-                  <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-                  <td><input v-model="currentBook.transfrom" v-on:change="updateWithDisabling('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td>Translated from</td>
+                  <!--<td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td>-->
+                  <td>
+                    <div class="trans-from-wrapper">
+                      <select id="select-field" class="form-control" v-model='currentBook.transfrom' v-on:change="updateWithDisabling('transfrom', $event)" :key="currentBookid" :disabled="!allowMetadataEdit">
+                        <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                      </select>
+                      <i class="pi pi-times" v-if="languages.hasOwnProperty(currentBook.transfrom)" v-on:click="updateWithDisabling('transfrom', '')"></i>
+                    </div>
+                  </td>
                 </tr>
 
                 <tr class='collection'>
@@ -209,7 +216,7 @@
                   </td>
                 </tr>
                 <tr class='weight'>
-                  <td>Weight:</td>
+                  <td>Weight</td>
                   <td>
                     <input v-model='currentBook.weight' v-on:change="updateWeigth($event, 100)" :disabled="!allowMetadataEdit"
                            :class="[{'has-error': this.validationErrorWeight }]"/>
@@ -223,7 +230,7 @@
             </fieldset>
 
           <fieldset class='description brief'>
-            <legend>Book Cover</legend>
+            <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">
               <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
                 <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
@@ -239,7 +246,7 @@
           </fieldset>
 
           <fieldset class='description brief'>
-            <legend>Brief Description </legend>
+            <legend>Brief description</legend>
             <resizable-textarea @valueChanged="update('description_short', $event)"
               :initValue="currentBook.description_short"
               ref="descriptionShort"
@@ -248,7 +255,7 @@
           </fieldset>
 
           <fieldset class='description long'>
-            <legend>Long Description </legend>
+            <legend>Long description</legend>
             <resizable-textarea @valueChanged="update('description', $event)"
               :initValue="currentBook.description"
               ref="descriptionLong"
@@ -517,7 +524,8 @@
                       :blockType="blockType"
                       :styleValue="styleValue"
                       :styleProps="pausesAfterProps"
-                      @setPauseAfter="selectPauseAfter"></pause-after-block>
+                      @setPauseAfter="selectPauseAfter"
+                      ref="pauseAfterControl"></pause-after-block>
                   </fieldset>
                   <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
@@ -732,6 +740,7 @@ export default {
         5: 'hr'
       },
       activeStyleTab: '',
+      jobDescription: ''
     }
   },
 
@@ -773,7 +782,6 @@ export default {
       currentBookCollection: 'currentBookCollection',
       alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
-      currentBookCollection: 'currentBookCollection',
       playingBlock: 'playingBlock'
     }),
     proofreadModeReadOnly: {
@@ -1007,6 +1015,7 @@ export default {
         }
       }
     }
+    this.jobDescription = this.currentJobInfo.description;
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1143,6 +1152,13 @@ export default {
         if (this.blockSelection.start._id && this.blockSelection.end._id) {
           //this.$refs.blockTypesTabs.render();
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+        }
+      }
+    },
+    'currentJobInfo.description': {
+      handler(val) {
+        if (!document.activeElement || !document.activeElement.classList.contains('jobinfo-description')) {
+          this.jobDescription = this.currentJobInfo.description;
         }
       }
     }
@@ -1899,21 +1915,26 @@ export default {
       }
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
-          let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
+          /*let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
           idsArrayRange.forEach((blockRid)=>{
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock && oBlock.type === blockType) {
               let pBlock = this.storeList.get(oBlock.blockid);
               pBlock.pause_after = styleVal;
             }
-          })
+          })*/
           this.updateBookVersion({major: true});
         }
         return this.setPauseAfter([blockType, styleVal])
-          .then(() => {
-            this.tc_loadBookTask(this.currentBookMeta._id);
-            this.getCurrentJobInfo();
-            this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+          .then((update) => {
+            if (update) {
+              this.tc_loadBookTask(this.currentBookMeta._id);
+              this.getCurrentJobInfo();
+              this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+              Vue.nextTick(() => {
+                this.$refs.pauseAfterControl[0].recalcPauseAfterRange(true);
+              });
+            }
           });
       }
     },
@@ -2217,6 +2238,15 @@ select.text-danger#categorySelection, input.text-danger{
   color: #000;
   border: 1px solid red!important;
   border-radius: 0px;
+}
+.trans-from-wrapper {
+  height: 31px;
+}
+.trans-from-wrapper i{
+  position: relative;
+  top: -26px;
+  left: -5px;
+  background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
   /*position: sticky;*/

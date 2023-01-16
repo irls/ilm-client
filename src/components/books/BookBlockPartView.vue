@@ -1410,6 +1410,7 @@ export default {
         //console.log('onSelect');
       },
       onClick: function($event) {
+        // return;
 //         $('.medium-editor-toolbar').each(function(){
 //           $(this).css('display', 'inline-block');
 //         });
@@ -1517,6 +1518,10 @@ export default {
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
+        if (this.isChanged && this.changes.includes('content')) {
+          
+          this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+        }
       },
       discardBlock: function(ev) {
         this.getBlock(this.block.blockid)
@@ -1976,6 +1981,8 @@ export default {
         }
       },
       audPlayFromSelection() {
+        console.log('audPlay')
+
         if (this.player) {
           this.isAudPartStarted = false;
           this.player.loadBlock(this.block._id);
@@ -1988,6 +1995,7 @@ export default {
         this.$refs.blockCntx.close();
       },
       audPlaySelection() {
+        console.log('audPlaySelection')
         if (this.player) {
           this.audStop(this.block._id);
           this.player.loadBlock(this.block._id);
@@ -2010,17 +2018,20 @@ export default {
         this.$refs.blockCntx.close();
       },
       audPause: function(block_id, ev) {
+        console.log('audPause')
         if (this.player) {
           this.player.pause();
         }
       },
       audResume: function(block_id, ev) {
+        console.log('audResume')
         if (this.player) {
           this.audCleanClasses(block_id, ev);
           this.player.resume();
         }
       },
       audStop: function(block_id, ev) {
+        console.log('audStop')
         if (this.player) {
           this.isAudPartStarted = false;
           this.player.pause();
@@ -4027,6 +4038,10 @@ Join subblocks?`,
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
+          let oldW = [];// save old content to apply temporary classes to new content
+          if (this.$refs.blockContent && this.$refs.blockContent.innerHTML && this.$refs.blockContent.innerHTML.indexOf(`class="selected"`) !== -1) {
+            oldW = this.$refs.blockContent.querySelectorAll('w');
+          }
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -4035,6 +4050,14 @@ Join subblocks?`,
             if (this.isAudPaused || this.isAudStarted) {
               this.player.regenerateAndHighlight();
             }
+            oldW.forEach(word => {
+              if (word.classList.contains('selected')) {// apply temporary class selected to new content
+                let w = this.$refs.blockContent.querySelector(`[id="${word.id}"]`);
+                if (w) {
+                  w.classList.add('selected');
+                }
+              }
+            });
           });
         }
       },
