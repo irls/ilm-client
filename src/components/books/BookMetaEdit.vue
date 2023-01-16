@@ -2230,7 +2230,8 @@ select.text-danger#categorySelection, input.text-danger{
 .trans-from-wrapper i{
   position: relative;
   top: -27px;
-  left: -16px;
+  left: -5px;
+  background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
   /*position: sticky;*/
