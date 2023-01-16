@@ -4031,6 +4031,10 @@ Join subblocks?`,
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
+          let oldW = [];// save old content to apply temporary classes to new content
+          if (val && val.indexOf('data-in-search') !== -1 && this.$refs.blockContent && this.$refs.blockContent.innerHTML && this.$refs.blockContent.innerHTML.indexOf(`class="selected"`) !== -1) {
+            oldW = this.$refs.blockContent.querySelectorAll('w');
+          }
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -4039,6 +4043,14 @@ Join subblocks?`,
             if (this.isAudPaused || this.isAudStarted) {
               this.player.regenerateAndHighlight();
             }
+            oldW.forEach(word => {
+              if (word.classList.contains('selected')) {// apply temporary class selected to new content
+                let w = this.$refs.blockContent.querySelector(`[id="${word.id}"]`);
+                if (w) {
+                  w.classList.add('selected');
+                }
+              }
+            });
           });
         }
       },
