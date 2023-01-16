@@ -581,6 +581,14 @@
    #bookCoverSmall {
      min-width: 200px; min-height: 300px; border: 1px dashed gray;
    }
+
+   .group {
+      display: flex;
+
+    }
+    .input-group {
+      margin-right: 5px;
+    }
  
    /*Tabs control*/
  
@@ -593,6 +601,7 @@
    .image-upload-wrapper {
      height: 200px;
    }
+ 
  
  
  
