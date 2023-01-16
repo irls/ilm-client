@@ -52,19 +52,20 @@
           <template v-if="allowLoginAs(user)"><span class="btn btn-primary" v-on:click="loginAs(user.email)">Login as</span></template>
         </div>
         <div class="t-box">
-    <!--      <select-roles
-            :selected="[...user.roles]"
+          <select-roles
+            :selected="user.languages ? [...user.roles] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
-    -->
-          <select-roles
-          :selected="[...user.roles]"
+   
+    <!--      <select-roles
+          :selected="roles"
           @select="val => { roles = val }"
           :inModal="true"
           :isDisabled="!$store.state.isAdmin"
         ></select-roles>
         </div>
+    -->
         <div class="t-box">
           <select-languages
             :selected="user.languages ? [...user.languages] : []"
