@@ -2229,7 +2229,7 @@ select.text-danger#categorySelection, input.text-danger{
 }
 .trans-from-wrapper i{
   position: relative;
-  top: -27px;
+  top: -26px;
   left: -5px;
   background: white;
 }
