@@ -59,7 +59,7 @@
           ></select-roles>
     -->
           <select-roles
-          :selected="roles"
+          :selected="[...user.roles]"
           @select="val => { roles = val }"
           :inModal="true"
           :isDisabled="!$store.state.isAdmin"
