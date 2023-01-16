@@ -110,9 +110,9 @@
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
+
         save() {
         
-          
           let formData = new FormData();
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
