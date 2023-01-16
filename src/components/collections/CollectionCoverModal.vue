@@ -103,10 +103,11 @@
           this.createImage(files[0]);
         },
 
-        resetInput () {
-          this.uploadURL = "";
-        },
+
         
+        resetInput () {
+          this.uploadURL = '';
+        },
 
         createImage (file) {
           // console.log('*** Creating new image', file)
@@ -118,6 +119,9 @@
         },
 
         save() {
+          if (!this.uploadImage && !this.uploadURL) {
+            return;
+          }
         
           let formData = new FormData();
           if (this.uploadImage) {
