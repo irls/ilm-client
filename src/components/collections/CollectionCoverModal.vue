@@ -119,9 +119,9 @@
         },
 
         save() {
-          if (!this.uploadImage && !this.uploadURL) {
+          /*if (!this.uploadImage && !this.uploadURL) {
             return;
-          }
+          }*/
         
           let formData = new FormData();
           if (this.uploadImage) {
