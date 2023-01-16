@@ -21,7 +21,7 @@
         </ul>
       </div> -->
 
-      <div class="tab-content">
+      
         <!-- Selection tabs for Upload or Create forms -->
 
         <div id="upload_pane" :class="['tab-pane fade in image-upload-wrapper', {active: uploadMode}]">
@@ -107,7 +107,7 @@
          <h2> {{uploadProgress}}   &nbsp; <i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i> </h2>
       </div>
 
-    </div> <!--modal body -->
+    
 
     <div class="modal-footer">
       <button class="btn" v-on:click="cancel()">Cancel</button>
@@ -236,7 +236,7 @@ export default {
   },
 
   activated () {
-      this.uploadImage = this.img.coverimg
+    //  this.uploadImage = this.img.coverimg
   },
 
   mounted () {
