@@ -35,10 +35,16 @@
               </div>
 
               <div class="col-sm-8">
+                <div class="group">
+
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL" v-model="uploadImage" v-on:input="onImageChange" />
                 </div>
+
+                <button class="btn btn-default" v-on:click="resetInput"><i class="fa fa-trash-o"></i></button>
+
+               </div>
 
                  <br> &nbsp;&nbsp;&nbsp;  or <br><br>
 
@@ -104,9 +110,9 @@
     </div> <!-- modal body -->
 
     <div class="modal-footer">
+      <button class="btn" v-on:click="cancel()">Cancel</button>
       <button class="btn btn-primary" type="button" 
-        @click="save" 
-        :disabled="!saveEnabled">Save</button>
+        @click="save">Save</button>
     </div>
 
   </modal>
@@ -580,6 +586,10 @@ export default {
     height: 200px;
   }
 
-
-
+  .group {
+      display: flex;
+    }
+    .input-group {
+      margin-right: 5px;
+    }
 </style>
