@@ -4032,7 +4032,7 @@ Join subblocks?`,
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
           let oldW = [];// save old content to apply temporary classes to new content
-          if (val && val.indexOf('data-in-search') !== -1 && this.$refs.blockContent && this.$refs.blockContent.innerHTML && this.$refs.blockContent.innerHTML.indexOf(`class="selected"`) !== -1) {
+          if (this.$refs.blockContent && this.$refs.blockContent.innerHTML && this.$refs.blockContent.innerHTML.indexOf(`class="selected"`) !== -1) {
             oldW = this.$refs.blockContent.querySelectorAll('w');
           }
 
