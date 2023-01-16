@@ -53,19 +53,11 @@
         </div>
         <div class="t-box">
           <select-roles
-            :selected="user.roles ? [...user.roles] : []"
+            :selected="[...user.roles]"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
-   
-    <!--      <select-roles
-          :selected="roles"
-          @select="val => { roles = val }"
-          :inModal="true"
-          :isDisabled="!$store.state.isAdmin"
-        ></select-roles>
         </div>
-    -->
         <div class="t-box">
           <select-languages
             :selected="user.languages ? [...user.languages] : []"
