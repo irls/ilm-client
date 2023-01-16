@@ -53,9 +53,9 @@
         </div>
         <div class="t-box">
           <select-roles
-            :placeholder="'Select Roles'"
             :selected="[...user.roles]"
             :isDisabled="!$store.state.isAdmin"
+            :placeholder="'Select Roles'"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
         </div>
