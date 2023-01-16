@@ -111,8 +111,7 @@
  
      <div class="modal-footer">
        <button class="btn" v-on:click="cancel()">Cancel</button>
-       <button class="btn btn-primary" type="button" 
-         @click="save">Save</button>
+       <button class="btn btn-primary" type="button" @click="save">Save</button>
      </div>
  
    </modal>
