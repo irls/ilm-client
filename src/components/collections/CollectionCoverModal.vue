@@ -24,18 +24,17 @@
               </div>
 
 
-            <div class="col-sm-8">
-
-
-              <div class="group">
-
-                <div class="input-group">
-                  <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                </div>
-
+              <div class="col-sm-8">
+              
+                <div class="group">
+              
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                    <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  </div>
+              
                   <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
-
+              
                 </div>
 
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
@@ -103,12 +102,6 @@
           this.createImage(files[0]);
         },
 
-
-        
-        resetInput () {
-          this.uploadURL = '';
-        },
-
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -116,6 +109,10 @@
           
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
+        },
+
+        resetInput () {
+          this.uploadURL = "";
         },
 
         save() {
