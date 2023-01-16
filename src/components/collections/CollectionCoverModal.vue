@@ -53,7 +53,8 @@
 
       <div class="modal-footer">
         <button class="btn" @click="cancel()">Cancel</button>
-        <button class="btn btn-primary" @click="save()">Save</button>
+        <!--<button class="btn btn-primary" @click="save()">Save</button>-->
+        <button class="btn btn-primary" type="button" @click="save">Save</button>
       </div>
 
     </modal>
@@ -116,9 +117,9 @@
         },
 
         save() {
-          /*if (!this.uploadImage && !this.uploadURL) {
+          if (!this.uploadImage && !this.uploadURL) {
             return;
-          }*/
+          }
         
           let formData = new FormData();
           if (this.uploadImage) {
