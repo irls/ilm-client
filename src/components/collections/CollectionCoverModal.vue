@@ -18,45 +18,32 @@
         <div id="upload_pane" class="tab-pane fade in">
           <div class="row">
             <div class="col-md-12">
-
               <div class="col-sm-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
-
-
-              <div class="col-sm-8">
-              
-                <div class="group">
-              
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
-                  </div>
-              
-                  <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
-              
+            <div class="col-sm-8">
+              <div class="group">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
-
+                  <button class="btn btn-default" @click="resetInput"><i class="fa fa-trash-o"></i></button>
+                </div>
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
-
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
                 </label>
               
             </div>
-
             </div>
           </div>
         </div>
       </div>
-
       <div class="modal-footer">
-        <button class="btn" @click="cancel()">Cancel</button>
-        <!--<button class="btn btn-primary" @click="save()">Save</button>-->
-        <button class="btn btn-primary" type="button" @click="save">Save</button>
+        <button class="btn" v-on:click="cancel()">Cancel</button>
+        <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
-
     </modal>
   </div>
 </template>
@@ -102,7 +89,16 @@
           }
           this.createImage(files[0]);
         },
-
+/*
+        resetInput () {
+         // this.$refs.form.reset()
+          this.$refs["form"].value = "";
+        },
+*/
+        resetInput () {
+          this.uploadURL = "";
+        },
+        
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -111,11 +107,6 @@
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
-
-        resetInput () {
-          this.uploadURL = "";
-        },
-
         save() {
           if (!this.uploadImage && !this.uploadURL) {
             return;
@@ -132,12 +123,28 @@
               this.close();
             });
         },
-
+        /*
+        save() {
+          if (!this.uploadImage && !this.uploadURL) {
+            return;
+          }
+          
+          let formData = new FormData();
+          if (this.uploadImage) {
+            formData.append('coverimg', this.uploadImage, 'coverimg');
+          }
+          formData.append('coverimgURL', this.uploadURL);
+          
+          return this.updateCollectionCoverimg(formData)
+            .then(response => {
+              this.close();
+            });
+        },
+        */
         cancel() {
           this.$emit('closed');
           this.$modal.hide('import-collection-cover')
         },
-
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
@@ -184,7 +191,6 @@
     }
     .group {
       display: flex;
-
     }
     .input-group {
       margin-right: 5px;
