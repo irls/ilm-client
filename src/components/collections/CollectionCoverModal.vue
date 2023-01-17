@@ -104,10 +104,17 @@
         },
         
         save() {
-          if (!this.uploadImage && !this.uploadURL && "") {
-            return;
+          if (!this.uploadImage && !this.uploadURL === "success") {
+
+            return this.updateCollectionCoverimg()
+            .then(response => {
+              this.close();
+            });
           }
-          
+
+
+
+        /*  
           let formData = new FormData();
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
@@ -118,6 +125,7 @@
             .then(response => {
               this.close();
             });
+          */
         },
        
         cancel() {
