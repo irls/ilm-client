@@ -130,12 +130,14 @@
       computed: {
         ...mapGetters(['currentCollection']),
 
+        /*
         saveEnabled: {
       get() {
         return !this.onFilesChange;
       },
       cache: false
     }
+    */
 
 
 
