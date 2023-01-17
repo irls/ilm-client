@@ -66,7 +66,7 @@
       methods: {
         show() {
           this.uploadImage = '';
-          this.uploadURL = this.currentCollection.coverimgURL || '';
+          this.uploadURL = this.currentCollection.coverimgURL ? this.currentCollection.coverimgURL : '';
           this.$modal.show('import-collection-cover');
         },
         close() {
@@ -104,7 +104,7 @@
         },
         
         save() {
-          if (!this.uploadImage && !this.uploadURL) {
+          if (!this.uploadImage && !this.uploadURL && !this.uploadURL != "") {
             return;
           }
           
@@ -128,7 +128,17 @@
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
-        ...mapGetters(['currentCollection'])
+        ...mapGetters(['currentCollection']),
+
+        saveEnabled: {
+      get() {
+        return !this.uploadImage && this.onFilesChange;
+      },
+      cache: false
+    }
+
+
+
       },
       watch: {
         /*uploadImage: {
