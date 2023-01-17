@@ -66,7 +66,7 @@
       methods: {
         show() {
           this.uploadImage = '';
-          this.uploadURL = this.currentCollection.coverimgURL ? this.currentCollection.coverimgURL : '';
+          this.uploadURL = this.currentCollection.coverimgURL && this.currentCollection.coverimgURL != ''  ? this.currentCollection.coverimgURL : '';
           this.$modal.show('import-collection-cover');
         },
         close() {
