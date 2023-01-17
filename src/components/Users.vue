@@ -56,7 +56,6 @@
             :selected="user.roles ? [...user.roles] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
-            :inModal="true"
           ></select-roles>
         </div>
         <div class="t-box">
