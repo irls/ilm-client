@@ -61,8 +61,9 @@ export default {
         if (this.inModal) {
           return '-in-modal';
         }
-        return '';
+        return this.selectedValue != undefined && this.selectedValue != "" ? this.selectedValue : "Select Roles";
       }
+    
     }
   }
 
