@@ -156,7 +156,8 @@
                     ref="blockDescription"
                     @input="commitDescription($event)"
                     v-html="block.description"
-                    @contextmenu.prevent.stop="onContext">
+                    @contextmenu.prevent.stop="onContext"
+                    @focusout="commitDescription($event, true)">
                   </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
@@ -2144,10 +2145,13 @@ export default {
           this.block.setAudiosrcFootnote(pos, '');
         }
       },
-      commitDescription: function(ev) {
+      commitDescription: function(ev, setContent = false) {
         //this.block.description = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange('description');
+        if (setContent) {
+          this.block.description = this.$refs.blockDescription.innerHTML;
+        }
       },
 
       addFlag: function(ev, type = 'editor') {

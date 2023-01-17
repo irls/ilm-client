@@ -455,6 +455,7 @@
                     :class="['table-cell', '-text', {'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language), {'__unsave': !(!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
+                    @focusout="commitFootnote(ftnIdx, $event, 'content')"
                     v-html="footnote.content"
                     :ref="'footnoteContent_' + ftnIdx">
                   </div>
@@ -2824,6 +2825,13 @@ Save text changes and realign the Block?`,
 //         }
         data.language = false;
         this.block.addFootnote(pos, data);
+        if (this.$refs.blocks) {// keep actual content in block
+          this.$refs.blocks.forEach((blkRef, partIdx) => {
+            if (blkRef.$refs && blkRef.$refs.blockContent) {
+              this.block.setPartContent(partIdx, blkRef.$refs.blockContent.innerHTML);
+            }
+          });
+        }
         this.$forceUpdate();
         this.isChanged = true;
         let ref = this.$refs['footnoteContent_' + pos];
@@ -2901,9 +2909,13 @@ Save text changes and realign the Block?`,
         if (this.block.footnotes[pos] && !(this.block.footnotes[pos] instanceof FootNote)) {
           this.block.footnotes[pos] = new FootNote(this.block.footnotes[pos]);
         }
-        if (field && ev && ev.target && typeof ev.target.value !== 'undefined') {
-          if (this.block.footnotes[pos] && this.block.footnotes[pos].hasAttribute(field)) {
-            this.block.footnotes[pos][field] = ev.target.value;
+        if (field && ev && ev.target) {
+          if (typeof ev.target.value !== 'undefined') {
+            if (this.block.footnotes[pos] && this.block.footnotes[pos].hasAttribute(field)) {
+              this.block.footnotes[pos][field] = ev.target.value;
+            }
+          } else if (field === 'content') {
+            this.block.footnotes[pos][field] = ev.target.innerHTML;
           }
         }
       },
