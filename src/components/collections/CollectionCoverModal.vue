@@ -104,7 +104,7 @@
         },
         
         save() {
-          if (!this.uploadImage && !this.uploadURL) {
+          if (!this.uploadImage && !this.uploadURL && !this.resetInput) {
             return;
           }
           
