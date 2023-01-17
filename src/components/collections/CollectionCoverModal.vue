@@ -132,7 +132,7 @@
 
         saveEnabled: {
       get() {
-        return !this.uploadImage && this.onFilesChange;
+        return !this.onFilesChange;
       },
       cache: false
     }
