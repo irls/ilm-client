@@ -170,13 +170,20 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-    /*
+    
     selectedRole: {
       get() {
-      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : this.user.roles != "'Select Roles'"
+      return this.user.roles != undefined ? this.user.roles : "Select Roles";
     }
     },
    
+/*
+selectedRole: {
+      get() {
+      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles"
+    }
+    },
+
 
     selectedRole: {
       get() {
@@ -186,14 +193,14 @@ export default {
       return ''
     },
   },
- */
+ 
  selectedRole() {
       if (this.user.roles != undefined) {
         return 'Select Roles'
       }
-      return this.user.roles
+      return 
     },
-
+*/
 
     filteredUsers: {
       //cache: false,
