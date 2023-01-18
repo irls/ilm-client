@@ -180,7 +180,7 @@ export default {
 
     selectedRole: {
       get() {
-      if (this.user.roles != undefined && this.user.roles != "") {
+      if (this.user.roles === undefined) {
         return 'Select Roles'
       }
       return ''
