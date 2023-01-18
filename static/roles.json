@@ -2,12 +2,10 @@
   {
     "rank": "admin",
     "name": "Admin"
-  }, 
-  {
+  }, {
     "rank": "editor",
     "name": "Editor"
-  }, 
-  {
+  }, {
     "rank": "librarian",
     "name": "Librarian"
   },
