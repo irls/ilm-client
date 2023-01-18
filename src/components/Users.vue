@@ -178,11 +178,14 @@ export default {
     },
     */
 
-    selectRoles () {
-      if (this.user.roles === undefined) {
-        return ""
+    selectRoles: {
+      get() {
+      if (this.user.roles === undefined && this.user.roles === "") {
+        return 'Select Roles'
       }
+      return ''
     },
+  },
 
     filteredUsers: {
       //cache: false,
