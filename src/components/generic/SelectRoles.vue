@@ -65,6 +65,12 @@ export default {
         return '';
       }
     },
+
+    selectedValue: {
+      get() {
+      return this.roles != undefined && this.roles != "" ? this.roles : 'Select Roles';
+    }
+    },
     
     /*
     selectedValue: {
