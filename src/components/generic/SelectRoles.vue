@@ -62,7 +62,7 @@ export default {
         if (this.inModal) {
           return '-in-modal';
         }
-        return this.roles != undefined && this.roles != "" ? this.roles : '';
+        return '';
       }
     },
 /*

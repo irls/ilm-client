@@ -54,7 +54,7 @@
         <div class="t-box">
           <select-roles 
             v-model="selectedRole"
-            :selected="user.roles ? [...user.roles] : []"
+            :selected=" [...user.roles] "
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
@@ -171,11 +171,19 @@ export default {
     },
 
   
-   
-/*
-selectedRole: {
+    selectedRole: {
       get() {
-      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles"
+      if (this.user.roles != undefined) {
+        return 'Select Roles'
+      }
+      return ''
+    },
+  },
+
+/*
+  selectedRole: {
+      get() {
+      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles";
     }
     },
 
