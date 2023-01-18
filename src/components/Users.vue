@@ -54,7 +54,7 @@
         <div class="t-box">
           <select-roles 
             v-model="selectedRole"
-            :selected="user.roles && user.roles != undefind ? [...user.roles] : [] "
+            :selected="user.roles ? [...user.roles] : [] "
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>

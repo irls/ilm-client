@@ -62,6 +62,9 @@ export default {
         if (this.inModal) {
           return '-in-modal';
         }
+        else {
+          this.selectedValue != undefined;
+          }
         return '';
       }
     },
