@@ -52,8 +52,8 @@
           <template v-if="allowLoginAs(user)"><span class="btn btn-primary" v-on:click="loginAs(user.email)">Login as</span></template>
         </div>
         <div class="t-box">
-          <select-roles
-            
+          <select-roles 
+            v-model="selecteRole"
             :selected="user.roles ? [...user.roles] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
@@ -168,6 +168,12 @@ export default {
 
     pagedUsers (val) {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
+    },
+
+    selecteRole: {
+      get() {
+      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : 'Select Roles'
+    }
     },
 
     filteredUsers: {

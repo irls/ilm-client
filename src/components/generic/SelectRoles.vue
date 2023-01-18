@@ -62,11 +62,9 @@ export default {
         if (this.inModal) {
           return '-in-modal';
         }
-        return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : 'Select Roles';
+        return '';
       }
     },
-    
-    ...mapGetters(['user'])
     
     /*
     selectedValue: {
