@@ -170,7 +170,7 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-  
+/*  
     selectedRole: {
       get() {
       if (this.user.roles != undefined) {
@@ -180,7 +180,7 @@ export default {
     },
   },
 
-/*
+
   selectedRole: {
       get() {
       return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles";
