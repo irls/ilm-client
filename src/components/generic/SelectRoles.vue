@@ -66,10 +66,11 @@ export default {
       }
     },
 
-    selectedValue: {
-      get() {
-      return this.roles != undefined && this.roles != "" ? this.roles : 'Select Roles';
-    }
+    selectedValue() {
+      if (this.roles != undefined) {
+        return 'Select Roles'
+      }
+      return ''
     },
     
     /*
