@@ -53,7 +53,7 @@
         </div>
         <div class="t-box">
           <select-roles 
-            v-model="selecteRole"
+            v-model="selectedRole"
             :selected="user.roles ? [...user.roles] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
@@ -170,9 +170,9 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-    selecteRole: {
+    selectedRole: {
       get() {
-      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : 'Select Roles'
+      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : this.user.roles != 'Select Roles'
     }
     },
 
