@@ -188,7 +188,7 @@ export default {
   },
  */
  selectedRole() {
-      if (this.user.roles === undefined) {
+      if (this.user.roles != undefined) {
         return 'Select Roles'
       }
     },
