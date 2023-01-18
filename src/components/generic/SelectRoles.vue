@@ -50,6 +50,7 @@ export default {
     selectedValue (val) {
       this.$emit('select', val)
     }
+  
   },
 
   mounted () {
@@ -62,9 +63,6 @@ export default {
         if (this.inModal) {
           return '-in-modal';
         }
-        else {
-          this.selectedValue != undefined;
-          }
         return '';
       }
     },
