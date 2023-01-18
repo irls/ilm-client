@@ -63,15 +63,7 @@ export default {
         }
         return '';
       }
-    },
-
-    selectedValue: {
-      get() {
-        return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles"
-      }
-    },
-
-    ...mapGetters(['user'])
+    }
   }
 
 }
