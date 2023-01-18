@@ -176,7 +176,7 @@ export default {
       return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : this.user.roles != "'Select Roles'"
     }
     },
-    */
+   
 
     selectedRole: {
       get() {
@@ -186,6 +186,13 @@ export default {
       return ''
     },
   },
+ */
+ selectedRole() {
+      if (this.user.roles === undefined) {
+        return 'Select Roles'
+      }
+    },
+
 
     filteredUsers: {
       //cache: false,
