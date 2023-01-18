@@ -52,7 +52,7 @@
           <template v-if="allowLoginAs(user)"><span class="btn btn-primary" v-on:click="loginAs(user.email)">Login as</span></template>
         </div>
         <div class="t-box">
-          <select-roles
+          <select-roles 
             :selected="user.roles ? [...user.roles] : []"
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
@@ -178,6 +178,7 @@ export default {
         return filteredData(this.users, this.filterKey, this.filter)
       }
     },
+    
     
     ...mapGetters(['adminOrLibrarian', 'isAdmin', 'user'])
 
