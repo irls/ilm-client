@@ -62,13 +62,9 @@ export default {
         if (this.inModal) {
           return '-in-modal';
         }
-        else {
-          this.roles != undefined;
-          }
-        return '';
+        return this.roles != undefined && this.roles != "" ? this.roles : '';
       }
     },
-    
 /*
     selectedValue() {
       if (this.roles != undefined) {
