@@ -15,6 +15,7 @@
 
 <script>
 
+import { mapGetters } from 'vuex'
 import { select } from 'vue-strap'
 import ROLES from '../../../static/roles.json'
 
@@ -63,10 +64,18 @@ export default {
         }
         return '';
       }
-    }
+    },
+    
+    selectedValue: {
+      get() {
+        return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles"
+      }
+    },
+
+    ...mapGetters(['user'])
+  }
   }
 
-}
 </script>
 <style lang="less">
   .roles-select {
