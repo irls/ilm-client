@@ -57,7 +57,7 @@
       data() {
         return {
           uploadImage: '',
-          uploadURL: null,
+          uploadURL: '',
          
         }
       },
@@ -92,7 +92,7 @@
         },
 
         resetInput () {
-          this.uploadURL = null
+          this.uploadURL = null;
         
           
         },
