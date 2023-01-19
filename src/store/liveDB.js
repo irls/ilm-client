@@ -19,6 +19,8 @@ class liveDB {
       process.env.LIVE_QUERY_URL,
       {
         timeout: 1000,
+        autoConnect: true,
+        reconnection: true,
       });
 
     socket.on('reconnect_error', () => {
