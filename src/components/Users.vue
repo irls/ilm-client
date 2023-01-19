@@ -174,10 +174,8 @@ export default {
  
     selectedRole() {
       if (this.user.roles != undefined ) {
-        val => { roles = val }
-      }
-      return 
-     
+        return ''
+      }   
     },
 
     
