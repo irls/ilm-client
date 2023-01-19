@@ -25,9 +25,9 @@
               <div class="group">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input id="myURL" type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
                 </div>
-                  <button class="btn btn-default" @click="resetInput" type="reset" value="reset"><i class="fa fa-trash-o"></i></button>
+                  <button class="btn btn-default" @click="document.getElementById('myURL').value = ''" ><i class="fa fa-trash-o"></i></button>
                 </div>
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
                 <label class='btn btn-default' type="file">
