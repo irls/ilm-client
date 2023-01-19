@@ -172,12 +172,13 @@ export default {
 
     
  
-    selectedRole: {
-      get() {
-      return this.user.roles != undefined && this.user.roles ? this.user.roles : this.user.roles != "Select Roles";
-    }
+    selectedRole() {
+      return this.user.roles
+       .then (val => { roles = val })
+     
     },
 
+    
 /* 
   selectedRole: {
       get() {
