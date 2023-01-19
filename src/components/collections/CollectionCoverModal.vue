@@ -92,7 +92,7 @@
 
         resetInput () {
           this.uploadURL = "";
-          this.uploadImage = "";
+          this.uploadImage = null;
           
         },
         
