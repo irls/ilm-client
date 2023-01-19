@@ -235,7 +235,7 @@ export default {
 
     selectedRole() {
       if (this.user.roles != undefined && this.user.roles != "" ) {
-        return 'Select Roles'
+        return 'Select'
       }   
     },
 
@@ -320,6 +320,7 @@ export default {
       }
       return user.enable && user._id !== this.user._id;
     },
+    ...mapGetters([ 'user' ]),
     ...mapActions(['loginAdminAs', 'connectDB']),
     ...mapActions('userActions', ['updateUser', 'getAll', 'user_passwordreset'])
   },
