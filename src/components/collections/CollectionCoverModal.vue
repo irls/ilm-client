@@ -56,7 +56,7 @@
       name: 'CollectionCoverModal',
       data() {
         return {
-          uploadImage: '',
+          uploadImage: null,
           uploadURL: '',
          
         }
@@ -92,7 +92,8 @@
         },
 
         resetInput () {
-          this.uploadURL = null;
+          this.uploadURL = '';
+          this.uploadImage = null
         
           
         },
