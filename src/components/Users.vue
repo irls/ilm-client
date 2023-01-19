@@ -233,18 +233,13 @@ export default {
       }
     },
 
-    selectedRole: {
-      get() {
-      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles";
-    }
-    },
-    
-/*
+
+
     selectedRole() {
-      if (this.user.roles != undefined && this.user.roles != "" ) {
+      if (this.user.roles != undefined && this.user.roles != null) {
         return 'Select'
       }   
-    },*/
+    },
 
     updateUsersList() {
       return this.getAll()
