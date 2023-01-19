@@ -114,7 +114,7 @@
           
           let formData = new FormData();
           if (this.uploadImage) {
-            formData.append('coverimg', this.uploadImage, 'coverimg') && this.this.uploadImage  === "";
+            formData.append('coverimg', this.uploadImage, 'coverimg') && this.this.uploadImage  === null;
           }
           formData.append('coverimgURL', this.uploadURL) && this.uploadURL === "";
           
