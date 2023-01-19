@@ -57,7 +57,7 @@
             :selected="user.roles ? [...user.roles] : [] "
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
-          ></select-roles>
+          >{{ selectedRole }}</select-roles>
         </div>
         <div class="t-box">
           <select-languages
@@ -179,6 +179,7 @@ export default {
       }
       return ''
     },
+
   },
 
 /* 
