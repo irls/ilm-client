@@ -109,26 +109,36 @@
           }
           
           
+          
           let formData = new FormData();
           if (this.uploadImage) {
-            formData.append('coverimg', this.uploadImage, 'coverimg');
+            formData.append('coverimg', this.uploadImage, 'coverimg') && this.this.uploadImage  === "";
           }
-          formData.append('coverimgURL', this.uploadURL);
+          formData.append('coverimgURL', this.uploadURL) && this.uploadURL === "";
           
           return this.updateCollectionCoverimg(formData)
             .then(response => {
               this.close();
             });
+            
         },
        
         cancel() {
           this.$emit('closed');
           this.$modal.hide('import-collection-cover')
         },
+
+        hideModal() {
+      this.$modal.hide('import-collection-cover');
+      this.$emit('closed');
+    },
+
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
         ...mapGetters(['currentCollection']),
+   
+    
 
         /*
         saveEnabled: {
