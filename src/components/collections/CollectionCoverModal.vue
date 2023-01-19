@@ -116,9 +116,9 @@
           
           let formData = new FormData();
           if (this.uploadImage) {
-            formData.append('coverimg', this.uploadImage, 'coverimg') && this.this.uploadImage  === null;
+            formData.append('coverimg', this.uploadImage, 'coverimg');
           }
-          formData.append('coverimgURL', this.uploadURL) && this.uploadURL === "";
+          formData.append('coverimgURL', this.uploadURL);
           
           return this.updateCollectionCoverimg(formData)
             .then(response => {
