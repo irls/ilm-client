@@ -25,7 +25,7 @@
               <div class="group">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input type="text" class="form-control" placeholder="URL" :key="imgInputKey" v-model="uploadURL" />
                 </div>
                   <button class="btn btn-default" @click="resetInput" ><i class="fa fa-trash-o"></i></button>
                 </div>
@@ -56,8 +56,9 @@
       name: 'CollectionCoverModal',
       data() {
         return {
-          uploadImage: null,
-          uploadURL: ''
+          uploadImage: '',
+          uploadURL: '',
+          imgInputKey: 0
         }
       },
       mounted() {
@@ -91,8 +92,8 @@
         },
 
         resetInput () {
-          this.uploadURL = "";
-          this.uploadImage = null;
+          this.imgInputKey++;
+        
           
         },
         
