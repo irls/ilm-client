@@ -170,13 +170,6 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-    
- 
-    selectedRole() {
-      if (this.user.roles != undefined && this.user.roles != "" ) {
-        return "'Select Roles'"
-      }   
-    },
 
     
 /* 
@@ -238,6 +231,12 @@ export default {
             user[field] = new_value;
           });
       }
+    },
+
+    selectedRole() {
+      if (this.user.roles != undefined && this.user.roles != "" ) {
+        return 'Select Roles'
+      }   
     },
 
     updateUsersList() {
