@@ -174,13 +174,9 @@ export default {
  
     selectedRole: {
       get() {
-      if (this.user.roles != undefined) {
-        return 'Select Roles'
-      }
-      return ''
+      return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : "Select Roles";
+    }
     },
-
-  },
 
 /* 
   selectedRole: {
