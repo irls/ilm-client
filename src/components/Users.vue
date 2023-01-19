@@ -170,7 +170,11 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
-
+    selectedRole: {
+      get() {
+      return this.user.roles != undefined && this.user.roles != null ? this.user.roles : "Select Roles";
+    }
+    },
     
 /* 
   selectedRole: {
@@ -233,13 +237,6 @@ export default {
       }
     },
 
-
-
-    selectedRole() {
-      if (this.user.roles != undefined && this.user.roles != null) {
-        return 'Select'
-      }   
-    },
 
     updateUsersList() {
       return this.getAll()
@@ -322,7 +319,7 @@ export default {
       }
       return user.enable && user._id !== this.user._id;
     },
-    ...mapGetters([ 'user' ]),
+
     ...mapActions(['loginAdminAs', 'connectDB']),
     ...mapActions('userActions', ['updateUser', 'getAll', 'user_passwordreset'])
   },
