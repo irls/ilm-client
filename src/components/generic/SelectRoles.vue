@@ -67,13 +67,15 @@ export default {
       }
     },
 
-    selectedValue() {
-      if (this.roles != null) {
+    selectedValue: {
+      get() {
+      if (this.user.roles === null) {
         return 'Select Roles'
       }
       return ''
     },
-    
+  },
+  ...mapGetters(['user'])
  /*   
     selectedValue: {
       get() {
