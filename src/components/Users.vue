@@ -57,7 +57,7 @@
             :selected=" [...user.roles]  "
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
-          >{{ selectedRole }}</select-roles>
+          ></select-roles>
         </div>
         <div class="t-box">
           <select-languages
@@ -170,6 +170,7 @@ export default {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
 
+    /*
     selectedRole: {
       get() {
       if (this.user.roles === null) {
