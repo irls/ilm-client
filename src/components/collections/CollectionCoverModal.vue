@@ -25,7 +25,7 @@
               <div class="group">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input type="text" class="form-control" placeholder="URL" ref="imgURL" v-model="uploadURL" />
                 </div>
                   <button class="btn btn-default" @click="resetInput" ><i class="fa fa-trash-o"></i></button>
                 </div>
@@ -91,7 +91,8 @@
         },
 
         resetInput () {
-          this.uploadURL = null;
+          this.uploadURL = "";
+          this.$refs.imgURL.value = ""
           
         },
         
