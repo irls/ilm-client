@@ -25,7 +25,7 @@
               <div class="group">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" :key="imgInputKey" v-model="uploadURL" />
+                  <input type="text" class="form-control" placeholder="URL"  v-model="uploadURL" />
                 </div>
                   <button class="btn btn-default" @click="resetInput" ><i class="fa fa-trash-o"></i></button>
                 </div>
@@ -57,8 +57,8 @@
       data() {
         return {
           uploadImage: '',
-          uploadURL: '',
-          imgInputKey: 0
+          uploadURL: null,
+         
         }
       },
       mounted() {
@@ -92,7 +92,7 @@
         },
 
         resetInput () {
-          this.imgInputKey++;
+          this.uploadURL = null
         
           
         },
@@ -107,7 +107,7 @@
         },
         
         save() {
-          if (!this.uploadImage && !this.uploadURL && !this.uploadURL === "") {
+          if (!this.uploadImage && !this.uploadURL) {
             return;
           }
           
