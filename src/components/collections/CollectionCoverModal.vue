@@ -56,7 +56,7 @@
       name: 'CollectionCoverModal',
       data() {
         return {
-          uploadImage: '',
+          uploadImage: null,
           uploadURL: ''
         }
       },
