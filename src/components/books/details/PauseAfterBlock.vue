@@ -31,7 +31,7 @@
           <input type="number" class="pause-after" v-model="pause" disabled v-else />
         </template>
         <template v-else>
-          <button v-if="range.length > 1" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
+          <button v-if="range.length > 1" @click="confirmPauseUptdMessage(range)" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
           <button v-else @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
           <input  class="pause-after" type="number" disabled
             v-if="range.length > 1"/>
@@ -42,7 +42,7 @@
             v-on:change="onPauseInput"
             v-on:focusout="onFocusout"
             v-else/>
-          <button v-if="range.length > 1" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
+          <button v-if="range.length > 1" @click="confirmPauseUptdMessage(range)" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
           <button v-else @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
@@ -409,7 +409,30 @@
         if (/[^\d\.\,]/.test($ev.target.value)) {
           $ev.target.value = this.pause;
         }
-      }
+      },
+      confirmPauseUptdMessage(range) {
+        this.$root.$emit('show-modal', {
+          title: 'Confirm pause update',
+          text: `Current values are from ${range[0]} to ${range[range.length - 1]} in the selected range of ${this.blockTypesInRange.length} blocks.<br>Are you sure you want to update "pause before" on the range?`,
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              'class': 'btn btn-primary'
+            },
+            {
+              title: 'Confirm',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              'class': 'btn btn-primary'
+            }
+          ],
+          class: ['modal-width align-modal']
+        });
+      },
     },
     computed: {
       pauseAfterSelection: {
@@ -558,6 +581,9 @@
   }
 </script>
 <style lang="less">
+  .modal-width {
+    width: 450px !important;
+  }
   .pause-after-container {
     .vue-slider-component.vue-slider-horizontal {
       z-index: 0;
