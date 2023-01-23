@@ -31,7 +31,8 @@
           <input type="number" class="pause-after" v-model="pause" disabled v-else />
         </template>
         <template v-else>
-          <button @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
+          <button v-if="range.length > 1" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
+          <button v-else @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
           <input  class="pause-after" type="number" disabled
             v-if="range.length > 1"/>
           <input  class="pause-after" type="number" v-model="pauseInput"
@@ -41,7 +42,8 @@
             v-on:change="onPauseInput"
             v-on:focusout="onFocusout"
             v-else/>
-          <button @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
+          <button v-if="range.length > 1" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
+          <button v-else @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
       <div class="listen-block col-md-4" v-if="listenBlockDisplay">
