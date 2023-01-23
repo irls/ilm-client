@@ -27,7 +27,7 @@
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL"  v-model="uploadURL" />
                 </div>
-                  <button class="btn btn-default" @click="resetInput" ><i class="fa fa-trash-o"></i></button>
+                  <button class="btn btn-default" @click="removeImage" ><i class="fa fa-trash-o"></i></button>
                 </div>
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
                 <label class='btn btn-default' type="file">
@@ -91,11 +91,11 @@
           this.createImage(files[0]);
         },
 
-        resetInput () {
-          this.uploadURL = '';
+       // resetInput () {
+       //   this.uploadURL = '';
         
           
-        },
+       // },
         
         createImage (file) {
           // console.log('*** Creating new image', file)
@@ -105,14 +105,17 @@
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
+
+        removeImage(e) {
+          this.uploadURL = '';
+        },
         
         save() {
           if (!this.uploadImage && !this.uploadURL && !this.uploadURL === "") {
             return;
           }
           
-          
-          
+      
           let formData = new FormData();
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
