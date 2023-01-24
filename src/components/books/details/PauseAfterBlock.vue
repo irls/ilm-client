@@ -122,16 +122,18 @@
             //let currentEvent = this.lastEvent;
             if (this.lastIncrement === null) {
               this.$emit('setPauseAfter', this.blockType, val);
+              this.range = [val];
             } else {
               return new Promise((resolve, reject) => {
                 setTimeout(() => {
                   if (this.lastIncrement === val) {
                     this.$emit('setPauseAfter', this.blockType, val);
-                    setTimeout(() => {// avoid updates from live_db
-                      this.lastIncrement = null;
-                    }, 300);
+                    this.range = [val];
+                    //setTimeout(() => {// avoid updates from live_db
+                      //this.lastIncrement = null;
+                    //}, 300);
                   }
-                }, 500);
+                }, 300);
               });
             }
             //}
@@ -148,6 +150,9 @@
       },
       recalcPauseAfterRange(reset_pause = false) {
         if (this.pauseAfterBlockUpdate) {
+          return false;
+        }
+        if (this.range.length === 1 && this.lastIncrement !== null) {
           return false;
         }
         let range = [];
@@ -531,6 +536,7 @@
       },*/
       'blockSelection.start._id': {
         handler(val, oldVal) {
+          this.lastIncrement = null;
           if (val) {
             this.resetPause();
             this.recalcBlocks();
@@ -541,6 +547,7 @@
         handler(val, oldVal) {
           let singleSelection = !oldVal && val === this.blockSelection.start._id;
           if (this.blockSelection.start._id && this.blockSelection.end._id && (this.blockSelection.start._id !== this.blockSelection.end._id || !singleSelection)) {
+            this.lastIncrement = null;
             this.resetPause();
             this.recalcBlocks();
           }
