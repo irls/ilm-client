@@ -9,7 +9,7 @@
     multiple
     :placeholder="'Select Roles'"
     :disabled="isDisabled"
-    :class="['roles-select', 'user-roles-select ' + classList]"
+    :class="['roles-select', 'user-roles-select' + classList]"
   ></v-select>
 </template>
 
@@ -31,10 +31,11 @@ export default {
     return {
       options: ROLES,
       selectedValue: [],
-      search: ''
+      search: '',
       
     }
   },
+  
 
   props: [
     'selected',
@@ -53,41 +54,26 @@ export default {
   
   },
 
+
   mounted () {
     this.selectedValue = this.selected
+   // console.log ( this.selected )
   },
   
   computed: {
     classList: {
       get() {
         if (this.inModal) {
-          return '-in-modal';
+         return '-in-modal';
         }
         return '';
       }
     },
 
-    selectedValue: {
-      get() {
-      if (this.user.roles === null) {
-        return 'Select Roles'
-      }
-      return ''
-    },
-  },
-  ...mapGetters(['user'])
- /*   
-    selectedValue: {
-      get() {
-        return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : 'Select Roles'
-      }
-    },
+    
+}, 
+}
 
-    ...mapGetters(['user'])
-    */
-  }
-
-  }
 
 </script>
 <style lang="less">

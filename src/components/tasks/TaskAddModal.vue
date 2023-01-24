@@ -106,8 +106,8 @@ export default {
           'roles': {
             'editor': {'require': true},
             'proofer': {'require': true},
-            'narrator': {'require': true}//,
-            //'engineer': {'require': true}
+            'narrator': {'require': true},
+            'engineer': {'require': true}
           },
           'lang': {'require': true}
         },
@@ -117,7 +117,7 @@ export default {
             'editor': {'require': true},
             'proofer': {'require': true},
             'narrator': {'require': true},
-            'engineer': {'require': true}
+          'engineer': {'require': true}
           },
           'lang': {'require': true}
         }
