@@ -27,7 +27,7 @@
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
                   <input type="text" class="form-control" placeholder="URL"  v-model="uploadURL" />
                 </div>
-                  <button class="btn btn-default" @click="removeImage" ><i class="fa fa-trash-o"></i></button>
+                  <button class="btn btn-default" @click="remove" ><i class="fa fa-trash-o"></i></button>
                 </div>
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
                 <label class='btn btn-default' type="file">
@@ -90,12 +90,6 @@
           }
           this.createImage(files[0]);
         },
-
-       // resetInput () {
-       //   this.uploadURL = '';
-        
-          
-       // },
         
         createImage (file) {
           // console.log('*** Creating new image', file)
@@ -106,21 +100,18 @@
           reader.readAsDataURL(file);
         },
 
-        removeImage(e) {
+        remove() {
           this.uploadURL = '';
+          this.currentCollection.coverimgURL = '';
         },
         
         save() {
-          if (!this.uploadImage && !this.uploadURL && !this.uploadURL === "") {
-            return;
-          }
-          
-      
+    
           let formData = new FormData();
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
           }
-          formData.append('coverimgURL', this.uploadURL);
+          formData.append('coverimgURL', this.uploadURL || this.uploadURL == '' );
           
           return this.updateCollectionCoverimg(formData)
             .then(response => {
@@ -145,38 +136,9 @@
         ...mapGetters(['currentCollection']),
    
     
-
-        /*
-        saveEnabled: {
-      get() {
-        return !this.onFilesChange;
       },
-      cache: false
-    }
-    */
-
-
-
-      },
-      watch: {
-        /*uploadImage: {
-          handler(val) {
-            if (val) {
-              this.uploadURL = '';
-            } else {
-              $('.upload-image-input').val('');
-            }
-          }
-        },
-        uploadURL: {
-          handler(val) {
-            if (val) {
-              this.uploadImage = '';
-            }
-          }
-        }*/
-      }
   }
+  
 </script>
 <style lang="less">
   .upload-collection-cover-modal {
