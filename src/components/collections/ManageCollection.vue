@@ -42,8 +42,9 @@
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
           <p v-if="pubVersion && pubVersion.length && pubVersionDate && pubVersionDate.length">
-            <span v-if="hasAnyBooks">Published: </span>
-            <span v-else>Unpublished updates: </span>
+            <span v-if="isUnpublishedUpd">Unpublished updates: </span>
+            <span v-else>Published: </span>
+
             <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
           <p v-if="!currentCollection.isPublished || hasReadyBooks">
@@ -166,6 +167,9 @@
           return readyBooks.every((bookId)=>(pubBooks.indexOf(bookId) >= 0))
         }
         return false;
+      },
+      isUnpublishedUpd() {
+        return !this.hasAnyBooks || this.collectionPubBooksLength == 0;
       },
       isPubDisabled() {
       //console.log(`isPubDisabled: `, this.currentCollection.isPublished, this.hasReadyBooks, this.collectionBooksLength, this.collectionPubBooksLength);
