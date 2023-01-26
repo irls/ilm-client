@@ -18,30 +18,30 @@
         <div id="upload_pane" class="tab-pane fade in">
           <div class="row">
             <div class="col-md-12">
-
               <div class="col-sm-4">
                 <img :src="uploadURL" class="preview-upload" v-show="uploadURL.length>0" />
               </div>
-
-              <div class="col-sm-8">
+            <div class="col-sm-8">
+              <div class="group">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                  <input type="text" class="form-control" placeholder="URL" v-model="uploadURL" />
+                  <input type="text" class="form-control" placeholder="URL"  v-model="uploadURL" />
                 </div>
-
+                  <button class="btn btn-default" @click="remove" ><i class="fa fa-trash-o"></i></button>
+                </div>
                 <br> &nbsp;&nbsp;&nbsp;  or <br><br>
-
                 <label class='btn btn-default' type="file">
                   <i class="fa fa-folder-open-o" aria-hidden="true"></i> &nbsp; Browse for bookcover file &hellip;
                   <input name="coverFile" type="file" v-show="false" accept="image/*" class="upload-image-input" @change="onFilesChange($event)"><br>
                 </label>
-              </div>
-
+              
+            </div>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn" v-on:click="cancel()">Cancel</button>
         <button class="btn btn-primary" v-on:click="save()">Save</button>
       </div>
     </modal>
@@ -57,7 +57,8 @@
       data() {
         return {
           uploadImage: '',
-          uploadURL: ''
+          uploadURL: '',
+         
         }
       },
       mounted() {
@@ -89,7 +90,7 @@
           }
           this.createImage(files[0]);
         },
-
+        
         createImage (file) {
           // console.log('*** Creating new image', file)
           this.uploadImage = file;
@@ -98,46 +99,46 @@
           reader.onload = e => {this.uploadURL = e.target.result};
           reader.readAsDataURL(file);
         },
+
+        remove() {
+          this.uploadURL = '';
+          this.currentCollection.coverimgURL = '';
+        },
+        
         save() {
-          if (!this.uploadImage && !this.uploadURL) {
-            return;
-          }
-          
+    
           let formData = new FormData();
           if (this.uploadImage) {
             formData.append('coverimg', this.uploadImage, 'coverimg');
           }
-          formData.append('coverimgURL', this.uploadURL);
+          formData.append('coverimgURL', this.uploadURL || this.uploadURL == '' );
           
           return this.updateCollectionCoverimg(formData)
             .then(response => {
               this.close();
             });
+            
         },
+       
+        cancel() {
+          this.$emit('closed');
+          this.$modal.hide('import-collection-cover')
+        },
+
+        hideModal() {
+      this.$modal.hide('import-collection-cover');
+      this.$emit('closed');
+    },
+
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollectionCoverimg'])
       },
       computed: {
-        ...mapGetters(['currentCollection'])
+        ...mapGetters(['currentCollection']),
+   
+    
       },
-      watch: {
-        /*uploadImage: {
-          handler(val) {
-            if (val) {
-              this.uploadURL = '';
-            } else {
-              $('.upload-image-input').val('');
-            }
-          }
-        },
-        uploadURL: {
-          handler(val) {
-            if (val) {
-              this.uploadImage = '';
-            }
-          }
-        }*/
-      }
   }
+  
 </script>
 <style lang="less">
   .upload-collection-cover-modal {
@@ -157,6 +158,12 @@
     }
     .tab-pane {
       display: block !important;
+    }
+    .group {
+      display: flex;
+    }
+    .input-group {
+      margin-right: 5px;
     }
   }
 </style>
