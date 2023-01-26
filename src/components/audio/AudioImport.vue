@@ -447,14 +447,12 @@ export default {
           toUpload.files.push(af);
         }
       });
-      let api_url = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunks';
-      let api = this.$store.state.auth.getHttp()
       if (this.audioURL.length) toUpload.url = this.audioURL;
       toUpload.audioImportType = this.audioImportType;
       toUpload.audioImportQuality = this.audioImportQuality;
 
       //this.isUploading = true
-      return this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload])
+      return this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload, this.book ? this.book.bookid : null])
         .then(response => {
           if (response.status===200) {
             this.uploadFinished = true
