@@ -23,7 +23,8 @@
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
     <button v-if="(showSearchIn.includes(currRoute) && hasBookSelected())" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
-    <OverlayPanel ref="searchPanel" :dismissable="false">
+    <div id="search-panel-container"></div>
+    <OverlayPanel ref="searchPanel" :dismissable="false" appendTo="search-panel-container">
       <div class="search-box">
         <div class="search">
           <input ref="searchInBookInput" v-model="bookSearch.string" v-on:paste.prevent="onPaste" v-on:keyup.enter="scrollSearchDown" v-on:keyup.escape="toggleSearchVisible" type="text" class="form-control search-in-book" placeholder="Search"></input>
@@ -415,5 +416,18 @@ h3.title i {
     }
   }
 }*/
+#search-panel-container {
+  display: inline-block;
+  width: 0px;
+  position: relative;
+  .p-overlaypanel {
+    width: 430px;
+    left: -440px !important;
+    top: 10px !important;
+  }
+  .buttons {
+    width: 75px;
+  }
+}
 
 </style>

@@ -156,7 +156,8 @@
                     ref="blockDescription"
                     @input="commitDescription($event)"
                     v-html="block.description"
-                    @contextmenu.prevent.stop="onContext">
+                    @contextmenu.prevent.stop="onContext"
+                    @focusout="commitDescription($event, true)">
                   </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
@@ -1517,6 +1518,10 @@ export default {
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
+        if (this.isChanged && this.changes.includes('content')) {
+          
+          this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+        }
       },
       discardBlock: function(ev) {
         this.getBlock(this.block.blockid)
@@ -2140,10 +2145,13 @@ export default {
           this.block.setAudiosrcFootnote(pos, '');
         }
       },
-      commitDescription: function(ev) {
+      commitDescription: function(ev, setContent = false) {
         //this.block.description = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange('description');
+        if (setContent) {
+          this.block.description = this.$refs.blockDescription.innerHTML;
+        }
       },
 
       addFlag: function(ev, type = 'editor') {
@@ -4027,6 +4035,10 @@ Join subblocks?`,
       'blockPart.content': {
         handler(val) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
+          let oldW = [];// save old content to apply temporary classes to new content
+          if (this.$refs.blockContent && this.$refs.blockContent.innerHTML && this.$refs.blockContent.innerHTML.indexOf(`class="selected"`) !== -1) {
+            oldW = this.$refs.blockContent.querySelectorAll('w');
+          }
 
           Vue.nextTick(() => {
             if (this.$refs.blockContent) {
@@ -4035,6 +4047,14 @@ Join subblocks?`,
             if (this.isAudPaused || this.isAudStarted) {
               this.player.regenerateAndHighlight();
             }
+            oldW.forEach(word => {
+              if (word.classList.contains('selected')) {// apply temporary class selected to new content
+                let w = this.$refs.blockContent.querySelector(`[id="${word.id}"]`);
+                if (w) {
+                  w.classList.add('selected');
+                }
+              }
+            });
           });
         }
       },

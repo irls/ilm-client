@@ -1203,6 +1203,9 @@ class BookBlock {
     }
 
     if (this.type == 'illustration') {
+      if (this.isChanged) {
+        this.description = this.prepareUnsavedContent(this.description);
+      }
       const contentArr = replaceParsing(this.description);
       let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
       if (foundContent) {
@@ -1219,6 +1222,9 @@ class BookBlock {
     if (this.parts && this.parts.length) {
       let isFound = false;
       for (let part of this.parts) {
+        if (part.isChanged) {
+          part.content = this.prepareUnsavedContent(part.content);
+        }
         const contentArr = replaceParsing(part.content);
         let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
         if (foundContent) {
@@ -1238,6 +1244,9 @@ class BookBlock {
     let isFound = false;
     if (this.footnotes && this.footnotes.length) {
       for (let footnote of this.footnotes) {
+        if (this.isChanged) {
+          footnote.content = this.prepareUnsavedContent(footnote.content);
+        }
         const contentArr = replaceParsing(footnote.content);
         let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
         if (foundContent) {
@@ -1253,6 +1262,9 @@ class BookBlock {
       }
     }
 
+    if (this.isChanged) {
+      this.content = this.prepareUnsavedContent(this.content);
+    }
     const contentArr = replaceParsing(this.content);
     let foundContent = filterContent(contentArr, parserSearchArr, fullPhrase);
     if (foundContent) {
@@ -1264,6 +1276,14 @@ class BookBlock {
       }
     }
     return isFound || (foundContent ? true : false);
+  }
+  
+  // when changes are not saved, content can not be wrapped with <w></w> yet
+  prepareUnsavedContent(content) {
+    if (content && !/<w[^>]*>/.test(content)) {
+      return `<w>${content}</w>`;
+    }
+    return content;
   }
 
   cleanFindMarks() {
