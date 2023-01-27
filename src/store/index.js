@@ -4855,8 +4855,8 @@ export const store = new Vuex.Store({
           });
       }
     },
-    updateAudiobook({state, commit, dispatch}, [id, data]) {
-      let url = `${state.API_URL}books/${state.currentBookid}/audiobooks/chunks`;
+    updateAudiobook({state, commit, dispatch}, [id, data, bookid = null]) {
+      let url = `${state.API_URL}books/${state.currentBookid ? state.currentBookid : bookid}/audiobooks/chunks`;
       if (id) {
         url+= `/${encodeURIComponent(id)}`;
       }
