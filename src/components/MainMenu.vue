@@ -81,7 +81,7 @@ export default {
       }
     },
     ...mapGetters(['tc_userTasks','livedbStatus']),
-  },
+  
 
 
 
@@ -96,6 +96,7 @@ export default {
     },
     ...mapGetters(['user']),
   }
+}
 
 </script>
 
