@@ -55,6 +55,7 @@
         getImage: 'image',
         getHeight: 'height',
         getWidth: 'width',
+        imagesMap: 'imagesMap'
       }),
       imgHeight(){
         return this.getHeight(this.id) || this.height
@@ -69,6 +70,11 @@
       },
       key(){
         return `${this.imgHeight}_${this.imgWidth}`
+      },
+      blockTmpImage: {
+        get() {
+          return this.imagesMap[this.id];
+        }
       }
     },
     methods: {
@@ -109,6 +115,15 @@
         })
       },
     },
+    watch: {
+      'blockTmpImage': {
+        handler(val) {
+          if (!val) {
+            this.$refs.illustrationInput.clear();
+          }
+        }
+      }
+    }
   }
 </script>
 <style lang="less" scoped>
