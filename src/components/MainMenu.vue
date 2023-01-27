@@ -39,10 +39,9 @@
     </td>
     <td class='menu right'>
       <ul class="navlist">
-          <!-- <router-link class="presentation" to="/help" tag='li'><a>Help</a></router-link></router-link> -->
-          <!-- <router-link class="presentation" to="/contact" tag='li'><a>Contact</a></router-link> -->
 
-          <li>Welcome {{$store.state.user.name}}!</li>
+          <li class="welcomeName">Welcome, {{ welcomeName }}!</li>
+
           <li v-if="$store.state.isLoggedIn" class="presentation"><a href="#" v-on:click.stop.prevent="$store.state.auth.logout()">Logout</a></li>
       </ul>
     </td></tr>
@@ -84,7 +83,20 @@ export default {
     ...mapGetters(['tc_userTasks','livedbStatus']),
   },
 
-}
+
+
+    welcomeName: {
+      get() {
+        if (this.user.name != undefined && this.user.name != "") {
+          return this.user.name
+        } else {
+          return this.user._id
+        }
+      },
+    },
+    ...mapGetters(['user']),
+  }
+
 </script>
 
 <style lang="less">
