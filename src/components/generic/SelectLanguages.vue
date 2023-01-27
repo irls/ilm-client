@@ -95,8 +95,12 @@ export default {
         overflow-x: hidden;
         /*top: -150px;*/
         /*height: auto;*/
-        left: 340px;
-        top: -277px;
+        left: 490px;
+        top: -12px;
+        max-width: 300px;
+        input.form-control {
+          width: 200px !important;
+        }
       }
       &.open {
         .dropdown-toggle {
@@ -115,7 +119,7 @@ export default {
       }
     }
     .dropdown-toggle {
-      max-width: 312px;
+      max-width: 455px;
     }
   }
 </style>
