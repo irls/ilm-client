@@ -10,7 +10,7 @@
       <div v-if="error" class="error-message" v-text="error"></div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-user"></i></span>
         <div class="user-modal-wrapper">
-          <input type="text" :class="['form-control', {'-has-error': errors.username}]" :maxlength="30" placeholder="Username" v-model="username">
+          <input type="text" :class="['form-control', {'-has-error': errors.username}]" :maxlength="30" placeholder="Username" v-model="username" @input="cleanWarningMsg('username')">
           <span >{{username.length}}/30</span>
         </div>
           <div v-if="errors.username" v-for="err in errors.username" class="error-message" v-text="err"></div>
@@ -23,7 +23,7 @@
       </div>
       <div class="form-group"><span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
         <div class="user-modal-wrapper">
-          <input type="text" :class="['form-control', {'-has-error': errors.email}]" :maxlength="40" placeholder="Email" name="email" v-model="email">
+          <input type="text" :class="['form-control', {'-has-error': errors.email}]" :maxlength="40" placeholder="Email" name="email" v-model="email" @input="cleanWarningMsg('email')">
           <span >{{email.length}}/40</span>
         </div>
           <div v-if="errors.email" v-for="err in errors.email" class="error-message" v-text="err"></div>
@@ -146,6 +146,10 @@ export default {
     cancel () {
       //this.$modal.hide('add-user-modal');
       this.$emit('closed', false)
+    },
+    cleanWarningMsg (type) {
+      if (type === 'username') return this.errors.username = undefined;
+      else if (type === 'email') return this.errors.email = undefined;
     },
     ...mapActions('userActions', ['createUser'])
   }
