@@ -15,7 +15,7 @@
           <button :class="['btn btn-danger', {'disabled' : !allowUnpublishCollection}]"
               :disabled="!allowUnpublishCollection"
               v-on:click="remove(true)">
-            <span v-if="hasAnyBooks">Unpublish Collection</span>
+            <span v-if="hasAnyBooks || neverPublished">Unpublish Collection</span>
             <span v-else>Unpublished</span>
           </button>
         </div>
@@ -42,8 +42,9 @@
         <fieldset class="c-publication-action">
           <legend>Publication</legend>
           <p v-if="pubVersion && pubVersion.length && pubVersionDate && pubVersionDate.length">
-            <span v-if="hasAnyBooks">Published: </span>
-            <span v-else>Unpublished updates: </span>
+            <span v-if="isUnpublishedUpd">Unpublished updates: </span>
+            <span v-else>Published: </span>
+
             <b>Ver. {{pubVersion}}</b> <i class="p-margin-left">{{pubVersionDate}}</i>
           </p>
           <p v-if="!currentCollection.isPublished || hasReadyBooks">
@@ -167,6 +168,9 @@
         }
         return false;
       },
+      isUnpublishedUpd() {
+        return !this.hasAnyBooks || this.collectionPubBooksLength == 0;
+      },
       isPubDisabled() {
       //console.log(`isPubDisabled: `, this.currentCollection.isPublished, this.hasReadyBooks, this.collectionBooksLength, this.collectionPubBooksLength);
         if (this.currentCollection.isPublished && (!this.hasReadyBooks && this.collectionBooksLength)) return true;
@@ -257,6 +261,9 @@
         }
         return '';
       },
+      neverPublished() {
+        return this.pubVersionDate.length == 0;
+      },
       currVersionDate() {
         if (this.hasReadyBooks) {
           const uDate = new Date();
@@ -277,7 +284,6 @@
       },
       currVersion() {
         if (this.hasReadyBooks) {
-          console.log(`hasReadyOnlyPublished: `, this.hasReadyOnlyPublished);
           const versions = this.pubVersion.split('.');
           if (versions && versions.length == 2) {
             if (this.hasReadyOnlyPublished) {

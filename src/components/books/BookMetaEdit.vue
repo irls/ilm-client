@@ -8,7 +8,9 @@
         </template>
       </div>
 
-      <div class="download-area col-sm-6">
+      <div class="row" style="height: 0">
+        <div class="download-area col-sm-6">
+        </div>
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />

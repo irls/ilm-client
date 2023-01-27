@@ -265,11 +265,11 @@ export const store = new Vuex.Store({
     setSelectedBlocksAsyncResult : [],
     suspiciousWordsHighlight: suspiciousWordsHighlight,
     blockAudiosrcConfig: {
-      
+
     },
-    
+
     audioFadeConfig: {
-      
+
     },
     playingBlock: {
       state: null,
@@ -1471,7 +1471,7 @@ export const store = new Vuex.Store({
     set_blockAudiosrcConfig(state, audiosrc_config) {
       state.blockAudiosrcConfig = audiosrc_config;
     },
-    
+
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
     },
@@ -1710,18 +1710,18 @@ export const store = new Vuex.Store({
           .then(() => {
             dispatch('tc_loadBookTask', 'all');
           });
-          
+
         dispatch('getConfig', 'custom')
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
               commit('set_couplet_separator', config.couplet_separator);
               commit('set_blockAudiosrcConfig', config.block_audiosrc_config);
             })
-            
+
         dispatch('getBookCategories');
         dispatch('getCollections');
         dispatch('getAlignBlocksLimit');
-        
+
         state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
           //console.log(`liveDB.startWatch.collection.data: `, data);
           if (data.action) {
@@ -1735,7 +1735,7 @@ export const store = new Vuex.Store({
                   if (cIdx > -1) {
                     const collection = state.bookCollectionsAll[cIdx];
                     if (collection.version < data.collection.version) {
-                      console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version, /*collection*/);
+                      //console.log(`updCollection ${data.collection.id}: coll.ver:`, collection.version, ` upd.ver`, data.collection.version, /*collection*/);
                       if (collection.validationErrors
                         && collection.validationErrors.slug
                         && data.collection.slug.trim().length) {
@@ -1801,7 +1801,7 @@ export const store = new Vuex.Store({
 
           }
        });
-       
+
        dispatch('getSuspiciousWordsCharacters');
        dispatch('getAudioFadeConfig');
        dispatch('updateBooksList');
@@ -4901,7 +4901,7 @@ export const store = new Vuex.Store({
                     blk.voicework = block.voicework;
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
-                    
+
                     if (blk.isChanged) {
                       response.data.blocks[idx] = _.assign(response.data.blocks[idx], {
                         footnotes: blk.footnotes,
@@ -5116,21 +5116,25 @@ export const store = new Vuex.Store({
       return axios.put(`${state.API_URL}collection/${state.currentCollection._id}`, data)
         .then((response) => {
           if (response && response.data) {
-            //commit('SET_CURRENT_COLLECTION', response.data);
+            let updObj = {};
             Object.keys(data).filter(k => {
               return !state.currentCollection.validationErrors[k];
             }).forEach(k => {
-              state.currentCollection[k] = data[k];
+              updObj[k] = data[k];
             });
-            if (response.data.hasOwnProperty('version')) {
-              state.currentCollection.version = response.data.version;
+            const updKeys = [
+              'version', 'pubVersion',
+              'currVersion', 'currVersionDate',
+              'slug', 'slug_status'
+            ];
+
+            for (let key of updKeys) {
+              if (response.data.hasOwnProperty(key)) {
+                updObj[key] = response.data[key];
+              }
             }
-            if (response.data.hasOwnProperty('slug')) {
-              state.currentCollection['slug'] = response.data.slug;
-            }
-            if (response.data.hasOwnProperty('slug_status')) {
-              state.currentCollection['slug_status'] = response.data.slug_status;
-            }
+
+            state.currentCollection = {...state.currentCollection, ...updObj};
             //commit('PREPARE_BOOK_COLLECTIONS');
           }
           return Promise.resolve();
@@ -5386,7 +5390,7 @@ export const store = new Vuex.Store({
           }
         });
     },
-    
+
     getAudioFadeConfig({state, commit}) {
       return axios.get(`${state.API_URL}audio_config/fade`)
         .then(response => {
