@@ -52,11 +52,13 @@
           <template v-if="allowLoginAs(user)"><span class="btn btn-primary" v-on:click="loginAs(user.email)">Login as</span></template>
         </div>
         <div class="t-box">
-          <select-roles
-            :selected="[...user.roles]"
+          <select-roles 
+            v-model="selectedRoles"
+            :selected=" [...user.roles] "
             :isDisabled="!$store.state.isAdmin"
             @select="userUpdate(user._id, 'roles', $event)"
           ></select-roles>
+          
         </div>
         <div class="t-box">
           <select-languages
@@ -159,7 +161,8 @@ export default {
         'enable': ''
       },
       workHistory: {},
-      passwordChanged: false
+      passwordChanged: false,
+      
     }
   },
 
@@ -168,6 +171,14 @@ export default {
     pagedUsers (val) {
       return pagedData(this.filteredUsers, this.currentPage, this.rowsPerPage)
     },
+
+    selectedRoles: {
+      get() {
+        console.log(this.user.roles)
+     //   return this.user.roles != undefined && this.user.roles != "" ? this.user.roles : 'Select Roles'
+      }
+    },
+
 
     filteredUsers: {
       //cache: false,
@@ -204,6 +215,7 @@ export default {
           });
       }
     },
+
 
     updateUsersList() {
       return this.getAll()
@@ -286,8 +298,9 @@ export default {
       }
       return user.enable && user._id !== this.user._id;
     },
+
     ...mapActions(['loginAdminAs', 'connectDB']),
-    ...mapActions('userActions', ['updateUser', 'getAll', 'user_passwordreset'])
+    ...mapActions('userActions', ['updateUser', 'getAll', 'user_passwordreset']),
   },
 
   watch: {

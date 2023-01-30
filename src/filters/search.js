@@ -83,7 +83,7 @@ const replaceParsing = (str, isWithSpace = false) => {
   let strArray = str.split('</w>');
 
   strArray = strArray.reduce((acc, string)=>{
-    const split = string.split(/(<w[^<>]+>)/i);
+    const split = string.split(/(<w[^<>]*>)/i);
     if (split.length > 2) {
       acc.push([
         split[1],

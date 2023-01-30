@@ -9,6 +9,7 @@
       :multiple="false"
       tabindex="0"
       :disabled="disabled"
+      ref="fileInput"
       @change="onChange($event.target.files[0])"
       @drop.stop.prevent="onFileDrop($event.dataTransfer.files[0])"
     />
@@ -48,6 +49,9 @@
           reader.onload = () => resolve(reader.result);
           reader.onerror = error => reject(error);
         });
+      },
+      clear() {
+        this.$refs.fileInput.value = '';
       }
     },
     beforeDestroy() {

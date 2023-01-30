@@ -9,12 +9,13 @@
     multiple
     :placeholder="'Select Roles'"
     :disabled="isDisabled"
-    :class="['roles-select', 'user-roles-select ' + classList]"
+    :class="['roles-select', 'user-roles-select' + classList]"
   ></v-select>
 </template>
 
 <script>
 
+import { mapGetters } from 'vuex'
 import { select } from 'vue-strap'
 import ROLES from '../../../static/roles.json'
 
@@ -30,9 +31,11 @@ export default {
     return {
       options: ROLES,
       selectedValue: [],
-      search: ''
+      search: '',
+      
     }
   },
+  
 
   props: [
     'selected',
@@ -48,24 +51,30 @@ export default {
     selectedValue (val) {
       this.$emit('select', val)
     }
+  
   },
+
 
   mounted () {
     this.selectedValue = this.selected
+   // console.log ( this.selected )
   },
   
   computed: {
     classList: {
       get() {
         if (this.inModal) {
-          return '-in-modal';
+         return '-in-modal';
         }
         return '';
       }
-    }
-  }
+    },
 
+    
+}, 
 }
+
+
 </script>
 <style lang="less">
   .roles-select {
@@ -83,8 +92,12 @@ export default {
         overflow-y: auto;
         overflow-x: hidden;
         /*height: auto;*/
-        left: 340px;
-        top: -12px;
+        left: 490px;
+        top: -13px;
+        max-width: 300px;
+        input.form-control {
+          width: 200px !important;
+        }
       }
       &.open {
         .dropdown-toggle {
@@ -103,7 +116,7 @@ export default {
       }
     }
     .dropdown-toggle {
-      max-width: 312px;
+      max-width: 455px;
     }
   }
 </style>
