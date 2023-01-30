@@ -4840,7 +4840,7 @@ export const store = new Vuex.Store({
           commit('set_updateAudiobookProgress', false);
           if (response && response.data && response.data.audio && response.data.audio.id) {
             commit('set_currentAudiobook', response.data.audio);
-            axios.put(`${state.API_URL}task/${state.currentBookid}/audio_imported`, {})
+            axios.put(`${state.API_URL}task/${state.currentBookid ? state.currentBookid : bookid}/audio_imported`, {})
               .then((link_response) => {
                 //vm.closeForm(response)
                 dispatch('tc_loadBookTask', state.currentBookid);
