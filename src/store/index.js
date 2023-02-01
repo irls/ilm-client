@@ -1782,7 +1782,7 @@ export const store = new Vuex.Store({
               return c.bookid === data.meta.bookid;
             });
             if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
-              console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              //console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
@@ -2014,7 +2014,7 @@ export const store = new Vuex.Store({
 
           console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-            console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+            //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               // console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
@@ -4983,7 +4983,7 @@ export const store = new Vuex.Store({
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         const reqBookid = bookid ? bookid : state.currentBookid;
-        console.log(`loadBookTocSections.reqBookid: `, reqBookid);
+        //console.log(`loadBookTocSections.reqBookid: `, reqBookid);
         if (!reqBookid) return Promise.resolve({});
         return axios.get(`${state.API_URL}toc_section/book/${reqBookid}/all`)
           .then(data => {
