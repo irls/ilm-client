@@ -1518,7 +1518,8 @@ export default {
       onFocusout: function(el) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
-        if (this.isChanged && this.changes.includes('content')) {
+        let isPasteEvent = el.relatedTarget && el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0;
+        if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
           
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
@@ -2149,7 +2150,8 @@ export default {
         //this.block.description = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange('description');
-        if (setContent) {
+        let isPasteEvent = ev.relatedTarget && ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0;
+        if (setContent && !isPasteEvent) {
           this.block.description = this.$refs.blockDescription.innerHTML;
         }
       },

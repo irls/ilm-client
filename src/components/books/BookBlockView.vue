@@ -2909,12 +2909,13 @@ Save text changes and realign the Block?`,
         if (this.block.footnotes[pos] && !(this.block.footnotes[pos] instanceof FootNote)) {
           this.block.footnotes[pos] = new FootNote(this.block.footnotes[pos]);
         }
+        let isPasteEvent = ev.relatedTarget && ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0;
         if (field && ev && ev.target) {
           if (typeof ev.target.value !== 'undefined') {
             if (this.block.footnotes[pos] && this.block.footnotes[pos].hasAttribute(field)) {
               this.block.footnotes[pos][field] = ev.target.value;
             }
-          } else if (field === 'content') {
+          } else if (field === 'content' && !isPasteEvent) {
             this.block.footnotes[pos][field] = ev.target.innerHTML;
           }
         }
