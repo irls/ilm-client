@@ -287,9 +287,8 @@
           update[field] = value;
           return this.updateCollection(update)
             .then(() => {
-              this.collection[field] = value;
-              this.collection.slug = this.currentCollection.slug;
-              this.collection.slug_status = this.currentCollection.slug_status;
+              //this.currentCollection[field] = value;
+              this.collection = Object.assign({}, this.currentCollection);
              });
         },
         publish() {
@@ -409,7 +408,6 @@
       watch: {
         'currentCollection': {
           handler(val, oldVal) {
-
             this.init();
             //if (this.$refs.collectionDescription) {
               //Vue.nextTick(() => {

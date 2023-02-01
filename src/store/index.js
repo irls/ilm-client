@@ -1475,7 +1475,7 @@ export const store = new Vuex.Store({
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
     },
-    
+
     clear_blockSelection(state) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
         let idsArrayRange = state.storeListO.ridsArrayRange(state.blockSelection.start._id, state.blockSelection.end._id);
@@ -1741,7 +1741,7 @@ export const store = new Vuex.Store({
                         && data.collection.slug.trim().length) {
                         delete collection.validationErrors.slug;
                       }
-                      state.bookCollectionsAll[cIdx] = {...collection, ...data.collection};
+                      state.bookCollectionsAll[cIdx] = new Collection({...collection, ...data.collection});
                       commit('PREPARE_BOOK_COLLECTIONS');
                     }
                   }
@@ -1770,9 +1770,9 @@ export const store = new Vuex.Store({
           }
         });
 
-        console.log(`liveDB.startWatch.pubMetaV: `);
+        //console.log(`liveDB.startWatch.pubMetaV: `);
         state.liveDB.startWatch('pubMetaV', 'pubMetaV', {bookid: 'pubMetaV'}, (data) => {
-          console.log(`liveDB.startWatch.pubMetaV.data: `, data);
+          //console.log(`liveDB.startWatch.pubMetaV.data: `, data);
           const cIdx = state.bookCollectionsAll.findIndex(c => {
             return c.id === data.meta.collection;
           });
@@ -5115,8 +5115,8 @@ export const store = new Vuex.Store({
       }
       return axios.put(`${state.API_URL}collection/${state.currentCollection._id}`, data)
         .then((response) => {
+          let updObj = {};
           if (response && response.data) {
-            let updObj = {};
             Object.keys(data).filter(k => {
               return !state.currentCollection.validationErrors[k];
             }).forEach(k => {
@@ -5134,10 +5134,17 @@ export const store = new Vuex.Store({
               }
             }
 
-            state.currentCollection = {...state.currentCollection, ...updObj};
-            //commit('PREPARE_BOOK_COLLECTIONS');
+            const cIdx = state.bookCollectionsAll.findIndex(c => {
+              return c.id === state.currentCollection.id;
+            });
+
+            if (cIdx > -1) {
+              const collection = state.bookCollectionsAll[cIdx];
+              state.bookCollectionsAll[cIdx] = new Collection({...collection, ...response.data});
+              commit('PREPARE_BOOK_COLLECTIONS');
+            }
           }
-          return Promise.resolve();
+          return updObj;
         })
         .catch(err => {
           return Promise.reject(err);
