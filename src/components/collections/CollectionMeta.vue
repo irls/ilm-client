@@ -286,10 +286,10 @@
           let update = {};
           update[field] = value;
           return this.updateCollection(update)
-            .then(() => {
-              //this.currentCollection[field] = value;
-              this.collection = Object.assign({}, this.currentCollection);
-             });
+          .then(() => {
+            this.currentCollection[field] = value;
+            this.collection = Object.assign({}, this.currentCollection);
+          });
         },
         publish() {
           /*let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
