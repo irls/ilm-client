@@ -277,8 +277,8 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
-    pauseAfterBlockXhr: null
-  },
+    pauseAfterBlockXhr: null,
+  }, // end state
 
   getters: {
     getSelectionModalProgress: state=>state.SelectionModalProgress,
@@ -2016,7 +2016,7 @@ export const store = new Vuex.Store({
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              // console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+              console.log('metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
@@ -2185,7 +2185,7 @@ export const store = new Vuex.Store({
             if (parseInt(cVers[0]) === parseInt(pVers[0])) {
               delete update['major'];
               update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-              console.log('updateBookMeta unpublished', update);
+              //console.log('updateBookMeta unpublished', update);
             }
           }
         }
@@ -2206,11 +2206,11 @@ export const store = new Vuex.Store({
         delete update.major;
       }
 
-      let newMeta = Object.assign(state.currentBookMeta, update);
-      commit('SET_CURRENTBOOK_META', newMeta);
+      //let newMeta = Object.assign(state.currentBookMeta, update);
+      //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
 
-      return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
+      return axios.put(`${state.API_URL}meta/${state.currentBookMeta._id}`, update)
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
