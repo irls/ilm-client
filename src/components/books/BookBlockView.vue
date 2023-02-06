@@ -4428,7 +4428,7 @@ Save text changes and realign the Block?`,
       resetListenCompressed() {
         this.block.resetAudiosrcConfig();
       },
-      
+
       openEditBlockHtml() {
         let blockHtmlProps = {
           blockHTML: this.block.content || "",
@@ -4451,12 +4451,12 @@ Save text changes and realign the Block?`,
         this.$modal.show(EditHTMLModal, {
           blockLang: this.getBlockLang,
           editBlockHTMLLabel: this.editBlockHTMLLabel,
-          parnumCompNotHidden: this.parnumCompNotHidden, 
-          shortBlockid: this.shortBlockid, 
-          wordsRange: this.wordsRange, 
-          block: this.block, 
-          audioUrl: this.audioUrl, 
-          compressedAudioUrl: this.compressedAudioUrl, 
+          parnumCompNotHidden: this.parnumCompNotHidden,
+          shortBlockid: this.shortBlockid,
+          wordsRange: this.wordsRange,
+          block: this.block,
+          audioUrl: this.audioUrl,
+          compressedAudioUrl: this.compressedAudioUrl,
           disabled: !this.adminOrLibrarian || this.isSplittedBlock,
           adminOrLibrarian: this.adminOrLibrarian,
           blockHtmlProps: blockHtmlProps,
@@ -5090,7 +5090,7 @@ Save text changes and realign the Block?`,
     }
 
     &.controls-right {
-        width: 20px;
+        width: 24px;
     }
 
     &.completed {

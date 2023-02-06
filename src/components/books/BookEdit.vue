@@ -98,7 +98,7 @@
 
   </div>
   <!--<div class="container-block">   -->
-  <AudioFAB 
+  <AudioFAB
     @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -1520,8 +1520,11 @@ export default {
         const blockVirtRef = document.getElementById('v-' + blockId);
         if (blockEditRef && blockVirtRef) {
           const blockEditRect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
+          const bodyStyle = blockEditRef.currentStyle || window.getComputedStyle(blockEditRef);
+          const marginTop = parseFloat(bodyStyle.marginTop);
+          const marginBottom = parseFloat(bodyStyle.marginBottom);
           //console.log(`correctCurrentEditHeight: `, blockId, blockEditRect.height);
-          blockVirtRef.style.height = `${blockEditRect.height}px`;
+          blockVirtRef.style.height = `${blockEditRect.height + marginTop + marginBottom}px`;
           blockVirtRef.style.overflow = `hidden`;
         }
       });
@@ -2266,7 +2269,7 @@ export default {
             }
           });
       },
-      
+
       goToAudioBlock(block) {
         return new Promise((resolve, reject) => {
           let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
@@ -2423,7 +2426,7 @@ export default {
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       },
-      
+
       onAudioFab() {
         if (this.playingBlock.playingPauseAfter) {
           switch (this.playingBlock.state) {
