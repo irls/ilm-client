@@ -8,8 +8,10 @@
         </template>
       </div>
 
-      <div class="row" style="height: 0">
-        <div class="download-area col-sm-6">
+      <div class="container-fluid">
+        <div class="row"> <!--style="height: 0"-->
+          <div class="download-area col-sm-6">
+          </div>
         </div>
       </div>
 
