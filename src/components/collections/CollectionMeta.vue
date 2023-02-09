@@ -286,11 +286,10 @@
           let update = {};
           update[field] = value;
           return this.updateCollection(update)
-            .then(() => {
-              this.collection[field] = value;
-              this.collection.slug = this.currentCollection.slug;
-              this.collection.slug_status = this.currentCollection.slug_status;
-             });
+          .then(() => {
+            this.currentCollection[field] = value;
+            this.collection = Object.assign({}, this.currentCollection);
+          });
         },
         publish() {
           /*let api_url = this.API_URL + 'collection/' + this.currentCollection._id + '/publish';
@@ -409,7 +408,6 @@
       watch: {
         'currentCollection': {
           handler(val, oldVal) {
-
             this.init();
             //if (this.$refs.collectionDescription) {
               //Vue.nextTick(() => {

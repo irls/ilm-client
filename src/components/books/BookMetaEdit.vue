@@ -112,18 +112,18 @@
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]'  v-on:change="update('author', $event) " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
-                                                <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
-                                                  <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
-                                                </div>
-                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="update('author', $event); " :disabled="!allowMetadataEdit">
-                                                <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
-                                                  <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
-                                                </div>
-                                               <button v-if="i !== 0 && allowMetadataEdit" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
-                    <br/>
+                    <input v-model='currentBook.author[0]' v-on:change="debounceUpdate('author', $event);" :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
+                    <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
+                      <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
+                      <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
+                    </div>
+                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="debounceUpdate('author', $event);" :disabled="!allowMetadataEdit">
+                      <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
+                        <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
+                        <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
+                      </div>
+                      <button v-if="i !== 0 && allowMetadataEdit" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
+                      <br/>
                     </template>
                     <p v-if="allowMetadataEdit" style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author']" class="validation-error" style="text-align: right !important;">Define Author</span>
@@ -133,10 +133,10 @@
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author en</td>
                   <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="update('author_en', $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
-                                                <div class="dropdown" v-if="allowMetadataEdit">
-                                                  <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
-                                                </div>
+                    <div class="dropdown" v-if="allowMetadataEdit">
+                      <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
+                      <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
+                    </div>
                     <span style="text-align: right !important;" v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
 
                   </td>
@@ -626,6 +626,16 @@ var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
 
+function _debounce (func, timeout = 500) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func.apply(this, args);
+    }, timeout);
+  };
+};
+
 export default {
 
   name: 'BookMetaEdit',
@@ -744,7 +754,8 @@ export default {
         5: 'hr'
       },
       activeStyleTab: '',
-      jobDescription: ''
+      jobDescription: '',
+      //_test: _debounce(() => this.liveUpdate()),
     }
   },
 
@@ -1170,7 +1181,15 @@ export default {
   },
 
   created () {
-    this.init()
+    this.debounceUpdate = _debounce((...args)=>{
+      let [key, _event = false, value = null] = args;
+      if (_event && value === null) {
+        value = _event.target.value;
+      }
+      if (key == 'author') value = this.currentBook.author;
+      this.liveUpdate(key, value, _event);
+    }, 800);
+    this.init();
   },
 
   methods: {
@@ -1326,18 +1345,12 @@ export default {
         }, 1500)
       }
     },
-    updateWithDisabling(key, event, debounceTime){
-      if(!debounceTime)
-        debounceTime = false;
-
+    updateWithDisabling(key, event, debounceTime = false){
       return this.update(key, event, debounceTime, true);
     },
 
-    update(key, event, debounceTime, disable){
-      if(!debounceTime)
-        debounceTime = false;
-      if(!disable)
-        disable = false;
+    update(key, event, debounceTime = false, disable = false){
+      //console.log(`update: `, key, event, debounceTime, disable);
 
       if(key =='difficulty'){
 
@@ -1374,16 +1387,19 @@ export default {
         let debouncedFunction = _.debounce((key,event)=>{
           let val = typeof event === 'string' ? event : event.target.value;
           this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
-
-        },  debounceTime, {
+        }, debounceTime, {
           'leading': false,
           'trailing': true
         });
         debouncedFunction(key,event);
-      }else{
+      } else {
         let val = typeof event === 'string' ? event : event.target.value;
         this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
       }
+    },
+
+    debounceUpdate () {
+      // template function, will redefine in created() hook for debounce.
     },
 
     liveUpdate (key, value, event) {
@@ -1393,39 +1409,39 @@ export default {
       //      return ;
       //bad conflict fix
 
-        if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
-          if (key != 'author'){
+      //console.log(`liveUpdate: `, key, value, event);
+
+      if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
+        if (key != 'author'){
+          delete this.requiredFields[this.currentBook.bookid][key];
+        } else {
+          if (this.currentBookMeta.author.join("").length !== 0){
             delete this.requiredFields[this.currentBook.bookid][key];
-          } else {
-            if (this.currentBookMeta.author.join("").length !== 0){
-              delete this.requiredFields[this.currentBook.bookid][key];
-            }
           }
         }
+      }
 
-        if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
-        {
-            try {
-              delete this.requiredFields[this.currentBook.bookid]['slug'];
-            } catch (err){
-            }
-        }
-        if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
-        {
-            try {
-              delete this.requiredFields[this.currentBook.bookid]['slug'];
-            } catch (err){
-            }
-        }
+      if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
+      if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
 
-      var keys = key.split('.');
+      let keys = key.split('.');
       key = keys[0];
       if (keys.length > 1) {
           this.currentBook[keys[0]][keys[1]] = value;
           value = this.currentBook[keys[0]];
       }
 
-      var update = {
+      let update = {
         [key]: value
       }
 
@@ -1434,22 +1450,33 @@ export default {
         update.voices = {};
       }
 
+      //console.log(`updateBookMeta.update: `, update);
+
       return this.updateBookMeta(update)
       .then((response)=>{
-        if(event)
+
+        if (event) {
           event.target.disabled  = false ;
+        }
+
+        //console.log(`response: `, response);
+        //console.log(`update.response: `, key, update[key], response[key]);
+        //this.currentBook[key] = response[key];
 
         this.lockLanguage = false;
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
         }
 
-          return response;
+        return response;
 
       })
       .catch(err => {
-        console.log(err);
-        return BPromise.reject(err);
+        if (err instanceof Error) {
+          console.error(err);
+          return BPromise.reject(err);
+        };
+        return true;
       });
 
     },
@@ -1515,12 +1542,14 @@ export default {
     },
     addAuthor() {
       this.currentBook.author.push('');
-      this.liveUpdate('author', this.currentBook.author);
+      this.debounceUpdate('author', false, this.currentBook.author);
+      //this.liveUpdate('author', this.currentBook.author);
     },
     removeAuthor(i) {
       if (i > 0 || this.currentBook.author.length > 1) {
         this.currentBook.author.splice(i, 1);
-        this.liveUpdate('author', this.currentBook.author);
+        this.debounceUpdate('author', false, this.currentBook.author);
+        //this.liveUpdate('author', this.currentBook.author);
       }
     },
     publish() {
