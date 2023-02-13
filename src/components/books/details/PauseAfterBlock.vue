@@ -8,19 +8,21 @@
         <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
-    <vue-slider v-model="pause"
-        :min="min"
-        :max="max"
-        :interval="interval"
-        :width="'auto'"
-        tooltip="none"
-        :lazy="true"
-        :silent="true"
-        :debug="false"
-        ref="pause_after_slider"
-        @input="pauseValueChange"
-        @drag-end="pauseDragEnd"
-        v-if="bookMode !== 'proofread'"></vue-slider>
+    <template v-if="bookMode !== 'proofread'">
+      <vue-slider v-model="pause"
+                  :min="min"
+                  :max="max"
+                  :interval="interval"
+                  :width="'auto'"
+                  tooltip="none"
+                  :lazy="true"
+                  :silent="true"
+                  :debug="false"
+                  ref="pause_after_slider"
+                  @input="pauseValueChange"
+                  @drag-end="pauseDragEnd"></vue-slider>
+      <div id="cover-slider" v-if="range.length > 1 && callModal" @click="confirmPauseUptdMessage(range)"></div>
+    </template>
     <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
     <div class="hidden">{{parseFloatToFixed(pause) === min}},{{parseFloatToFixed(pause) === max}}</div>
     <div class="col-md-12">
@@ -31,8 +33,9 @@
           <input type="number" class="pause-after" v-model="pause" disabled v-else />
         </template>
         <template v-else>
-          <button @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
-          <input  class="pause-after" type="number" disabled
+          <button v-if="range.length > 1" @click="confirmPauseUptdMessage(range)" class="minus"></button>
+          <button v-else @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
+          <input  class="pause-after" type="number" @click="confirmPauseUptdMessage(range)"
             v-if="range.length > 1"/>
           <input  class="pause-after" type="number" v-model="pauseInput"
             :min="min"
@@ -41,7 +44,8 @@
             v-on:change="onPauseInput"
             v-on:focusout="onFocusout"
             v-else/>
-          <button @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
+          <button v-if="range.length > 1" @click="confirmPauseUptdMessage(range)" class="plus"></button>
+          <button v-else @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
       <div class="listen-block col-md-4" v-if="listenBlockDisplay">
@@ -74,7 +78,9 @@
         player: null,
         nowPlaying: false,
         lastEvent: null,
-        lastIncrement: null
+        lastIncrement: null,
+        setUndefined: false,
+        callModal: false,
       }
     },
     mounted() {
@@ -107,6 +113,9 @@
       },
       pauseValueChange(val) {
           //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
+        if (this.setUndefined) {
+          this.setUndefined = false;
+        }
         if (this.pauseUpdateEmitted) {
           if (val !== this.lastIncrement) {
             this.lastIncrement = null;
@@ -184,6 +193,9 @@
         if (this.range.length === 1 && this.range[0] !== 'none') {
           val = this.parseFloatToFixed(this.range[0]);
         } else {
+          setTimeout(() => {
+            this.callModal = true;
+          }, 800);
           val = 0;
         }
         let changedVal = this.pause != val;
@@ -194,20 +206,35 @@
         }
       },
       increasePause() {
-        if (this.range.length > 1) {
-          this.pause = this.min;
+        if (this.setUndefined) {
+          this.setUndefined = false;
+          this.pause = 0;
           this.pauseUpdateEmitted = true;
           this.pauseValueChange(this.pause);
-          this.resetPause();
-        } else if (this.pause <= this.max - this.interval) {
-          this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) + this.interval);
-          this.pause = this.lastIncrement;
+        } else {
+          if (this.range.length > 1) {
+            this.pause = this.min;
+            this.pauseUpdateEmitted = true;
+            this.pauseValueChange(this.pause);
+            this.resetPause();
+          } else if (this.pause <= this.max - this.interval) {
+            this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) + this.interval);
+            this.pause = this.lastIncrement;
+          }
         }
+
       },
       decreasePause() {
-        if (this.pause >= this.min + this.interval) {
-          this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
-          this.pause = this.lastIncrement;
+        if (this.setUndefined) {
+          this.setUndefined = false;
+          this.pause = 0;
+          this.pauseUpdateEmitted = true;
+          this.pauseValueChange(this.pause);
+        } else {
+          if (this.pause >= this.min + this.interval) {
+            this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
+            this.pause = this.lastIncrement;
+          }
         }
       },
       defer(func, val, time = 300) {
@@ -409,8 +436,11 @@
       onPauseInput($ev) {
         //console.log($ev.target.value);
         let value = parseFloat($ev.target.value);
-        if (isNaN(value) || !value) {
+        if ((isNaN(value) || !value) && !this.setUndefined) {
           value = 0;
+        }
+        if (this.setUndefined) {
+          this.setUndefined = false;
         }
         this.pause = this.parseFloatToFixed(value);
       },
@@ -418,6 +448,36 @@
         if (/[^\d\.\,]/.test($ev.target.value)) {
           $ev.target.value = this.pause;
         }
+      },
+      confirmPauseUptdMessage(range) {
+        this.$root.$emit('show-modal', {
+          title: 'Confirm pause update',
+          text: `Current values are from ${range[0]} to ${range[range.length - 1]} in the selected range of ${this.blockTypesInRange.length} blocks.<br>Are you sure you want to update "pause before" on the range?`,
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              'class': 'btn btn-primary'
+            },
+            {
+              title: 'Confirm',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                this.updates ();
+              },
+              'class': 'btn btn-primary'
+            }
+          ],
+          class: ['modal-width align-modal']
+        });
+      },
+      updates () {
+        this.range = 1;
+        this.setUndefined = true;
+        this.callModal = false;
+        this.pauseInput.get();
       }
     },
     computed: {
@@ -467,6 +527,9 @@
       },
       pauseInput: {
         get() {
+          if(this.setUndefined){
+            this.pause = undefined;
+          }
           return this.pause;
         },
         set(val) {
@@ -579,9 +642,21 @@
   }
 </script>
 <style lang="less">
+  .modal-width {
+    width: 450px !important;
+  }
   .pause-after-container {
+    position: relative;
     .vue-slider-component.vue-slider-horizontal {
       z-index: 0;
+    }
+    #cover-slider {
+      background: transparent;
+      border: #00d1ff;
+      width: 100%;
+      height: 18px;
+      position: absolute;
+      top: 42px;
     }
     .pause-after-input {
       text-align: left;
