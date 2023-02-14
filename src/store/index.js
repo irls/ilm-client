@@ -905,7 +905,7 @@ export const store = new Vuex.Store({
       Vue.prototype.user_id = session ? session.user_id : null;
     },
 
-    updateBookMeta (state, meta) {
+    SET_CURRENTBOOK_META_RAW (state, meta) {
       state.currentBookMeta = meta
     },
 
@@ -2151,10 +2151,10 @@ export const store = new Vuex.Store({
         if (update.major && update.major == true) updateVersion = {major: true}
       }
 
-      if (!(Object.keys(update).length === 2 &&
-              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined') &&
-              typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
-              //console.log('Update version');
+      if (!(Object.keys(update).length === 2
+        && (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined')
+        && typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
+        //console.log('Update version');
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
           let versions = currMeta.version.split('.');
           if (update.hasOwnProperty('hashTags')){
@@ -2238,6 +2238,7 @@ export const store = new Vuex.Store({
               commit('PREPARE_BOOK_COLLECTIONS');
             }
 
+            //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
