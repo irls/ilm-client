@@ -2135,9 +2135,10 @@ export const store = new Vuex.Store({
 
     updateBookMeta({state, dispatch, commit}, update) {
 
+      update = {...update};
       update.bookid = state.currentBookMeta._id;
 
-      let currMeta = state.currentBookMeta;
+      let currMeta = {...state.currentBookMeta};
       if (!currMeta.hasOwnProperty('publishLog')){
         currMeta.publishLog = {publishTime: false, updateTime: false}
       }
@@ -2189,19 +2190,16 @@ export const store = new Vuex.Store({
             }
           }
         }
-        if (currMeta.hasOwnProperty('publishLog')){
-          //console.log('income publishLog: ', currMeta.publishLog);
-          var publishLogAction = currMeta.publishLog || {publishTime: false, updateTime: false};
-          publishLogAction.updateTime = Date();
-        } else {
-          var publishLogAction = {
+        if (!update.hasOwnProperty('private')) {
+          let publishLogAction = {
             publishTime : false,
             updateTime : Date()
           };
-        }
-        if (!update.hasOwnProperty('private'))
+          if (currMeta.hasOwnProperty('publishLog') && currMeta.publishLog.publishTime){
+            publishLogAction.publishTime = currMeta.publishLog.publishTime;
+          }
           update.publishLog = publishLogAction;
-
+        }
       } else {
         delete update.major;
       }
@@ -2209,6 +2207,7 @@ export const store = new Vuex.Store({
       //let newMeta = Object.assign(state.currentBookMeta, update);
       //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
+      //return Promise.resolve('No data updated');
 
       return axios.put(`${state.API_URL}meta/${state.currentBookMeta._id}`, update)
         .then(response => {
