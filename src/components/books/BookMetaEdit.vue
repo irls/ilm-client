@@ -1199,149 +1199,7 @@ export default {
   },
 
   created () {
-    this.debounceUpdate = _cacheDebounce((...args)=>{
-      let [key, value = null, _event = false, disable = false] = args;
-
-      if (this.requiredFields[this.currentBook.bookid]
-      && this.requiredFields[this.currentBook.bookid][key]) {
-        if (key != 'author'){
-          delete this.requiredFields[this.currentBook.bookid][key];
-        } else {
-          if (this.currentBookMeta.author.join("").length !== 0){
-            delete this.requiredFields[this.currentBook.bookid][key];
-          }
-        }
-      }
-
-      if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
-      {
-        try {
-          delete this.requiredFields[this.currentBook.bookid]['slug'];
-        } catch (err) {}
-      }
-      if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
-      {
-        try {
-          delete this.requiredFields[this.currentBook.bookid]['slug'];
-        } catch (err) {}
-      }
-
-      if (key == 'difficulty') {
-
-        let validationErrors = '';
-
-        let re = /^\d{1,2}(\.\d{1,2})?$/i;
-
-        if ( !this.currentBook.difficulty.match(re) ){
-          validationErrors = 'Allowed range 1 - 14.99';
-        }
-
-        if ( parseFloat(this.currentBook.difficulty) > 14.99 ){
-          validationErrors = 'Allowed range 1 - 14.99';
-        }
-        if ( parseFloat(this.currentBook.difficulty) < 1){
-          validationErrors = 'Allowed range 1 - 14.99';
-        }
-
-        if(validationErrors !=this.validationErrors['difficulty'] ){
-          this.validationErrorDifficulty = validationErrors;
-        }
-        if(validationErrors && _event && disable){
-          _event.target.toggleAttribute('disable');
-          return false;
-        }
-
-      }
-
-      //-- Set values immediately because of controls -- { --//
-      if (key === 'numbering') {
-        this.currentBook[key] = value;
-      }
-
-      let keys = key.split('.');
-      if (keys.length > 1) {
-        if (keys[0] && ['styles'].includes(keys[0])) {
-          this.currentBook[keys[0]][keys[1]] = value;
-        }
-      }
-      //-- } -- end -- Set values immediately because of controls --//
-
-      if (_event && _event.target) {
-        if (disable) {
-          _event.target.disabled = true;
-        }
-      }
-      return true;
-    },
-    (...args)=>{
-
-      let targets = [];
-      const update = args.reduce((acc, arg)=>{
-        let [key, value = null, _event = false, disable = false] = arg;
-
-        if (_event && _event.target) {
-          if (value === null) {
-            value = _event.target.value;
-          }
-          if (disable) {
-            targets.push(_event.target);
-          }
-        }
-
-        let keys = key.split('.');
-        key = keys[0];
-        if (keys.length > 1) {
-          const prevVal = this.currentBook[keys[0]];
-          prevVal[keys[1]] = value;
-          value = prevVal;
-        }
-
-        if (key == 'author') value = this.currentBook.author;
-
-        acc[key] = value;
-
-        // Batch updates
-        if (key === 'language') {
-          acc.voices = {};
-        }
-
-        return acc;
-      }, {});
-
-      //console.log(`debounceUpdate.update: `, update);
-      return this.updateBookMeta(update)
-      .then((response)=>{
-
-        targets.forEach((target)=>{
-          target.disabled = false
-        });
-
-        this.currentBook = Object.assign(this.currentBookMeta, update);
-
-        this.lockLanguage = false;
-        if (Object.keys(update).includes('numbering')) {
-          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-        }
-
-        if (Object.keys(update).includes('language')) {
-          setTimeout(() => {
-            this.reloadBook()
-            .then(() => {
-              this.$root.$emit('book-reimported');
-              this.isBatchProgress = false;
-            })
-          }, 1500)
-        }
-        return response;
-      })
-      .catch(err => {
-        if (err instanceof Error) {
-          console.error(err);
-          //return BPromise.reject(err);
-        };
-        return true;
-      });
-    }, 1000);
+    this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, 1000);
     this.init();
   },
 
@@ -1486,6 +1344,150 @@ export default {
 
     debounceUpdate () {
       // template function, will redefine in created() hook for debounce.
+    },
+
+    beforeMetaUpdateHook (...args) {
+      let [key, value = null, _event = false, disable = false] = args;
+
+      if (this.requiredFields[this.currentBook.bookid]
+      && this.requiredFields[this.currentBook.bookid][key]) {
+        if (key != 'author'){
+          delete this.requiredFields[this.currentBook.bookid][key];
+        } else {
+          if (this.currentBookMeta.author.join("").length !== 0){
+            delete this.requiredFields[this.currentBook.bookid][key];
+          }
+        }
+      }
+
+      if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
+      if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
+
+      if (key == 'difficulty') {
+
+        let validationErrors = '';
+
+        let re = /^\d{1,2}(\.\d{1,2})?$/i;
+
+        if ( !this.currentBook.difficulty.match(re) ){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+
+        if ( parseFloat(this.currentBook.difficulty) > 14.99 ){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+        if ( parseFloat(this.currentBook.difficulty) < 1){
+          validationErrors = 'Allowed range 1 - 14.99';
+        }
+
+        if(validationErrors !=this.validationErrors['difficulty'] ){
+          this.validationErrorDifficulty = validationErrors;
+        }
+        if(validationErrors && _event && disable){
+          _event.target.toggleAttribute('disable');
+          return false;
+        }
+
+      }
+
+      //-- Set values immediately because of controls -- { --//
+      if (key === 'numbering') {
+        this.currentBook[key] = value;
+      }
+
+      let keys = key.split('.');
+      if (keys.length > 1) {
+        if (keys[0] && ['styles'].includes(keys[0])) {
+          this.currentBook[keys[0]][keys[1]] = value;
+        }
+      }
+      //-- } -- end -- Set values immediately because of controls --//
+
+      if (_event && _event.target) {
+        if (disable) {
+          _event.target.disabled = true;
+        }
+      }
+      return true;
+    },
+
+    updateMetaHook (...args) {
+      let targets = [];
+      const update = args.reduce((acc, arg)=>{
+        let [key, value = null, _event = false, disable = false] = arg;
+
+        if (_event && _event.target) {
+          if (value === null) {
+            value = _event.target.value;
+          }
+          if (disable) {
+            targets.push(_event.target);
+          }
+        }
+
+        let keys = key.split('.');
+        key = keys[0];
+        if (keys.length > 1) {
+          const prevVal = this.currentBook[keys[0]];
+          prevVal[keys[1]] = value;
+          value = prevVal;
+        }
+
+        if (key == 'author') value = this.currentBook.author;
+
+        acc[key] = value;
+
+        // Batch updates
+        if (key === 'language') {
+          acc.voices = {};
+        }
+
+        return acc;
+      }, {});
+
+      //console.log(`debounceUpdate.update: `, update);
+      return this.updateBookMeta(update)
+      .then((response)=>{
+
+        targets.forEach((target)=>{
+          target.disabled = false
+        });
+
+        this.currentBook = Object.assign(this.currentBookMeta, update);
+
+        this.lockLanguage = false;
+        if (Object.keys(update).includes('numbering')) {
+          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+        }
+
+        if (Object.keys(update).includes('language')) {
+          setTimeout(() => {
+            this.reloadBook()
+            .then(() => {
+              this.$root.$emit('book-reimported');
+              this.isBatchProgress = false;
+            })
+          }, 1500)
+        }
+        return response;
+      })
+      .catch(err => {
+        if (err instanceof Error) {
+          console.error(err);
+          //return BPromise.reject(err);
+        };
+        return true;
+      });
     },
 
     liveUpdate (key, value, event) {
