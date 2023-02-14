@@ -245,7 +245,20 @@ export default {
                 });
                 reportHtml+= `</ul></li>`;
               }
+              if (report.copied) {
+                reportHtml+= `<li>${report.copied} audio file(s) copied to the catalog and will be available shortly after processing</li>`;
+              }
+              if (report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0) {
+                reportHtml+= `<li>${report.duplicates.files.length} duplicate audio file(s) replaced with:<ul class="audiofiles-list">`;
+                report.duplicates.files.forEach(filename => {
+                  reportHtml+= `<li>${filename}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
               reportHtml+='</ul>';
+              if (report.copied && (!report.duplicates || !Array.isArray(report.duplicates.files) || report.duplicates.files.length === 0)) {
+                reportHtml = reportHtml.replace(/<\/?(ul|li)[^>]*>/img, '');
+              }
               return reportHtml;
             }
           } else {
@@ -515,6 +528,13 @@ export default {
         if (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) {
           reportHtml+= `${report.not_replaced.files.length} audio file(s) could not be replaced because of pending tasks\n`;
           report.not_replaced.files.forEach(filename => {
+            reportHtml+= ` - ${filename}\n`;
+          });
+          reportHtml+= `\n`;
+        }
+        if (report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0) {
+          reportHtml+= `${report.duplicates.files.length} duplicate audio file(s) replaced with:\n`;
+          report.duplicates.files.forEach(filename => {
             reportHtml+= ` - ${filename}\n`;
           });
           reportHtml+= `\n`;
