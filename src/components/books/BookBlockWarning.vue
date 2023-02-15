@@ -1,5 +1,5 @@
 <template>
-  <div id="bookBlockWarning" v-if="currentBook.isInTheQueueOfPublication || currentBook.isIntheProcessOfPublication">
+  <div id="bookBlockWarning" v-if="meta.isInTheQueueOfPublication || meta.isIntheProcessOfPublication">
     <div id="holder">
       <div id="text">
         <div id="union">
@@ -81,6 +81,6 @@
 
 
 export default {
-  props: ['currentBook'],
+  props: ['meta'],
 }
 </script>

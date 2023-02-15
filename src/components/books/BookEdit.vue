@@ -10,7 +10,7 @@
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <BookBlockWarning
-        :currentBook="book"
+        :meta="meta"
       ></BookBlockWarning>
 
       <SvelteBookPreviewInVue

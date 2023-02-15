@@ -1,7 +1,7 @@
 <template>
   <div ref="scrollWrap" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
     <BookBlockWarning
-      :currentBook="book"
+      :meta="meta"
     ></BookBlockWarning>
 
 
