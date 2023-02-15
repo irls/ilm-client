@@ -9,6 +9,9 @@
   </selection-modal>
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
+      <BookBlockWarning
+        :currentBook="book"
+      ></BookBlockWarning>
 
       <SvelteBookPreviewInVue
         :class="['content-background']"
@@ -128,6 +131,7 @@ import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
 
 import SvelteBookPreview from "./previews/BookPreview.svelte";
+import BookBlockWarning from "./BookBlockWarning";
 import toVue from "svelte-adapter/vue";
 import TaskAddModal from "../tasks/TaskAddModal";
 
@@ -295,7 +299,7 @@ export default {
   mixins: [access, taskControls, api_config, playing_block],
   components: {
     SelectionModal,
-    BookBlockView, BookBlockPreview, vueSlider,
+    BookBlockView, BookBlockPreview, vueSlider,BookBlockWarning,
       SvelteBookPreviewInVue: toVue(SvelteBookPreview, {}, 'div'),
       AudioFAB
   },
