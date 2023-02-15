@@ -1,5 +1,9 @@
 <template>
   <div ref="scrollWrap" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+    <BookBlockWarning
+      :currentBook="book"
+    ></BookBlockWarning>
+
 
     <SvelteBookDisplayInVue
       v-if="isBookMounted"
@@ -20,6 +24,7 @@
 import Vue from 'vue'
 import BookDisplayHeader from './BookDisplayHeader'
 import BookBlockDisplay   from './BookBlockDisplay';
+import BookBlockWarning   from './BookBlockWarning';
 //import BookTOC from './BookTOC'
 import { mapGetters, mapState, mapActions } from 'vuex'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
@@ -43,7 +48,7 @@ export default {
     }
   },
   components: {
-    BookDisplayHeader, BookBlockDisplay,/*InfiniteLoading,  BookTOC,*/
+    BookDisplayHeader, BookBlockDisplay,/*InfiniteLoading,  BookTOC,*/BookBlockWarning,
     SvelteBookDisplayInVue: toVue(SvelteBookDisplay, {height: '100%'}, "div")
   },
   computed: {
