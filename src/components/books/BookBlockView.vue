@@ -481,11 +481,20 @@
                         v-bind:class="{'-disabled': !isChanged && !isIllustrationChanged}">
                       Discard
                     </div>
-                    <div class="save-block -right"
-                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+
+                    <div
+                    v-if="!meta.isInTheQueueOfPublication && !meta.isIntheProcessOfPublication"
+                    class="save-block -right"
+                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}"
+
                     @click="assembleBlockProxy(true, needsRealignment)">
                       {{saveBlockLabel}}
                     </div>
+                    <div v-else
+                      class="save-block -right -nohover" disabled="disabled" title="Book is being published">
+                      {{saveBlockLabel}}
+                    </div>
+
                     <template v-if="!isCompleted">
                     <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
                       @click.prevent="reworkBlock">
@@ -5149,7 +5158,7 @@ Save text changes and realign the Block?`,
           padding: 1px 5px;
           margin-right: 10px;
           background: rgba(204, 255, 217, 0.5);
-          &:hover {
+          &:not(.-nohover):hover {
               background: rgba(204, 255, 217, 0.9);
           }
 
