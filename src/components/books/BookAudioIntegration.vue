@@ -39,7 +39,8 @@
               <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()" ><i class="fa fa-trash" style="color:red"></i><span v-if="selectionLength > 0" style="color:red">({{selectionLength}})</span></button>
             </div>
             <div class="align-audio left-divider">
-              <button class="btn btn-primary btn-small" :disabled="startAlignDisabled" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
+              <button
+                class="btn btn-primary btn-small" :disabled="startAlignDisabled" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>
             </div>
@@ -1300,7 +1301,9 @@
       },
       startAlignDisabled: {
         get() {
-          return this.alignCounter.count == 0 || this.selections.length == 0 || !this.allowAlignBlocksLimit;
+          return this.alignCounter.count == 0 || this.selections.length == 0 || !this.allowAlignBlocksLimit ||
+            this.currentBookMeta.isInTheQueueOfPublication || this.currentBookMeta.isIntheProcessOfPublication
+            ;
         }
       },
       ...mapGetters({
