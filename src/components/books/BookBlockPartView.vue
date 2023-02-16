@@ -345,7 +345,7 @@
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && (isChanged || isIllustrationChanged)) || isLocked}">
             Discard
           </div>
-          <div class="save-block -right -nohover"
+          <div class="save-block -right"
           v-bind:class="{ '-disabled': ((!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)) || isLocked }"
           @click="assembleBlockProxy(true, needsRealignment)">
             {{saveBlockLabel}}

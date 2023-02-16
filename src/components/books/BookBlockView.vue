@@ -490,7 +490,8 @@
                     @click="assembleBlockProxy(true, needsRealignment)">
                       {{saveBlockLabel}}
                     </div>
-                    <div v-else
+                    <div v-if="meta.isInTheQueueOfPublication || meta.isIntheProcessOfPublication"
+                         v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}"
                       class="save-block -right -nohover" disabled="disabled" title="Book is being published">
                       {{saveBlockLabel}}
                     </div>
