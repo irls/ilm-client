@@ -345,7 +345,7 @@
                v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && (isChanged || isIllustrationChanged)) || isLocked}">
             Discard
           </div>
-          <div class="save-block -right"
+          <div class="save-block -right -nohover"
           v-bind:class="{ '-disabled': ((!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)) || isLocked }"
           @click="assembleBlockProxy(true, needsRealignment)">
             {{saveBlockLabel}}
@@ -1520,7 +1520,7 @@ export default {
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
         let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
         if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
-          
+
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
       },
