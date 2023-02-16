@@ -33,10 +33,10 @@
           <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
           <button class="audio-btn -pause" v-if="isPlaying" v-on:click="pause()"></button>
           <div class="speed-controls" v-if="mode === 'block'">
-            <dropdown 
-              v-model="playbackRate" 
-              :options="playbackRates" 
-              scrollHeight="410px" 
+            <dropdown
+              v-model="playbackRate"
+              :options="playbackRates"
+              scrollHeight="410px"
               @change="onPlaybackRateChange"
               class="playbackrate-dropdown"/>
           </div>
@@ -50,9 +50,9 @@
           <button class="audio-btn -zoom-out" :disabled="!allowZoomOut" v-on:click="zoomOut()"></button>
         </div>
         <div class="silence-controls" v-if="mode == 'block' && !editingLocked">
-          <dropdown 
-            v-model="silenceLength" 
-            :options="silenceLengths" 
+          <dropdown
+            v-model="silenceLength"
+            :options="silenceLengths"
             scrollHeight="auto"
             class="add-silence-dropdown" />
           <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
@@ -92,10 +92,10 @@
                 <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
                 <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
                 <div class="dropdown-controls">
-                  <dropdown 
-                    v-model="fadePercent" 
-                    :options="fadePercents" 
-                    scrollHeight="410px" 
+                  <dropdown
+                    v-model="fadePercent"
+                    :options="fadePercents"
+                    scrollHeight="410px"
                     class="fade-percent-dropdown"/>
                   <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
                 </div>
@@ -180,7 +180,7 @@
   const SILENCE_VALUE = 0.005;
   const closeBracketsRegex = /[\)\]\}\﴿]/mg;
   const closeQuotesRegex = /[\”\’\»]/mg;
-  
+
   Vue.directive('ilm-tooltip', IlmTooltip);
   Vue.directive('btn-toast', BtnToast);
 
@@ -278,11 +278,11 @@
         this.$root.$on('for-audioeditor:flush', this.flush);
         this.$root.$on('for-audioeditor:lock-editing', this.setEditingLocked);
         this.$root.$on('readalong:playBlock', this.stop);
-        
+
         for (let i = 1.25; i > 0.7; i-=0.05) {
           this.playbackRates.push(this._round(i, 2));
         }
-        
+
         this.silenceLengths.push(2);
         this.silenceLengths.push(1.5);
         for (let i = 1; i >= 0.1; i-=0.1) {
@@ -475,7 +475,7 @@
           this.currentWord = null;
           this.contextPosition = null;
           this.mode = mode;
-          
+
           this.playbackRate = 1;
           if (this.currentBookMeta && this.currentBookMeta.bookid && mode === 'block') {
             if (this.user.bookPlaybackRate && this.user.bookPlaybackRate[this.currentBookMeta.bookid]) {
@@ -530,7 +530,7 @@
 
               return timeScale.render();
             }
-            
+
             //this.audiosourceEditor.load = trackLoad;
 //             var _this15 = this.audiosourceEditor;
 //             this.audiosourceEditor.drawRequest = function (){
@@ -1561,16 +1561,16 @@
         fade() {
           return this.pause()
             .then(() => {
-              
+
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
-              
+
               let selectionLength = this._round(this.selection.end - this.selection.start, 2);
 
               let silence = new Float32Array((selectionLength) * original_buffer.sampleRate);
-              
+
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
-              
+
               let calculatedFadeLength = this.audioFadeConfig.length;
               if (selectionLength < this.audioFadeConfig.shortLength) {
                 calculatedFadeLength = this._round(this.audioFadeConfig.shortPercent * selectionLength / 100, 2);
@@ -1614,7 +1614,7 @@
                 }
                 //console.log('===========', silence[i]);
               }
-              
+
               for (let i = fadeLength + 1; i < fadeInStart; ++i) {
                 if (range[i]) {
                   let currentDelta = removePercent * Math.abs(range[i]) / 100;
@@ -1629,10 +1629,10 @@
                   silence[i] = currentValue;
                 }
               }
-              
+
               this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
-              
-              
+
+
               this._addHistoryLocal('fade', range, this.selection.start, this.selection.end);
               this.addTaskQueue('fade', [this.selection.start, this.selection.end, fadePercent, calculatedFadeLength]);
               this.addFadeSelectionLog();
@@ -1690,7 +1690,7 @@
               let original_buffer = this.audiosourceEditor.activeTrack.buffer;
 
               let silence = new Float32Array((this.selection.end - this.selection.start) * original_buffer.sampleRate);
-              
+
               silence.fill(SILENCE_VALUE);
               let range = this.cutRangeAction(this.selection.start, this.selection.end);
               this.insertRangeAction(this.selection.start, silence, this.selection.end - this.selection.start);
@@ -3221,7 +3221,8 @@ Revert to original block audio?`,
           get() {
             return this.blockSelection.start && this.blockSelection.start._id &&
                     this.blockSelection.end && this.blockSelection.end._id &&
-                    this.alignCounter.count && this.allowAlignBlocksLimit;
+                    this.alignCounter.count && this.allowAlignBlocksLimit &&
+                    !this.currentBookMeta.isInTheQueueOfPublication && !this.currentBookMeta.isIntheProcessOfPublication
           }
         },
         selectionBlocksToAlign: {
@@ -3279,6 +3280,9 @@ Revert to original block audio?`,
         },
         isSaveDisabled: {
           get() {
+            if (this.currentBookMeta.isInTheQueueOfPublication || this.currentBookMeta.isIntheProcessOfPublication) {
+              return false;
+            }
             if (!this.isModifiedComputed) {
               return true;
             }
@@ -4043,7 +4047,7 @@ Revert to original block audio?`,
     font-size: 12px;
     font-weight: bold;
   }
-  
+
   span.blue-message {
     color: #2D76B0;
     border: 1.7px solid #2D76B0;
