@@ -28,11 +28,12 @@
   position: -webkit-sticky;
   position: sticky;
   top: 0;
-  background-color: #666;
   height: 62px;
   width: 100%;
-  background-color: #F69E3A33;
+  background-color: #fdf0e0;
   border-radius: 4px;
+  font-family: 'Arial';
+  font-size: 18px;
 }
 
 #bookBlockWarning #holder #text {
@@ -48,7 +49,7 @@
   vertical-align: middle;
   height: 60px;
   text-align: center;
-  top: 15px;
+  top: 18px;
 }
 #bookBlockWarning #holder  {
 }
