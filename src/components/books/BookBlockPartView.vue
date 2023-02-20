@@ -1474,7 +1474,7 @@ export default {
         this.$refs.blockCntx.open(e, container, offsetX);
         this.$nextTick(() => {
           //hide medium editor if context menu is active
-          $('.medium-editor-toolbar-active').css('visibility', 'hidden');
+          $('.medium-editor-toolbar-active').removeClass('medium-editor-toolbar-active');
         })
       },
 
