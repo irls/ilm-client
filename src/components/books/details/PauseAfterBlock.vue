@@ -452,7 +452,7 @@
       confirmPauseUptdMessage(range) {
         this.$root.$emit('show-modal', {
           title: 'Confirm pause update',
-          text: `Current values are from ${range[0]} to ${range[range.length - 1]} in the selected range of ${this.blockTypesInRange.length} blocks.<br>Are you sure you want to update "pause before" on the range?`,
+          text: `Current values are from ${range[0]} to ${range[range.length - 1]} in the selected range of ${this.blockTypesInRange.length} blocks.<br>Are you sure you want to update "pause after" on the range?`,
           buttons: [
             {
               title: 'Cancel',
