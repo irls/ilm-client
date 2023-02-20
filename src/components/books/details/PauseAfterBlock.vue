@@ -472,7 +472,7 @@
         this.range = 1;
         this.setUndefined = true;
         this.callModal = false;
-        this.pauseInput.get();
+//        this.pauseInput.get();
       }
     },
     computed: {
