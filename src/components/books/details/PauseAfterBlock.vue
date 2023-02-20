@@ -19,7 +19,7 @@
                   :silent="true"
                   :debug="false"
                   ref="pause_after_slider"
-                  @input="pauseValueChange(range)"
+                  @input="pauseValueChange"
                   @drag-end="pauseDragEnd"></vue-slider>
     </template>
     <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
@@ -150,7 +150,6 @@
         }
       },
       pauseDragEnd(val) {
-        this.confirmPauseUptdMessage();
         //console.log('DRAG END');
         //console.log(arguments)
         if (val && typeof val.getValue === 'function') {
