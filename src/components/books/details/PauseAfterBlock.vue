@@ -459,7 +459,7 @@
               handler: () => {
                 this.$root.$emit('hide-modal');
               },
-              'class': 'btn btn-primary'
+              'class': 'btn btn-default'
             },
             {
               title: 'Confirm',
