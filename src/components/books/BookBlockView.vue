@@ -570,6 +570,11 @@
         </template>
       </div>
     </modal>
+    <CoupletWarningPopup
+      v-if="isCoupletWarningPopupActive"
+      @close="(e) => cancelCoupletUpdate(e)"
+      @save="(e) => saveCoupletChanges(e)"
+    ></CoupletWarningPopup>
   </div>
 </template>
 
@@ -597,6 +602,7 @@ import BookBlockPartView from './BookBlockPartView';
 import LockedBlockActions from './block/LockedBlockActions';
 import FlagComment        from './block/FlagComment';
 import EditHTMLModal      from './block/EditHTML';
+import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 //import { tabs, tab } from 'vue-strap';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
@@ -673,11 +679,12 @@ export default {
       },
       //isSaving: false
       editingLocked: false,
-      editingLockedReason: ''
-
+      editingLockedReason: '',
+      isCoupletWarningPopupActive: false
     }
   },
   components: {
+    CoupletWarningPopup,
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
@@ -1892,7 +1899,20 @@ Save or discard your changes to continue editing`,
             return Promise.reject(err);
           });
       },
-
+      cancelCoupletUpdate(isDontShowAgain) {
+        this.saveUserChoiceToCookie(isDontShowAgain);
+        this.isCoupletWarningPopupActive = false;
+      },
+      saveCoupletChanges(isDontShowAgain) {
+        this.isCoupletWarningPopupActive = false;
+        this.saveUserChoiceToCookie(isDontShowAgain);
+      },
+      saveUserChoiceToCookie(isDontShowAgain) {
+        if (isDontShowAgain &&
+          !document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+          document.cookie = 'dontShowAgainCoupletWarning=true';
+        }
+      },
       assembleBlockProxy: function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
         if (!this.block.audiosrc) {
           realign = false;
@@ -2014,6 +2034,9 @@ Save or discard your changes to continue editing`,
                     partUpdate.content = this.block.content;
                     partUpdate.manual_boundaries = this.block.manual_boundaries || [];
                     if (this.block.hasClass('whitespace', 'couplet')) {
+                      if (!document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+                        this.isCoupletWarningPopupActive = true;
+                      }
                       partUpdate.classes = this.block.classes;
                     }
                     break;
@@ -4428,7 +4451,7 @@ Save text changes and realign the Block?`,
       resetListenCompressed() {
         this.block.resetAudiosrcConfig();
       },
-      
+
       openEditBlockHtml() {
         let blockHtmlProps = {
           blockHTML: this.block.content || "",
@@ -4451,12 +4474,12 @@ Save text changes and realign the Block?`,
         this.$modal.show(EditHTMLModal, {
           blockLang: this.getBlockLang,
           editBlockHTMLLabel: this.editBlockHTMLLabel,
-          parnumCompNotHidden: this.parnumCompNotHidden, 
-          shortBlockid: this.shortBlockid, 
-          wordsRange: this.wordsRange, 
-          block: this.block, 
-          audioUrl: this.audioUrl, 
-          compressedAudioUrl: this.compressedAudioUrl, 
+          parnumCompNotHidden: this.parnumCompNotHidden,
+          shortBlockid: this.shortBlockid,
+          wordsRange: this.wordsRange,
+          block: this.block,
+          audioUrl: this.audioUrl,
+          compressedAudioUrl: this.compressedAudioUrl,
           disabled: !this.adminOrLibrarian || this.isSplittedBlock,
           adminOrLibrarian: this.adminOrLibrarian,
           blockHtmlProps: blockHtmlProps,

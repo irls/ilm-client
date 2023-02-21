@@ -415,7 +415,7 @@
                           :styleKey="'level'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -430,7 +430,7 @@
                           :styleKey="'style'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -446,7 +446,7 @@
                           :styleKey="'table of contents'+'.'+styleKey"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -461,7 +461,7 @@
                           :styleKey="'table of contents.isInToc'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -476,7 +476,7 @@
                           :styleKey="'table of contents.tocLevel'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -542,14 +542,13 @@
                           :styleKey="styleKey"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
 
 
                       </fieldset>
 
                   </template>
-
                 </vue-tab>
 
               </vue-tabs>
@@ -583,7 +582,11 @@
         <a v-if="currentBook.mergedAudiofile" v-on:click="generatingAudiofile = false" class="btn btn-default">Cancel</a>
       </div>
     </modal>
-
+    <CoupletWarningPopup
+      v-if="isCoupletWarningPopupActive"
+      @close="(e) => cancelCoupletUpdate(e)"
+      @save="(e) => saveCoupletChanges(e)"
+    ></CoupletWarningPopup>
     <div v-if="showUnknownAuthor == 1" class="outside" v-on:click="showUnknownAuthor = -1"></div>
     <div v-if="showUnknownAuthorEn == 1" class="outside" v-on:click="showUnknownAuthorEn = -1"></div>
   </div>
@@ -611,6 +614,7 @@ import time_methods         from '../../mixins/time_methods.js';
 import number_methods       from "../../mixins/number_methods.js"
 import toc_methods          from '../../mixins/toc_methods.js';
 import { VueTabs, VTab }    from 'vue-nav-tabs'
+import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments      from './details/BookAssignments';
 import BookWorkflow         from './details/BookWorkflow';
@@ -649,8 +653,8 @@ export default {
     CompleteAudioExport,
     PauseAfterBlock,
     VTagSuggestion,
-    'resizable-textarea': ResizableTextarea
-
+    'resizable-textarea': ResizableTextarea,
+    CoupletWarningPopup
   },
 
   data () {
@@ -744,7 +748,11 @@ export default {
         5: 'hr'
       },
       activeStyleTab: '',
-      jobDescription: ''
+      jobDescription: '',
+      isCoupletWarningPopupActive: false,
+      blockType: '',
+      styleKey: '',
+      styleVal: '',
     }
   },
 
@@ -1911,6 +1919,35 @@ export default {
             }
           })
       }
+    },
+    dummySelectStyle(blockType, styleKey, styleVal) {
+      if(styleVal !== "couplet" ||
+        document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+        this.selectStyle(blockType, styleKey, styleVal);
+      } else {
+        this.isCoupletWarningPopupActive = true;
+        this.blockType = blockType;
+        this.styleKey = styleKey;
+        this.styleVal = styleVal;
+      }
+    },
+    saveCoupletChanges(isDontShowAgain) {
+      this.closeCoupletWarningPopup();
+      this.saveUserChoiceToCookie(isDontShowAgain);
+      this.selectStyle(this.blockType, this.styleKey, this.styleVal);
+    },
+    saveUserChoiceToCookie(isDontShowAgain) {
+      if (isDontShowAgain &&
+        !document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+        document.cookie = 'dontShowAgainCoupletWarning=true';
+      }
+    },
+    closeCoupletWarningPopup() {
+      this.isCoupletWarningPopupActive = false;
+    },
+    cancelCoupletUpdate(isDontShowAgain) {
+      this.saveUserChoiceToCookie(isDontShowAgain);
+      this.closeCoupletWarningPopup();
     },
     selectPauseAfter(blockType, styleVal) {
       //console.log(blockType, styleKey, styleVal);
