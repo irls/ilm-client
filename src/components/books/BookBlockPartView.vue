@@ -12,7 +12,7 @@
         />
     </div>
 
-    <div v-if="!meta.isInTheQueueOfPublication && !meta.isIntheProcessOfPublication" :class="['locked-block-cover','clear','top25']">
+    <div v-if="meta.isInTheQueueOfPublication || meta.isIntheProcessOfPublication" :class="['locked-block-cover','clear','top25']">
       <LockedBlock/>
     </div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
@@ -1525,7 +1525,7 @@ export default {
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
         let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
         if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
-          
+
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
       },
