@@ -481,21 +481,11 @@
                         v-bind:class="{'-disabled': !isChanged && !isIllustrationChanged}">
                       Discard
                     </div>
-
-                    <div
-                    v-if="!meta.isInTheQueueOfPublication && !meta.isIntheProcessOfPublication"
-                    class="save-block -right"
-                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}"
-
+                    <div class="save-block -right"
+                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
                     @click="assembleBlockProxy(true, needsRealignment)">
                       {{saveBlockLabel}}
                     </div>
-                    <div v-if="meta.isInTheQueueOfPublication || meta.isIntheProcessOfPublication"
-                         v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}"
-                      class="save-block -right -nohover" disabled="disabled" title="Book is being published">
-                      {{saveBlockLabel}}
-                    </div>
-
                     <template v-if="!isCompleted">
                     <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
                       @click.prevent="reworkBlock">
@@ -4438,7 +4428,7 @@ Save text changes and realign the Block?`,
       resetListenCompressed() {
         this.block.resetAudiosrcConfig();
       },
-
+      
       openEditBlockHtml() {
         let blockHtmlProps = {
           blockHTML: this.block.content || "",
@@ -4461,12 +4451,12 @@ Save text changes and realign the Block?`,
         this.$modal.show(EditHTMLModal, {
           blockLang: this.getBlockLang,
           editBlockHTMLLabel: this.editBlockHTMLLabel,
-          parnumCompNotHidden: this.parnumCompNotHidden,
-          shortBlockid: this.shortBlockid,
-          wordsRange: this.wordsRange,
-          block: this.block,
-          audioUrl: this.audioUrl,
-          compressedAudioUrl: this.compressedAudioUrl,
+          parnumCompNotHidden: this.parnumCompNotHidden, 
+          shortBlockid: this.shortBlockid, 
+          wordsRange: this.wordsRange, 
+          block: this.block, 
+          audioUrl: this.audioUrl, 
+          compressedAudioUrl: this.compressedAudioUrl, 
           disabled: !this.adminOrLibrarian || this.isSplittedBlock,
           adminOrLibrarian: this.adminOrLibrarian,
           blockHtmlProps: blockHtmlProps,
@@ -5159,7 +5149,7 @@ Save text changes and realign the Block?`,
           padding: 1px 5px;
           margin-right: 10px;
           background: rgba(204, 255, 217, 0.5);
-          &:not(.-nohover):hover {
+          &:hover {
               background: rgba(204, 255, 217, 0.9);
           }
 
