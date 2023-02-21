@@ -77,6 +77,9 @@
             :convertTime="convertTime"></SplitPreview>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
+            <div v-if="currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+              <LockedBlock/>
+            </div>
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -273,11 +276,19 @@
           </fieldset>
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
+            <div v-if="currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+              <LockedBlock/>
+            </div>
+
             <BookToc ref="bookToc"
               :bookId="currentBook.bookid"
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
+            <div v-if="currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+              <LockedBlock/>
+            </div>
+
             <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
               {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
               <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
@@ -293,6 +304,10 @@
           </vue-tab>
 
         <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
+          <div v-if="currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+            <LockedBlock/>
+          </div>
+
             <div class="styles-catalogue">
 
               <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
@@ -626,6 +641,8 @@ import CompleteAudioExport  from './details/CompleteAudioExport';
 import PauseAfterBlock      from './details/PauseAfterBlock';
 import VTagSuggestion       from './details/HashTag';
 import ResizableTextarea    from '../generic/ResizableTextarea';
+import LockedBlock    from './block/LockedBlock.vue';
+
 
 var BPromise = require('bluebird');
 
@@ -654,6 +671,7 @@ export default {
     CompleteAudioExport,
     PauseAfterBlock,
     VTagSuggestion,
+    LockedBlock,
     'resizable-textarea': ResizableTextarea
 
   },

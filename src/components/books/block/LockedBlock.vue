@@ -1,3 +1,6 @@
+<template>
+</template>
+
 <style lang="less">
 .locked-block-cover.clear{
   background-image: unset;
