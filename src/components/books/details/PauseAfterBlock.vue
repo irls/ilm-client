@@ -22,6 +22,8 @@
                   @input="pauseValueChange"
                   @drag-end="pauseDragEnd"></vue-slider>
     </template>
+    <div id="cover-slider2" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
+    <div id="cover-slider" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
     <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
     <div class="hidden">{{parseFloatToFixed(pause) === min}},{{parseFloatToFixed(pause) === max}}</div>
     <div class="col-md-12">
@@ -32,10 +34,12 @@
           <input type="number" class="pause-after" v-model="pause" disabled v-else />
         </template>
         <template v-else>
-          <button v-if="range.length > 1" @click="confirmPauseUptdMessage(range,this.callModal)" class="minus"></button>
+
+          <button v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)" class="minus"></button>
           <button v-else @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
-          <input  class="pause-after" type="number" @click="confirmPauseUptdMessage(range,this.callModal)"
-            v-if="range.length > 1"/>
+
+          <input  class="pause-after" type="number" @click="confirmPauseUptdMessage(range)"
+            v-if="range.length > 1 && this.callModal"/>
           <input  class="pause-after" type="number" v-model="pauseInput"
             :min="min"
             :max="max"
@@ -43,7 +47,8 @@
             v-on:change="onPauseInput"
             v-on:focusout="onFocusout"
             v-else/>
-          <button v-if="range.length > 1" @click="confirmPauseUptdMessage(range)" class="plus"></button>
+
+          <button v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)" class="plus"></button>
           <button v-else @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
@@ -111,7 +116,6 @@
         this.$emit('setPauseAfter', this.blockType, val);
       },
       pauseValueChange(val) {
-        this.confirmPauseUptdMessage(this.range,this.callModal);
           //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
         if (this.setUndefined) {
           this.setUndefined = false;
@@ -441,9 +445,7 @@
           $ev.target.value = this.pause;
         }
       },
-      confirmPauseUptdMessage(range , callModal) {
-        if(!callModal)
-          return;
+      confirmPauseUptdMessage(range) {
         this.$root.$emit('show-modal', {
           title: 'Confirm pause update',
           text: `Current values are from ${range[0]} to ${range[range.length - 1]} in the selected range of ${this.blockTypesInRange.length} blocks.<br>Are you sure you want to update "pause after" on the range?`,
@@ -475,6 +477,12 @@
       }
     },
     computed: {
+      showConfirmPopup: {
+        get() {
+          return this.range.length > 1 && this.callModal;
+        },
+      },
+
       pauseAfterSelection: {
         get() {
           let range = this.pausesAfterRange;
@@ -635,10 +643,20 @@
     #cover-slider {
       background: transparent;
       border: #00d1ff;
+      width: 120px;
+      height: 18px;
+      position: absolute;
+      top: 28px;
+      z-index: 2;
+    }
+    #cover-slider2 {
+      background: transparent;
+      border: #00d1ff;
       width: 100%;
       height: 18px;
       position: absolute;
-      top: 42px;
+      top: 2px;
+      z-index: 2;
     }
     .pause-after-input {
       text-align: left;
