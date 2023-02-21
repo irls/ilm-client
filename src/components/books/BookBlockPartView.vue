@@ -11,6 +11,10 @@
         :blockPartIdx="blockPartIdx"
         />
     </div>
+
+    <div v-if="!meta.isInTheQueueOfPublication && !meta.isIntheProcessOfPublication" :class="['locked-block-cover','clear','top25']">
+      <LockedBlock/>
+    </div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
       <div class="table-row">
         <div class="table-cell">
@@ -373,6 +377,7 @@ import BlockMenu          from '../generic/BlockMenu';
 import BlockContextMenu   from '../generic/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import LockedBlockActions from './block/LockedBlockActions';
+import LockedBlock from './block/LockedBlock';
 import FlagComment        from './block/FlagComment';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
