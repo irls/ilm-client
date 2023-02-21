@@ -25,7 +25,12 @@
 
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Assignments" id="assignments">
+          <vue-tab title="Assignments" id="assignments" style="position: relative">
+
+            <div v-if="!currentBookMeta.isInTheQueueOfPublication && !currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+              <LockedBlock/>
+            </div>
+
             <BookAssignments
               @showModal_audio="showModal_audio = true"
               ></BookAssignments>
