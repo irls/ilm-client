@@ -1,5 +1,10 @@
 <template>
   <div ref="scrollWrap" v-hotkey="keymap" :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+    <BookBlockWarning
+      :meta="meta"
+    ></BookBlockWarning>
+
+
     <SvelteBookDisplayInVue
       v-if="isBookMounted"
       :blocksList="{parlistO, parlist, blocks: getIdsArray()}"
