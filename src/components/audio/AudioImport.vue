@@ -248,15 +248,24 @@ export default {
               if (report.copied) {
                 reportHtml+= `<li>${report.copied} audio file(s) copied to the catalog and will be available shortly after processing</li>`;
               }
-              if (report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0) {
+              let hasDuplicates = report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0;
+              let hasSkipped = report.skipped && Array.isArray(report.skipped.files) && report.skipped.files.length > 0;
+              if (hasDuplicates) {
                 reportHtml+= `<li>${report.duplicates.files.length} duplicate audio file(s) replaced with:<ul class="audiofiles-list">`;
                 report.duplicates.files.forEach(filename => {
                   reportHtml+= `<li>${filename}</li>`;
                 });
                 reportHtml+= `</ul></li>`;
               }
+              if (hasSkipped) {
+                reportHtml+= `<li>${report.skipped.files.length} duplicate audio file(s) rejected<ul class="audiofiles-list">`;
+                report.skipped.files.forEach(af => {
+                  reportHtml+= `<li>${af}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
               reportHtml+='</ul>';
-              if (report.copied && (!report.duplicates || !Array.isArray(report.duplicates.files) || report.duplicates.files.length === 0)) {
+              if (report.copied && !hasDuplicates && !hasSkipped) {
                 reportHtml = reportHtml.replace(/<\/?(ul|li)[^>]*>/img, '');
               }
               return reportHtml;
@@ -274,7 +283,14 @@ export default {
         if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
           let report = this.getParsedReport();
           if (report instanceof Object) {
-            return (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) || (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0) || (report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0);
+            let hasReport = false;
+            let checkReport = ['aligned', 'not_replaced', 'not_matched', 'duplicates', 'skipped'];
+            checkReport.forEach(key => {
+              if (!hasReport && report[key] && Array.isArray(report[key].files) && report[key].files.length > 0) {
+                hasReport = true;
+              }
+            });
+            return hasReport;
           }
           return false;
         }
@@ -284,14 +300,6 @@ export default {
     },
     reportFooter: {
       get() {
-        if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
-          let report = this.getParsedReport();
-          if (report instanceof Object) {
-            if  ((report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) || (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0)) {
-              return "The above listed audio file(s) copied to the catalog and will be available shortly after processing";
-            }
-          }
-        }
         return "";
       },
       cache: false
@@ -535,14 +543,22 @@ export default {
         if (report.copied) {
           reportHtml+= `${report.copied} audio file(s) copied to the catalog and will be available shortly after processing\n\n`;
         }
-        if (report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0) {
+        let hasDuplicates = report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0;
+        if (hasDuplicates) {
           reportHtml+= `${report.duplicates.files.length} duplicate audio file(s) replaced with:\n`;
           report.duplicates.files.forEach(filename => {
             reportHtml+= ` - ${filename}\n`;
           });
           reportHtml+= `\n`;
         }
-        reportHtml+='';
+        let hasSkipped = report.skipped && Array.isArray(report.skipped.files) && report.skipped.files.length > 0;
+        if (hasSkipped) {
+          reportHtml+= `${report.skipped.files.length} duplicate audio file(s) rejected\n`;
+          report.skipped.files.forEach(af => {
+            reportHtml+= ` - ${af}\n`;
+          });
+          reportHtml+= `\n`;
+        }
         content+= reportHtml;
         el.innerHTML = content;
         el.select();
