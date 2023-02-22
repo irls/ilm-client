@@ -669,7 +669,7 @@
       width: 120px;
       height: 18px;
       position: absolute;
-      top: 28px;
+      top: 48px;
       z-index: 2;
     }
     #cover-slider2 {
@@ -678,7 +678,7 @@
       width: 100%;
       height: 18px;
       position: absolute;
-      top: 2px;
+      top: 22px;
       z-index: 2;
     }
     .pause-after-input {
