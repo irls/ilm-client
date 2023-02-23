@@ -3813,7 +3813,8 @@ Please save or discard your changes before joining.`,
         if (this.setSplitPoint()) {
           this.closeAudioEditor();
           let update = {
-            content: this.$refs.blockContent.innerHTML
+            content: this.$refs.blockContent.innerHTML,
+            rid: this.block._rid
           };
           if (this.block.getIsSplittedBlock()) {
             update.partIdx = this.blockPartIdx;
