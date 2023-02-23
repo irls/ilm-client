@@ -2089,7 +2089,7 @@ export const store = new Vuex.Store({
 
     updateBlockToc({state, dispatch}, params) {
       dispatch('freeze', 'loadBookToc');
-      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
+      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${encodeURIComponent(params.rid)}`)
       .then((response) => {
         //state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
