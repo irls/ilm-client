@@ -21,8 +21,9 @@
                   ref="pause_after_slider"
                   @input="pauseValueChange"
                   @drag-end="pauseDragEnd"></vue-slider>
+      <div id="cover-slider2" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
     </template>
-    <div id="cover-slider2" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
+
     <div id="cover-slider" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
     <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
     <div class="hidden">{{parseFloatToFixed(pause) === min}},{{parseFloatToFixed(pause) === max}}</div>
@@ -641,21 +642,23 @@
       z-index: 0;
     }
     #cover-slider {
+      border: 1px solid !important;
       background: transparent;
       border: #00d1ff;
       width: 120px;
-      height: 18px;
-      position: absolute;
-      top: 48px;
+      height: 24px;
+      position: relative;
+      top: 27px;
       z-index: 2;
     }
     #cover-slider2 {
+      border: 1px solid !important;
       background: transparent;
       border: #00d1ff;
       width: 100%;
-      height: 18px;
-      position: absolute;
-      top: 22px;
+      height: 20px;
+      position: relative;
+      top: -21px;
       z-index: 2;
     }
     .pause-after-input {
