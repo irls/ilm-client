@@ -82,7 +82,7 @@
                               </div>
                               <!--<div class="table-row content-description-->
                             {:else} <!--block.type == par, h-->
-                              <div class="content-wrap-preview {block.getClass(mode)}">
+                              <div class="content-wrap-preview part-{blockPartIdx} {block.getClass(mode)}">
                                 {@html blockPart.content}
                               </div>
                               <!--<div class="content-wrap-preview-->
@@ -210,7 +210,10 @@
       const blockVirtRef = document.getElementById('v-' + block._id);
       if (blockVirtRef) {
         const blockEditRect = blockEditRef ? blockEditRef.getBoundingClientRect() : { height: 0 };
-        blockVirtRef.style.height = `${blockEditRect.height}px`;
+        const bodyStyle = blockEditRef.currentStyle || window.getComputedStyle(blockEditRef);
+        const marginTop = parseFloat(bodyStyle.marginTop);
+        const marginBottom = parseFloat(bodyStyle.marginBottom);
+        blockVirtRef.style.height = `${blockEditRect.height + marginTop + marginBottom}px`;
         blockVirtRef.style.overflow = `hidden`;
       }
     }
@@ -316,6 +319,6 @@
 
 <style>
   .content-wrap-preview {
-    min-height: 54px
+    min-height: 50px;
   }
 </style>
