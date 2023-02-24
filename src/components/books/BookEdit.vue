@@ -945,7 +945,7 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-      this.removeBlock(block._id)
+      this.removeBlock(block)
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
         this.getDisabledBlocks();

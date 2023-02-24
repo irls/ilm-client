@@ -4117,25 +4117,25 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         })
     },
-    removeBlock({state, commit, dispatch}, blockid) {
-      return axios.delete(state.API_URL + 'book/block/' + blockid)
+    removeBlock({state, commit, dispatch}, block) {
+      return axios.delete(state.API_URL + 'book/block/' + encodeURIComponent(block._rid))
         .then(response => {
-          if (state.blockSelection.start && blockid === state.blockSelection.start._id) {
+          if (state.blockSelection.start && block.blockid === state.blockSelection.start._id) {
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               dispatch('set_block_selection', {start: {}, end: {}});
             } else {
-              let outId = state.storeListO.getOutId(blockid);
+              let outId = state.storeListO.getOutId(block.blockid);
               if (outId) {
                 dispatch('set_block_selection', Object.assign(state.blockSelection, {
                   start: {_id: outId}
                 }));
               }
             }
-          } else if (state.blockSelection.end && blockid === state.blockSelection.end._id) {
+          } else if (state.blockSelection.end && block.blockid === state.blockSelection.end._id) {
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               dispatch('set_block_selection', {start: {}, end: {}});
             } else {
-              let inId = state.storeListO.getInId(blockid);
+              let inId = state.storeListO.getInId(block.blockid);
               if (inId) {
                 dispatch('set_block_selection', Object.assign(state.blockSelection, {
                   end: {_id: inId}
