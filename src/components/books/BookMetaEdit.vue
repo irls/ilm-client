@@ -26,8 +26,7 @@
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments" style="position: relative">
-
-            <div v-if="currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+            <div v-if="bookBlockBPublication" :class="['locked-block-cover','clear']">
               <LockedBlock/>
             </div>
 
@@ -806,6 +805,33 @@ export default {
   ],
 
   computed: {
+    // a computed getter
+
+    bookBlockBPublication: function () {
+      if(this.$store.state.bookBlockBPublication){
+        $('.logo').focus();
+        this.$modal.hide('on-collection-remove-message')
+        this.$modal.hide('import-collection-cover')
+        this.$modal.hide('duplicate-files-warning');
+        this.$modal.hide('delete-block-message')
+        this.$modal.hide('on-published-modal')
+        this.$modal.hide('bookEditCoverModal');
+        this.$modal.hide('onDiscardMessage');
+        this.$modal.hide('voicework-change');
+        this.$modal.hide('edit-user-modal');
+        this.$modal.hide('on-link-message');
+        this.$modal.hide('on-remove-modal')
+        this.$modal.hide('add-user-modal');
+        this.$modal.hide('import-audio');
+        this.$modal.hide('import-cover');
+        this.$modal.hide('api-key-info')
+        this.$modal.hide('block-html');
+        this.$modal.hide('dialog');
+        $('button.close[data-dismiss="modal"]').click();
+      }
+      return this.$store.state.bookBlockBPublication;
+    },
+
 
     ...mapGetters({
       currentBookid: 'currentBookid',

@@ -115,6 +115,7 @@ export const store = new Vuex.Store({
     currentBook: {},
     selectionModalActive:false,
     currentBookMeta: {},
+    bookBlockBPublication: false,
 //     currentBook_dirty: false,
 //     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
@@ -351,6 +352,7 @@ export const store = new Vuex.Store({
     currentBook: state => state.currentBook,
     selectionModalActive: state => state.selectionModalActive,
     currentBookMeta: state => state.currentBookMeta,
+    bookBlockBPublication: state => state.bookBlockBPublication,
     currentBookFiles: state => state.currentBookFiles,
     currentBookBlocksLeft: state => state.currentBookBlocksLeft,
     currentBookBlocksLeftId: state => state.currentBookBlocksLeftId,
@@ -1015,6 +1017,10 @@ export const store = new Vuex.Store({
         this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
       //}
     },
+    SET_BOOK_PUBLISH_BLOCK(state, status) {
+      state.bookBlockBPublication = status;
+    },
+
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
       state.allowPublishCurrentBook = allow;
     },
@@ -2012,13 +2018,23 @@ export const store = new Vuex.Store({
 
           state.watched['metaV'] = book_id;
 
-          console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
+          state.liveDB.startWatch(book_id + '-metaVPublicationStatus', 'metaVPublicationStatus', {bookid: book_id}, (data) => {
+            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
+              let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
+              if (bookMetaIdx > -1) {
+                state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
+                commit('SET_BOOK_PUBLISH_BLOCK', data.meta.isIntheProcessOfPublication || data.meta.isInTheQueueOfPublication);
+              }
+            }
+          });
+
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
               console.log('metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
+                commit('SET_BOOK_PUBLISH_BLOCK', data.meta.isIntheProcessOfPublication || data.meta.isInTheQueueOfPublication);
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
                 commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
                 let allowPublish = state.adminOrLibrarian;
