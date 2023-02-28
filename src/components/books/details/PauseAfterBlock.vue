@@ -488,7 +488,9 @@
 //        this.pauseInput.get();
       },
       coversReposition () {
-        let parentTopOffset = $('.pause-after-container.mode-edit').offset();
+        console.log('coversReposition');
+        console.log(this.bookMode);
+        let parentTopOffset = $('.pause-after-container.mode-'+this.bookMode).offset();
         if(!parentTopOffset)
           return;
 
@@ -497,6 +499,8 @@
         let offset = `${coverSlider2TopOffset.top - parentTopOffset.top}px`;
         let offset2 = `${coverSlider2TopOffset.top - parentTopOffset.top+ 25}px`;
 
+        console.log(offset)
+        console.log(offset2)
         setTimeout( function() {
           $('#cover-slider2').css('top',offset);
           $('#cover-slider').css('top',offset2);
