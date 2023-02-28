@@ -130,9 +130,8 @@
         }
         this.$emit('setPauseAfter', this.blockType, val);
       },
-      showConfirmPopup(val) {
-        this.pause = this.pausePreValue;
-        val = this.pausePreValue;
+      showConfirmPopup() {
+        this.pause = 0;
         return this.confirmPauseUptdMessage(this.range);
       },
       pauseValueChange(val) {
