@@ -8,9 +8,6 @@
         <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
-    {{showConfirmPopup}}-
-    {{this.range.length}}-
-    {{this.callModal}}-
     <template v-if="bookMode !== 'proofread'">
       <vue-slider v-model="pause"
                   :min="min"
