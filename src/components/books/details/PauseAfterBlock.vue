@@ -475,11 +475,28 @@
         this.setUndefined = true;
         this.callModal = false;
 //        this.pauseInput.get();
+      },
+      coversReposition () {
+        let parentTopOffset = $('.pause-after-container.mode-edit').offset();
+        if(!parentTopOffset)
+          return;
+
+        let coverSlider2TopOffset = $('.vue-slider-component.vue-slider-horizontal').offset()
+
+        let offset = `${coverSlider2TopOffset.top - parentTopOffset.top}px`;
+        let offset2 = `${coverSlider2TopOffset.top - parentTopOffset.top+ 25}px`;
+
+        setTimeout( function() {
+          $('#cover-slider2').css('top',offset);
+          $('#cover-slider').css('top',offset2);
+        },10);
       }
+
     },
     computed: {
       showConfirmPopup: {
         get() {
+          this.coversReposition();
           return this.range.length > 1 && this.callModal;
         },
       },
@@ -646,18 +663,18 @@
       border: #00d1ff;
       width: 120px;
       height: 24px;
-      position: relative;
       top: 27px;
       z-index: 2;
+      position: absolute;
     }
     #cover-slider2 {
       background: transparent;
       border: #00d1ff;
       width: 100%;
       height: 20px;
-      position: relative;
       top: -21px;
       z-index: 2;
+      position: absolute;
     }
     .pause-after-input {
       text-align: left;
