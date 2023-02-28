@@ -670,7 +670,6 @@
       top: 27px;
       z-index: 2;
       position: absolute;
-      border: 1px solid;
     }
     #cover-slider2 {
       background: transparent;
@@ -680,7 +679,6 @@
       top: -21px;
       z-index: 2;
       position: absolute;
-      border: 1px solid;
     }
     .pause-after-input {
       text-align: left;
