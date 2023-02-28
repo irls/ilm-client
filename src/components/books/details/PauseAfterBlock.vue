@@ -8,12 +8,7 @@
         <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
-<!--
-    {{range.length}}-
-    {{callModal}}-
-    {{bookMode}}
--->
-    <template v-if="bookMode !== 'proofread'">
+    <template v-if="bookMode !== 'proofread' && !allowConfirmPopup">
       <vue-slider v-model="pause"
                   :min="min"
                   :max="max"
@@ -26,10 +21,23 @@
                   ref="pause_after_slider"
                   @input="pauseValueChange"
                   @drag-end="pauseDragEnd"></vue-slider>
-      <div id="cover-slider2" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
     </template>
 
-    <div id="cover-slider" v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)"></div>
+    <template v-if="bookMode !== 'proofread' && allowConfirmPopup">
+      <vue-slider v-model="pause"
+                  :min="min"
+                  :max="max"
+                  :interval="interval"
+                  :width="'auto'"
+                  tooltip="none"
+                  :lazy="true"
+                  :silent="true"
+                  :debug="false"
+                  ref="pause_after_slider"
+                  @input="showConfirmPopup"
+                  @drag-end="showConfirmPopup"></vue-slider>
+    </template>
+
     <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
     <div class="hidden">{{parseFloatToFixed(pause) === min}},{{parseFloatToFixed(pause) === max}}</div>
     <div class="col-md-12">
@@ -41,7 +49,7 @@
         </template>
         <template v-else>
 
-          <button v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)" class="minus"></button>
+          <button v-if="allowConfirmPopup" @click="confirmPauseUptdMessage(range)" class="minus"></button>
           <button v-else @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
 
           <input  class="pause-after" type="number" @click="confirmPauseUptdMessage(range)"
@@ -54,7 +62,7 @@
             v-on:focusout="onFocusout"
             v-else/>
 
-          <button v-if="showConfirmPopup" @click="confirmPauseUptdMessage(range)" class="plus"></button>
+          <button v-if="allowConfirmPopup" @click="confirmPauseUptdMessage(range)" class="plus"></button>
           <button v-else @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
@@ -79,6 +87,7 @@
     data() {
       return {
         pause: 0,
+        pausePreValue: 0,
         pauseUpdateEmitted: false,
         min: 0,
         max: 4,
@@ -120,6 +129,11 @@
           val = parseFloat(parseFloat(val).toFixed(1));
         }
         this.$emit('setPauseAfter', this.blockType, val);
+      },
+      showConfirmPopup(val) {
+        this.pause = this.pausePreValue;
+        val = this.pausePreValue;
+        return this.confirmPauseUptdMessage(this.range);
       },
       pauseValueChange(val) {
           //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
@@ -179,9 +193,7 @@
         this.range = range.sort((a, b) => {
           return a > b ? 1 : -1;
         });
-        console.log(selectedProps)
-        console.log(range)
-        console.log(this.range)
+
         //console.log('recalc range', this.pause, this.range[0], reset_pause);
         if (this.range.length === 1 && this.pause !== this.range[0] && reset_pause) {
           this.pauseUpdateEmitted = false;
@@ -479,33 +491,13 @@
         this.range = 1;
         this.setUndefined = true;
         this.callModal = false;
-//        this.pauseInput.get();
       },
-      coversReposition () {
-        console.log('coversReposition');
-        console.log(this.bookMode);
-        let parentTopOffset = $('.pause-after-container.mode-'+this.bookMode).offset();
-        if(!parentTopOffset)
-          return;
-
-        let coverSlider2TopOffset = $('.vue-slider-component.vue-slider-horizontal').offset()
-
-        let offset = `${coverSlider2TopOffset.top - parentTopOffset.top}px`;
-        let offset2 = `${coverSlider2TopOffset.top - parentTopOffset.top+ 25}px`;
-
-        console.log(offset)
-        console.log(offset2)
-        setTimeout( function() {
-          $('#cover-slider2').css('top',offset);
-          $('#cover-slider').css('top',offset2);
-        },10);
-      }
 
     },
     computed: {
-      showConfirmPopup: {
+      allowConfirmPopup: {
         get() {
-          this.coversReposition();
+          // this.coversReposition();
           return this.range.length > 1 && this.callModal;
         },
       },
@@ -666,26 +658,6 @@
     position: relative;
     .vue-slider-component.vue-slider-horizontal {
       z-index: 0;
-    }
-    #cover-slider {
-      background: transparent;
-      border: #00d1ff;
-      width: 120px;
-      height: 24px;
-      top: 27px;
-      z-index: 2;
-      position: absolute;
-      border: 1px solid;
-    }
-    #cover-slider2 {
-      background: transparent;
-      border: #00d1ff;
-      width: 100%;
-      height: 20px;
-      top: -21px;
-      z-index: 2;
-      position: absolute;
-      border: 1px solid;
     }
     .pause-after-input {
       text-align: left;
