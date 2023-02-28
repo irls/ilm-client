@@ -477,6 +477,8 @@
 //        this.pauseInput.get();
       },
       coversReposition () {
+        console.log('coversReposition');
+        console.log(this.bookMode);
         let parentTopOffset = $('.pause-after-container.mode-edit').offset();
         if(!parentTopOffset)
           return;
@@ -486,6 +488,8 @@
         let offset = `${coverSlider2TopOffset.top - parentTopOffset.top}px`;
         let offset2 = `${coverSlider2TopOffset.top - parentTopOffset.top+ 25}px`;
 
+        console.log(offset)
+        console.log(offset2)
         setTimeout( function() {
           $('#cover-slider2').css('top',offset);
           $('#cover-slider').css('top',offset2);
@@ -666,6 +670,7 @@
       top: 27px;
       z-index: 2;
       position: absolute;
+      border: 1px solid;
     }
     #cover-slider2 {
       background: transparent;
@@ -675,6 +680,7 @@
       top: -21px;
       z-index: 2;
       position: absolute;
+      border: 1px solid;
     }
     .pause-after-input {
       text-align: left;
