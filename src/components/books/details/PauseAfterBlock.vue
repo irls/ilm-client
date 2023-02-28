@@ -668,7 +668,6 @@
       z-index: 0;
     }
     #cover-slider {
-      border: 1px solid !important;
       background: transparent;
       border: #00d1ff;
       width: 120px;
@@ -678,7 +677,6 @@
       z-index: 2;
     }
     #cover-slider2 {
-      border: 1px solid !important;
       background: transparent;
       border: #00d1ff;
       width: 100%;
