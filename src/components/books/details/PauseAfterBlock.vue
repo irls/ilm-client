@@ -479,7 +479,7 @@
       coversReposition () {
         console.log('coversReposition');
         console.log(this.bookMode);
-        let parentTopOffset = $('.pause-after-container.mode-edit').offset();
+        let parentTopOffset = $('.pause-after-container.mode-'+this.bookMode).offset();
         if(!parentTopOffset)
           return;
 
