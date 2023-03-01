@@ -2933,16 +2933,21 @@ export const store = new Vuex.Store({
         })
     },
     tc_approveBookTask({state, commit, dispatch}, task) {
-      if (task.blockid) {
-        state.approveBlocksList.push(task.blockid);
-      }
-      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
-      {
+      let request = {
         'bookId': task.bookid || false,
         'taskId': task.id || false,
         'taskStep': task.nextStep || 'narrate-block',
         'taskType': task.type || false
-      })
+      };
+      if (task.blockid) {
+        state.approveBlocksList.push(task.blockid);
+        let block = state.storeList.get(task.blockid);
+        if (block) {
+          request.blockRid = block._rid;
+        }
+      }
+      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
+      request)
       .then((response) => {
         return dispatch('checkResponse', response)
           .then(list => {
