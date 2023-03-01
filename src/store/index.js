@@ -2393,14 +2393,15 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-        return axios.get(state.API_URL + 'book/block/' + block_id)
-          .then(response => {
-            return Promise.resolve(response.data);
-          })
-          .catch(err => {
-            console.log(err);
-            return Promise.reject(err);
-          });
+      let block = state.storeList.get(block_id);
+      return axios.get(state.API_URL + 'book/block/' + encodeURIComponent(block._rid))
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          console.log(err);
+          return Promise.reject(err);
+        });
     },
 
     getBlocks ({commit, state, dispatch}, blocksIds) {
@@ -4657,7 +4658,8 @@ export const store = new Vuex.Store({
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
-        mode: state.bookMode
+        mode: state.bookMode,
+        rid: block._rid,
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
@@ -4795,8 +4797,8 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo]) {
-      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo, blockRid]) {
+      return axios.post(`${state.API_URL}books/blocks/${encodeURIComponent(blockRid)}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
         .then((response) => {
           let storeBlock = state.storeList.get(blockid);
           if (storeBlock && Array.isArray(storeBlock.parts) && storeBlock.parts.length > 2) {
@@ -5258,7 +5260,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
+    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
@@ -5266,7 +5268,7 @@ export const store = new Vuex.Store({
       let currentBlockO = state.storeListO.get(blockid);
       let currentOut = currentBlockO.out;
 
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/split_to_subblocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
           let storeBlock = state.storeList.get(blockid);
@@ -5300,7 +5302,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
+    splitBySubblock({state, dispatch, commit}, [blockid, partIdx, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
@@ -5308,7 +5310,7 @@ export const store = new Vuex.Store({
       let currentOut = currentBlockO.out;
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/split_by_subblock`, {
         partIdx: partIdx,
         mode: state.bookMode
       })
@@ -5331,11 +5333,11 @@ export const store = new Vuex.Store({
         });
     },
 
-    mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
+    mergeAllBlockParts({state, commit, dispatch}, [blockid, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/parts/merge_all`, {mode: state.bookMode})
         .then((response) => {
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');

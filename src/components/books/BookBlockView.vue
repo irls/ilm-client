@@ -3239,7 +3239,8 @@ Save text changes and realign the Block?`,
                 'position': reRecordPosition,
                 'isTemp': false,
                 'blockid': this.block.blockid,
-                'partIdx': partIdx
+                'partIdx': partIdx,
+                rid: this.block._rid
               })
                 .then(response => {
                   this.isUpdating = false;

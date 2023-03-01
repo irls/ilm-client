@@ -3780,7 +3780,7 @@ Please save or discard your changes before joining.`,
         this.closeAudioEditor();
         this.$parent.isSaving = true;
         this.$parent.$forceUpdate();
-        return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1])
+        return this.mergeBlockParts([this.block.blockid, this.blockPartIdx, this.blockPartIdx + 1, this.block._rid])
           .then((response) => {
             if (this._isDestroyed) {
               this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
@@ -3845,7 +3845,7 @@ Please save or discard your changes before joining.`,
           this.block.isSaving = true;
           this.$parent.isSaving = true;
           this.$parent.$forceUpdate();
-          return this.splitBlockToSubblocks([this.block.blockid, update])
+          return this.splitBlockToSubblocks([this.block.blockid, update, this.block._rid])
             .then(() => {
               this.$parent.highlightSuspiciousWords();
               return Promise.resolve();
@@ -3861,7 +3861,7 @@ Please save or discard your changes before joining.`,
         this.block.isSaving = true;
         this.$parent.isSaving = true;
         this.$parent.$forceUpdate();
-        return this.splitBySubblock([this.block.blockid, this.blockPartIdx])
+        return this.splitBySubblock([this.block.blockid, this.blockPartIdx, this.block._rid])
           .then(() => {
             this.$parent.highlightSuspiciousWords();
             return Promise.resolve();
@@ -3924,7 +3924,7 @@ Please save or discard your changes before joining.`,
         this.closeAudioEditor();
         this.$parent.isSaving = true;
         this.$parent.$forceUpdate();
-        return this.mergeAllBlockParts([this.block.blockid])
+        return this.mergeAllBlockParts([this.block.blockid, this.block._rid])
           .then((response) => {
             if (this._isDestroyed) {
               this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
