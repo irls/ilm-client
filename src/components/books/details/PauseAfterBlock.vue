@@ -131,7 +131,8 @@
         this.$emit('setPauseAfter', this.blockType, val);
       },
       showConfirmPopup() {
-        return this.confirmPauseUptdMessage(this.range);
+        if(this.pauseUpdateEmitted)
+          return this.confirmPauseUptdMessage(this.range);
       },
       pauseValueChange(val) {
           //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
