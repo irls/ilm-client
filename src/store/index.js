@@ -5267,6 +5267,8 @@ export const store = new Vuex.Store({
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
+              
+              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
@@ -5339,6 +5341,7 @@ export const store = new Vuex.Store({
 
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
+              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
