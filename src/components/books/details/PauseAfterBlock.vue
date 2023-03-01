@@ -131,6 +131,7 @@
         this.$emit('setPauseAfter', this.blockType, val);
       },
       showConfirmPopup() {
+        alert('test1');
         return this.confirmPauseUptdMessage(this.range);
       },
       pauseValueChange(val) {
@@ -462,6 +463,8 @@
         }
       },
       confirmPauseUptdMessage(range) {
+        alert('test2');
+
         this.$root.$emit('show-modal', {
           title: 'Confirm pause update',
           text: `Current values are from ${range[0]} to ${range[range.length - 1]} in the selected range of ${this.blockTypesInRange.length} blocks.<br>Are you sure you want to update "pause after" on the range?`,
