@@ -131,7 +131,6 @@
         this.$emit('setPauseAfter', this.blockType, val);
       },
       showConfirmPopup() {
-        this.pause = 0;
         return this.confirmPauseUptdMessage(this.range);
       },
       pauseValueChange(val) {
@@ -470,6 +469,7 @@
             {
               title: 'Cancel',
               handler: () => {
+                this.$refs.pause_after_slider.setValue(0);
                 this.$root.$emit('hide-modal');
               },
               'class': 'btn btn-default'
@@ -477,8 +477,10 @@
             {
               title: 'Confirm',
               handler: () => {
+                this.$refs.pause_after_slider.setValue(0);
+                this.callModal = false;
                 this.$root.$emit('hide-modal');
-                this.updates ();
+                // this.updates ();
               },
               'class': 'btn btn-primary'
             }
@@ -486,11 +488,13 @@
           class: ['modal-width align-modal']
         });
       },
+/*
       updates () {
-        this.range = 1;
-        this.setUndefined = true;
+        // this.range = 1;
+        // this.setUndefined = true;
         this.callModal = false;
       },
+*/
 
     },
     computed: {
