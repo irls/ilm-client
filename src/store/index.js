@@ -2051,7 +2051,8 @@ export const store = new Vuex.Store({
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
-                commit('SET_BOOK_PUBLISH_BLOCK', data.meta.isIntheProcessOfPublication || data.meta.isInTheQueueOfPublication);
+                console.log(data);
+                commit('SET_BOOK_PUBLISH_BLOCK', data);
               }
             }
           });
