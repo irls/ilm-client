@@ -26,7 +26,7 @@
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments" style="position: relative">
-            <div v-if="bookBlockBPublication" :class="['locked-block-cover','clear']">
+            <div v-if="bookBlockBPublication || currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
               <LockedBlock/>
             </div>
 
@@ -76,7 +76,7 @@
             :convertTime="convertTime"></SplitPreview>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
-            <div v-if="currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
+            <div v-if="bookBlockBPublication || currentBookMeta.isInTheQueueOfPublication || currentBookMeta.isIntheProcessOfPublication" :class="['locked-block-cover','clear']">
               <LockedBlock/>
             </div>
             <fieldset>
