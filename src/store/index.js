@@ -277,7 +277,8 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
-    pauseAfterBlockXhr: null
+    pauseAfterBlockXhr: null,
+    pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
   },
 
   getters: {
@@ -1408,6 +1409,12 @@ export const store = new Vuex.Store({
         }
       } else if (data.action === 'change' && data.block) {
         if (blockStore) {
+          let paused = state.pauseLiveDBBlocks.find(blk => {
+            return blk.blockid === blockStore.blockid;
+          });
+          if (paused) {
+            return;
+          }
           if (blockStore.audiosrc_config) {// stored only locally
             data.block.audiosrc_config = blockStore.audiosrc_config;
           }
@@ -1486,6 +1493,27 @@ export const store = new Vuex.Store({
           }
         });
         this.dispatch('setBlockSelection', {start: {}, end: {}});
+      }
+    },
+    pause_liveDBBlock(state, blockId, blockRid) {
+      let index = state.pauseLiveDBBlocks.findIndex(record => {
+        return record.blockid === blockId;
+      });
+      if (index === -1) {
+        state.pauseLiveDBBlocks.push({
+          blockid: blockId,
+          rid: blockRid
+        });
+      }
+    },
+    resume_liveDBBlock(state, blockId, blockRid) {
+      let index = state.pauseLiveDBBlocks.findIndex(record => {
+        return record.blockid === blockId;
+      });
+      if (index !== -1) {
+        setTimeout(() => {
+          state.pauseLiveDBBlocks.splice(index, 1);
+        }, 500);// server's timeout for update
       }
     }
   },
@@ -5240,15 +5268,17 @@ export const store = new Vuex.Store({
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       update.mode = state.bookMode;
+      commit('pause_liveDBBlock', blockid, storeBlock._id);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
               
-              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out});
+              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out, updated: response.data.updated});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
+              commit('resume_liveDBBlock', blockid, storeBlock._rid);
             });
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
@@ -5310,6 +5340,7 @@ export const store = new Vuex.Store({
       let currentOut = currentBlockO.out;
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
+      commit('pause_liveDBBlock', blockid, storeBlock._id);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
         partIdx: partIdx,
         mode: state.bookMode
@@ -5318,10 +5349,11 @@ export const store = new Vuex.Store({
 
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
-              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out});
+              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out, updated: response.data.updated});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
+              commit('resume_liveDBBlock', blockid, storeBlock._rid);
             });
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
