@@ -1288,7 +1288,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist',
+                  'superscript', 'subscript',//'orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1474,7 +1474,7 @@ export default {
         this.$refs.blockCntx.open(e, container, offsetX);
         this.$nextTick(() => {
           //hide medium editor if context menu is active
-          $('.medium-editor-toolbar-active').css('visibility', 'hidden');
+          $('.medium-editor-toolbar-active').removeClass('medium-editor-toolbar-active');
         })
       },
 
@@ -1520,7 +1520,7 @@ export default {
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
         let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
         if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
-          
+
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
       },
