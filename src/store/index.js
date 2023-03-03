@@ -4658,13 +4658,12 @@ export const store = new Vuex.Store({
     saveBlockAudio({state, dispatch}, [realign, preparedData]) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let alignBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
       let data = {
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
         mode: state.bookMode,
-        rid: block._rid,
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
