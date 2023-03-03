@@ -1869,7 +1869,8 @@ export default {
                   let updateBody = {
                     blockid: pBlock.blockid,
                     bookid: pBlock.bookid,
-                    classes: pBlock.classes//,
+                    classes: pBlock.classes,
+                    rid: pBlock._rid
                     //status: pBlock.status
                   };
                   let isCouplet = styleKey === "whitespace" && styleVal === "couplet";

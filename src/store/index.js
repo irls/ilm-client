@@ -2624,7 +2624,7 @@ export const store = new Vuex.Store({
         update.block.content = block.content;
       }
       let storeBlock = state.storeList.get(block.blockid);
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
+      return axios.put(state.API_URL + 'book/block/' + encodeURIComponent(storeBlock._rid) + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
@@ -2642,7 +2642,9 @@ export const store = new Vuex.Store({
     },
     putBlockNarrate({state, dispatch, commit}, [block, realign, partIdx]) {
       commit('set_blocker', 'putBlock');
-      let url = `${state.API_URL}book/block/${block.blockid}/narrate`;
+
+      let storeBlock = state.storeList.get(block.blockid);
+      let url = `${state.API_URL}book/block/${encodeURIComponent(storeBlock._rid)}/narrate`;
       if (realign) {
         url+= '?realign=true';
       }
@@ -2676,8 +2678,6 @@ export const store = new Vuex.Store({
       isSplitting = isSplitting ? isSplitting.length : 0;
       return axios.put(url, update)
         .then((response) => {
-
-          let storeBlock = state.storeList.get(response.data.blockid);
           if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
             response.data.audiosrc_config = storeBlock.audiosrc_config;
           }
@@ -4594,7 +4594,7 @@ export const store = new Vuex.Store({
         }
       })
       state.audioTasksQueue.running = Object.assign({}, queue[queue.length - 1]);
-      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
+      return axios.post(`${state.API_URL}book/block/${encodeURIComponent(block._rid)}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
         queue: queue,
         block: {
           content: content,
