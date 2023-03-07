@@ -674,7 +674,7 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      currentBook: {},
+      currentBook: { author: [] },
       masteringTask: {},
       importTask: {},
       linkTaskError: '',
@@ -944,6 +944,7 @@ export default {
   mixins: [task_controls, api_config, access, time_methods, number_methods, toc_methods],
 
   mounted() {
+    console.log(`BookMetaEdit.mounted: `, this.currentBookid);
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
 
     this.getAudioBook({bookid: this.currentBookid})

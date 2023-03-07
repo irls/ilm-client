@@ -9,7 +9,12 @@
 
     <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
-      <BookEditToolbar v-if="isEditMode()"
+      <AllListsToolbar
+        :hasBookSelected="hasBookSelected"
+        :metaVisible="metaVisible"
+      />
+
+<!--      <BookEditToolbar v-if="isEditMode()"
       :toggleMetaVisible="toggleMetaVisible"
       :hasBookSelected="hasBookSelected"
       :metaVisible="metaVisible"/>
@@ -23,7 +28,7 @@
       <BookReimport v-if="showBookReimport"
         :multiple="false"
         @close_modal="reimportBookClose"
-        :bookId="getBookid()" />
+        :bookId="getBookid()" />-->
 
 
       <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
@@ -32,8 +37,8 @@
 
     </div>
 
-    <div class='metaedit' v-if='metaVisible'>
-      <book-meta-edit v-if='metaVisible'></book-meta-edit>
+    <div class='metaedit'>
+      <book-meta-edit v-if='hasBookSelected'></book-meta-edit>
     </div>
 
     <v-dialog :clickToClose="false"/>
@@ -53,7 +58,8 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import Clipboard from 'v-clipboard'
-import BooksToolbar from './books/BooksToolbar'
+//import BooksToolbar from './books/BooksToolbar'
+import AllListsToolbar from './toolbar/AllListsToolbar'
 import BookEditToolbar from './books/BookEditToolbar'
 import BookMetaEdit from './books/BookMetaEdit'
 import BookEditHtml from './books/BookEdit_HTML'
@@ -78,7 +84,7 @@ export default {
 
   data () {
     return {
-      metaVisible: false,
+      metaVisible: true,
       metaAvailable: false,
       //colCount: 1,
       currentBookid: this.$store.state.currentBookid,
@@ -91,7 +97,8 @@ export default {
   },
 
   components: {
-    BooksToolbar,
+//     BooksToolbar,
+    AllListsToolbar,
     BookMetaEdit,
     BookEditToolbar,
     axios,
@@ -102,6 +109,11 @@ export default {
 
   computed: {
     ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian', 'hashTagsSuggestions']),
+
+    hasBookSelected () {
+      console.log(`hasBookSelected.this.currentBookMeta: `, this.currentBookMeta);
+      return this.currentBookMeta && this.currentBookMeta.bookid;
+    },
   },
 
   watch: {
@@ -250,9 +262,6 @@ export default {
       })
 
     },
-    hasBookSelected () {
-      return !!this.currentBookMeta.bookid
-    },
     isEditMode () {
       return this.$route.matched.some(record => {
         return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
@@ -350,11 +359,9 @@ export default {
     }
 
     .toolbar {
-      min-height: 36px;
-      display: flex;
-      flex-direction: row;
+      /*min-height: 36px;*/
       justify-content: space-between;
-      flex-shrink: 0;
+      display: grid;
       align-items: center;
       box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
       padding-left: 4px;

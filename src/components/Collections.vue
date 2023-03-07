@@ -1,19 +1,6 @@
 <template>
   <div id='booksarea' v-cloak>
-    <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
-
-      <BookEditToolbar v-if="isEditMode()"
-      :toggleMetaVisible="toggleMetaVisible"
-      :hasBookSelected="hasBookSelected"
-      :metaVisible="metaVisible"/>
-      <CollectionsToolbar v-else
-      :hasItemSelected="hasItemSelected"
-      :metaVisible="metaVisible"
-      :hasBookSelected="hasBookSelected"
-      @collectionAdded="onCollectionAdded"
-      @toggleMetaVisible="toggleMetaVisible"/>
-
-
+    <div :class="['content-meta-wrapper', 'meta-visible']">
       <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
           <template v-if="isEditMode()">
             <BookEdit v-if="bookEditMode == 'Editor'" :mode="mode"/>
@@ -25,22 +12,17 @@
             @selectCollection="selectCollection"
             @selectBook="selectBook"/>
       </div>
-
     </div>
 
-    <div class='metaedit' v-if='metaVisible'>
-      <CollectionTabs v-if="collectionMetaVisible"
-        @collectionRemoved="collectionRemoved"></CollectionTabs>
-      <BookMetaEdit v-if="bookMetaVisible"
-        :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
+    <div class='metaedit' v-if='hasBookSelected'>
+      <CollectionTabs @collectionRemoved="collectionRemoved"></CollectionTabs>
+      <BookMetaEdit :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
     </div>
 
     <v-dialog :clickToClose="false"/>
   </div>
 </template>
 <script>
-  import BookEditToolbar from './books/BookEditToolbar';
-  import CollectionsToolbar from './collections/CollectionsToolbar';
   import CollectionsGrid from './collections/CollectionsGrid';
   import CollectionTabs from './collections/CollectionTabs';
   import BookMetaEdit from './books/BookMetaEdit';
@@ -55,8 +37,6 @@
   export default {
       name: 'Collections',
       components: {
-        BookEditToolbar: BookEditToolbar,
-        CollectionsToolbar: CollectionsToolbar,
         CollectionsGrid: CollectionsGrid,
         CollectionTabs: CollectionTabs,
         BookMetaEdit: BookMetaEdit,
@@ -92,17 +72,9 @@
           if (this.currentCollection._id !== id) {
             this.$store.commit('SET_CURRENT_COLLECTION', false);
             this.selectCollection(id);
-            this.collectionMetaVisible = true;
             this.scrollToRow(id);
           }
           //}
-        },
-        toggleMetaVisible() {
-          if (this.currentBookMeta._id) {
-            this.bookMetaVisible = !this.bookMetaVisible;
-          } else if (this.currentCollection._id) {
-            this.collectionMetaVisible = !this.collectionMetaVisible;
-          }
         },
         selectCollection(id) {
           //if (!this.currentCollection || collection._id !== this.currentCollection._id) {

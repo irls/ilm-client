@@ -32,7 +32,7 @@ export default new Router({
       path: '/books',
       component: Books,
 //       name: 'BooksList',
-      props: {listing: 'books'},
+      props: {},
       children: [
         { path: '', component: BooksGrid }
       ]
@@ -40,33 +40,65 @@ export default new Router({
     {
       path: '/books/:bookid',
       component: Books,
-      props: {listing: 'books'},
+      props: {},
 //       name: 'Book',
       children: [
-        { path: '', component: BooksGrid, name: 'BooksGrid', props: {listing: 'books'} },
+        { path: '', component: BooksGrid, name: 'BooksGrid', props: {} },
         {
           path: 'edit/:block?/:task_type?', name: 'BookEdit',
-          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit', listing: 'books' }
+          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
         },
         {
           path: 'display/:block?/:task_type?', name: 'BookEditDisplay',
-          component: BookEditDisplay, meta: { mode: 'edit' }, props: {listing: 'books'}
+          component: BookEditDisplay, meta: { mode: 'edit' }, props: {}
         },
         {
           path: 'narrate/:block?/:task_type?', name: 'BookNarrate',
-          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate', listing: 'books' }
+          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
         },
         {
           path: 'proofread/:block?/:task_type?', name: 'BookProofread',
-          component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread', listing: 'books' }
+          component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
         }
       ]
     },
-//     {
-//       path: '/books/edit/:bookid',
-//       component: Books
-//     },
-
+    {
+      path: '/collections',
+      component: Books,
+      props: {},
+      children: [
+        {
+          path: '',
+          name: 'Collections',
+          component: Collections
+        },
+        {
+          path: '/collections/:collectionid',
+          name: 'Collection',
+          component: Collections,
+        },
+        {
+          path: '/collections/:collectionid/:bookid',
+          name: 'CollectionBook', component: Collections
+        },
+        {
+          path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',
+          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
+        },
+        {
+          path: '/collections/:collectionid/:bookid/display/:block?', name: 'CollectionBookEditDisplay',
+          component: BookEditDisplay, meta: { mode: 'edit' }
+        },
+        {
+          path: '/collections/:collectionid/:bookid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
+          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
+        },
+        {
+          path: '/collections/:collectionid/:bookid/proofread/:block?/:task_type?', name: 'CollectionBookProofread',
+          component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
+        }
+      ]
+    },
     {
       path: '/users',
       component: Users
@@ -107,43 +139,6 @@ export default new Router({
     {
       path: '/settings',
       component: Settings
-    },
-    {
-      path: '/collections',
-      component: Books,
-      props: {listing: 'collections'},
-      children: [
-        {
-          path: '',
-          name: 'Collections',
-          component: Collections
-        },
-        {
-          path: '/collections/:collectionid',
-          name: 'Collection',
-          component: Collections,
-        },
-        {
-          path: '/collections/:collectionid/:bookid',
-          name: 'CollectionBook', component: Collections
-        },
-        {
-          path: '/collections/:collectionid/:bookid/edit/:block?/:task_type?', name: 'CollectionBookEdit',
-          component: BookEdit, meta: { mode: 'edit' }, props: { mode: 'edit' }
-        },
-        {
-          path: '/collections/:collectionid/:bookid/display/:block?', name: 'CollectionBookEditDisplay',
-          component: BookEditDisplay, meta: { mode: 'edit' }
-        },
-        {
-          path: '/collections/:collectionid/:bookid/narrate/:block?/:task_type?', name: 'CollectionBookNarrate',
-          component: BookEdit, meta: { mode: 'narrate' }, props: { mode: 'narrate' }
-        },
-        {
-          path: '/collections/:collectionid/:bookid/proofread/:block?/:task_type?', name: 'CollectionBookProofread',
-          component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
-        }
-      ]
     },
     {
       path: '/test_audio_convert',
