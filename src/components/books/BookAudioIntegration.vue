@@ -176,6 +176,9 @@
           <button v-if="hasLocks('align')" class="cancel-align pull-left" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
       </AccordionTab>
+      <AccordionTab :header="'Export & Replace audio'" v-bind:key="'export-replace-audio'">
+        <ReplaceAudio/>
+      </AccordionTab>
     </Accordion>
     <div id="player"></div>
   </div>
@@ -191,6 +194,7 @@
   import {mapGetters, mapActions} from 'vuex';
   import Slider from 'primevue/slider';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
+  import ReplaceAudio from './details/ReplaceAudio.vue';
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
   import superlogin from 'superlogin-client';
@@ -211,7 +215,8 @@
       dropdown,
       Slider,
       'select-tts-voice':SelectTTSVoice,
-      draggable
+      draggable,
+      ReplaceAudio
 
     },
     props: {
