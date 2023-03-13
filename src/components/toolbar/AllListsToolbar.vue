@@ -34,7 +34,7 @@
     <TabView ref="booksListTabs" :activeIndex="activeTabIdx" :scrollable="false" @tab-change="onBooksListTabChange">
       <TabPanel :header="booksCount + ' Book' + (booksCount===1 ? '':'s')"></TabPanel>
       <TabPanel :header="collectionsCount + ' Collection' + (collectionsCount===1 ? '':'s')"></TabPanel>
-      <TabPanel v-if="currentCollection._id" :header="currentCollection.title + ' (' + collectionBooksCount + ' Book' + (collectionBooksCount === 1 ? ')':'s)')"></TabPanel>
+      <TabPanel v-if="currentCollection._id" :header="currentCollectionHeader"></TabPanel>
     </TabView>
 
     <div class="toolbar-second-row-buttons">
@@ -159,6 +159,12 @@ export default {
         return this.currentCollection.bookids.length;
       }
       return 0;
+    },
+    currentCollectionHeader () {
+      if (this.currentCollection._id) {
+        return `${this.currentCollection.title} (${this.collectionBooksCount} Book${(this.collectionBooksCount === 1?'':'s')})`;
+      }
+      return '';
     }
   },
 
@@ -231,8 +237,10 @@ export default {
   },
   watch:{
     async '$route' ($to, $from) {
-      await Vue.nextTick();
-      this.syncRouteWithTab();
+      if ($to.name !== $from.name) {
+        await Vue.nextTick();
+        this.syncRouteWithTab();
+      }
     }
   },
 }
