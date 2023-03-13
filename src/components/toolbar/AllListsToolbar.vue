@@ -34,7 +34,7 @@
     <TabView ref="booksListTabs" :activeIndex="activeTabIdx" :scrollable="false" @tab-change="onBooksListTabChange">
       <TabPanel :header="booksCount + ' Book' + (booksCount===1 ? '':'s')"></TabPanel>
       <TabPanel :header="collectionsCount + ' Collection' + (collectionsCount===1 ? '':'s')"></TabPanel>
-      <TabPanel v-if="currentCollection._id" :header="currentCollection.title"></TabPanel>
+      <TabPanel v-if="currentCollection._id" :header="currentCollection.title + ' (' + collectionBooksCount + ' Book' + (collectionBooksCount === 1 ? ')':'s)')"></TabPanel>
     </TabView>
 
     <div class="toolbar-second-row-buttons">
@@ -154,6 +154,12 @@ export default {
         return 0;
       }
     },
+    collectionBooksCount () {
+      if (this.currentCollection._id) {
+        return this.currentCollection.bookids.length;
+      }
+      return 0;
+    }
   },
 
   methods: {
