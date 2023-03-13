@@ -1,31 +1,32 @@
 <template>
-  <div id='booksarea' v-cloak>
-    <div :class="['content-meta-wrapper', 'meta-visible']">
-      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
+  <div class="router-view-wrapper" v-cloak>
+    <!--<div :class="['content-meta-wrapper', 'meta-visible']">
+      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">-->
           <template v-if="isEditMode()">
             <BookEdit v-if="bookEditMode == 'Editor'" :mode="mode"/>
             <BookEditHtml v-else-if="bookEditMode == 'HTML'" />
             <BookEditJson v-else-if="bookEditMode == 'JSON'" />
             <BookEditDisplay v-else="bookEditMode == 'Display'" />
           </template>
-          <CollectionsGrid v-else
+          <CollectionGrid v-else
             @selectCollection="selectCollection"
             @selectBook="selectBook"/>
-      </div>
-    </div>
+  <!--</div>
+    </div>-->
 
-    <div class='metaedit' v-if='hasBookSelected'>
+    <!--<div class='metaedit' v-if='hasBookSelected'>
       <CollectionTabs @collectionRemoved="collectionRemoved"></CollectionTabs>
       <BookMetaEdit :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
-    </div>
+    </div>-->
 
     <v-dialog :clickToClose="false"/>
   </div>
+  <!--<div class="router-view-wrapper"-->
 </template>
 <script>
-  import CollectionsGrid from './collections/CollectionsGrid';
-  import CollectionTabs from './collections/CollectionTabs';
-  import BookMetaEdit from './books/BookMetaEdit';
+  import CollectionGrid from './collections/CollectionGrid';
+  //import CollectionTabs from './collections/CollectionTabs';
+  //import BookMetaEdit from './books/BookMetaEdit';
   import { mapGetters, mapActions } from 'vuex';
   import BookEdit from './books/BookEdit'
   import Vue from 'vue';
@@ -37,21 +38,16 @@
   export default {
       name: 'Collections',
       components: {
-        CollectionsGrid: CollectionsGrid,
-        CollectionTabs: CollectionTabs,
-        BookMetaEdit: BookMetaEdit,
+        CollectionGrid: CollectionGrid,
+        //CollectionTabs: CollectionTabs,
+        //BookMetaEdit: BookMetaEdit,
         BookEdit: BookEdit
       },
       mixins: [api_config, task_controls],
       data() {
         return {
           collectionMetaVisible: false,
-          bookMetaVisible: false,
-          blocksForAlignment: {
-            start: {},
-            end: {},
-            count: 0
-          },
+          bookMetaVisible: true,
           currentBook: {}
         }
       },
@@ -107,7 +103,7 @@
             }
           }, 500);
         },
-        getBlockSelectionInfo() {
+        /*getBlockSelectionInfo() {
           this.blocksForAlignment.count = 0;
           if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
             let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
@@ -123,7 +119,7 @@
                 }
               })
           }
-        },
+        },*/
         showModal(params) {
           //console.log('MODAL SHOW')
           this.$modal.show('dialog', params);
@@ -142,11 +138,11 @@
         if (this.$route.params.hasOwnProperty('bookid')) {
             this.loadBook(this.$route.params.bookid);
         }
-        this.$root.$on('from-bookedit:set-selection', (start, end) => {
+        /*this.$root.$on('from-bookedit:set-selection', (start, end) => {
           this.blocksForAlignment.start = start;
           this.blocksForAlignment.end = end;
           this.getBlockSelectionInfo();
-        });
+        });*/
         this.$root.$on('from-bookblockview:voicework-type-changed', () => {
           this.getBlockSelectionInfo();
         });

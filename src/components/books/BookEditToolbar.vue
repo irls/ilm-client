@@ -1,5 +1,5 @@
 <template>
-<div class="toolbar">
+<div class="toolbar-first-row">
 
   <h3 v-if="currentBook" class='title'>
     <i class="fa fa-minus-square-o -smaller-uncheck" aria-hidden="true"
@@ -22,7 +22,7 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if="(showSearchIn.includes(currRoute) && hasBookSelected())" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
+    <button v-if="showSearchIn.includes(currRoute) && hasBookSelected" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
     <div id="search-panel-container"></div>
     <OverlayPanel ref="searchPanel" :dismissable="false" appendTo="search-panel-container">
       <div class="search-box">
@@ -38,7 +38,7 @@
       </div>
     </OverlayPanel>
 
-    <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
+    <button v-if='hasBookSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
 </div>

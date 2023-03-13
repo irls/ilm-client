@@ -1475,7 +1475,7 @@ export const store = new Vuex.Store({
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
     },
-    
+
     clear_blockSelection(state) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
         let idsArrayRange = state.storeListO.ridsArrayRange(state.blockSelection.start._id, state.blockSelection.end._id);
@@ -2012,7 +2012,7 @@ export const store = new Vuex.Store({
 
           state.watched['metaV'] = book_id;
 
-          console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
+          //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
@@ -4983,7 +4983,7 @@ export const store = new Vuex.Store({
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         const reqBookid = bookid ? bookid : state.currentBookid;
-        console.log(`loadBookTocSections.reqBookid: `, reqBookid);
+        //console.log(`loadBookTocSections.reqBookid: `, reqBookid);
         if (!reqBookid) return Promise.resolve({});
         return axios.get(`${state.API_URL}toc_section/book/${reqBookid}/all`)
           .then(data => {

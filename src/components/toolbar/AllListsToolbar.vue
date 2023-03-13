@@ -5,8 +5,18 @@
     <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange()"></input>
     <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
 
-    <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
+    <!--<input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>-->
+
+    <MultiSelect v-model="selectedProject" :options="projects" optionLabel="project" placeholder="Select Project" />
+
+    <!-- Language Dropdown -->
+    <select v-model="bookFilters.language" @change="filterChange()">
+      <option value="">Any language</option>
+      <option v-for="(name, code) in languages" :value="code">{{name}}</option>
+    </select>
+
+    <MultiSelect v-model="selectedStatus" :options="statuses" optionLabel="status" placeholder="Select Status" />
 
     <template v-if="adminOrLibrarian">
       <select v-model="bookFilters.jobStatus" @change="filterChange()">
@@ -18,31 +28,32 @@
       </select> &nbsp;
     </template>
 
-    <!-- Language Dropdown -->
-    <select v-model="bookFilters.language" @change="filterChange()">
-      <option value="">Any language</option>
-      <option v-for="(name, code) in languages" :value="code">{{name}}</option>
-    </select>
   </div>
 
   <div class="toolbar-second-row">
-    <TabView ref="booksListTabs" :scrollable="false" v-on:tab-change="onBooksListTabChange">
-      <TabPanel :header="'aaaa'"></TabPanel>
-      <TabPanel :header="'bbb'"></TabPanel>
-      <TabPanel :header="'ccccc'"></TabPanel>
+    <TabView ref="booksListTabs" :activeIndex="activeTabIdx" :scrollable="false" @tab-change="onBooksListTabChange">
+      <TabPanel :header="booksCount + ' Book' + (booksCount===1 ? '':'s')"></TabPanel>
+      <TabPanel :header="collectionsCount + ' Collection' + (collectionsCount===1 ? '':'s')"></TabPanel>
+      <TabPanel v-if="currentCollection._id" :header="currentCollection.title"></TabPanel>
     </TabView>
 
+    <div class="toolbar-second-row-buttons">
+      <button class="btn btn-primary" v-on:click="addCollection" v-if="allowCollectionsEdit">
+        <i class="fa fa-plus"></i>&nbsp;Add Book
+      </button>
+      <button class="btn btn-primary" v-on:click="addCollection" v-if="allowCollectionsEdit">
+        <i class="fa fa-plus"></i>&nbsp;Add Collection
+      </button>
+    </div>
 
-    <h3><img src='/static/bookstack_crop.svg' class='bookstack'/>
-      {{ bookCount() }} Book{{ (bookCount()===1 ? '':'s')}}
-    </h3>
+    <!--<h3><img src='/static/bookstack_crop.svg' class='bookstack'/></h3>-->
 
-    <div class="pull-right">
+    <!--<div class="pull-right">-->
     <!-- Edit Button -->
-    <button v-show="hasBookSelected"
+    <!--<button v-show="hasBookSelected"
       @click='displayBook' class='btn btn-default'>
       <i class="fa fa-pencil fa-lg"></i>  Display Book
-    </button>  &nbsp;
+    </button>  &nbsp;-->
 
 
 
@@ -60,18 +71,20 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import { mapGetters } from 'vuex'
 import BookImport from '../books/BookImport'
 import { Languages } from "../../mixins/lang_config.js"
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
+import MultiSelect from 'primevue/multiselect';
 
 export default {
 
   name: 'AllListsToolbar',
 
   components: {
-    BookImport, TabView, TabPanel
+    BookImport, TabView, TabPanel, MultiSelect
   },
 
   data () {
@@ -79,6 +92,24 @@ export default {
       filterStr: '',
       showImportBooksModal: false,
       languages: Languages,
+      activeTabIdx: 0,
+
+      selectedProject: null,
+      projects: [
+        {project: 'Reader', value: 'Reader'},
+        {project: 'Ocean', value: 'Ocean'},
+        {project: 'ST', value: 'ST'},
+        {project: 'OOL', value: 'OOL'},
+        {project: 'Testing', value: 'Testing'},
+        {project: 'Traning', value: 'Traning'},
+      ],
+      selectedStatus: null,
+      statuses: [
+        {status: 'Done', value: 'Done'},
+        {status: 'Narration', value: 'Narration'},
+        {status: 'Proofreading', value: 'Proofreading'},
+        {status: 'Text-cleanup', value: 'Text-cleanup'},
+      ]
     }
   },
 
@@ -88,32 +119,48 @@ export default {
     'metaVisible'
   ],
 
-  computed: mapGetters([
-    'isLoggedIn',
-    'isAdmin',
-    'isEditor',
-    'isLibrarian',
-    'allowBookEditMode',
-    'allBooks',
-    'adminOrLibrarian',
-    'bookFilters'
-  ]),
-
-  methods: {
-    filterChange () {
-      /*if (this.$route.params.hasOwnProperty('bookid')) {
-        this.$router.replace({ path: '/books'});
-      }*/
-    },
-    bookCount () {
+  computed: {
+    ...mapGetters([
+      'isLoggedIn',
+      'isAdmin',
+      'isEditor',
+      'isLibrarian',
+      'allowBookEditMode',
+      'allBooks',
+      'bookCollections',
+      'adminOrLibrarian',
+      'bookFilters',
+      'currentBookMeta',
+      'currentCollection',
+      'allowCollectionsEdit',
+    ]),
+    booksCount () {
       if (this.allBooks && this.allBooks.length) {
-        let filtered = this.allBooks
+        const filtered = this.allBooks
                 .filter(m => !m.collection_id)
                 .filter(m => m.importStatus);
         return filtered.length;
       } else {
         return 0;
       }
+    },
+    collectionsCount () {
+      if (this.bookCollections && this.bookCollections.length) {
+        const filtered = this.bookCollections;
+                //.filter(m => !m.collection_id)
+                //.filter(m => m.importStatus);
+        return filtered.length;
+      } else {
+        return 0;
+      }
+    },
+  },
+
+  methods: {
+    filterChange () {
+      /*if (this.$route.params.hasOwnProperty('bookid')) {
+        this.$router.replace({ path: '/books'});
+      }*/
     },
     displayBook () {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
@@ -126,20 +173,62 @@ export default {
       this.showImportBooksModal=false
       this.$emit('import_finished', uploaded)
     },
+    addCollection() {
+      return this.createCollection({})
+        .then(doc => {
+          Vue.nextTick(() => {
+            this.$emit('collectionAdded', doc._id);
+          });
+        }).catch(err => {})
+    },
     onBooksListTabChange(ev) {
-      console.log(`onBooksListTabChange: `, ev.index, this.$router);
       switch(ev.index) {
           case 2 : {
+            if (this.currentCollection._id) {
+              this.$router.push({ name: 'CollectionBooks', params: { collectionid: this.currentCollection._id } });
+            }
           } break;
           case 1 : {
-            this.$router.push('/collections');
+            this.$router.push({ name: 'Collections' });
           } break;
           case 0 : default : {
-            this.$router.push('/books');
+            this.$router.push({ name: 'Books' });
           } break;
       };
+    },
+    syncRouteWithTab() {
+      console.log(`syncRouteWithTab: `, this.$route.name, this.currentCollection._id);
+      switch(this.$route.name) {
+        case 'CollectionBooks' :
+        case 'CollectionBook' : {
+          if (this.currentCollection._id) {
+            this.activeTabIdx = 2;
+          } else {
+            this.activeTabIdx = 1;
+          }
+        } break;
+        case 'Collections' :
+        case 'Collection' : {
+          this.activeTabIdx = 1;
+        } break;
+        default : {
+          this.activeTabIdx = 0;
+        } break;
+      }
     }
-  }
+  },
+
+  async mounted() {
+    //console.log(`this.$route.name: `, this.$route.name);
+    await Vue.nextTick();
+    this.syncRouteWithTab();
+  },
+  watch:{
+    async '$route' ($to, $from) {
+      await Vue.nextTick();
+      this.syncRouteWithTab();
+    }
+  },
 }
 </script>
 
@@ -202,7 +291,12 @@ input {width: 12em}
 
 <style lang="less">
 .books-list-toolbar {
+  .toolbar-first-row {
+
+  }
   .toolbar-second-row {
+    display: flex;
+    justify-content: space-between;
     .p-tabview {
       .p-tabview-nav {
         li.p-highlight {

@@ -1,14 +1,18 @@
 <template>
-  <Grid id='books_grid'
-    ref="books_grid"
-    :data="booksMeta"
-    :columns="headers"
-    :rowsPerPage="100"
-    @clickRow="rowClick"
-    :selected="selectedBooks"
-    :idField="idField"
-    :filter-key="''">
-  </Grid>
+  <div class="router-view-wrapper" v-cloak>
+    <Grid id='books_grid'
+      ref="books_grid"
+      :data="booksMeta"
+      :columns="headers"
+      :rowsPerPage="100"
+      @clickRow="rowClick"
+      @dblClickRow="openBook"
+      :selected="selectedBooks"
+      :idField="idField"
+      :filter-key="''">
+    </Grid>
+  </div>
+  <!--<div class="router-view-wrapper"-->
 </template>
 
 <script>
@@ -235,25 +239,15 @@ export default {
     ...mapActions(['updateBooksList']),
     // A row in the table has been clicked. Returns Vue data object bound to the row.
     rowClick (ev) {
-      let bookid = ev.bookid
+      const bookid = ev.bookid;
       if (bookid) {
-
-        this.openBookClickCounter++;
-
-        if(this.openBookClickCounter == 1) {
-          this.timer = setTimeout(() => {
-            this.openBookClickCounter = 0;
-            this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
-          }, 300);
-
-          return;
-        }
-        clearTimeout(this.timer);
-        this.openBookClickCounter = 0;
-	    //this.bookFilters.filter = '';
-	    //this.bookFilters.projectTag = '';
-        this.$router.push('/books/' + bookid + '/display')
-
+        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+      }
+    },
+    openBook (ev) {
+      const bookid = ev.bookid;
+      if (bookid) {
+        this.$router.push('/books/' + bookid + '/display');
       }
     },
     goToBookPage (bookId) {
@@ -281,6 +275,7 @@ export default {
 <style>
   #books_grid {
     width: 100%;
+    height: 100%;
     overflow-y: auto;
     padding-top: 4px;
   }

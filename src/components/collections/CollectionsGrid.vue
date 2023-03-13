@@ -1,26 +1,26 @@
 <template>
   <div id="books_grid">
-    <!-- <Grid id='collections_grid'
+     <Grid id='collections_grid'
       :data="bookCollections"
       :columns="headers"
       :rowsPerPage="100"
       @clickRow="rowClick"
+      @dblClickRow="openCollection"
       :selected="selectedBooks"
       :idField="idField"
       :filter-key="''">
-    </Grid> -->
-    <div v-for="collection in collectionsPage" class="collection-container">
-      <div v-on:click="rowClick(collection, $event)"
+    </Grid>
+    <!--<div v-for="collection in collectionsPage" class="collection-container">-->
+      <!--<div v-on:click="rowClick(collection, $event)"
         :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
         :data-id="collection._id">
         <span slot="header" class="collection-title" @click.prevent.self>
           <i class="fa fa-book"></i>&nbsp;
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
-      </div>
-      <Grid id='books_grid_grid'
-          v-if="isOpenPanel(collection)"
-          :data="collection.books_list"
+      </div>-->
+      <!--<Grid id='books_grid_grid'
+          :data="collectionsPage"
           :columns="headers"
           :rowsPerPage="100"
           @clickRow="selectBook"
@@ -32,8 +32,8 @@
           :sortable="false"
           :ref="'grid-' + collection._id"
           :class="['collection-books-grid']"
-          :customEmptyTableText="'No books'"></Grid>
-    </div>
+          :customEmptyTableText="'No books'" />-->
+    <!--</div>-->
   </div>
 </template>
 <script>
@@ -62,12 +62,15 @@
       },
       methods: {
         rowClick(collection, event) {
-          if (collection._id !== this.currentCollection._id/* && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1*/) {
+          if (collection._id !== this.currentCollection._id) {
             this.$emit('selectCollection', collection._id);
-            this.selectedBooks = [];
-          } else if (this.selectedBooks.length) {
-            this.selectedBooks = [];
             this.$router.replace({ path: '/collections/' + collection._id })
+          }
+        },
+        openCollection(collection, event) {
+          const collectionId = collection._id;
+          if (collectionId) {
+            this.$router.push({ name: 'CollectionBooks', params: { collectionid: collectionId } });
           }
         },
         selectBook(book) {
@@ -102,12 +105,6 @@
             }
           }, 300);
         },
-        isOpenPanel(collection) {
-          if (this.currentCollection._id) {
-            return this.currentCollection._id === collection._id;
-          }
-          return collection.book_match || collection.bookids.indexOf(this.currentBookMeta.bookid) !== -1;
-        },
         moveBook(collection, data) {
           if (this.allowCollectionsEdit
             && typeof data.from !== 'undefined'
@@ -138,6 +135,7 @@
               this.scrollToRow(this.$route.params.collectionid);
             }
           }
+          console.log(`bookCollections: `, this.bookCollections);
         })
       },
       computed: {
@@ -151,74 +149,11 @@
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
-        collectionsPage: {
-          get() {
-            if (!this.bookCollections || !this.bookCollections.length) {
-              return [];
-            }
-            let collections = lodash.cloneDeep(this.bookCollections);
-            collections.forEach(c => {
-              c.book_match = false;
-            });
-            for (var field in this.collectionsFilter) {
-              if (this.collectionsFilter[field].length > 0) {
-                let filter = prepareForFilter(this.collectionsFilter[field]);
-                switch (field) {
-                  case 'title':
-                    collections = collections.filter(collection => {
-                      let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
-                      if (!match) {
-                        collection.books_list = collection.books_list.filter(book => {
-                          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-                          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-                          return (str.indexOf(filter) > -1)
-                        });
-                      }
-                      let book_match = !match && collection.books_list.length > 0;
-                      collection.match = match;
-                      collection.book_match = book_match;
-                      return match || book_match;
-                    });
-                    break;
-                  case 'language':
-                    collections = collections.filter(collection => {
-                      return collection.language == filter;
-                    });
-                    break;
-                  case 'jobStatus':
-                    collections = collections.filter(collection => {
-                      if (!collection.books_list) return false;
-                      collection.books_list = collection.books_list.filter(b => {
-                        return b.job_status === filter;
-                      });
-                      return collection.books_list.length > 0;
-                    });
-                    break;
-                  case 'projectTag':
-                    collections = collections.filter(collection => {
-                      collection.books_list = collection.books_list.filter(b => {
-                        let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
-                        return (str.indexOf(filter) > -1)
-                      });
-                      let book_match =  collection.books_list.length > 0;
-                      collection.match = book_match;
-                      collection.book_match = book_match;
-                      return book_match;
-
-                    });
-                    break;
-
-                }
-              }
-            }
-            return collections;
-          }
-        },
         headers: {
           get() {
             let headers = [
               {
-                title: 'Book Title',
+                title: 'Collection Title',
                 path: 'title',
                 addClass: 'booktitle',
                 html (val) {
@@ -226,80 +161,25 @@
                 }
               },
               {
-                title: 'Author',
-                path: 'author',
+                title: 'Title EN',
+                path: 'title_en',
+                addClass: 'author',
+                html (val) {
+                  return `${val}`
+                }
+              },
+              {
+                title: 'Category',
+                path: 'category',
                 addClass: 'author',
                 render(val) {
                   return val && Array.isArray(val) ? val.join(', ') : val;
                 }
-              },
-              {
-                title: 'Editor',
-                path: 'executors',
-                render(val) {
-                  return val && val.editor ? val.editor.title : '';
-                }
-              },
-              {
-                title: 'Published',
-                path: 'pub_ver'
-              },
-              {
-                title: 'Updated',
-                path: 'cur_ver'
-              },
-              {
-                title: 'Status',
-                path: 'importStatus',
-                render(val) {
-                  switch (val) {
-                    case 'staging_empty':
-                      return 'No content';
-                      break;
-                    case 'staging':
-                      return 'Text Cleanup';
-                      break;
-                    case 'narrating':
-                      return 'Narration';
-                      break;
-                    case 'proofing':
-                      return 'Proofreading';
-                      break;
-                    case 'mastering':
-                      return 'Mastering';
-                      break;
-                    case 'completed':
-                      return 'Done';
-                      break;
-                    default:
-                      return val ? val : 'Book Import';
-                  }
-                }
               }
             ];
-            if (this.adminOrLibrarian) {
-              headers.push({
-                title: 'State',
-                path: 'job_status',
-                render(val) {
-                  switch (val) {
-                    case 'active':
-                      return 'Active';
-                    case 'archived':
-                      return 'Archived';
-                    case 'completed':
-                      return 'Completed';
-                    case 'suspended':
-                      return 'Suspended';
-                    default:
-                      return val;
-                  }
-                }
-              });
-            }
             return headers;
           },
-          cache: false
+          //cache: false
         }
       },
       watch: {
