@@ -7,12 +7,12 @@
       </div>
     </div>
 
-    <div :class="['content-meta-wrapper', 'meta-visible']">
+    <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
       <AllListsToolbar
         v-if="!isBookEditRoute"
         :hasBookSelected="hasBookSelected"
-        :metaVisible="metaVisible"
+        :toggleMetaVisible="toggleMetaVisible"
       />
 
       <BookEditToolbar v-if="isBookEditRoute && isEditMode"
@@ -43,7 +43,7 @@
       <NoCollectionSelected v-else />
     </div>
 
-    <div class='metaedit' v-if="isBookRoute">
+    <div class='metaedit' v-else-if="metaVisible" >
       <BookMetaEdit v-if='hasBookSelected'></BookMetaEdit>
       <NoBookSelected v-else />
     </div>
@@ -185,10 +185,10 @@ export default {
           } else {
             this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
           }
-        } else if (this.metaVisible && !this.currentBookMeta._id) {
+        } /*else if (this.metaVisible && !this.currentBookMeta._id) {
           this.metaVisible = false;
           this.metaAvailable = false;
-        }
+        }*/
       }
     },
     'jobStatusError': {
@@ -289,10 +289,10 @@ export default {
 
   methods: {
 
-    toggleMetaVisible () {
-      let id = this.$store.state.currentBookid
-      this.metaAvailable = id
-      this.metaVisible = !this.metaVisible
+    toggleMetaVisible ($event = {}) {
+      let id = this.$store.state.currentBookid;
+      this.metaAvailable = id;
+      this.metaVisible = $event.force ? true : !this.metaVisible;
       if (!this.metaAvailable) this.metaVisible = false;
 
       Vue.nextTick(()=>{

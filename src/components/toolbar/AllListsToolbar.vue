@@ -115,8 +115,8 @@ export default {
 
   props: [
     'hasBookSelected',
-    //'toggleMetaVisible',
-    'metaVisible'
+    'toggleMetaVisible',
+    //'metaVisible'
   ],
 
   computed: {
@@ -186,7 +186,7 @@ export default {
       this.$emit('import_finished', uploaded)
     },
     addCollection() {
-      return this.createCollection({})
+      return this.$store.dispatch('createCollection', {})
         .then(doc => {
           Vue.nextTick(() => {
             this.$emit('collectionAdded', doc._id);
@@ -231,7 +231,7 @@ export default {
   },
 
   async mounted() {
-    //console.log(`this.$route.name: `, this.$route.name);
+    this.toggleMetaVisible({force: true});
     await Vue.nextTick();
     this.syncRouteWithTab();
   },

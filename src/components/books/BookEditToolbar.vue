@@ -285,6 +285,7 @@ export default {
   },
   mounted() {
     this.bookSearch.string = "";
+    this.toggleMetaVisible();
   },
   destroyed: function () {
 
