@@ -48,8 +48,9 @@ export default {
     books () { // filtered list of books
       if (!this.allBooks.length) return [];
       let filteredbooks = this.allBooks
-        .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
-        .filter(book => this.bookFilters.jobStatus ? book.job_status === this.bookFilters.jobStatus : true)
+        .filter(book => (this.bookFilters.language.length == 0 || (this.bookFilters.language).indexOf(book.language) >= 0))
+        .filter(book => (this.bookFilters.importStatus.length == 0 || (this.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
+        .filter(book => (this.bookFilters.jobStatus.length == 0 || (this.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
           let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}

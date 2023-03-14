@@ -2,23 +2,39 @@
 <div class="toolbar books-list-toolbar">
   <div class="toolbar-first-row">
     <!-- Meta Filter -->
-    <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange()"></input>
+    <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange"></input>
     <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
 
-    <!--<input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange()"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>-->
+    <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
 
-    <MultiSelect v-model="selectedProject" :options="projects" optionLabel="project" placeholder="Select Project" />
+    <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
+      :options="mapFilterProjectTag"
+      optionLabel="caption" placeholder="All projects"
+      display="chip" :showToggleAll="false"
+      @change="filterChange" />-->
 
     <!-- Language Dropdown -->
-    <select v-model="bookFilters.language" @change="filterChange()">
+    <!--<select v-model="bookFilters.language" @change="filterChange()">
       <option value="">Any language</option>
       <option v-for="(name, code) in languages" :value="code">{{name}}</option>
-    </select>
+    </select>-->
 
-    <MultiSelect v-model="selectedStatus" :options="statuses" optionLabel="status" placeholder="Select Status" />
+    <!-- Language Dropdown -->
+    <MultiSelect v-model="multiBookFilters.language"
+      :options="mapFilterLanguages"
+      optionLabel="caption" placeholder="Any language"
+      display="chip" :showToggleAll="false"
+      @change="filterChange" />
 
-    <template v-if="adminOrLibrarian">
+    <!-- Book status Dropdown -->
+    <MultiSelect v-model="multiBookFilters.importStatus"
+      :options="mapFilterImportStatus"
+      optionLabel="caption" placeholder="Any status"
+      display="chip" :showToggleAll="false"
+      @change="filterChange" />
+
+    <!--<template v-if="adminOrLibrarian">
       <select v-model="bookFilters.jobStatus" @change="filterChange()">
         <option value="">Not filtered</option>
         <option value="active">Active</option>
@@ -26,7 +42,14 @@
         <option value="completed">Completed</option>
         <option value="suspended">Suspended</option>
       </select> &nbsp;
-    </template>
+    </template>-->
+
+    <MultiSelect v-if="adminOrLibrarian"
+      v-model="multiBookFilters.jobStatus"
+      :options="mapFilterJobStatus"
+      optionLabel="caption" placeholder="Any job status"
+      display="chip" :showToggleAll="false"
+      @change="filterChange" />
 
   </div>
 
@@ -38,10 +61,10 @@
     </TabView>
 
     <div class="toolbar-second-row-buttons">
-      <button class="btn btn-primary" v-on:click="addCollection" v-if="allowCollectionsEdit">
+      <button class="btn btn-primary" v-on:click="taskAddModalActive = true" v-if="(isAdmin || isLibrarian)">
         <i class="fa fa-plus"></i>&nbsp;Add Book
       </button>
-      <button class="btn btn-primary" v-on:click="addCollection" v-if="allowCollectionsEdit">
+      <button class="btn btn-primary" v-on:click="addCollection" v-if="(isAdmin || isLibrarian) && allowCollectionsEdit">
         <i class="fa fa-plus"></i>&nbsp;Add Collection
       </button>
     </div>
@@ -64,6 +87,8 @@
     <!-- Import Books Modal Popup -->
     <BookImport v-if="showImportBooksModal"
     @close_modal="importBooksModalClose" />
+    <TaskAddModal :show="taskAddModalActive"
+    @closed="taskAddModalClose" />
 
   </div>
 
@@ -74,6 +99,7 @@
 import Vue from 'vue';
 import { mapGetters } from 'vuex'
 import BookImport from '../books/BookImport'
+import TaskAddModal from '../tasks/TaskAddModal'
 import { Languages } from "../../mixins/lang_config.js"
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
@@ -84,32 +110,48 @@ export default {
   name: 'AllListsToolbar',
 
   components: {
-    BookImport, TabView, TabPanel, MultiSelect
+    BookImport, TaskAddModal, TabView, TabPanel, MultiSelect
   },
 
   data () {
     return {
       filterStr: '',
       showImportBooksModal: false,
+      taskAddModalActive: false,
       languages: Languages,
       activeTabIdx: 0,
 
-      selectedProject: null,
-      projects: [
-        {project: 'Reader', value: 'Reader'},
-        {project: 'Ocean', value: 'Ocean'},
-        {project: 'ST', value: 'ST'},
-        {project: 'OOL', value: 'OOL'},
-        {project: 'Testing', value: 'Testing'},
-        {project: 'Traning', value: 'Traning'},
+      multiBookFilters: {
+        language: [],
+        jobStatus: [{caption: 'Active', value: 'active'}],
+        importStatus: [],
+        multiProjectTag: []
+      },
+
+      mapFilterJobStatus: [
+        {caption: 'Active',    value: 'active'},
+        {caption: 'Archived',  value: 'archived'},
+        {caption: 'Completed', value: 'completed'},
+        {caption: 'Suspended', value: 'suspended'}
       ],
-      selectedStatus: null,
-      statuses: [
-        {status: 'Done', value: 'Done'},
-        {status: 'Narration', value: 'Narration'},
-        {status: 'Proofreading', value: 'Proofreading'},
-        {status: 'Text-cleanup', value: 'Text-cleanup'},
-      ]
+
+      mapFilterImportStatus: [
+        {caption: 'No content',   value: 'staging_empty'},
+        {caption: 'Text Cleanup', value: 'staging'},
+        {caption: 'Narration',    value: 'narrating'},
+        {caption: 'Proofreading', value: 'proofing'},
+        {caption: 'Mastering',    value: 'mastering'},
+        {caption: 'Done',         value: 'completed'}
+      ],
+
+      mapFilterProjectTag: [
+        {caption: 'Reader',  value: 'Reader'},
+        {caption: 'Ocean',   value: 'Ocean'},
+        {caption: 'ST',      value: 'ST'},
+        {caption: 'OOL',     value: 'OOL'},
+        {caption: 'Testing', value: 'Testing'},
+        {caption: 'Traning', value: 'Traning'},
+      ],
     }
   },
 
@@ -165,14 +207,26 @@ export default {
         return `${this.currentCollection.title} (${this.collectionBooksCount} Book${(this.collectionBooksCount === 1?'':'s')})`;
       }
       return '';
+    },
+    mapFilterLanguages () {
+      return Object.entries(Languages).map(([code, name])=>({caption: name, value: code}));
     }
   },
 
   methods: {
-    filterChange () {
+    filterChange (val) {
       /*if (this.$route.params.hasOwnProperty('bookid')) {
         this.$router.replace({ path: '/books'});
       }*/
+      const newFilters = Object.entries(this.multiBookFilters).reduce((acc, [key, val])=>{
+        acc[key] = val.map((el)=>el.value);
+        return acc;
+      }, {});
+      console.log(`filterChange.newFilters: `, newFilters);
+      this.$store.commit('SET_CURRENTBOOK_FILTER', newFilters);
+    },
+    convertFilters () {
+
     },
     displayBook () {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
@@ -182,8 +236,15 @@ export default {
       this.showImportBooksModal = true
     },
     importBooksModalClose(uploaded) {
-      this.showImportBooksModal=false
+      this.showImportBooksModal = false
       this.$emit('import_finished', uploaded)
+    },
+    taskAddModalClose(create) {
+      this.taskAddModalActive = false;
+      console.log(`taskAddModalClose.create: `, create);
+      if (create) {
+        this.$store.dispatch('tc_loadBookTask')
+      }
     },
     addCollection() {
       return this.$store.dispatch('createCollection', {})

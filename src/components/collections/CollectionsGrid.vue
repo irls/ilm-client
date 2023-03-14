@@ -10,30 +10,6 @@
       :idField="idField"
       :filter-key="''">
     </Grid>
-    <!--<div v-for="collection in collectionsPage" class="collection-container">-->
-      <!--<div v-on:click="rowClick(collection, $event)"
-        :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
-        :data-id="collection._id">
-        <span slot="header" class="collection-title" @click.prevent.self>
-          <i class="fa fa-book"></i>&nbsp;
-          {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
-        </span>
-      </div>-->
-      <!--<Grid id='books_grid_grid'
-          :data="collectionsPage"
-          :columns="headers"
-          :rowsPerPage="100"
-          @clickRow="selectBook"
-          @orderChanged="moveBook(collection, $event)"
-          :selected="selectedBooks"
-          :idField="'bookid'"
-          :filter-key="''"
-          :draggable="allowCollectionsEdit"
-          :sortable="false"
-          :ref="'grid-' + collection._id"
-          :class="['collection-books-grid']"
-          :customEmptyTableText="'No books'" />-->
-    <!--</div>-->
   </div>
 </template>
 <script>
@@ -73,30 +49,6 @@
             this.$router.push({ name: 'CollectionBooks', params: { collectionid: collectionId } });
           }
         },
-        selectBook(book) {
-          let bookid = book.bookid;
-          if (bookid) {
-
-            this.openBookClickCounter++;
-
-
-            if(this.openBookClickCounter == 1) {
-              this.timer = setTimeout(() => {
-                this.openBookClickCounter = 0;
-                this.selectedBooks = [book.bookid];
-                this.$emit('selectBook', book.bookid, book.collection_id);
-              }, 300);
-
-              return;
-            }
-            clearTimeout(this.timer);
-            //this.bookFilters.filter = '';
-            //this.bookFilters.projectTag = '';
-            this.openBookClickCounter = 0;
-            this.$router.push('/books/' + book.bookid + '/display')
-          }
-
-        },
         scrollToRow(bookId) {
           let t = setTimeout(function() {
             let el = document.querySelector(`[data-id="${bookId}"]`);
@@ -105,33 +57,13 @@
             }
           }, 300);
         },
-        moveBook(collection, data) {
-          if (this.allowCollectionsEdit
-            && typeof data.from !== 'undefined'
-            && typeof data.to !== 'undefined'
-            && data.from != data.to) {
-          }
-        },
         ...mapActions(['updateBooksList'])
       },
       mounted() {
         this.updateBooksList()
         .then(()=>{
           if (this.$route && this.$route.params) {
-            if (this.$route.params.bookid) {
-              let hasBook = this.selectedBooks.findIndex(b => {
-                return b.bookid === this.$route.params.bookid;
-              });
-              if (hasBook === -1) {
-                let book = this.allBooks.find(b => {
-                  return b.bookid === this.$route.params.bookid;
-                });
-                if (book) {
-                  this.selectBook(book);
-                  this.scrollToRow(book.bookid);
-                }
-              }
-            } else if (this.$route.params.collectionid) {
+            if (this.$route.params.collectionid) {
               this.scrollToRow(this.$route.params.collectionid);
             }
           }
@@ -183,14 +115,6 @@
         }
       },
       watch: {
-        currentBookMeta: {
-          handler() {
-            if (this.currentBookMeta.bookid) {
-              this.selectedBooks = [this.currentBookMeta.bookid];
-            }
-          },
-          deep: true
-        },
         currentCollection: {
           handler(val, oldVal) {
             if(val._id && !oldVal._id) {

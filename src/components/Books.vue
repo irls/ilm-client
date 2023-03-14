@@ -95,7 +95,6 @@ export default {
   data () {
     return {
       metaVisible: true,
-      metaAvailable: false,
       currentBookid: this.$store.state.currentBookid,
       showBookReimport: false,
       hasErrorAlert: false,
@@ -185,10 +184,7 @@ export default {
           } else {
             this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
           }
-        } /*else if (this.metaVisible && !this.currentBookMeta._id) {
-          this.metaVisible = false;
-          this.metaAvailable = false;
-        }*/
+        }
       }
     },
     'jobStatusError': {
@@ -290,10 +286,12 @@ export default {
   methods: {
 
     toggleMetaVisible ($event = {}) {
-      let id = this.$store.state.currentBookid;
-      this.metaAvailable = id;
-      this.metaVisible = $event.force ? true : !this.metaVisible;
-      if (!this.metaAvailable) this.metaVisible = false;
+      console.log(`toggleMetaVisible: `, $event.force, $event.hasOwnProperty('force'));
+      if ($event.hasOwnProperty('force')) {
+        this.metaVisible = $event.force;
+      } else {
+        this.metaVisible = !this.metaVisible;
+      }
 
       Vue.nextTick(()=>{
         this.$root.$emit('from-toolbar:toggle-meta');
@@ -398,10 +396,11 @@ export default {
       padding-left: 4px;
       margin-bottom: 3px;
 
-      .pull-right {
+      /*.pull-right {
         min-width: 460px;
         text-align: right;
-      }
+      }*/
+
       .title {
         white-space: nowrap;
         overflow: hidden;

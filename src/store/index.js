@@ -124,9 +124,9 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
+    bookFilters: {filter: '', projectTag: '', multiProjectTag: [], importStatus: [], language: [], jobStatus: ['active']},
     bookSearch: {string: '', resultCounter: 0, searchPointer: 0},
-    defaultBookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
+    defaultBookFilters: {filter: '', projectTag: '', importStatus: [], multiProjectTag: [], language: [], jobStatus: ['active']},
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -716,10 +716,8 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'projectTag', 'language', 'jobStatus'].indexOf(prop) > -1) {
+      for (var prop in obj) if (['filter', 'projectTag', 'multiProjectTag', 'importStatus', 'language', 'jobStatus'].indexOf(prop) > -1) {
         state.bookFilters[prop] = obj[prop]
-         //console.log("Setting bookfilter."+prop, obj[prop])
-         //console.log('SET_CURRENTBOOK_FILTER', state.bookFilters)
       }
     },
 
