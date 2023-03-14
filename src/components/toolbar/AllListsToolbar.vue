@@ -222,7 +222,7 @@ export default {
         acc[key] = val.map((el)=>el.value);
         return acc;
       }, {});
-      console.log(`filterChange.newFilters: `, newFilters);
+      //console.log(`filterChange.newFilters: `, newFilters);
       this.$store.commit('SET_CURRENTBOOK_FILTER', newFilters);
     },
     convertFilters () {

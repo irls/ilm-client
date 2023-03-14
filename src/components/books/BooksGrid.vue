@@ -62,7 +62,7 @@ export default {
           let find = prepareForFilter(this.bookFilters.projectTag);
           return (str.indexOf(find) > -1)
         })
-        .filter(book => !book.collection_id)
+        //.filter(book => !book.collection_id)
       return filteredbooks
     },
 

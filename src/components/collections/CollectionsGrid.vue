@@ -1,7 +1,7 @@
 <template>
   <div id="books_grid">
      <Grid id='collections_grid'
-      :data="bookCollections"
+      :data="collections"
       :columns="headers"
       :rowsPerPage="100"
       @clickRow="rowClick"
@@ -16,10 +16,9 @@
   import Grid from '../generic/Grid';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
-  import superlogin from 'superlogin-client';
-  import PouchDB from 'pouchdb';
-  import lodash from 'lodash';
+  //import lodash from 'lodash';
   import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
+  import { Languages } from "../../mixins/lang_config.js"
 
   export default {
       name: 'CollectionsGrid',
@@ -33,7 +32,6 @@
         return {
           idField: '_id',
           selectedBooks: [],
-          openBookClickCounter: 0
         }
       },
       methods: {
@@ -67,20 +65,34 @@
               this.scrollToRow(this.$route.params.collectionid);
             }
           }
-          console.log(`bookCollections: `, this.bookCollections);
+          //console.log(`bookCollections: `, this.bookCollections);
         })
       },
       computed: {
         ...mapGetters([
-          'collectionsFilter',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
           'currentCollection',
+          'bookFilters',
           'collectionsFilter',
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
+        collections: { // filtered list of collections
+          get() {
+            if (!this.bookCollections.length) return [];
+            let filteredCollections = this.bookCollections
+               .filter(coll => (this.bookFilters.language.length == 0 || (this.bookFilters.language).indexOf(coll.language) >= 0))
+               .filter(coll => {
+                  const collAuthors = Array.isArray(coll.author) ? coll.author.join('|') : coll.author;
+                  let str = prepareForFilter(`${coll.title} ${coll.subtitle} ${collAuthors} ${coll._id} ${coll.category}`); // ${coll.description}
+                  let find = prepareForFilter(this.bookFilters.filter);
+                  return (str.indexOf(find) > -1)
+                })
+            return filteredCollections;
+          }
+        },
         headers: {
           get() {
             let headers = [
@@ -90,6 +102,14 @@
                 addClass: 'booktitle',
                 html (val) {
                   return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+                }
+              },
+              {
+                title: 'Author',
+                path: 'author',
+                addClass: 'author',
+                render(val) {
+                  return val && Array.isArray(val) ? val.join(', ') : val;
                 }
               },
               {
@@ -107,7 +127,18 @@
                 render(val) {
                   return val && Array.isArray(val) ? val.join(', ') : val;
                 }
-              }
+              },
+              {
+                title: 'Language',
+                path: 'language',
+                addClass: 'author',
+                html (val) {
+                  if (Languages.hasOwnProperty(val)) {
+                    return `${Languages[val]}`;
+                  }
+                  return `${val}`
+                }
+              },
             ];
             return headers;
           },
@@ -122,19 +153,19 @@
             }
           }
         },
-        collectionsFilter: {
+        bookFilters: { //collectionsFilter
           deep: true,
           handler(newVal, oldVal) {
-            if (this.$route.params.hasOwnProperty('bookid')) {
-              const bookid = this.$route.params.bookid;
+            if (this.$route.params.hasOwnProperty('collectionid')) {
               const collectionid = this.$route.params.collectionid;
-              const found = this.collectionsPage.find((collection)=>{
-                return collection.bookids.find((book)=>{
-                  return book === bookid;
-                })
+              const found = this.collections.find((collection)=>{
+                return collection._id === collectionid;
+                //return collection.bookids.find((book)=>{
+                //  return book === bookid;
+                //})
               })
               if (found) {
-                this.scrollToRow(bookid);
+                this.scrollToRow(collectionid);
               } else {
                 this.$router.replace({ path: '/collections' });
               }
