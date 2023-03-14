@@ -103,8 +103,9 @@
                 title: 'Collection Title',
                 path: 'title',
                 addClass: 'booktitle',
+                isPassFull: true,
                 html (val) {
-                  return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+                  return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val.title.length ? val.title : val._id}`
                 }
               },
               {
