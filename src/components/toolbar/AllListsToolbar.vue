@@ -78,19 +78,15 @@
       <i class="fa fa-pencil fa-lg"></i>  Display Book
     </button>  &nbsp;-->
 
-
-
     <!--<button v-show='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>-->
 
-    </div>
-
-    <!-- Import Books Modal Popup -->
-    <BookImport v-if="showImportBooksModal"
-    @close_modal="importBooksModalClose" />
-    <TaskAddModal :show="taskAddModalActive"
-    @closed="taskAddModalClose" />
-
   </div>
+
+  <!-- Import Books Modal Popup -->
+  <BookImport v-if="showImportBooksModal"
+  @close_modal="importBooksModalClose" />
+  <TaskAddModal :show="taskAddModalActive"
+  @closed="taskAddModalClose" />
 
 </div>
 </template>
@@ -232,7 +228,7 @@ export default {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
     },
     importBook () {
-      console.log('event ok')
+      //console.log('event ok')
       this.showImportBooksModal = true
     },
     importBooksModalClose(uploaded) {
@@ -262,7 +258,12 @@ export default {
             }
           } break;
           case 1 : {
-            this.$router.push({ name: 'Collections' });
+            if (this.currentCollection._id) {
+              this.$router.push({ name: 'Collection', params: { collectionid: this.currentCollection._id } });
+            }
+            else {
+              this.$router.push({ name: 'Collections' });
+            }
           } break;
           case 0 : default : {
             this.$router.push({ name: 'Books' });
@@ -271,10 +272,14 @@ export default {
     },
     syncRouteWithTab() {
       console.log(`syncRouteWithTab: `, this.$route.name, this.currentCollection._id);
+      let currentCollectionId = (this.$route.params && this.$route.params.collectionid) ? this.$route.params.collectionid : false;
+      if (this.currentCollection._id) {
+        currentCollectionId = this.currentCollection._id;
+      }
       switch(this.$route.name) {
         case 'CollectionBooks' :
         case 'CollectionBook' : {
-          if (this.currentCollection._id) {
+          if (currentCollectionId) {
             this.activeTabIdx = 2;
           } else {
             this.activeTabIdx = 1;

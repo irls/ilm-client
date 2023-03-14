@@ -149,7 +149,12 @@ export default {
     },
 
     isBookEditRoute () {
-      return ['BookEdit', 'BookEditDisplay', 'BookNarrate', 'BookProofread'].indexOf(this.$route.name) > -1;
+      return [
+        'BookEdit', 'BookEditDisplay',
+        'BookNarrate', 'BookProofread',
+        'CollectionBookEdit', 'CollectionBookEditDisplay',
+        'CollectionBookNarrate', 'CollectionBookProofread'
+      ].indexOf(this.$route.name) >= 0;
     }
   },
 

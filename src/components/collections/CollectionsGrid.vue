@@ -37,8 +37,9 @@
       methods: {
         rowClick(collection, event) {
           if (collection._id !== this.currentCollection._id) {
-            this.$emit('selectCollection', collection._id);
-            this.$router.replace({ path: '/collections/' + collection._id })
+            this.$store.dispatch('loadCollection', collection._id);
+            this.$router.replace({ path: '/collections/' + collection._id });
+            this.selectedBooks = [collection._id];
           }
         },
         openCollection(collection, event) {
@@ -62,6 +63,8 @@
         .then(()=>{
           if (this.$route && this.$route.params) {
             if (this.$route.params.collectionid) {
+              this.$store.dispatch('loadCollection', this.$route.params.collectionid);
+              this.selectedBooks = [this.$route.params.collectionid];
               this.scrollToRow(this.$route.params.collectionid);
             }
           }

@@ -130,6 +130,20 @@ export default {
         return modes;
       }
     },
+
+    isBookRoute () {
+      return [
+        'BookEdit', 'BookEditDisplay',
+        'BookNarrate', 'BookProofread'
+      ].indexOf(this.$route.name) >= 0;
+    },
+    isCollectionRoute () {
+      return [
+        'CollectionBookEdit', 'CollectionBookEditDisplay',
+        'CollectionBookNarrate', 'CollectionBookProofread'
+      ].indexOf(this.$route.name) >= 0;
+    },
+
     ...mapGetters([
       'currentBookMeta',
       'currentBookid',
@@ -152,15 +166,18 @@ export default {
       } else this.$router.push({ name: val });
     },
     goBack: function() {
-      if (this.currentBookMeta && this.currentBookMeta.collection_id) {
-        let currentBookid = this.$store.state.currentBookid
-        let path = '/collections/' + this.currentBookMeta.collection_id + '/' + (currentBookid?currentBookid:'')
-        this.$router.push(path)
-      } else {
-        let currentBookid = this.$store.state.currentBookid
-        let path = '/books' + (currentBookid?'/'+currentBookid:'')
-        this.$router.push(path)
+      let path = '/books';
+      if (this.isBookRoute) {
+        if (this.currentBookMeta && this.currentBookMeta.collection_id) {
+          const currentBookid = this.$store.state.currentBookid;
+          path = '/books' + (currentBookid?'/'+currentBookid:'')
+        }
       }
+      if (this.isCollectionRoute && this.$route.params && this.$route.params.collectionid) {
+        const currentBookid = this.$store.state.currentBookid;
+        path = '/collections/books/' + this.$route.params.collectionid + '/' + (currentBookid?currentBookid:'')
+      }
+      this.$router.push(path);
     },
     getCurrentBookUrl(format) {
       return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
@@ -254,18 +271,6 @@ export default {
   directives: {
     'tooltip': Tooltip
   },
-  // watch: {
-  //   'this.editMode' () {
-  //     this.editModeChange()
-  //     console.log('Watcher for editmode')
-  //   }
-  // },
-  // events: {
-  //   changeEditMode: function(editMode) {
-  //     this.editMode = editMode
-  //     console.log('Caught event changeEditMode', editMode)
-  //   }
-  // },
   created: function () {
     if (!this.isAdmin) delete this.editModes.JSON;
   },
@@ -286,12 +291,6 @@ export default {
   mounted() {
     this.bookSearch.string = "";
     this.toggleMetaVisible({force: false});
-  },
-  destroyed: function () {
-
-  },
-  beforeDestroy: function() {
-
   }
 }
 </script>

@@ -1,14 +1,5 @@
 <template>
   <div id="books_grid">
-    <!-- <Grid id='collections_grid'
-      :data="bookCollections"
-      :columns="headers"
-      :rowsPerPage="100"
-      @clickRow="rowClick"
-      :selected="selectedBooks"
-      :idField="idField"
-      :filter-key="''">
-    </Grid> -->
     <div v-for="collection in collectionsPage" class="collection-container">
       <div v-on:click="rowClick(collection, $event)"
         :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
@@ -63,43 +54,22 @@
       },
       methods: {
         rowClick(collection, event) {
-          if (collection._id !== this.currentCollection._id/* && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1*/) {
-            this.$emit('selectCollection', collection._id);
-            this.selectedBooks = [];
-          } else if (this.selectedBooks.length) {
-            this.selectedBooks = [];
-            this.$router.replace({ path: '/collections/' + collection._id })
-          }
+//           if (collection._id !== this.currentCollection._id/* && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1*/) {
+//             this.$emit('selectCollection', collection._id);
+//             this.selectedBooks = [];
+//           } else if (this.selectedBooks.length) {
+//             this.selectedBooks = [];
+//             this.$router.replace({ path: '/collections/' + collection._id })
+//           }
         },
         selectBook(book) {
           const bookid = book.bookid;
           const currentId = this.currentCollection._id;
           this.selectedBooks = [book.bookid];
           this.$router.push({ name: 'CollectionBook', params: { collectionid: currentId, bookid: bookid} })
-//           if (bookid) {
-//
-//             this.openBookClickCounter++;
-//
-//
-//             if(this.openBookClickCounter == 1) {
-//               this.timer = setTimeout(() => {
-//                 this.openBookClickCounter = 0;
-//                 this.selectedBooks = [book.bookid];
-//                 this.$emit('selectBook', book.bookid, book.collection_id);
-//               }, 300);
-//
-//               return;
-//             }
-//             clearTimeout(this.timer);
-//             //this.bookFilters.filter = '';
-//             //this.bookFilters.projectTag = '';
-//             this.openBookClickCounter = 0;
-//             this.$router.push('/books/' + book.bookid + '/display')
-//           }
-
         },
         openBook(book) {
-          console.log(`openBook: `, book);
+          this.$router.push({ name: 'CollectionBookEditDisplay', params: { collectionid: this.currentCollection._id, bookid: this.selectedBooks[0] } });
         },
         scrollToRow(bookId) {
           let t = setTimeout(function() {
@@ -129,27 +99,30 @@
         .then(()=>{
           if (this.$route && this.$route.params) {
             if (this.$route.params.bookid) {
-              let hasBook = this.selectedBooks.findIndex(b => {
-                return b.bookid === this.$route.params.bookid;
-              });
-              if (hasBook === -1) {
-                let book = this.allBooks.find(b => {
-                  return b.bookid === this.$route.params.bookid;
-                });
-                if (book) {
-                  this.selectBook(book);
-                  this.scrollToRow(book.bookid);
-                }
-              }
-            } else if (this.$route.params.collectionid) {
+              this.selectedBooks = [this.$route.params.bookid];
+              this.scrollToRow(this.$route.params.bookid);
+//               let hasBook = this.selectedBooks.findIndex(b => {
+//                 return b.bookid === this.$route.params.bookid;
+//               });
+//               if (hasBook === -1) {
+//                 let book = this.allBooks.find(b => {
+//                   return b.bookid === this.$route.params.bookid;
+//                 });
+//                 if (book) {
+//                   this.selectBook(book);
+//                   this.scrollToRow(book.bookid);
+//                 }
+//               }
+            } /*else if (this.$route.params.collectionid) {
               this.scrollToRow(this.$route.params.collectionid);
-            }
+            }*/
           }
         })
       },
       computed: {
         ...mapGetters([
           'collectionsFilter',
+          'bookFilters',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
@@ -173,6 +146,30 @@
               }
               return acc;
             }, []);
+
+            if (collections.length == 0) {
+              return collections;
+            }
+
+            let filteredbooks = collections[0].books_list
+              .filter(book => (this.bookFilters.language.length == 0 || (this.bookFilters.language).indexOf(book.language) >= 0))
+              .filter(book => (this.bookFilters.importStatus.length == 0 || (this.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
+              .filter(book => (this.bookFilters.jobStatus.length == 0 || (this.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
+              .filter(book => {
+                const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+                let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+                let find = prepareForFilter(this.bookFilters.filter);
+                return (str.indexOf(find) > -1)
+              })
+              .filter(book => {
+                let str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+                let find = prepareForFilter(this.bookFilters.projectTag);
+                return (str.indexOf(find) > -1)
+              })
+              //.filter(book => !book.collection_id)
+            collections[0].books_list = filteredbooks
+
+            //console.log(`collections: `,collections[0]);
 //             for (const field in this.collectionsFilter) {
 //               if (this.collectionsFilter[field].length > 0) {
 //                 let filter = prepareForFilter(this.collectionsFilter[field]);
