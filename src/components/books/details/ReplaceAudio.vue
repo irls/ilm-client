@@ -14,7 +14,8 @@
           </label>
         </div>
         <div class="">
-          <button class="btn btn-primary" v-on:click="rebuild()">Rebuild</button>
+          <button class="btn btn-primary" v-on:click="rebuild()" v-if="blocksCountForExport > 0">{{buildButtonLabel}}</button>
+          <span class="btn btn-primary disabled" v-else>{{buildButtonLabel}}</span>
           &nbsp;&nbsp;{{blocksCountForExport}}&nbsp;voiced block(s)
           <template v-if="selectedBlocks.length > 0">
             in range
@@ -24,14 +25,21 @@
         </div>
       </template>
       <div v-else class="align-preloader -small"></div>
-        <div class="" v-if="exportData.date">
+      <template v-if="exportData.date">
+        <div class="">
           Latest build: {{exportDataType}} {{convertTime(exportData.date, true)}}
           <template v-if="exportData.range">
             &nbsp;{{exportData.range.count}}&nbsp;block(s) 
-            <a v-on:click="goToBlock(exportData.range.start)">{{getIdShort(exportData.range.start)}}</a>&nbsp;-&nbsp;
-            <a v-on:click="goToBlock(exportData.range.end)">{{getIdShort(exportData.range.end)}}</a>
+            <!-- <a v-on:click="goToBlock(exportData.range.start)">{{getIdShort(exportData.range.start)}}</a>&nbsp;-&nbsp;
+            <a v-on:click="goToBlock(exportData.range.end)">{{getIdShort(exportData.range.end)}}</a> -->
           </template>
         </div>
+        <div>
+          <a :href="this.API_URL + 'download/complete_audio?path=' + exportData.path" v-if="!exportData.in_process" target="_blank" class="btn btn-primary">
+            Download
+          </a>
+        </div>
+      </template>
     </fieldset>
   </div>
 </template>
@@ -39,13 +47,14 @@
   import { mapGetters, mapActions } from 'vuex';
   import time_methods from '../../../mixins/time_methods.js';
   import blockid_short from '../../../mixins/blockid_short';
+  import api_config from '../../../mixins/api_config';
   export default {
     data() {
       return {
         export_type: 'flac'
       }
     },
-    mixins: [time_methods, blockid_short],
+    mixins: [time_methods, blockid_short, api_config],
     computed: {
       exportData: {
         get() {
@@ -60,7 +69,7 @@
         get() {
           if (this.selectedBlocks.length > 0) {
             return this.selectedBlocks.filter(blk => {
-              return !blk.disabled;
+              return !blk.disabled && blk.audiosrc && blk.audiosrc.length > 0;
             }).length;
           } else {
             if (this.currentBookCounters.enabled_blocks !== null) {
@@ -68,9 +77,18 @@
             }
             let blocks = Array.from(this.storeList.values());
             return blocks.filter(blk => {
-              return !blk.disabled;
+              return !blk.disabled && blk.audiosrc && blk.audiosrc.length > 0;
             }).length;
           }
+        },
+        cache: false
+      },
+      buildButtonLabel: {
+        get() {
+          if (this.exportData && this.exportData.path) {
+            return 'Rebuild';
+          }
+          return 'Build';
         },
         cache: false
       },
