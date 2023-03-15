@@ -310,4 +310,13 @@ Features:
   .width-50 {
     width:50px;
   }
+  .width-50-p {
+    width:50%;
+  }
+  .width-37-p {
+    width:37%;
+  }
+  .width-36-p {
+    width:36%;
+  }
 </style>

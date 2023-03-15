@@ -86,7 +86,7 @@ export default {
           {
             title: 'Book Title',
             path: 'title',
-            addClass: 'booktitle',
+            addClass: 'booktitle width-36-p',
             isPassFull: true,
             html (val) {
               return `<i class='fa ${val.collection_id ? 'fa-copy' : 'fa-book'}'></i>&nbsp;&nbsp;${val.title}`

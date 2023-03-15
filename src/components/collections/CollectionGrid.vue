@@ -230,7 +230,7 @@
               {
                 title: 'Book Title',
                 path: 'title',
-                addClass: 'booktitle',
+                addClass: 'booktitle width-36-p',
                 html (val) {
                   return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
                 }
