@@ -232,15 +232,16 @@
                 path: 'title',
                 addClass: 'booktitle width-36-p',
                 html (val) {
-                  return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val}`
+                  return `<span data-tooltip="${val.title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title}</span>`
                 }
               },
               {
                 title: 'Author',
                 path: 'author',
-                addClass: 'author',
-                render(val) {
-                  return val && Array.isArray(val) ? val.join(', ') : val;
+                addClass: 'author width-16-p',
+                html(val) {
+                  const text = val && Array.isArray(val) ? val.join(', ') : val;
+                  return `<span data-tooltip="${text}">${text}</span>`;
                 }
               },
               {

@@ -319,4 +319,10 @@ Features:
   .width-36-p {
     width:36%;
   }
+  .width-16-p {
+    width:16%;
+  }
+  .min-width-150 {
+    min-width:150px;
+  }
 </style>
