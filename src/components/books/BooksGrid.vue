@@ -103,7 +103,7 @@ export default {
           {
             title: 'Editor',
             path: 'executors',
-            addClass: 'width-100',
+            addClass: 'width-150',
             render(val) {
               return val && val.editor ? val.editor.title : '';
             }
