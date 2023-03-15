@@ -127,7 +127,7 @@
               {
                 title: 'Category',
                 path: 'category',
-                addClass: 'author',
+                addClass: 'author width-150',
                 render(val) {
                   return val && Array.isArray(val) ? val.join(', ') : val;
                 }
@@ -135,7 +135,7 @@
               {
                 title: 'Language',
                 path: 'language',
-                addClass: 'author',
+                addClass: 'author width-100',
                 html (val) {
                   if (Languages.hasOwnProperty(val)) {
                     return `${Languages[val]}`;
