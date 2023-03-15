@@ -843,6 +843,7 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENT_COLLECTION (state, _id) {
+      //console.log(`SET_CURRENT_COLLECTION: `, _id);
       let currentCollection = null;
       if (_id) {
         let collection = state.bookCollections.find(c => {
@@ -856,7 +857,7 @@ export const store = new Vuex.Store({
         currentCollection = new Collection({});
       }
       state.currentCollection = currentCollection;
-      state.currentCollection.sortBooks();
+      if (state.currentCollection) state.currentCollection.sortBooks();
       state.currentCollectionId = _id;
     },
 
@@ -2250,26 +2251,6 @@ export const store = new Vuex.Store({
     },
 
     loadCollection({commit, state, dispatch}, id) {
-      /*if (id) {
-        let collection = state.bookCollections.find(c => {
-          return c._id === id;
-        });
-        if (collection) {
-          state.currentCollectionId = id;
-          commit('SET_CURRENT_COLLECTION', collection);
-        } else {
-          return axios.get(`${state.API_URL}/collection/${id}`)
-            .then(response => {
-              if (response && response.data) {
-                state.currentCollectionId = id;
-                commit('SET_CURRENT_COLLECTION', response.data);
-              }
-            })
-        }
-      } else {
-        commit('SET_CURRENT_COLLECTION', {});
-        commit('SET_ALLOW_COLLECTION_PUBLISH', false);
-      }*/
       if (id) {
         return dispatch('getCollection', id)
           .then(collection => {
@@ -2287,7 +2268,7 @@ export const store = new Vuex.Store({
             return Promise.reject(err);
           });
       } else {
-        commit('SET_CURRENT_COLLECTION', id);
+        commit('SET_CURRENT_COLLECTION', false);
         return Promise.resolve();
       }
     },

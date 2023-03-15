@@ -177,7 +177,7 @@ export default {
     },
     currentCollectionHeader () {
       if (this.currentCollection._id) {
-        return `${this.currentCollection.title} (${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})`;
+        return `${this.currentCollection.title || this.currentCollection._id} (${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})`;
       }
       return '';
     },
@@ -214,7 +214,6 @@ export default {
     },
     taskAddModalClose(create) {
       this.taskAddModalActive = false;
-      console.log(`taskAddModalClose.create: `, create);
       if (create) {
         this.$store.dispatch('tc_loadBookTask')
       }
@@ -231,7 +230,16 @@ export default {
       switch(ev.index) {
           case 2 : {
             if (this.currentCollection._id) {
-              this.$router.push({ name: 'CollectionBooks', params: { collectionid: this.currentCollection._id } });
+              if (this.currentBookMeta && this.currentBookMeta.bookid) {
+                this.$router.push({ name: 'CollectionBook', params: {
+                  collectionid: this.currentCollection._id,
+                  bookid: this.currentBookMeta.bookid
+                } });
+              } else {
+                this.$router.push({ name: 'CollectionBooks', params: {
+                  collectionid: this.currentCollection._id
+                } });
+              }
             }
           } break;
           case 1 : {
@@ -243,7 +251,12 @@ export default {
             }
           } break;
           case 0 : default : {
-            this.$router.push({ name: 'Books' });
+            if (this.currentBookMeta && this.currentBookMeta.bookid) {
+              console.log(`this.currentBookMeta: `, this.currentBookMeta.bookid);
+              this.$router.push({ name: 'BooksGrid', params: { bookid: this.currentBookMeta.bookid } });
+            } else {
+              this.$router.push({ name: 'Books' });
+            }
           } break;
       };
     },

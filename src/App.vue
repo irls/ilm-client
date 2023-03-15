@@ -61,14 +61,14 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.loadBook(this.$route.params.bookid)
       } else {
-        this.loadBook(false);
+        //this.loadBook(false);
       }
       if (this.$route.params.hasOwnProperty('collectionid')) {
         if (this.$route.params.collectionid !== this.currentCollectionId) {
           this.loadCollection(this.$route.params.collectionid);
         }
       } else {
-        this.loadCollection(false);
+        //this.loadCollection(false);
       }
       if (this.$route.params.hasOwnProperty('libraryid')) {
         this.loadLibrary(this.$route.params.libraryid);

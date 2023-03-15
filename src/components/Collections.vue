@@ -67,24 +67,21 @@
           //this.loadCollection(false);
           if (this.currentCollection._id !== id) {
             this.$store.commit('SET_CURRENT_COLLECTION', false);
-            this.selectCollection(id);
-            this.scrollToRow(id);
+            this.selectCollection(id)
+            .then(() => {
+              this.scrollToRow(id);
+            })
           }
           //}
         },
         selectCollection(id) {
-          //if (!this.currentCollection || collection._id !== this.currentCollection._id) {
-            //this.currentCollection = collection;
-            //this.currentBook = false;
-            //this.bookMetaVisible = false;
-            //this.$router.replace({ path: '/collections/' + this.currentCollection._id })
-          //}
           if (this.currentCollection._id !== id) {
-            this.loadCollection(id)
+            return this.loadCollection(id)
               .then(() => {
                 this.$router.replace({ path: '/collections/' + id });
               });
           }
+          return Promise.resolve();
         },
         selectBook(id, collection_id) {
           this.loadBook(id);

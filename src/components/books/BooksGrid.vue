@@ -235,6 +235,12 @@ export default {
       const bookid = ev.bookid;
       if (bookid) {
         this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+        const book = this.filteredBooks.find(book=>book.bookid === bookid);
+        if (book && book.collection_id) {
+          this.$store.dispatch('loadCollection', book.collection_id);
+        } else {
+          this.$store.dispatch('loadCollection', false);
+        }
       }
     },
     openBook (ev) {
