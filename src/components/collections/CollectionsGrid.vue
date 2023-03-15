@@ -141,8 +141,9 @@
       watch: {
         currentCollection: {
           handler(val, oldVal) {
-            if(val._id && !oldVal._id) {
-
+            if(val._id  !== oldVal._id) {
+              this.selectedBooks = [val._id];
+              this.scrollToRow(val._id);
             }
           }
         },

@@ -62,9 +62,6 @@
           })
         },
         onCollectionAdded(id) {
-          //let current = this.bookCollections.find(bk => bk._id == id);
-          //if (current) {
-          //this.loadCollection(false);
           if (this.currentCollection._id !== id) {
             this.$store.commit('SET_CURRENT_COLLECTION', false);
             this.selectCollection(id)
@@ -72,7 +69,6 @@
               this.scrollToRow(id);
             })
           }
-          //}
         },
         selectCollection(id) {
           if (this.currentCollection._id !== id) {
