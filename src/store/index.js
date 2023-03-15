@@ -17,6 +17,7 @@ import setBlocksDisabled from './modules/setBlocksDisabled';
 import userActions from './modules/user';
 import alignActions from './modules/align';
 import tasks from './modules/tasks';
+import gridFilters from './modules/gridFilters';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -77,7 +78,8 @@ export const store = new Vuex.Store({
     setBlocksDisabled,
     userActions,
     alignActions,
-    tasks
+    tasks,
+    gridFilters
   },
   state: {
     SelectionModalProgress:0,

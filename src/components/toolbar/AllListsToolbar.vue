@@ -116,38 +116,6 @@ export default {
       taskAddModalActive: false,
       languages: Languages,
       activeTabIdx: 0,
-
-      multiBookFilters: {
-        language: [],
-        jobStatus: [{caption: 'Active', value: 'active'}],
-        importStatus: [],
-        multiProjectTag: []
-      },
-
-      mapFilterJobStatus: [
-        {caption: 'Active',    value: 'active'},
-        {caption: 'Archived',  value: 'archived'},
-        {caption: 'Completed', value: 'completed'},
-        {caption: 'Suspended', value: 'suspended'}
-      ],
-
-      mapFilterImportStatus: [
-        {caption: 'No content',   value: 'staging_empty'},
-        {caption: 'Text Cleanup', value: 'staging'},
-        {caption: 'Narration',    value: 'narrating'},
-        {caption: 'Proofreading', value: 'proofing'},
-        {caption: 'Mastering',    value: 'mastering'},
-        {caption: 'Done',         value: 'completed'}
-      ],
-
-      mapFilterProjectTag: [
-        {caption: 'Reader',  value: 'Reader'},
-        {caption: 'Ocean',   value: 'Ocean'},
-        {caption: 'ST',      value: 'ST'},
-        {caption: 'OOL',     value: 'OOL'},
-        {caption: 'Testing', value: 'Testing'},
-        {caption: 'Traning', value: 'Traning'},
-      ],
     }
   },
 
@@ -172,10 +140,16 @@ export default {
       'currentCollection',
       'allowCollectionsEdit',
     ]),
+    ...mapGetters({
+      multiBookFilters: 'gridFilters/multiBookFilters',
+      mapFilterJobStatus: 'gridFilters/mapFilterJobStatus',
+      mapFilterImportStatus: 'gridFilters/mapFilterImportStatus',
+      mapFilterProjectTag: 'gridFilters/mapFilterProjectTag'
+    }),
     booksCount () {
       if (this.allBooks && this.allBooks.length) {
         const filtered = this.allBooks
-                .filter(m => !m.collection_id)
+                //.filter(m => !m.collection_id)
                 .filter(m => m.importStatus);
         return filtered.length;
       } else {
@@ -184,9 +158,9 @@ export default {
     },
     collectionsCount () {
       if (this.bookCollections && this.bookCollections.length) {
-        const filtered = this.bookCollections;
+        const filtered = this.bookCollections
                 //.filter(m => !m.collection_id)
-                //.filter(m => m.importStatus);
+                .filter(m => m.importStatus);
         return filtered.length;
       } else {
         return 0;
