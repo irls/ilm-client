@@ -131,6 +131,9 @@
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
+        ...mapGetters({
+          filteredBooks: 'gridFilters/filteredCollectionBooks'
+        }),
         collectionsPage: {
           cache: true,
           get() {
@@ -151,76 +154,59 @@
               return collections;
             }
 
-            let filteredbooks = collections[0].books_list
-              .filter(book => (this.bookFilters.language.length == 0 || (this.bookFilters.language).indexOf(book.language) >= 0))
-              .filter(book => (this.bookFilters.importStatus.length == 0 || (this.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
-              .filter(book => (this.bookFilters.jobStatus.length == 0 || (this.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
-              .filter(book => {
-                const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-                let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-                let find = prepareForFilter(this.bookFilters.filter);
-                return (str.indexOf(find) > -1)
-              })
-              .filter(book => {
-                let str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
-                let find = prepareForFilter(this.bookFilters.projectTag);
-                return (str.indexOf(find) > -1)
-              })
-              //.filter(book => !book.collection_id)
-            collections[0].books_list = filteredbooks
+            collections[0].books_list = this.filteredBooks;
 
-            //console.log(`collections: `,collections[0]);
-//             for (const field in this.collectionsFilter) {
-//               if (this.collectionsFilter[field].length > 0) {
-//                 let filter = prepareForFilter(this.collectionsFilter[field]);
-//                 switch (field) {
-//                   case 'title':
-//                     collections = collections.filter(collection => {
-//                       let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
-//                       if (!match) {
-//                         collection.books_list = collection.books_list.filter(book => {
-//                           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-//                           let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-//                           return (str.indexOf(filter) > -1)
-//                         });
-//                       }
-//                       let book_match = !match && collection.books_list.length > 0;
-//                       collection.match = match;
-//                       collection.book_match = book_match;
-//                       return match || book_match;
-//                     });
-//                     break;
-//                   case 'language':
-//                     collections = collections.filter(collection => {
-//                       return collection.language == filter;
-//                     });
-//                     break;
-//                   case 'jobStatus':
-//                     collections = collections.filter(collection => {
-//                       if (!collection.books_list) return false;
-//                       collection.books_list = collection.books_list.filter(b => {
-//                         return b.job_status === filter;
-//                       });
-//                       return collection.books_list.length > 0;
-//                     });
-//                     break;
-//                   case 'projectTag':
-//                     collections = collections.filter(collection => {
-//                       collection.books_list = collection.books_list.filter(b => {
-//                         let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
-//                         return (str.indexOf(filter) > -1)
-//                       });
-//                       let book_match =  collection.books_list.length > 0;
-//                       collection.match = book_match;
-//                       collection.book_match = book_match;
-//                       return book_match;
-//
-//                     });
-//                     break;
-//
-//                 }
-//               }
-//             }
+            /*for (const field in this.collectionsFilter) {
+              if (this.collectionsFilter[field].length > 0) {
+                let filter = prepareForFilter(this.collectionsFilter[field]);
+                switch (field) {
+                  case 'title':
+                    collections = collections.filter(collection => {
+                      let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
+                      if (!match) {
+                        collection.books_list = collection.books_list.filter(book => {
+                          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+                          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+                          return (str.indexOf(filter) > -1)
+                        });
+                      }
+                      let book_match = !match && collection.books_list.length > 0;
+                      collection.match = match;
+                      collection.book_match = book_match;
+                      return match || book_match;
+                    });
+                    break;
+                  case 'language':
+                    collections = collections.filter(collection => {
+                      return collection.language == filter;
+                    });
+                    break;
+                  case 'jobStatus':
+                    collections = collections.filter(collection => {
+                      if (!collection.books_list) return false;
+                      collection.books_list = collection.books_list.filter(b => {
+                        return b.job_status === filter;
+                      });
+                      return collection.books_list.length > 0;
+                    });
+                    break;
+                  case 'projectTag':
+                    collections = collections.filter(collection => {
+                      collection.books_list = collection.books_list.filter(b => {
+                        let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
+                        return (str.indexOf(filter) > -1)
+                      });
+                      let book_match =  collection.books_list.length > 0;
+                      collection.match = book_match;
+                      collection.book_match = book_match;
+                      return book_match;
+
+                    });
+                    break;
+
+                }
+              }
+            }*/
             return collections;
           }
         },
@@ -231,6 +217,7 @@
                 title: 'Book Title',
                 path: 'title',
                 addClass: 'booktitle width-36-p',
+                isPassFull: true,
                 html (val) {
                   return `<span data-tooltip="${val.title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title}</span>`
                 }

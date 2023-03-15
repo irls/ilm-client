@@ -1,3 +1,5 @@
+import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
+
 export default {
   namespaced: true,
   state: {
@@ -34,10 +36,75 @@ export default {
     ],
   },
   getters: {
-    multiBookFilters:      state=>state.multiBookFilters,
-    mapFilterJobStatus:    state=>state.mapFilterJobStatus,
-    mapFilterImportStatus: state=>state.mapFilterImportStatus,
-    mapFilterProjectTag:   state=>state.mapFilterProjectTag,
+    multiBookFilters:               state=>state.multiBookFilters,
+    mapFilterJobStatus:             state=>state.mapFilterJobStatus,
+    mapFilterImportStatus:          state=>state.mapFilterImportStatus,
+    mapFilterProjectTag:            state=>state.mapFilterProjectTag,
+
+    filteredBooksCounter: (state, getters) => {
+      return getters.filteredBooks.length;
+    },
+    filteredCollectionsCounter: (state, getters) => {
+      return getters.filteredCollections.length;
+    },
+    filteredCollectionBooksCounter: (state, getters) => {
+      return getters.filteredCollectionBooks.length;
+    },
+
+    filteredBooks: (state, getters, rootState, rootGetters) => {
+      if (!rootGetters.allBooks.length) return [];
+      const filteredbooks = rootGetters.allBooks
+        .filter(book => (rootState.bookFilters.language.length == 0 || (rootState.bookFilters.language).indexOf(book.language) >= 0))
+        .filter(book => (rootState.bookFilters.importStatus.length == 0 || (rootState.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
+        .filter(book => (rootState.bookFilters.jobStatus.length == 0 || (rootState.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
+        .filter(book => {
+          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          const str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+          const find = prepareForFilter(rootState.bookFilters.filter);
+          return (str.indexOf(find) > -1)
+        })
+        .filter(book => {
+          const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+          const find = prepareForFilter(rootState.bookFilters.projectTag);
+          return (str.indexOf(find) > -1)
+        })
+        //.filter(book => !book.collection_id)
+      return filteredbooks;
+    },
+
+    filteredCollections: (state, getters, rootState, rootGetters) => {
+      if (!rootGetters.bookCollections.length) return [];
+      let filteredCollections = rootGetters.bookCollections
+          .filter(coll => (rootState.bookFilters.language.length == 0 || (rootState.bookFilters.language).indexOf(coll.language) >= 0))
+          .filter(coll => {
+            const collAuthors = Array.isArray(coll.author) ? coll.author.join('|') : coll.author;
+            let str = prepareForFilter(`${coll.title} ${coll.subtitle} ${collAuthors} ${coll._id} ${coll.category}`); // ${coll.description}
+            let find = prepareForFilter(rootState.bookFilters.filter);
+            return (str.indexOf(find) > -1)
+          })
+      return filteredCollections;
+    },
+
+    filteredCollectionBooks: (state, getters, rootState, rootGetters) => {
+      if (!rootGetters.currentCollection._id) return [];
+      const filteredbooks = rootGetters.currentCollection.books_list
+        .filter(book => (rootState.bookFilters.language.length == 0 || (rootState.bookFilters.language).indexOf(book.language) >= 0))
+        .filter(book => (rootState.bookFilters.importStatus.length == 0 || (rootState.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
+        .filter(book => (rootState.bookFilters.jobStatus.length == 0 || (rootState.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
+        .filter(book => {
+          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          const str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+          const find = prepareForFilter(rootState.bookFilters.filter);
+          return (str.indexOf(find) > -1)
+        })
+        .filter(book => {
+          const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+          const find = prepareForFilter(rootState.bookFilters.projectTag);
+          return (str.indexOf(find) > -1)
+        })
+        //.filter(book => !book.collection_id)
+      return filteredbooks;
+    }
   },
   mutations: {
     multiBookFilters(state, payload) {

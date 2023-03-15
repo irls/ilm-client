@@ -55,8 +55,8 @@
 
   <div class="toolbar-second-row">
     <TabView ref="booksListTabs" :activeIndex="activeTabIdx" :scrollable="false" @tab-change="onBooksListTabChange">
-      <TabPanel :header="booksCount + ' Book' + (booksCount===1 ? '':'s')"></TabPanel>
-      <TabPanel :header="collectionsCount + ' Collection' + (collectionsCount===1 ? '':'s')"></TabPanel>
+      <TabPanel :header="filteredBooksCounter + ' Book' + (filteredBooksCounter===1 ? '':'s')"></TabPanel>
+      <TabPanel :header="filteredCollectionsCounter + ' Collection' + (filteredCollectionsCounter===1 ? '':'s')"></TabPanel>
       <TabPanel v-if="currentCollection._id" :header="currentCollectionHeader"></TabPanel>
     </TabView>
 
@@ -141,10 +141,13 @@ export default {
       'allowCollectionsEdit',
     ]),
     ...mapGetters({
-      multiBookFilters: 'gridFilters/multiBookFilters',
-      mapFilterJobStatus: 'gridFilters/mapFilterJobStatus',
-      mapFilterImportStatus: 'gridFilters/mapFilterImportStatus',
-      mapFilterProjectTag: 'gridFilters/mapFilterProjectTag'
+      multiBookFilters:               'gridFilters/multiBookFilters',
+      mapFilterJobStatus:             'gridFilters/mapFilterJobStatus',
+      mapFilterImportStatus:          'gridFilters/mapFilterImportStatus',
+      mapFilterProjectTag:            'gridFilters/mapFilterProjectTag',
+      filteredBooksCounter:           'gridFilters/filteredBooksCounter',
+      filteredCollectionsCounter:     'gridFilters/filteredCollectionsCounter',
+      filteredCollectionBooksCounter: 'gridFilters/filteredCollectionBooksCounter',
     }),
     booksCount () {
       if (this.allBooks && this.allBooks.length) {
@@ -174,7 +177,7 @@ export default {
     },
     currentCollectionHeader () {
       if (this.currentCollection._id) {
-        return `${this.currentCollection.title} (${this.collectionBooksCount} Book${(this.collectionBooksCount === 1?'':'s')})`;
+        return `${this.currentCollection.title} (${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})`;
       }
       return '';
     },

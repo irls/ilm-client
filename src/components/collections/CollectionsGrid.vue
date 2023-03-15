@@ -1,7 +1,7 @@
 <template>
   <div id="books_grid">
      <Grid id='collections_grid'
-      :data="collections"
+      :data="filteredCollections"
       :columns="headers"
       :rowsPerPage="100"
       @clickRow="rowClick"
@@ -82,20 +82,9 @@
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
-        collections: { // filtered list of collections
-          get() {
-            if (!this.bookCollections.length) return [];
-            let filteredCollections = this.bookCollections
-               .filter(coll => (this.bookFilters.language.length == 0 || (this.bookFilters.language).indexOf(coll.language) >= 0))
-               .filter(coll => {
-                  const collAuthors = Array.isArray(coll.author) ? coll.author.join('|') : coll.author;
-                  let str = prepareForFilter(`${coll.title} ${coll.subtitle} ${collAuthors} ${coll._id} ${coll.category}`); // ${coll.description}
-                  let find = prepareForFilter(this.bookFilters.filter);
-                  return (str.indexOf(find) > -1)
-                })
-            return filteredCollections;
-          }
-        },
+        ...mapGetters({
+          filteredCollections: 'gridFilters/filteredCollections'
+        }),
         headers: {
           get() {
             let headers = [
@@ -162,7 +151,7 @@
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('collectionid')) {
               const collectionid = this.$route.params.collectionid;
-              const found = this.collections.find((collection)=>{
+              const found = this.filteredCollections.find((collection)=>{
                 return collection._id === collectionid;
                 //return collection.bookids.find((book)=>{
                 //  return book === bookid;

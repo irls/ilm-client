@@ -44,31 +44,13 @@ export default {
       'allBooks',
       'adminOrLibrarian'
     ]),
-
-    books () { // filtered list of books
-      if (!this.allBooks.length) return [];
-      let filteredbooks = this.allBooks
-        .filter(book => (this.bookFilters.language.length == 0 || (this.bookFilters.language).indexOf(book.language) >= 0))
-        .filter(book => (this.bookFilters.importStatus.length == 0 || (this.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
-        .filter(book => (this.bookFilters.jobStatus.length == 0 || (this.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
-        .filter(book => {
-          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-          let find = prepareForFilter(this.bookFilters.filter);
-          return (str.indexOf(find) > -1)
-        })
-        .filter(book => {
-          let str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
-          let find = prepareForFilter(this.bookFilters.projectTag);
-          return (str.indexOf(find) > -1)
-        })
-        //.filter(book => !book.collection_id)
-      return filteredbooks
-    },
+    ...mapGetters({
+      filteredBooks: 'gridFilters/filteredBooks'
+    }),
 
     booksMeta () { // because our grid does not work with nested values
       let result = []
-      for (let book of this.books) {
+      for (let book of this.filteredBooks) {
         if (book.importStatus == 'staging' && book.blocksCount <= 2){
           if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
             book.importStatus = 'staging_empty'
@@ -180,7 +162,7 @@ export default {
   },
 
   created () {
-    this.selectedBooks = [this.$route.params.bookid]
+    this.selectedBooks = [this.$route.params.bookid];
   },
 
   mounted () {
@@ -222,7 +204,7 @@ export default {
       handler(newVal, oldVal) {
         if (this.$route.params.hasOwnProperty('bookid')) {
           const bookid = this.$route.params.bookid;
-          const found = this.books.find((book)=>{
+          const found = this.filteredBooks.find((book)=>{
             return book.bookid === bookid;
           })
           if (found) {
