@@ -401,7 +401,8 @@
     methods: {
       uploadAudio() {
         this.$modal.show(AudioImport, {
-          book: this.currentBookMeta
+          book: this.currentBookMeta,
+          uploadInfo: {}
         }, {
           height: 'auto',
           width: '700px'

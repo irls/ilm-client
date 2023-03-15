@@ -139,7 +139,7 @@
     </div>
     <div class="modal-footer">
       <template v-if="(audiobookReport && uploadFinished) || uploadErrors.length">
-        <button class="btn btn-default" v-on:click="$emit('closeOk')">Ok, got it</button>
+        <button class="btn btn-default" v-on:click="uploadOk()">Ok, got it</button>
       </template>
       <template v-else-if="!isUploading">
         <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import</button>
@@ -240,6 +240,10 @@ export default {
     'type': {
       type: String,
       default: 'import'
+    },
+    'uploadInfo': {
+      type: Object,
+      default: {}
     }
   },
   computed: {
@@ -639,6 +643,10 @@ export default {
         }
       }
       return "";
+    },
+    uploadOk() {
+      this.uploadInfo.success = true;
+      this.$emit('close');
     },
     ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign'])
 

@@ -21,7 +21,7 @@
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              @showModal_audio="showModal_audio = true"
+              @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
@@ -2156,7 +2156,6 @@ export default {
     },
 
     checkAfterAudioImport() {
-      this.showModal_audio = false
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
         this.activeTabIndex = this.TAB_AUDIO_INDEX;
         this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
