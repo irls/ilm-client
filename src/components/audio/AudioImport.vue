@@ -39,6 +39,34 @@
               <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
             </div>
           </template>
+          <template v-if="type === 'replace'">
+            <div class="col-sm-12">
+              <h5>Browse for FLAC audiofiles</h5>
+            </div>
+            <div class="col-sm-12 upload-files">
+              <div class="col-sm-3">
+                <dropzone id="audio-dropzone" ref="uploadDropzone" 
+                  :options="dropzoneOptions" 
+                  @vdropzone-file-added="onAudioFileChange"
+                  @vdropzone-total-upload-progress="onUploadProgress"
+                  @vdropzone-success="onUploadSuccess"
+                  @vdropzone-complete="onUploadComplete"
+                  @vdropzone-error="onUploadError"
+                  @vdropzone-queue-complete="onUploadFinished">
+                  Browse
+                </dropzone>
+              </div>
+              <div class="col-sm-9">
+                <div class="input-group">
+                  <input type="text" class="form-control playlist-url" placeholder="Playlist URL" v-model="audioURL" />
+                </div>
+              </div>
+              <span v-if="$refs.upload">
+              {{$refs.upload.uploaded}}
+              </span>
+              <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
+            </div>
+          </template>
           <div class="col-sm-12">
             <ul class="audiofiles-list">
               <li v-for="file in audioFiles">
@@ -320,6 +348,9 @@ export default {
           case 'import':
             return 'Import Audio';
             break;
+          case 'replace':
+            return 'Replace audio';
+            break;
         }
         return '';
       },
@@ -332,6 +363,10 @@ export default {
           case 'import':
             options.acceptedFiles = 'audio/*';
             options.dictDefaultMessage = `<button class="btn btn-default browse-audio">Browse audio</button>`;
+            break;
+          case 'replace':
+            options.acceptedFiles = 'audio/flac';
+            options.dictDefaultMessage = `<button class="btn btn-default browse-audio">Browse FLAC</button>`;
             break;
         }
         return Object.assign(this.dropzoneOptionsCommon, options);
