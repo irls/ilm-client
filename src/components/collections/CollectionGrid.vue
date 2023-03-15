@@ -24,7 +24,7 @@
           :sortable="false"
           :ref="'grid-' + collection._id"
           :class="['collection-books-grid']"
-          :customEmptyTableText="'No books'"></Grid>
+          customEmptyTableText="No Books found" />
     </div>
   </div>
 </template>

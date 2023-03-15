@@ -9,8 +9,8 @@
       @dblClickRow="openBook"
       :selected="selectedBooks"
       :idField="idField"
-      :filter-key="''">
-    </Grid>
+      :filter-key="''"
+      customEmptyTableText="No Books found" />
   </div>
   <!--<div class="router-view-wrapper"-->
 </template>

@@ -8,8 +8,8 @@
       @dblClickRow="openCollection"
       :selected="selectedBooks"
       :idField="idField"
-      :filter-key="''">
-    </Grid>
+      :filter-key="''"
+      customEmptyTableText="No Collections found" />
   </div>
 </template>
 <script>
