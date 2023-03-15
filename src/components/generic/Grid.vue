@@ -8,7 +8,7 @@ Features:
 -->
 <template>
   <div ref="grid_component_ref">
-  <table class="table table-striped table-bordered table-hover" v-if="!draggable">
+  <table class="table table-striped table-bordered table-hover table-fixed" v-if="!draggable">
     <thead>
       <tr>
         <th v-for="key in columns"
@@ -38,7 +38,7 @@ Features:
       </tr>
     </tbody>
   </table>
-  <table class="table table-striped table-bordered table-hover" v-else>
+  <table class="table table-striped table-bordered table-hover table-fixed" v-else>
     <thead>
       <tr v-if="sortable">
         <th v-for="key in columns"
@@ -291,5 +291,23 @@ Features:
   th {vertical-align: top !important;}
   .grid-row.status-archived {
     color: gray;
+  }
+  .table-fixed {
+    table-layout: fixed;
+  }
+  .width-auto {
+    width: auto;
+  }
+  .width-150 {
+    width:150px;
+  }
+  .width-100 {
+    width:100px;
+  }
+  .width-90 {
+    width:90px;
+  }
+  .width-50 {
+    width:50px;
   }
 </style>

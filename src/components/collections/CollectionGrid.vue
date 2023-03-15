@@ -246,20 +246,24 @@
               {
                 title: 'Editor',
                 path: 'executors',
+                addClass: 'width-100',
                 render(val) {
                   return val && val.editor ? val.editor.title : '';
                 }
               },
               {
                 title: 'Published',
-                path: 'pub_ver'
+                path: 'pub_ver',
+                addClass: 'width-150'
               },
               {
                 title: 'Updated',
-                path: 'cur_ver'
+                path: 'cur_ver',
+                addClass: 'width-150'
               },
               {
                 title: 'Status',
+                addClass: 'width-100',
                 path: 'importStatus',
                 render(val) {
                   switch (val) {
@@ -291,6 +295,7 @@
               headers.push({
                 title: 'State',
                 path: 'job_status',
+                addClass: 'width-90',
                 render(val) {
                   switch (val) {
                     case 'active':

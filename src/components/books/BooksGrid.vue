@@ -103,21 +103,25 @@ export default {
           {
             title: 'Editor',
             path: 'executors',
+            addClass: 'width-100',
             render(val) {
               return val && val.editor ? val.editor.title : '';
             }
           },
           {
             title: 'Published',
-            path: 'pub_ver'
+            path: 'pub_ver',
+            addClass: 'width-150'
           },
           {
             title: 'Updated',
-            path: 'cur_ver'
+            path: 'cur_ver',
+            addClass: 'width-150'
           },
           {
             title: 'Status',
             path: 'importStatus',
+            addClass: 'width-100',
             render(val) {
               switch (val) {
                 case 'staging_empty':
@@ -141,13 +145,14 @@ export default {
                 default:
                   return val ? val : 'Book Import';
               }
-            }
+            },
           }
         ];
         if (this.adminOrLibrarian) {
           headers.push({
             title: 'State',
             path: 'job_status',
+            addClass: 'width-90',
             render(val) {
               switch (val) {
                 case 'active':
@@ -279,6 +284,7 @@ export default {
     width: 100%;
     height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-top: 4px;
   }
 
