@@ -89,7 +89,10 @@ export default {
             addClass: 'booktitle width-36-p',
             isPassFull: true,
             html (val) {
-              return `<i class='fa ${val.collection_id ? 'fa-copy' : 'fa-book'}'></i>&nbsp;&nbsp;${val.title}`
+              if (val.collection_id) {
+                return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title}`
+              }
+              return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val.title}`
             }
           },
           {

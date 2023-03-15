@@ -105,7 +105,7 @@
                 addClass: 'booktitle',
                 isPassFull: true,
                 html (val) {
-                  return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val.title.length ? val.title : val._id}`
+                  return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title.length ? val.title : val._id}`
                 }
               },
               {
@@ -209,7 +209,7 @@
     }
   }
   div.collection-title {
-    padding: 10px 5px;
+    /*padding: 10px 5px;*/
     background-color: #f5f5f5;
     border-color: #ddd;
     color: #333;

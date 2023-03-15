@@ -5,7 +5,7 @@
         :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
         :data-id="collection._id">
         <span slot="header" class="collection-title" @click.prevent.self>
-          <i class="fa fa-book"></i>&nbsp;
+          <i class='ico ico-collection'></i>&nbsp;
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
@@ -232,7 +232,7 @@
                 path: 'title',
                 addClass: 'booktitle width-36-p',
                 html (val) {
-                  return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+                  return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val}`
                 }
               },
               {
@@ -385,7 +385,7 @@
     }
   }
   div.collection-title {
-    padding: 10px 5px;
+    padding: 3px 5px 10px 5px;
     background-color: #f5f5f5;
     border-color: #ddd;
     color: #333;

@@ -611,4 +611,19 @@ export default {
   }
 }
 
+i.ico {
+  &.ico-collection {
+    margin-right: -2px;
+    margin-top: -6px;
+    display: inline-block;
+    &:before {
+      content: url('/static/books_list/books-24.ico');
+      margin-left: -5px;
+      position: relative;
+      top: 5px;
+      right: -2px;
+    }
+  }
+}
+
 </style>
