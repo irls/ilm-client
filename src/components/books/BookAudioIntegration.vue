@@ -195,12 +195,15 @@
   import Slider from 'primevue/slider';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
   import ReplaceAudio from './details/ReplaceAudio.vue';
+  import AudioImport from '../audio/AudioImport';
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
   import Split from 'split.js';
   import _ from 'lodash';
+  import v_modal from 'vue-js-modal';
+  Vue.use(v_modal, {dialog: true});
   //var d3 = require('d3')
   export default {
     name: 'BookAudioIntegration',
@@ -397,7 +400,12 @@
     },
     methods: {
       uploadAudio() {
-        this.$emit('uploadAudio')
+        this.$modal.show(AudioImport, {
+          book: this.currentBookMeta
+        }, {
+          height: 'auto',
+          width: '700px'
+        });
       },
       renameAudiofile(id) {
         this.renaming = {

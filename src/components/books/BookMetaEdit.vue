@@ -16,12 +16,6 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-      <AudioImport v-if="showModal_audio"
-        @close="showModal_audio = false"
-        @closeOk="checkAfterAudioImport"
-        :book="currentBook"
-        :importTask="importTask"
-        :allowDownload="false" />
 
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
@@ -282,7 +276,6 @@
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
-                @uploadAudio="showModal_audio = true"
               ></BookAudioIntegration>
           </vue-tab>
 
@@ -597,7 +590,6 @@ import superlogin           from 'superlogin-client'
 import BookDownload         from './BookDownload'
 import BookEditCoverModal   from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
-import AudioImport          from '../audio/AudioImport'
 import BookToc              from './BookToc'
 import _                    from 'lodash'
 import axios                from 'axios'
@@ -632,7 +624,6 @@ export default {
   components: {
     BookDownload,
     BookEditCoverModal,
-    AudioImport,
     BookToc,
     BookAudioIntegration,
     'vue-tabs': VueTabs,

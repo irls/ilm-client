@@ -1,109 +1,114 @@
 <template>
-  <div>
-  <modal name="import-audio" :resizeable="false" :clickToClose="false" height="auto" width="700px">
-    
-          <div class="modal-header">
-
-            <slot name="header">
-              <div class="header-title">
-                <h4 class="header-h">{{importTitle}}</h4>
-              </div>
-
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading || uploadErrors.length || audiobookReport">
-                <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-                </button>
-
-            </slot>
-          </div>
-          <div class="modal-body">
-
-          <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
-
-          <div class="modal-body clearfix">
-
-
-
-            <slot name="body">
-              <div class="col-sm-12">
-                <h5>Browse for audio files or type a playlist URL</h5>
-              </div>
-              <div class="col-sm-12 upload-files">
-                <div class="col-sm-9">
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="Playlist URL" v-model="audioURL" />
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                  <dropzone id="audio-dropzone" ref="uploadDropzone" 
-                    :options="dropzoneOptions" 
-                    @vdropzone-file-added="onAudioFileChange"
-                    @vdropzone-total-upload-progress="onUploadProgress"
-                    @vdropzone-success="onUploadSuccess"
-                    @vdropzone-complete="onUploadComplete"
-                    @vdropzone-error="onUploadError"
-                    @vdropzone-queue-complete="onUploadFinished">
-                    Browse
+  <div class="audio-import-modal">
+    <div class="modal-header">
+      <div>
+        <h4 class="modal-title">{{importTitle}}</h4>
+      </div>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading || uploadErrors.length || audiobookReport">
+      <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
+        <div class="modal-body clearfix">
+          <template v-if="type === 'import'">
+            <div class="col-sm-12">
+              <h5>Browse for audio files or type a playlist URL</h5>
+            </div>
+            <div class="col-sm-12 upload-files">
+              <div class="col-sm-3">
+                <dropzone id="audio-dropzone" ref="uploadDropzone" 
+                  :options="dropzoneOptions" 
+                  @vdropzone-file-added="onAudioFileChange"
+                  @vdropzone-total-upload-progress="onUploadProgress"
+                  @vdropzone-success="onUploadSuccess"
+                  @vdropzone-complete="onUploadComplete"
+                  @vdropzone-error="onUploadError"
+                  @vdropzone-queue-complete="onUploadFinished">
+                  Browse
                 </dropzone>
-                </div>
-                <span v-if="$refs.upload">
-                {{$refs.upload.uploaded}}
-                </span>
-                <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
               </div>
-              <div class="col-sm-12">
-                <ul class="audiofiles-list">
-                  <li v-for="file in audioFiles">
-                    {{ file.name }} - {{ humanFileSize(file.size, true) }}
-                  </li>
-               </ul>
-              </div>
-              <div class="col-sm-12 audio-import-options">
-                <div class="col-sm-7">
-                  <fieldset class="audio-import-options-fieldset">
-                    <legend>Import type</legend>
-                    <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="copy" />Copy to the catalog</label>
-                    <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="replace" />Replace block audio</label>
-                  </fieldset>
-                </div>
-                <div class="col-sm-5">
-                  <fieldset class="audio-import-options-fieldset">
-                    <legend>Audio quality</legend>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><div><img src="/static/audio_quality/raw-16.png" /></div>Raw</label>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><div><img src="/static/audio_quality/improved-16.png" /></div>Improved</label>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><div><img src="/static/audio_quality/mastered-16.png" /></div>Mastered</label>
-                  </fieldset>
+              <div class="col-sm-9">
+                <div class="input-group">
+                  <input type="text" class="form-control playlist-url" placeholder="Playlist URL" v-model="audioURL" />
                 </div>
               </div>
-              <div class="col-sm-12">
-              </div>
-            </slot>
-
+              <span v-if="$refs.upload">
+              {{$refs.upload.uploaded}}
+              </span>
+              <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
+            </div>
+          </template>
+          <div class="col-sm-12">
+            <ul class="audiofiles-list">
+              <li v-for="file in audioFiles">
+                {{ file.name }} - {{ humanFileSize(file.size, true) }}
+              </li>
+           </ul>
           </div>
-
-          </form>
-          <div id='uploadingMsg' v-show='isUploading'>
-            <template v-if="!audiobookReport && !uploadErrors.length">
-             <h2>{{uploadProgress}}&nbsp;<i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
-             <ul class="audiofiles-list">
-                <li v-for="file in audioFiles">
-                  {{ file.name }} - {{ file.progress ? file.progress : 0 }}%
-                </li>
-             </ul>
-            </template>
-            <template v-else>
-              <div v-html="audiobookReport"></div>
-              <template v-if="uploadFinished">
-                <div class="copy-report" v-if="allowCopyReport">
-                  <textarea class="copy-report-content" ref="copy-report-content" ></textarea>
-                  <button class="btn btn-primary" v-if="allowCopyReport" v-on:click="copyReport">Copy Report</button>
-                </div>
-                <div v-html="reportFooter" class="copy-report" v-if="reportFooter.length"></div>
-              </template>
-            </template>
-            <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
+          <div class="col-sm-12 audio-import-quality">
+            <!-- <div class="col-sm-7">
+              <fieldset class="audio-import-options-fieldset">
+                <legend>Import type</legend>
+                <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="copy" />Copy to the catalog</label>
+                <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="replace" />Replace block audio</label>
+              </fieldset>
+            </div>
+            <div class="col-sm-5">
+              <fieldset class="audio-import-options-fieldset">
+                <legend>Audio quality</legend>
+                <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><div><img src="/static/audio_quality/raw-16.png" /></div>Raw</label>
+                <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><div><img src="/static/audio_quality/improved-16.png" /></div>Improved</label>
+                <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><div><img src="/static/audio_quality/mastered-16.png" /></div>Mastered</label>
+              </fieldset>
+            </div> -->
+            <div class="col-sm-3">
+              Audio quality
+            </div>
+            <div class="col-sm-3">
+              <label>
+                <input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" />
+                <div class="audio-quality -raw"></div>Raw
+              </label>
+            </div>
+            <div class="col-sm-3">
+              <label>
+                <input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" />
+                <div class="audio-quality -improved"></div>Improved
+              </label>
+            </div>
+            <div class="col-sm-3">
+              <label>
+                <input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" />
+                <div class="audio-quality -mastered"></div>Mastered</label>
+            </div>
           </div>
+          <div class="col-sm-12">
           </div>
+        </div>
+      </form>
+      <div id='uploadingMsg' v-show='isUploading'>
+        <template v-if="!audiobookReport && !uploadErrors.length">
+         <h2>{{uploadProgress}}&nbsp;<i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
+         <ul class="audiofiles-list">
+            <li v-for="file in audioFiles">
+              {{ file.name }} - {{ file.progress ? file.progress : 0 }}%
+            </li>
+         </ul>
+        </template>
+        <template v-else>
+          <div v-html="audiobookReport"></div>
+          <template v-if="uploadFinished">
+            <div class="copy-report" v-if="allowCopyReport">
+              <textarea class="copy-report-content" ref="copy-report-content" ></textarea>
+              <button class="btn btn-primary" v-if="allowCopyReport" v-on:click="copyReport">Copy Report</button>
+            </div>
+            <div v-html="reportFooter" class="copy-report" v-if="reportFooter.length"></div>
+          </template>
+        </template>
+        <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
+      </div>
+    </div>
     <div class="modal-footer">
       <template v-if="(audiobookReport && uploadFinished) || uploadErrors.length">
         <button class="btn btn-default" v-on:click="$emit('closeOk')">Ok, got it</button>
@@ -113,7 +118,6 @@
         <button class="btn btn-default modal-default-button" @click="$emit('close')">Cancel</button>
       </template>
     </div>
-  </modal>
     <modal name="duplicate-files-warning" :resizeable="false" :clickToClose="false" height="auto">
         <div class="modal-header"></div>
         <div class="modal-body">
@@ -126,7 +130,7 @@
           <button type="button" class="btn btn-default" @click="cancelDuplicateAudio()">Cancel</button>
           <button type="button" class="btn btn-confirm" @click="replaceDuplicateAudio()">Replace</button>
         </div>
-      </modal>
+    </modal>
   </div>
 
 </template>
@@ -164,7 +168,7 @@ export default {
       uploadFilesDuplicates: [],
       confirmedDuplicates: [],
       uploadErrors: [],
-      dropzoneOptions: {
+      dropzoneOptionsCommon: {
         url: this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk', 
         chunking: true, 
         chunkSize: 1024 * 1024, 
@@ -177,13 +181,16 @@ export default {
       },
       choosingFile: false,
       audioImportType: "copy",
-      audioImportQuality: "raw"
+      audioImportQuality: "raw",
+      uploadUrl: '',
     }
   },
+  beforeMount: function() {
+    this.uploadUrl = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk';
+  },
   mounted: function () {
-    this.dropzoneOptions.url = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk';
-    this.dropzoneOptions.headers = {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password};
-    this.showModal('import-audio');
+    this.dropzoneOptionsCommon.url = this.uploadUrl;
+    this.dropzoneOptionsCommon.headers = {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password};
   },
   components: {
     Vue, dropzone
@@ -198,13 +205,13 @@ export default {
       type: Boolean,
       default: true
     },
-    'importTask': {
-      type: Object,
-      default: () => {return {}}
-    },
     'allowDownload': {
       type: Boolean,
       default: true
+    },
+    'type': {
+      type: String,
+      default: 'import'
     }
   },
   computed: {
@@ -306,9 +313,29 @@ export default {
     },
     importTitle: {
       get() {
-        return this.audiobookReport ? 'Import Audio Report' : 'Import Audio';
+        if (this.audiobookReport) {
+          return 'Import Audio Report';
+        }
+        switch (this.type) {
+          case 'import':
+            return 'Import Audio';
+            break;
+        }
+        return '';
       },
       cache: false
+    },
+    dropzoneOptions: {
+      get() {
+        let options = {url: this.uploadUrl};
+        switch (this.type) {
+          case 'import':
+            options.acceptedFiles = 'audio/*';
+            options.dictDefaultMessage = `<button class="btn btn-default browse-audio">Browse audio</button>`;
+            break;
+        }
+        return Object.assign(this.dropzoneOptionsCommon, options);
+      }
     },
     ...mapGetters({
       audiobook: 'currentAudiobook',
@@ -871,5 +898,48 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 .copy-report {
   text-align: left;
   padding: 5px;
+}
+.audio-import-modal {
+  [class^="col-sm-"] {
+    padding: 4px 4px 4px 0px;
+  }
+  .modal-header {
+    padding: 10px 10px 10px 28px;
+    button.close {
+      margin-top: -25px;
+    }
+  }
+  .browse-audio, .browse-audio:hover {
+    border: 1px solid #3187d5;
+    border-radius: 5px;
+    color: #3187d5;
+    padding: 8px 12px;
+    background: rgba(49, 135, 213, 0.1);
+  }
+  .input-group {
+    width: 100%;
+    padding: 1px 0px;
+    .playlist-url {
+      background: rgba(238, 238, 238, 0.2);
+    }
+  }
+  .audio-import-quality {
+    font-size: 15px;
+    div.audio-quality {
+      width: 20px;
+      height: 16px;
+      display: inline-block;
+      background-repeat: no-repeat;
+      &.-raw {
+        background: url(/static/audio_quality/raw-16.png) no-repeat;
+      }
+      &.-improved {
+        background: url(/static/audio_quality/improved-16.png) no-repeat;
+      }
+      &.-mastered {
+        background: url(/static/audio_quality/mastered-16.png) no-repeat;
+      }
+    }
+  }
 }
 </style>
