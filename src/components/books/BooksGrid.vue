@@ -71,10 +71,11 @@ export default {
             addClass: 'booktitle width-36-p',
             isPassFull: true,
             html (val) {
+              const title = val.title.length ? val.title : val.bookid;
               if (val.collection_id) {
-                return `<span data-tooltip="${val.title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title}</span>`
+                return `<span data-tooltip="${title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
               }
-              return `<span data-tooltip="${val.title}"><i class='fa fa-book'></i>&nbsp;&nbsp;${val.title}</span>`
+              return `<span data-tooltip="${title}"><i class='fa fa-book'></i>&nbsp;&nbsp;${title}</span>`
             }
           },
           {
