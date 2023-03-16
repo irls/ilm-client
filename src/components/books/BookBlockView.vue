@@ -613,6 +613,19 @@ Vue.use(v_modal, { dialog: true });
 //Vue.use(hljs.vuePlugin);
 //Vue.use(VueHighlightJS);
 
+class Deferred {
+  constructor() {
+    this._promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+    this.then = this._promise.then.bind(this._promise);
+    this.catch = this._promise.catch.bind(this._promise);
+    this.finally = this._promise.finally.bind(this._promise);
+    this[Symbol.toStringTag] = 'Promise';
+  }
+}
+
 export default {
   data () {
     return {
@@ -1901,10 +1914,10 @@ Save or discard your changes to continue editing`,
       },
       cancelCoupletUpdate(isDontShowAgain) {
         this.saveUserChoiceToCookie(isDontShowAgain);
-        this.isCoupletWarningPopupActive = false;
+        this.isCoupletWarningPopupActive.resolve(false);// = false;
       },
       saveCoupletChanges(isDontShowAgain) {
-        this.isCoupletWarningPopupActive = false;
+        this.isCoupletWarningPopupActive.resolve(true);// = false;
         this.saveUserChoiceToCookie(isDontShowAgain);
       },
       saveUserChoiceToCookie(isDontShowAgain) {
@@ -1913,7 +1926,23 @@ Save or discard your changes to continue editing`,
           document.cookie = 'dontShowAgainCoupletWarning=true';
         }
       },
-      assembleBlockProxy: function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
+      async showStopConfirmations(block) {
+        if (block.hasClass('whitespace', 'couplet')) {
+          if (!document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+            this.isCoupletWarningPopupActive = new Deferred();
+            const popResult = await this.isCoupletWarningPopupActive;
+            this.isCoupletWarningPopupActive = false;
+            if (popResult === false) return Promise.reject();
+          }
+        }
+        return Promise.resolve();
+      },
+      assembleBlockProxy: async function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
+        try {
+          await this.showStopConfirmations(this.block)
+        } catch(e) {
+          return false;
+        }
         if (!this.block.audiosrc) {
           realign = false;
         }
@@ -2034,9 +2063,6 @@ Save or discard your changes to continue editing`,
                     partUpdate.content = this.block.content;
                     partUpdate.manual_boundaries = this.block.manual_boundaries || [];
                     if (this.block.hasClass('whitespace', 'couplet')) {
-                      if (!document.cookie.includes('dontShowAgainCoupletWarning=true')) {
-                        this.isCoupletWarningPopupActive = true;
-                      }
                       partUpdate.classes = this.block.classes;
                     }
                     break;

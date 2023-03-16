@@ -98,7 +98,7 @@
 
   </div>
   <!--<div class="container-block">   -->
-  <AudioFAB 
+  <AudioFAB
     @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -718,7 +718,9 @@ export default {
 
       },
     eventKeyDown: function(key) {
+      if (this.$events) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
+      }
     },
     onMediaSuccess_msr(stream) {
       if (!this.recorder || (this.recorderStream && !this.recorderStream.active && this.recorderStream.id !== stream.id && stream.active)) {
@@ -2266,7 +2268,7 @@ export default {
             }
           });
       },
-      
+
       goToAudioBlock(block) {
         return new Promise((resolve, reject) => {
           let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
@@ -2423,7 +2425,7 @@ export default {
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       },
-      
+
       onAudioFab() {
         if (this.playingBlock.playingPauseAfter) {
           switch (this.playingBlock.state) {
