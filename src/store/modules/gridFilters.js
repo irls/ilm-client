@@ -93,7 +93,7 @@ export default {
         .filter(book => (rootState.bookFilters.jobStatus.length == 0 || (rootState.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-          const str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
+          const str = prepareForFilter(`${book.title} ${book.subtitle} ${book.slug} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
           const find = prepareForFilter(rootState.bookFilters.filter);
           return (str.indexOf(find) > -1)
         })
