@@ -1,4 +1,5 @@
 import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
+import { Languages }                         from "@src/mixins/lang_config.js"
 
 export default {
   namespaced: true,
@@ -66,6 +67,26 @@ export default {
     mapFilterJobStatus:             state => state.mapFilterJobStatus,
     mapFilterImportStatus:          state => state.mapFilterImportStatus,
     mapFilterProjectTag:            state => state.mapFilterProjectTag,
+
+    mapFilterLanguages: (state, getters, rootState, rootGetters) => {
+      if (!rootGetters.allBooks.length) {
+        return Object.entries(Languages).map(([code, name])=>({caption: name, value: code}));
+      }
+      const availableLanguages = new Set();
+      rootGetters.allBooks.forEach((book)=>{
+        availableLanguages.add(book.language);
+      });
+      rootGetters.bookCollections.forEach((book)=>{
+        availableLanguages.add(book.language);
+      });
+      if (state.booksFilters.language.length) {
+        state.booksFilters.language = state.booksFilters.language.filter((lang)=>availableLanguages.has(lang));
+      }
+      if (state.multiBookFilters.language.length) {
+        state.multiBookFilters.language = state.multiBookFilters.language.filter((obj)=>availableLanguages.has(obj.value));
+      }
+      return Array.from(availableLanguages).map((code)=>({caption: Languages[code] ? Languages[code] : code, value: code}));
+    },
 
     filteredBooksCounter: (state, getters) => {
       return getters.filteredBooks.length;

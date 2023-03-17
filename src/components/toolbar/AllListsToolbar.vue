@@ -149,44 +149,16 @@ export default {
       mapFilterJobStatus:             'gridFilters/mapFilterJobStatus',
       mapFilterImportStatus:          'gridFilters/mapFilterImportStatus',
       mapFilterProjectTag:            'gridFilters/mapFilterProjectTag',
+      mapFilterLanguages:             'gridFilters/mapFilterLanguages',
       filteredBooksCounter:           'gridFilters/filteredBooksCounter',
       filteredCollectionsCounter:     'gridFilters/filteredCollectionsCounter',
       filteredCollectionBooksCounter: 'gridFilters/filteredCollectionBooksCounter',
     }),
-    booksCount () {
-      if (this.allBooks && this.allBooks.length) {
-        const filtered = this.allBooks
-                //.filter(m => !m.collection_id)
-                .filter(m => m.importStatus);
-        return filtered.length;
-      } else {
-        return 0;
-      }
-    },
-    collectionsCount () {
-      if (this.bookCollections && this.bookCollections.length) {
-        const filtered = this.bookCollections
-                //.filter(m => !m.collection_id)
-                .filter(m => m.importStatus);
-        return filtered.length;
-      } else {
-        return 0;
-      }
-    },
-    collectionBooksCount () {
-      if (this.currentCollection._id) {
-        return this.currentCollection.bookids.length;
-      }
-      return 0;
-    },
     currentCollectionHeader () {
       if (this.currentCollection._id) {
         return `${this.currentCollection.title || this.currentCollection._id} (${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})`;
       }
       return '';
-    },
-    mapFilterLanguages () {
-      return Object.entries(Languages).map(([code, name])=>({caption: name, value: code}));
     }
   },
 
