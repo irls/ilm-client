@@ -357,6 +357,11 @@
     <!--<div class="table-row controls-bottom">-->
   </div>
   <div :id="this.block.blockid + '-part-' + this.blockPartIdx + '-toolbar-container'" class="toolbar-container"></div>
+  <CoupletWarningPopup
+    v-if="isCoupletWarningPopupActive"
+    @close="(e) => cancelCoupletUpdate(e)"
+    @save="(e) => saveCoupletChanges(e)"
+  ></CoupletWarningPopup>
 </div>
 </template>
 
@@ -384,11 +389,14 @@ import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
 import RecordingBlock from './block/RecordingBlock';
 import UploadImage from './block/UploadImage'
-var BPromise = require('bluebird');
+const BPromise = require('bluebird');
 import narrationBlockContent from './narrationBlockContent.js'
 import SplitBlockMenu from '../generic/SplitBlockMenu';
+import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 
 Vue.use(v_modal, { dialog: true, dynamic: true });
+
+import Deferred from "@src/mixins/deferred.js";
 
 export default {
   data () {
@@ -452,10 +460,12 @@ export default {
       splitPinSelection: null,
       editingLocked: false,
       pinUpdated: null,
-      maxSplitPoints: 15
+      maxSplitPoints: 15,
+      isCoupletWarningPopupActive: false
     }
   },
   components: {
+    CoupletWarningPopup,
     UploadImage,
     LockedBlockActions,
     FlagComment,
@@ -1520,7 +1530,7 @@ export default {
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
         let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
         if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
-          
+
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
       },
@@ -1585,8 +1595,40 @@ export default {
 //
 //           });
       },
-      assembleBlockProxy: function (check_realign = true, realign = false, check_audio_changes = true) {
+      cancelCoupletUpdate(isDontShowAgain) {
+        this.saveUserChoiceToCookie(isDontShowAgain);
+        this.isCoupletWarningPopupActive.resolve(false);// = false;
+      },
+      saveCoupletChanges(isDontShowAgain) {
+        this.isCoupletWarningPopupActive.resolve(true);// = false;
+        this.saveUserChoiceToCookie(isDontShowAgain);
+      },
+      saveUserChoiceToCookie(isDontShowAgain) {
+        if (isDontShowAgain &&
+          !document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+          document.cookie = 'dontShowAgainCoupletWarning=true';
+        }
+      },
+      async showStopConfirmations(block) {
+        if (block.hasClass('whitespace', 'couplet')) {
+          if (!document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+            this.isCoupletWarningPopupActive = new Deferred();
+            const popResult = await this.isCoupletWarningPopupActive;
+            this.isCoupletWarningPopupActive = false;
+            if (popResult === false) return Promise.reject();
+          }
+        }
+        return Promise.resolve();
+      },
+      assembleBlockProxy: async function (check_realign = true, realign = false, check_audio_changes = true) {
         this.$root.$emit('closeFlagPopup', true);
+
+        try {
+          await this.showStopConfirmations(this.block)
+        } catch(e) {
+          return false;
+        }
+
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
           if (this.isAudioEditing) {

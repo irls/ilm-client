@@ -608,23 +608,12 @@ import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
 //import hljs from 'highlight.js';
 //import VueHighlightJS from 'vue-highlightjs';
-var BPromise = require('bluebird');
+const BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
 //Vue.use(hljs.vuePlugin);
 //Vue.use(VueHighlightJS);
 
-class Deferred {
-  constructor() {
-    this._promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-    this.then = this._promise.then.bind(this._promise);
-    this.catch = this._promise.catch.bind(this._promise);
-    this.finally = this._promise.finally.bind(this._promise);
-    this[Symbol.toStringTag] = 'Promise';
-  }
-}
+import Deferred from "@src/mixins/deferred.js";
 
 export default {
   data () {
@@ -697,7 +686,7 @@ export default {
     }
   },
   components: {
-    CoupletWarningPopup,
+      CoupletWarningPopup,
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
