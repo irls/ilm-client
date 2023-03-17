@@ -121,8 +121,6 @@
       },
       computed: {
         ...mapGetters([
-          'collectionsFilter',
-          'bookFilters',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
@@ -132,7 +130,9 @@
           'adminOrLibrarian',
         ]),
         ...mapGetters({
-          filteredBooks: 'gridFilters/filteredCollectionBooks'
+          booksFilters:      'gridFilters/booksFilters',
+          collectionsFilter: 'gridFilters/collectionsFilter',
+          filteredBooks:     'gridFilters/filteredCollectionBooks'
         }),
         collectionsPage: {
           cache: true,

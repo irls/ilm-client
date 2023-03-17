@@ -126,9 +126,8 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', projectTag: '', multiProjectTag: [], importStatus: [], language: [], jobStatus: ['active']},
     bookSearch: {string: '', resultCounter: 0, searchPointer: 0},
-    defaultBookFilters: {filter: '', projectTag: '', importStatus: [], multiProjectTag: [], language: [], jobStatus: ['active']},
+
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -137,7 +136,6 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: '', jobStatus: 'active', projectTag: ''},
     currentCollection: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
@@ -347,7 +345,6 @@ export const store = new Vuex.Store({
       });
       return state.books_meta;
     },
-    bookFilters: state => state.bookFilters,
     bookSearch: state => state.bookSearch,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -372,7 +369,6 @@ export const store = new Vuex.Store({
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     currentCollectionId: state => state.currentCollectionId,
-    collectionsFilter: state => state.collectionsFilter,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
       let result = [];
@@ -717,16 +713,6 @@ export const store = new Vuex.Store({
       //console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
     },
 
-    SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'projectTag', 'multiProjectTag', 'importStatus', 'language', 'jobStatus'].indexOf(prop) > -1) {
-        state.bookFilters[prop] = obj[prop]
-      }
-    },
-
-    CLEAR_CURRENTBOOK_FILTER (state) {
-      state.bookFilters = Object.assign({}, state.defaultBookFilters);
-    },
-
     // initiateBooks (state, books) {
     //   state.books = books
     //   if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
@@ -859,13 +845,6 @@ export const store = new Vuex.Store({
       state.currentCollection = currentCollection;
       if (state.currentCollection) state.currentCollection.sortBooks();
       state.currentCollectionId = _id;
-    },
-
-    SET_COLLECTIONS_FILTER (state, filter) {
-      for(var field in filter) {
-        state.collectionsFilter[field] = filter[field];
-      }
-      //console.log(state.collectionsFilter)
     },
 
     SET_CURRENT_LIBRARY (state, library) {

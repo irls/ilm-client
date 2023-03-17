@@ -19,12 +19,7 @@
         :toggleMetaVisible="toggleMetaVisible"
         :hasBookSelected="hasBookSelected"
         :metaVisible="metaVisible"/>
-
-      <!--<BooksToolbar v-else-if="listing=='books'"
-        @import_finished="bookImportFinished"
-        :toggleMetaVisible="toggleMetaVisible"
-        :hasBookSelected="hasBookSelected"
-        :metaVisible="metaVisible"/>-->
+        <!--@import_finished="bookImportFinished"-->
 
       <BookReimport v-if="isBookEditRoute && showBookReimport"
         :multiple="false"
@@ -65,7 +60,6 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import Clipboard from 'v-clipboard'
-//import BooksToolbar from './books/BooksToolbar'
 import AllListsToolbar from './toolbar/AllListsToolbar'
 import BookEditToolbar from './books/BookEditToolbar'
 import BookMetaEdit from './books/BookMetaEdit'
@@ -105,7 +99,6 @@ export default {
   },
 
   components: {
-//     BooksToolbar,
     AllListsToolbar,
     BookMetaEdit,
     NoBookSelected,

@@ -2,11 +2,14 @@
 <div class="toolbar books-list-toolbar">
   <div class="toolbar-first-row">
     <!-- Meta Filter -->
-    <input v-model="bookFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.filter='';"></i>
+    <input v-model="booksFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
-    <input v-model="bookFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="bookFilters.projectTag='';"></i>
+    <input v-model="booksFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.projectTag='';"></i>
+
+    <input v-model="booksFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.projectTag='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
       :options="mapFilterProjectTag"
@@ -15,7 +18,7 @@
       @change="filterChange" />-->
 
     <!-- Language Dropdown -->
-    <!--<select v-model="bookFilters.language" @change="filterChange()">
+    <!--<select v-model="booksFilters.language" @change="filterChange()">
       <option value="">Any language</option>
       <option v-for="(name, code) in languages" :value="code">{{name}}</option>
     </select>-->
@@ -35,7 +38,7 @@
       @change="filterChange" />
 
     <!--<template v-if="adminOrLibrarian">
-      <select v-model="bookFilters.jobStatus" @change="filterChange()">
+      <select v-model="booksFilters.jobStatus" @change="filterChange()">
         <option value="">Not filtered</option>
         <option value="active">Active</option>
         <option value="archived">Archived</option>
@@ -135,12 +138,13 @@ export default {
       'allBooks',
       'bookCollections',
       'adminOrLibrarian',
-      'bookFilters',
       'currentBookMeta',
       'currentCollection',
       'allowCollectionsEdit',
     ]),
     ...mapGetters({
+      booksFilters:                   'gridFilters/booksFilters',
+      collectionsFilter:              'gridFilters/collectionsFilter',
       multiBookFilters:               'gridFilters/multiBookFilters',
       mapFilterJobStatus:             'gridFilters/mapFilterJobStatus',
       mapFilterImportStatus:          'gridFilters/mapFilterImportStatus',
@@ -196,7 +200,7 @@ export default {
         return acc;
       }, {});
       //console.log(`filterChange.newFilters: `, newFilters);
-      this.$store.commit('SET_CURRENTBOOK_FILTER', newFilters);
+      this.$store.commit('gridFilters/set_booksFilters', newFilters);
     },
     convertFilters () {
 

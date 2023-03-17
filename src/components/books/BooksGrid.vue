@@ -40,11 +40,11 @@ export default {
   computed: {
 
     ...mapGetters([
-      'bookFilters',
       'allBooks',
       'adminOrLibrarian'
     ]),
     ...mapGetters({
+      bookdFilters:   'gridFilters/booksFilters',
       filteredBooks: 'gridFilters/filteredBooks'
     }),
 
@@ -200,7 +200,7 @@ export default {
         }
       }
     },
-    bookFilters: {
+    booksFilters: {
       deep: true,
       handler(newVal, oldVal) {
         if (this.$route.params.hasOwnProperty('bookid')) {

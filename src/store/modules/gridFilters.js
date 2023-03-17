@@ -3,6 +3,30 @@ import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
 export default {
   namespaced: true,
   state: {
+
+    booksFilters: {
+      filter: '',
+      projectTag: '',
+      multiProjectTag: [],
+      importStatus: [],
+      language: [],
+      jobStatus: ['active']
+    },
+    defaultBooksFilters: {
+      filter: '',
+      projectTag: '',
+      importStatus: [],
+      multiProjectTag: [],
+      language: [],
+      jobStatus: ['active']
+    },
+    collectionsFilters: {
+      title: '',
+      language: '',
+      jobStatus: 'active',
+      projectTag: ''
+    },
+
     multiBookFilters: {
       language: [],
       jobStatus: [{caption: 'Active', value: 'active'}],
@@ -36,10 +60,12 @@ export default {
     ],
   },
   getters: {
-    multiBookFilters:               state=>state.multiBookFilters,
-    mapFilterJobStatus:             state=>state.mapFilterJobStatus,
-    mapFilterImportStatus:          state=>state.mapFilterImportStatus,
-    mapFilterProjectTag:            state=>state.mapFilterProjectTag,
+    booksFilters:                   state => state.booksFilters,
+    collectionsFilters:             state => state.collectionsFilters,
+    multiBookFilters:               state => state.multiBookFilters,
+    mapFilterJobStatus:             state => state.mapFilterJobStatus,
+    mapFilterImportStatus:          state => state.mapFilterImportStatus,
+    mapFilterProjectTag:            state => state.mapFilterProjectTag,
 
     filteredBooksCounter: (state, getters) => {
       return getters.filteredBooks.length;
@@ -54,18 +80,18 @@ export default {
     filteredBooks: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.allBooks.length) return [];
       const filteredbooks = rootGetters.allBooks
-        .filter(book => (rootState.bookFilters.language.length == 0 || (rootState.bookFilters.language).indexOf(book.language) >= 0))
-        .filter(book => (rootState.bookFilters.importStatus.length == 0 || (rootState.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
-        .filter(book => (rootState.bookFilters.jobStatus.length == 0 || (rootState.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
+        .filter(book => (state.booksFilters.language.length == 0 || (state.booksFilters.language).indexOf(book.language) >= 0))
+        .filter(book => (state.booksFilters.importStatus.length == 0 || (state.booksFilters.importStatus).indexOf(book.importStatus) >= 0))
+        .filter(book => (state.booksFilters.jobStatus.length == 0 || (state.booksFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
           const str = prepareForFilter(`${book.title} ${book.subtitle} ${book.slug} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-          const find = prepareForFilter(rootState.bookFilters.filter);
+          const find = prepareForFilter(state.booksFilters.filter);
           return (str.indexOf(find) > -1)
         })
         .filter(book => {
           const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
-          const find = prepareForFilter(rootState.bookFilters.projectTag);
+          const find = prepareForFilter(state.booksFilters.projectTag);
           return (str.indexOf(find) > -1)
         })
         //.filter(book => !book.collection_id)
@@ -75,11 +101,11 @@ export default {
     filteredCollections: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.bookCollections.length) return [];
       let filteredCollections = rootGetters.bookCollections
-          .filter(coll => (rootState.bookFilters.language.length == 0 || (rootState.bookFilters.language).indexOf(coll.language) >= 0))
+          .filter(coll => (state.booksFilters.language.length == 0 || (state.booksFilters.language).indexOf(coll.language) >= 0))
           .filter(coll => {
             const collAuthors = Array.isArray(coll.author) ? coll.author.join('|') : coll.author;
             let str = prepareForFilter(`${coll.title} ${coll.subtitle} ${coll.slug} ${collAuthors} ${coll._id} ${coll.category}`); // ${coll.description}
-            let find = prepareForFilter(rootState.bookFilters.filter);
+            let find = prepareForFilter(state.booksFilters.filter);
             return (str.indexOf(find) > -1)
           })
       return filteredCollections;
@@ -88,18 +114,18 @@ export default {
     filteredCollectionBooks: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.currentCollection._id) return [];
       const filteredbooks = rootGetters.currentCollection.books_list
-        .filter(book => (rootState.bookFilters.language.length == 0 || (rootState.bookFilters.language).indexOf(book.language) >= 0))
-        .filter(book => (rootState.bookFilters.importStatus.length == 0 || (rootState.bookFilters.importStatus).indexOf(book.importStatus) >= 0))
-        .filter(book => (rootState.bookFilters.jobStatus.length == 0 || (rootState.bookFilters.jobStatus).indexOf(book.job_status) >= 0))
+        .filter(book => (state.booksFilters.language.length == 0 || (state.booksFilters.language).indexOf(book.language) >= 0))
+        .filter(book => (state.booksFilters.importStatus.length == 0 || (state.booksFilters.importStatus).indexOf(book.importStatus) >= 0))
+        .filter(book => (state.booksFilters.jobStatus.length == 0 || (state.booksFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
           const str = prepareForFilter(`${book.title} ${book.subtitle} ${book.slug} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-          const find = prepareForFilter(rootState.bookFilters.filter);
+          const find = prepareForFilter(state.booksFilters.filter);
           return (str.indexOf(find) > -1)
         })
         .filter(book => {
           const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
-          const find = prepareForFilter(rootState.bookFilters.projectTag);
+          const find = prepareForFilter(state.booksFilters.projectTag);
           return (str.indexOf(find) > -1)
         })
         //.filter(book => !book.collection_id)
@@ -107,9 +133,27 @@ export default {
     }
   },
   mutations: {
-    multiBookFilters(state, payload) {
+    set_multiBookFilters(state, payload) {
       state.multiBookFilters = payload;
-    }
+    },
+
+    set_booksFilters (state, obj) { // replace any property of bookFilters
+      for (var prop in obj) if (['filter', 'projectTag', 'multiProjectTag', 'importStatus', 'language', 'jobStatus'].indexOf(prop) > -1) {
+        state.booksFilters[prop] = obj[prop]
+      }
+    },
+
+    set_clearBookFilters (state) {
+      state.bookFilters = Object.assign({}, state.defaultBooksFilters);
+    },
+
+    set_collectionsFilters (state, filter) {
+      for(var field in filter) {
+        state.collectionsFilters[field] = filter[field];
+      }
+      //console.log(state.collectionsFilter)
+    },
   },
+
   actions: {}
 }

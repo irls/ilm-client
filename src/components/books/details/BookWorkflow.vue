@@ -116,7 +116,12 @@
         },
         cache: false
       },
-      ...mapGetters(['adminOrLibrarian', 'currentJobInfo', 'currentCollectionId', 'bookFilters', 'collectionsFilter', 'activeTasksCount'])
+      ...mapGetters(['adminOrLibrarian', 'currentJobInfo', 'currentCollectionId', 'activeTasksCount']),
+      ...mapGetters({
+        booksFilters:      'gridFilters/booksFilters',
+        collectionsFilter: 'gridFilters/collectionsFilter'
+      }),
+
     },
     methods: {
       archive(check = true) {
@@ -233,7 +238,7 @@
                 .then(() => {
                   if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1)
                   if (!this.currentCollectionId) {
-                    if (this.bookFilters.jobStatus !== '') {
+                    if (this.booksFilters.jobStatus !== '') {
                       this.$router.replace({path: '/books', params: {}});
                     }
                   } else {

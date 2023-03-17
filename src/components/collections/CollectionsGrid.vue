@@ -77,12 +77,12 @@
           'allBooks',
           'currentBookMeta',
           'currentCollection',
-          'bookFilters',
-          'collectionsFilter',
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
         ...mapGetters({
+          booksFilters:        'gridFilters/booksFilters',
+          collectionsFilter:   'gridFilters/collectionsFilter',
           filteredCollections: 'gridFilters/filteredCollections'
         }),
         headers: {
@@ -147,7 +147,7 @@
             }
           }
         },
-        bookFilters: { //collectionsFilter
+        booksFilters: { //collectionsFilter
           deep: true,
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('collectionid')) {
