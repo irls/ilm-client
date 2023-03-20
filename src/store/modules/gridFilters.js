@@ -70,9 +70,52 @@ export default {
     booksFilters:                   state => state.booksFilters,
     collectionsFilters:             state => state.collectionsFilters,
     multiBookFilters:               state => state.multiBookFilters,
-    mapFilterJobStatus:             state => state.mapFilterJobStatus,
-    mapFilterImportStatus:          state => state.mapFilterImportStatus,
+
     mapFilterProjectTag:            state => state.mapFilterProjectTag,
+
+    mapFilterJobStatus: (state, getters, rootState, rootGetters) => {
+      if (!rootGetters.allBooks.length) {
+        return state.mapFilterJobStatus;
+      }
+      const availableJobStatuses = new Set();
+      rootGetters.allBooks.forEach((book)=>{
+        availableJobStatuses.add(book.job_status);
+      });
+      if (false) {
+        state.mapFilterJobStatus.forEach((el)=>{
+          availableJobStatuses.add(el.value);
+        });
+      }
+      if (state.booksFilters.jobStatus.length) {
+        state.booksFilters.jobStatus = state.booksFilters.jobStatus.filter((code)=>availableJobStatuses.has(code));
+      }
+      return Array.from(availableJobStatuses).map((code)=>{
+        const captionFound = state.mapFilterJobStatus.find((el)=>el.value === code);
+        return {caption: (captionFound ? captionFound.caption : code), value: code}
+      });
+    },
+
+    mapFilterImportStatus: (state, getters, rootState, rootGetters) => {
+      if (!rootGetters.allBooks.length) {
+        return state.mapFilterImportStatus;
+      }
+      const availableImportStatuses = new Set();
+      rootGetters.allBooks.forEach((book)=>{
+        availableImportStatuses.add(book.importStatus);
+      });
+      if (false) {
+        state.mapFilterImportStatus.forEach((el)=>{
+          availableImportStatuses.add(el.value);
+        });
+      }
+      if (state.booksFilters.importStatus.length) {
+        state.booksFilters.importStatus = state.booksFilters.importStatus.filter((code)=>availableImportStatuses.has(code));
+      }
+      return Array.from(availableImportStatuses).map((code)=>{
+        const captionFound = state.mapFilterImportStatus.find((el)=>el.value === code);
+        return {caption: (captionFound ? captionFound.caption : code), value: code}
+      });
+    },
 
     mapFilterLanguages: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.allBooks.length) {
