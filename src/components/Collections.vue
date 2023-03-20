@@ -154,7 +154,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
+          'currentCollection', 'currentBookMeta', 'collectionsFilters', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
         ])
       },
       watch: {

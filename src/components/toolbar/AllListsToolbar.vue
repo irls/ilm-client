@@ -2,23 +2,20 @@
 <div class="toolbar books-list-toolbar">
   <div class="toolbar-first-row">
     <!-- Meta Filter -->
-    <input v-model="booksFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter by Title / Author / Category" @keyup="filterChange"></input>
+    <input v-model="booksFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Books" @keyup="filterChangeBooks"></input>
     <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
-    <input v-model="booksFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.projectTag='';"></i>
-
-    <input v-model="booksFilters.projectTag" type="text" class="form-control" style="width: 16em; padding-right:30px;" placeholder="Filter by Editor or Project tag" @keyup="filterChange"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.projectTag='';"></i>
+    <input v-model="collectionsFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Collections" @keyup="filterChangeCollections"></input>
+    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
       :options="mapFilterProjectTag"
       optionLabel="caption" placeholder="All projects"
       display="chip" :showToggleAll="false"
-      @change="filterChange" />-->
+      @change="filterChangeBooks" />-->
 
     <!-- Language Dropdown -->
-    <!--<select v-model="booksFilters.language" @change="filterChange()">
+    <!--<select v-model="booksFilters.language" @change="filterChangeBooks">
       <option value="">Any language</option>
       <option v-for="(name, code) in languages" :value="code">{{name}}</option>
     </select>-->
@@ -26,19 +23,19 @@
     <!-- Language Dropdown -->
     <MultiSelect v-model="multiBookFilters.language"
       :options="mapFilterLanguages"
-      optionLabel="caption" placeholder="Any language"
+      optionLabel="caption" placeholder="Language"
       display="chip" :showToggleAll="false"
-      @change="filterChange" />
+      @change="filterChangeBooks" />
 
     <!-- Book status Dropdown -->
     <MultiSelect v-model="multiBookFilters.importStatus"
       :options="mapFilterImportStatus"
-      optionLabel="caption" placeholder="Any status"
+      optionLabel="caption" placeholder="Status"
       display="chip" :showToggleAll="false"
-      @change="filterChange" />
+      @change="filterChangeBooks" />
 
     <!--<template v-if="adminOrLibrarian">
-      <select v-model="booksFilters.jobStatus" @change="filterChange()">
+      <select v-model="booksFilters.jobStatus" @change="filterChangeBooks">
         <option value="">Not filtered</option>
         <option value="active">Active</option>
         <option value="archived">Archived</option>
@@ -50,9 +47,9 @@
     <MultiSelect v-if="adminOrLibrarian"
       v-model="multiBookFilters.jobStatus"
       :options="mapFilterJobStatus"
-      optionLabel="caption" placeholder="Any job status"
+      optionLabel="caption" placeholder="State"
       display="chip" :showToggleAll="false"
-      @change="filterChange" />
+      @change="filterChangeBooks" />
 
   </div>
 
@@ -144,7 +141,7 @@ export default {
     ]),
     ...mapGetters({
       booksFilters:                   'gridFilters/booksFilters',
-      collectionsFilter:              'gridFilters/collectionsFilter',
+      collectionsFilters:             'gridFilters/collectionsFilters',
       multiBookFilters:               'gridFilters/multiBookFilters',
       mapFilterJobStatus:             'gridFilters/mapFilterJobStatus',
       mapFilterImportStatus:          'gridFilters/mapFilterImportStatus',
@@ -163,7 +160,7 @@ export default {
   },
 
   methods: {
-    filterChange (val) {
+    filterChangeBooks (val) {
       /*if (this.$route.params.hasOwnProperty('bookid')) {
         this.$router.replace({ path: '/books'});
       }*/
@@ -171,8 +168,16 @@ export default {
         acc[key] = val.map((el)=>el.value);
         return acc;
       }, {});
-      //console.log(`filterChange.newFilters: `, newFilters);
+      //console.log(`filterChangeBooks.newFilters: `, newFilters);
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
+    },
+    filterChangeCollections (val) {
+      const newFilters = Object.entries(this.multiBookFilters).reduce((acc, [key, val])=>{
+        acc[key] = val.map((el)=>el.value);
+        return acc;
+      }, {});
+      console.log(`filterChange.newFilters: `, newFilters);
+      this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
     },
     convertFilters () {
 

@@ -118,8 +118,8 @@
       },
       ...mapGetters(['adminOrLibrarian', 'currentJobInfo', 'currentCollectionId', 'activeTasksCount']),
       ...mapGetters({
-        booksFilters:      'gridFilters/booksFilters',
-        collectionsFilter: 'gridFilters/collectionsFilter'
+        booksFilters:       'gridFilters/booksFilters',
+        collectionsFilters: 'gridFilters/collectionsFilters'
       }),
 
     },
@@ -236,16 +236,17 @@
             .then(() => {
               return this.getCurrentJobInfo()
                 .then(() => {
-                  if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1)
+                  //TODO check!
+                  /*if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1)
                   if (!this.currentCollectionId) {
                     if (this.booksFilters.jobStatus !== '') {
                       this.$router.replace({path: '/books', params: {}});
                     }
                   } else {
-                    if (this.collectionsFilter.jobStatus !== '') {
+                    if (this.collectionsFilters.jobStatus !== '') {
                       this.$router.replace({name: 'Collection', params: {collectionid: this.currentCollectionId}});
                     }
-                  }
+                  }*/
                   this.archiveInProcess = false;
                 })
                 .catch(err => {

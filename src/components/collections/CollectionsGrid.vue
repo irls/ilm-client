@@ -81,9 +81,9 @@
           'adminOrLibrarian',
         ]),
         ...mapGetters({
-          booksFilters:        'gridFilters/booksFilters',
-          collectionsFilter:   'gridFilters/collectionsFilter',
-          filteredCollections: 'gridFilters/filteredCollections'
+          booksFilters:         'gridFilters/booksFilters',
+          collectionsFilters:   'gridFilters/collectionsFilters',
+          filteredCollections:  'gridFilters/filteredCollections'
         }),
         headers: {
           get() {
@@ -147,7 +147,7 @@
             }
           }
         },
-        booksFilters: { //collectionsFilter
+        booksFilters: { //collectionsFilters
           deep: true,
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('collectionid')) {

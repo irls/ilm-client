@@ -125,14 +125,14 @@
           'allBooks',
           'currentBookMeta',
           'currentCollection',
-          'collectionsFilter',
+          'collectionsFilters',
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
         ...mapGetters({
-          booksFilters:      'gridFilters/booksFilters',
-          collectionsFilter: 'gridFilters/collectionsFilter',
-          filteredBooks:     'gridFilters/filteredCollectionBooks'
+          booksFilters:       'gridFilters/booksFilters',
+          collectionsFilters: 'gridFilters/collectionsFilters',
+          filteredBooks:      'gridFilters/filteredCollectionBooks'
         }),
         collectionsPage: {
           cache: true,
@@ -156,9 +156,9 @@
 
             collections[0].books_list = this.filteredBooks;
 
-            /*for (const field in this.collectionsFilter) {
-              if (this.collectionsFilter[field].length > 0) {
-                let filter = prepareForFilter(this.collectionsFilter[field]);
+            /*for (const field in this.collectionsFilters) {
+              if (this.collectionsFilters[field].length > 0) {
+                let filter = prepareForFilter(this.collectionsFilters[field]);
                 switch (field) {
                   case 'title':
                     collections = collections.filter(collection => {
@@ -321,7 +321,7 @@
             }
           }
         },
-        collectionsFilter: {
+        collectionsFilters: {
           deep: true,
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('bookid')) {
