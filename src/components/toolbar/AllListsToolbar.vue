@@ -305,6 +305,7 @@ export default {
     this.toggleMetaVisible({force: true});
     await Vue.nextTick();
     this.syncRouteWithTab();
+    this.changeFilterVisual();
   },
   watch:{
     async '$route' ($to, $from) {
