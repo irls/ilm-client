@@ -1,6 +1,6 @@
 <template>
 <div class="toolbar books-list-toolbar">
-  <div class="toolbar-first-row">
+  <div class="toolbar-first-row" ref="toolbarFirstRow">
     <!-- Meta Filter -->
     <input v-model="booksFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Books" @keyup="filterChangeBooks"></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
@@ -170,6 +170,7 @@ export default {
       }, {});
       //console.log(`filterChangeBooks.newFilters: `, newFilters);
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
+      this.changeFilterVisual();
     },
     filterChangeCollections (val) {
       const newFilters = Object.entries(this.multiBookFilters).reduce((acc, [key, val])=>{
@@ -180,6 +181,38 @@ export default {
     },
     convertFilters () {
 
+    },
+    changeFilterVisual() {
+      Vue.nextTick(()=>{
+        const vFilters = this.$refs.toolbarFirstRow.querySelectorAll('.p-multiselect-label-container .p-multiselect-label');
+        for (const vContainer of vFilters) {
+          const vTokens = vContainer.querySelectorAll('.p-multiselect-token');
+          const maxTokens = 3;
+          for (const [vIndex, vToken] of vTokens.entries()) {
+            if (vIndex < maxTokens) {
+              vToken.style.display = 'inline-block';
+            } else {
+              vToken.style.display = 'none';
+            }
+          }
+          const moreCounterVal = vTokens.length - maxTokens;
+          const moreCounterPrev = vContainer.querySelector('.p-multiselect-more-counter');
+          if (moreCounterVal > 0) {
+            if (moreCounterPrev) {
+              moreCounterPrev.innerText = `+${moreCounterVal}`;
+            } else {
+              const counter = document.createElement('span');
+              counter.className = 'p-multiselect-more-counter';
+              counter.innerText = `+${moreCounterVal}`;
+              vContainer.appendChild(counter);
+            }
+          } else {
+            if (moreCounterPrev) {
+              vContainer.removeChild(moreCounterPrev);
+            }
+          }
+        }
+      })
     },
     displayBook () {
       this.$router.push('/books/' + this.$store.state.currentBookMeta.bookid + '/display')
@@ -360,9 +393,15 @@ input {width: 12em}
     justify-content: space-between;
     .p-tabview {
       .p-tabview-nav {
+        .p-tabview-nav-link {
+          font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+          font-size: 1.0em;
+          font-weight: 400;
+        }
         li.p-highlight {
           .p-tabview-nav-link {
             background: #eaf1fc;
+            font-weight: 600;
           }
         }
       }
