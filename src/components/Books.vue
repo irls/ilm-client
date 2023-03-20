@@ -617,6 +617,18 @@ i.ico {
       right: -2px;
     }
   }
+
+  &.ico-clear-filter {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    &:before {
+      content: url('/static/books_list/clear-filter-button.png');
+      position: relative;
+      left: 6px;
+    }
+  }
 }
 
 </style>

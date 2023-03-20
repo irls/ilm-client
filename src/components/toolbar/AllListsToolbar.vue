@@ -3,10 +3,10 @@
   <div class="toolbar-first-row">
     <!-- Meta Filter -->
     <input v-model="booksFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Books" @keyup="filterChangeBooks"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
+    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
     <input v-model="collectionsFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Collections" @keyup="filterChangeCollections"></input>
-    <i class="fa fa-times-circle-o btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
+    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
       :options="mapFilterProjectTag"
@@ -176,7 +176,6 @@ export default {
         acc[key] = val.map((el)=>el.value);
         return acc;
       }, {});
-      console.log(`filterChange.newFilters: `, newFilters);
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
     },
     convertFilters () {
@@ -333,11 +332,10 @@ input {width: 12em}
 .form-control {display: inline}
 
 .btn-inside {
-    margin-left: -30px;
-    margin-top: 7px;
-    z-index: 999;
-    position: absolute;
-
+  margin-left: -30px;
+  margin-top: 7px;
+  z-index: 999;
+  position: absolute;
 }
 
 </style>
@@ -345,7 +343,17 @@ input {width: 12em}
 <style lang="less">
 .books-list-toolbar {
   .toolbar-first-row {
-
+    .p-multiselect {
+      min-width: 14rem;
+      &.p-multiselect-chip {
+        .p-multiselect-token {
+          border-radius: 4px;
+          .p-multiselect-token-icon {
+            display: none;
+          }
+        }
+      }
+    }
   }
   .toolbar-second-row {
     display: flex;
