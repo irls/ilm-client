@@ -335,7 +335,13 @@
               if (found) {
                 this.scrollToRow(bookid);
               } else {
-                this.$router.replace({ path: '/collections' });
+                if (collectionid) {
+                  this.$router.push({ name: 'CollectionBooks', params: {
+                    collectionid: collectionid
+                  } });
+                } else {
+                  this.$router.push({ name: 'Collections' });
+                }
               }
             } else {
               this.selectedBooks = []; // clean old selection

@@ -75,7 +75,7 @@ export default {
 
     mapFilterJobStatus: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.allBooks.length) {
-        return state.mapFilterJobStatus;
+        return [];//state.mapFilterJobStatus;
       }
       const availableJobStatuses = new Set();
       rootGetters.allBooks.forEach((book)=>{
@@ -97,7 +97,7 @@ export default {
 
     mapFilterImportStatus: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.allBooks.length) {
-        return state.mapFilterImportStatus;
+        return [];//state.mapFilterImportStatus;
       }
       const availableImportStatuses = new Set();
       rootGetters.allBooks.forEach((book)=>{
@@ -119,7 +119,7 @@ export default {
 
     mapFilterLanguages: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.allBooks.length) {
-        return Object.entries(Languages).map(([code, name])=>({caption: name, value: code}));
+        return [];//Object.entries(Languages).map(([code, name])=>({caption: name, value: code}));
       }
       const availableLanguages = new Set();
       rootGetters.allBooks.forEach((book)=>{

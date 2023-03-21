@@ -423,7 +423,7 @@ input.form-control {
 
 .btn-inside {
   margin-left: -30px;
-  margin-top: 7px;
+  margin-top: 6px;
   z-index: 999;
   position: absolute;
 }
