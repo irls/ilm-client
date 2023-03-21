@@ -73,17 +73,19 @@ Features:
       </tr>
     </draggable>
   </table>
-    <div class="row" v-if="noPages.length > 1">
-      <div class="text-center">
-        <ul class="pagination">
-          <li :class="{disabled: (currentPage === 0)}"><a href="#" @click="previous">Previous</a></li>
-          <template>
-            <li v-for="page in noPages" :class="{active: page === currentPage}">
-              <a href="#" @click="goToPage(page, $event)">{{page + 1}}</a>
-            </li>
-          </template>
-          <li :class="{disabled: (currentPage + 1 === noPages.length)}"><a href="#" @click="next">Next</a></li>
-        </ul>
+    <div class="container-fluid" v-if="noPages.length > 1">
+      <div class="row">
+        <div class="text-center">
+          <ul class="pagination">
+            <li :class="{disabled: (currentPage === 0)}"><a href="#" @click="previous">Previous</a></li>
+            <template>
+              <li v-for="page in noPages" :class="{active: page === currentPage}">
+                <a href="#" @click="goToPage(page, $event)">{{page + 1}}</a>
+              </li>
+            </template>
+            <li :class="{disabled: (currentPage + 1 === noPages.length)}"><a href="#" @click="next">Next</a></li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
