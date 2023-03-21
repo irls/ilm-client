@@ -380,10 +380,6 @@ select {
   padding: 3px; height: 34px;
 }
 
-input.form-control {
-  height: 34px;
-}
-
 .btn {
   margin-right: .5em;
   vertical-align: top;
@@ -413,7 +409,17 @@ img.bookstack {
 
 input {width: 12em}
 
-.form-control {display: inline}
+input.form-control {
+  display: inline;
+  box-shadow: none;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  height: 32px;
+  &:hover {
+    box-shadow: none;
+    border: 1px solid #66afe9;
+  }
+}
 
 .btn-inside {
   margin-left: -30px;
@@ -427,12 +433,23 @@ input {width: 12em}
 <style lang="less">
 .books-list-toolbar {
   .toolbar-first-row {
+    margin-bottom: 1px;
+
     .form-control.book-filter {
       width: 17.5em;
       padding-right:30px;
     }
     .p-multiselect {
       min-width: 14rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-shadow: none;
+
+      &:hover, &.p-focus {
+        box-shadow: none;
+        border: 1px solid #66afe9;
+      }
+
       &.p-multiselect-chip {
         .p-multiselect-token {
           border-radius: 4px;
