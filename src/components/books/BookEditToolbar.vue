@@ -1,5 +1,5 @@
 <template>
-<div class="toolbar-first-row">
+<div class="toolbar toolbar-first-row">
 
   <h3 v-if="currentBook" class='title'>
     <i class="fa fa-minus-square-o -smaller-uncheck" aria-hidden="true"

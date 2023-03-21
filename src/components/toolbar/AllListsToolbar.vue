@@ -1,17 +1,17 @@
 <template>
-<div class="toolbar books-list-toolbar">
+<div class="books-list-toolbar">
   <div class="toolbar-first-row" ref="toolbarFirstRow">
     <!-- Meta Filter -->
     <input placeholder="Filter by Book"
       :value="booksFilters.filter"
       type="text" class="form-control book-filter"
-      @keyup="filterChangeBooksThrottle('filter', $event)" ></input>
+      @keyup="filterChangeBooksDebounce('filter', $event)" ></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
     <input placeholder="Filter by Collection"
       :value="collectionsFilters.filter"
       type="text" class="form-control book-filter"
-      @keyup="filterChangeCollectionsThrottle('filter', $event)"></input>
+      @keyup="filterChangeCollectionsDebounce('filter', $event)"></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
@@ -181,7 +181,7 @@ export default {
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
       this.changeFilterVisual2();
     },
-    filterChangeBooksThrottle: _.throttle(function (key, $event) {
+    filterChangeBooksDebounce: _.debounce(function (key, $event) {
       this.filterChangeBooks(key, $event)
     }, 300),
 
@@ -195,7 +195,7 @@ export default {
       }
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
     },
-    filterChangeCollectionsThrottle: _.throttle(function (key, $event) {
+    filterChangeCollectionsDebounce: _.debounce(function (key, $event) {
       this.filterChangeCollections(key, $event)
     }, 300),
 

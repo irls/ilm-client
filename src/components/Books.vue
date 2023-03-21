@@ -389,15 +389,15 @@ export default {
     .toolbar {
       justify-content: space-between;
       display: flex;
-      flex-direction: column;
+      /*flex-direction: column;*/
       box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
       padding-left: 4px;
       margin-bottom: 3px;
 
-      /*.pull-right {
+      .pull-right {
         min-width: 460px;
         text-align: right;
-      }*/
+      }
 
       .title {
         white-space: nowrap;
