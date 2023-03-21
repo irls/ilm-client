@@ -5,13 +5,13 @@
     <input placeholder="Filter by Book"
       v-model="booksFilters.filter"
       type="text" class="form-control book-filter"
-      @keyup="filterChangeBooks" ></input>
+      @change="filterChangeBooks" ></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
     <input placeholder="Filter by Collection"
       v-model="collectionsFilters.filter"
       type="text" class="form-control book-filter"
-      @keyup="filterChangeCollections"></input>
+      @change="filterChangeCollections"></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
