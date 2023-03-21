@@ -2,10 +2,16 @@
 <div class="toolbar books-list-toolbar">
   <div class="toolbar-first-row" ref="toolbarFirstRow">
     <!-- Meta Filter -->
-    <input v-model="booksFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Books" @keyup="filterChangeBooks"></input>
+    <input placeholder="Filter by Book"
+      v-model="booksFilters.filter"
+      type="text" class="form-control book-filter"
+      @keyup="filterChangeBooks" ></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
-    <input v-model="collectionsFilters.filter" type="text" class="form-control" style="width: 17.5em; padding-right:30px;" placeholder="Filter Collections" @keyup="filterChangeCollections"></input>
+    <input placeholder="Filter by Collection"
+      v-model="collectionsFilters.filter"
+      type="text" class="form-control book-filter"
+      @keyup="filterChangeCollections"></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
@@ -21,14 +27,16 @@
     </select>-->
 
     <!-- Language Dropdown -->
-    <MultiSelect v-model="multiBookFilters.language"
+    <MultiSelect v-if="mapFilterLanguages.length > 1"
+      v-model="multiBookFilters.language"
       :options="mapFilterLanguages"
       optionLabel="caption" placeholder="Language"
       display="chip" :showToggleAll="false"
       @change="filterChangeBooks" />
 
     <!-- Book status Dropdown -->
-    <MultiSelect v-model="multiBookFilters.importStatus"
+    <MultiSelect v-if="mapFilterImportStatus.length > 1"
+      v-model="multiBookFilters.importStatus"
       :options="mapFilterImportStatus"
       optionLabel="caption" placeholder="Status"
       display="chip" :showToggleAll="false"
@@ -44,7 +52,7 @@
       </select> &nbsp;
     </template>-->
 
-    <MultiSelect v-if="adminOrLibrarian"
+    <MultiSelect v-if="adminOrLibrarian && mapFilterJobStatus.length > 1"
       v-model="multiBookFilters.jobStatus"
       :options="mapFilterJobStatus"
       optionLabel="caption" placeholder="State"
@@ -377,6 +385,10 @@ input {width: 12em}
 <style lang="less">
 .books-list-toolbar {
   .toolbar-first-row {
+    .form-control.book-filter {
+      width: 17.5em;
+      padding-right:30px;
+    }
     .p-multiselect {
       min-width: 14rem;
       &.p-multiselect-chip {
