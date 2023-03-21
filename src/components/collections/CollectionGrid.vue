@@ -242,12 +242,12 @@
               {
                 title: 'Published',
                 path: 'pub_ver',
-                addClass: 'width-150'
+                addClass: 'width-135'
               },
               {
                 title: 'Updated',
                 path: 'cur_ver',
-                addClass: 'width-150'
+                addClass: 'width-135'
               },
               {
                 title: 'Status',

@@ -301,6 +301,9 @@ Features:
   .width-150 {
     width:150px;
   }
+  .width-135 {
+    width:135px;
+  }
   .width-100 {
     width:100px;
   }

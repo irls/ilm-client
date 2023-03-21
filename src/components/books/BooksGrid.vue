@@ -98,12 +98,12 @@ export default {
           {
             title: 'Published',
             path: 'pub_ver',
-            addClass: 'width-150'
+            addClass: 'width-135'
           },
           {
             title: 'Updated',
             path: 'cur_ver',
-            addClass: 'width-150'
+            addClass: 'width-135'
           },
           {
             title: 'Status',
@@ -274,10 +274,8 @@ export default {
 
 <style>
   #books_grid {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: auto;
+    /*width: 100%;*/
+    /*height: 100%;*/
     min-width: 900px;
     padding-top: 4px;
   }

@@ -410,7 +410,7 @@ export default {
       flex-grow: 2;
       display: flex;
       flex-direction: row;
-      overflow-y: hidden;
+      overflow: auto;
 
       .container-fluid {
         width: 100%;
