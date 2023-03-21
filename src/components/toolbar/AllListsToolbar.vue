@@ -3,15 +3,15 @@
   <div class="toolbar-first-row" ref="toolbarFirstRow">
     <!-- Meta Filter -->
     <input placeholder="Filter by Book"
-      v-model="booksFilters.filter"
+      :value="booksFilters.filter"
       type="text" class="form-control book-filter"
-      @change="filterChangeBooks" ></input>
+      @keyup="filterChangeBooksThrottle('filter', $event)" ></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
 
     <input placeholder="Filter by Collection"
-      v-model="collectionsFilters.filter"
+      :value="collectionsFilters.filter"
       type="text" class="form-control book-filter"
-      @change="filterChangeCollections"></input>
+      @keyup="filterChangeCollectionsThrottle('filter', $event)"></input>
     <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
@@ -29,16 +29,16 @@
     <!-- Language Dropdown -->
     <MultiSelect v-if="mapFilterLanguages.length > 1"
       v-model="multiBookFilters.language"
-      :options="mapFilterLanguages"
-      optionLabel="caption" placeholder="Language"
+      :options="mapFilterLanguages" optionLabel="caption"
+      data-captions="Languages" placeholder="Language"
       display="chip" :showToggleAll="false"
       @change="filterChangeBooks" />
 
     <!-- Book status Dropdown -->
     <MultiSelect v-if="mapFilterImportStatus.length > 1"
       v-model="multiBookFilters.importStatus"
-      :options="mapFilterImportStatus"
-      optionLabel="caption" placeholder="Status"
+      :options="mapFilterImportStatus" optionLabel="caption"
+      data-captions="Statuses" placeholder="Status"
       display="chip" :showToggleAll="false"
       @change="filterChangeBooks" />
 
@@ -54,8 +54,8 @@
 
     <MultiSelect v-if="adminOrLibrarian && mapFilterJobStatus.length > 1"
       v-model="multiBookFilters.jobStatus"
-      :options="mapFilterJobStatus"
-      optionLabel="caption" placeholder="State"
+      :options="mapFilterJobStatus" optionLabel="caption"
+      data-captions="States" placeholder="State"
       display="chip" :showToggleAll="false"
       @change="filterChangeBooks" />
 
@@ -101,6 +101,7 @@
 
 <script>
 import Vue from 'vue';
+import _ from 'lodash';
 import { mapGetters } from 'vuex'
 import BookImport from '../books/BookImport'
 import TaskAddModal from '../tasks/TaskAddModal'
@@ -168,29 +169,37 @@ export default {
   },
 
   methods: {
-    filterChangeBooks (val) {
-      /*if (this.$route.params.hasOwnProperty('bookid')) {
-        this.$router.replace({ path: '/books'});
-      }*/
+    filterChangeBooks (key, $event) {
       const newFilters = Object.entries(this.multiBookFilters).reduce((acc, [key, val])=>{
         acc[key] = val.map((el)=>el.value);
         return acc;
       }, {});
       //console.log(`filterChangeBooks.newFilters: `, newFilters);
+      if (key && key === 'filter') {
+        newFilters.filter = $event.target.value;
+      }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
-      this.changeFilterVisual();
+      this.changeFilterVisual2();
     },
-    filterChangeCollections (val) {
+    filterChangeBooksThrottle: _.throttle(function (key, $event) {
+      this.filterChangeBooks(key, $event)
+    }, 300),
+
+    filterChangeCollections (key, $event) {
       const newFilters = Object.entries(this.multiBookFilters).reduce((acc, [key, val])=>{
         acc[key] = val.map((el)=>el.value);
         return acc;
       }, {});
+      if (key && key === 'filter') {
+        newFilters.filter = $event.target.value;
+      }
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
     },
-    convertFilters () {
+    filterChangeCollectionsThrottle: _.throttle(function (key, $event) {
+      this.filterChangeCollections(key, $event)
+    }, 300),
 
-    },
-    changeFilterVisual() {
+    changeFilterVisual1() {
       Vue.nextTick(()=>{
         const vFilters = this.$refs.toolbarFirstRow.querySelectorAll('.p-multiselect-label-container .p-multiselect-label');
         for (const vContainer of vFilters) {
@@ -212,6 +221,39 @@ export default {
               const counter = document.createElement('span');
               counter.className = 'p-multiselect-more-counter';
               counter.innerText = `+${moreCounterVal}`;
+              vContainer.appendChild(counter);
+            }
+          } else {
+            if (moreCounterPrev) {
+              vContainer.removeChild(moreCounterPrev);
+            }
+          }
+        }
+      })
+    },
+    changeFilterVisual2() {
+      Vue.nextTick(()=>{
+        const vFilters = this.$refs.toolbarFirstRow.querySelectorAll('.p-multiselect.p-component.p-inputwrapper');
+        for (const vFilter of vFilters) {
+          const vContainer = vFilter.querySelector('.p-multiselect-label-container .p-multiselect-label');
+          const vTokens = vContainer.querySelectorAll('.p-multiselect-token');
+          const maxTokens = 3;
+          for (const [vIndex, vToken] of vTokens.entries()) {
+            if (vTokens.length > maxTokens) {
+              vToken.style.display = 'none';
+            } else {
+              vToken.style.display = 'inline-block';
+            }
+          }
+          const moreCounterVal = vTokens.length;
+          const moreCounterPrev = vContainer.querySelector('.p-multiselect-more-counter');
+          if (vTokens.length > maxTokens) {
+            if (moreCounterPrev) {
+              moreCounterPrev.innerText = `${moreCounterVal} ${vFilter.dataset.captions}`;
+            } else {
+              const counter = document.createElement('div');
+              counter.className = 'p-multiselect-more-counter';
+              counter.innerText = `${moreCounterVal} ${vFilter.dataset.captions}`;
               vContainer.appendChild(counter);
             }
           } else {
@@ -313,7 +355,7 @@ export default {
     this.toggleMetaVisible({force: true});
     await Vue.nextTick();
     this.syncRouteWithTab();
-    this.changeFilterVisual();
+    this.changeFilterVisual2();
   },
   watch:{
     async '$route' ($to, $from) {
@@ -397,6 +439,15 @@ input {width: 12em}
           .p-multiselect-token-icon {
             display: none;
           }
+        }
+        .p-multiselect-more-counter {
+          border-radius: 4px;
+          padding: 0.25rem 0.5rem;
+          margin-right: 0.5rem;
+          background: #edebe9;
+          color: #323130;
+          cursor: default;
+          width: fit-content;
         }
       }
     }
