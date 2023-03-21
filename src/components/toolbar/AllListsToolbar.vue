@@ -391,6 +391,7 @@ input {width: 12em}
   }
   .toolbar-second-row {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     .p-tabview {
       .p-tabview-nav {
