@@ -11,62 +11,43 @@
     <div class="modal-body">
       <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
         <div class="modal-body clearfix">
-          <template v-if="type === 'import'">
-            <div class="col-sm-12">
-              <h5>Browse for audio files or type a playlist URL</h5>
+          <div class="col-sm-12">
+            <h5>
+              <template v-if="type === 'import'">
+                Browse for audio files or type a playlist URL
+              </template>
+              <template v-if="type === 'replace'">
+                Browse for FLAC audiofiles
+              </template>
+              <template v-if="type === 'parse_replace'">
+                Browse for a ZIP with WAV file and JSON audio map
+              </template>
+            </h5>
+          </div>
+          <div class="col-sm-12 upload-files">
+            <div class="col-sm-3">
+              <dropzone id="audio-dropzone" ref="uploadDropzone" 
+                :options="dropzoneOptions" 
+                @vdropzone-file-added="onAudioFileChange"
+                @vdropzone-total-upload-progress="onUploadProgress"
+                @vdropzone-success="onUploadSuccess"
+                @vdropzone-complete="onUploadComplete"
+                @vdropzone-error="onUploadError"
+                @vdropzone-queue-complete="onUploadFinished">
+                Browse
+              </dropzone>
             </div>
-            <div class="col-sm-12 upload-files">
-              <div class="col-sm-3">
-                <dropzone id="audio-dropzone" ref="uploadDropzone" 
-                  :options="dropzoneOptions" 
-                  @vdropzone-file-added="onAudioFileChange"
-                  @vdropzone-total-upload-progress="onUploadProgress"
-                  @vdropzone-success="onUploadSuccess"
-                  @vdropzone-complete="onUploadComplete"
-                  @vdropzone-error="onUploadError"
-                  @vdropzone-queue-complete="onUploadFinished">
-                  Browse
-                </dropzone>
-              </div>
+            <template v-if="type === 'import'">
               <div class="col-sm-9">
                 <div class="input-group">
                   <input type="text" class="form-control playlist-url" placeholder="Playlist URL" v-model="audioURL" />
                 </div>
               </div>
-              <span v-if="$refs.upload">
-              {{$refs.upload.uploaded}}
-              </span>
-              <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
-            </div>
-          </template>
-          <template v-if="type === 'replace'">
-            <div class="col-sm-12">
-              <h5>Browse for FLAC audiofiles</h5>
-            </div>
-            <div class="col-sm-12 upload-files">
-              <div class="col-sm-3">
-                <dropzone id="audio-dropzone" ref="uploadDropzone" 
-                  :options="dropzoneOptions" 
-                  @vdropzone-file-added="onAudioFileChange"
-                  @vdropzone-total-upload-progress="onUploadProgress"
-                  @vdropzone-success="onUploadSuccess"
-                  @vdropzone-complete="onUploadComplete"
-                  @vdropzone-error="onUploadError"
-                  @vdropzone-queue-complete="onUploadFinished">
-                  Browse
-                </dropzone>
-              </div>
-              <div class="col-sm-9">
-                <div class="input-group">
-                  <input type="text" class="form-control playlist-url" placeholder="Playlist URL" v-model="audioURL" />
-                </div>
-              </div>
-              <span v-if="$refs.upload">
-              {{$refs.upload.uploaded}}
-              </span>
-              <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
-            </div>
-          </template>
+            </template>
+            <span v-if="$refs.upload">
+            {{$refs.upload.uploaded}}
+            </span>
+          </div>
           <div class="col-sm-12">
             <ul class="audiofiles-list">
               <li v-for="file in audioFiles">
@@ -75,21 +56,6 @@
            </ul>
           </div>
           <div class="col-sm-12 audio-import-quality">
-            <!-- <div class="col-sm-7">
-              <fieldset class="audio-import-options-fieldset">
-                <legend>Import type</legend>
-                <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="copy" />Copy to the catalog</label>
-                <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="replace" />Replace block audio</label>
-              </fieldset>
-            </div>
-            <div class="col-sm-5">
-              <fieldset class="audio-import-options-fieldset">
-                <legend>Audio quality</legend>
-                <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><div><img src="/static/audio_quality/raw-16.png" /></div>Raw</label>
-                <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><div><img src="/static/audio_quality/improved-16.png" /></div>Improved</label>
-                <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><div><img src="/static/audio_quality/mastered-16.png" /></div>Mastered</label>
-              </fieldset>
-            </div> -->
             <div class="col-sm-3">
               Audio quality
             </div>
@@ -211,10 +177,24 @@ export default {
       audioImportType: "copy",
       audioImportQuality: "raw",
       uploadUrl: '',
+      acceptFiles: null,
     }
   },
   beforeMount: function() {
     this.uploadUrl = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk';
+    switch (this.type) {
+      case 'import':
+        this.acceptFiles = 'audio/*';
+        break;
+      case 'replace':
+        this.audioImportType = 'replace';
+        this.acceptFiles = 'audio/flac';
+        break;
+      case 'parse_replace':
+        this.audioImportType = 'parse_replace';
+        this.acceptFiles = 'application/zip';
+        break;
+    }
   },
   mounted: function () {
     this.dropzoneOptionsCommon.url = this.uploadUrl;
@@ -303,6 +283,13 @@ export default {
                 });
                 reportHtml+= `</ul></li>`;
               }
+              if (Array.isArray(report.errors_parse_replace) && report.errors_parse_replace.length > 0) {
+                reportHtml+= `<li>Audio can’t be parsed. WAV audio file, specified in the JSON audio map is not found in:<ul class="audiofiles-list">`;
+                report.errors_parse_replace.forEach(err => {
+                  reportHtml+= `<li>${err.dir}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
               reportHtml+='</ul>';
               if (report.copied && !hasDuplicates && !hasSkipped) {
                 reportHtml = reportHtml.replace(/<\/?(ul|li)[^>]*>/img, '');
@@ -329,6 +316,9 @@ export default {
                 hasReport = true;
               }
             });
+            if (Array.isArray(report.errors_parse_replace) && report.errors_parse_replace.length > 0) {
+              hasReport = true;
+            }
             return hasReport;
           }
           return false;
@@ -355,6 +345,9 @@ export default {
           case 'replace':
             return 'Replace audio';
             break;
+          case 'parse_replace':
+            return 'Parse & Replace audio';
+            break;
         }
         return '';
       },
@@ -362,17 +355,24 @@ export default {
     },
     dropzoneOptions: {
       get() {
-        let options = {url: this.uploadUrl};
+        let options = {
+          url: this.uploadUrl, 
+          acceptedFiles: this.acceptFiles,
+        };
+        let browseButtonLabel = '';
         switch (this.type) {
           case 'import':
-            options.acceptedFiles = 'audio/*';
-            options.dictDefaultMessage = `<button class="btn btn-default browse-audio">Browse audio</button>`;
+            browseButtonLabel = `Browse audio`;
             break;
           case 'replace':
-            options.acceptedFiles = 'audio/flac';
-            options.dictDefaultMessage = `<button class="btn btn-default browse-audio">Browse FLAC</button>`;
+            browseButtonLabel = `Browse FLAC`;
+            break;
+          case 'parse_replace':
+            browseButtonLabel = `Browse ZIP`;
+            options.maxFiles = 1;
             break;
         }
+        options.dictDefaultMessage = `<button class="btn btn-default browse-audio">${browseButtonLabel}</button>`;
         return Object.assign(this.dropzoneOptionsCommon, options);
       }
     },
@@ -401,34 +401,27 @@ export default {
         this.formData = new FormData();
       }
       for(let file of fileList) {
-          let exist = false;
-          if (this.audiobook._id && this.audiobook.importFiles) {
-            exist = this.audiobook.importFiles.find(_f => {
-              return _f.origName == file.name || _f.group_id === file.name;
-            });
-          }
-          this.addFileToUpload(file);
-          /*
-          if (exist) {
-            //this.uploadFilesDuplicates.push(file);
-          } else {
-            let existInCurrent = this.audioFiles.find(_f => {
-              return _f.name == file.name;
-            })
-            if (!existInCurrent) {
-              this.addFileToUpload(file);
+        let allow = true;
+        if (!file.type) {
+          allow = false;
+        }
+        switch (this.acceptFiles) {
+          case 'audio/*':
+            if (!/^audio\/.*$/.test(file.type.toLowerCase())) {
+              allow = false;
             }
-          }
-          */
+            break;
+          case 'audio/flac':
+          case 'application/zip':
+            if (file.type.toLowerCase() !== this.acceptFiles) {
+              allow = false;
+            }
+            break;
+        }
+        if (allow) {
+          this.addFileToUpload(file);
+        }
       }
-      
-      /*Array
-        .from(Array(fileList.length).keys())
-        .map(x => {
-          this.formData.append(fieldName, fileList[x], fileList[x].name);
-          //console.log('Field name: ', fieldName)
-          this.uploadFiles++
-        });*/
     },
     addFileToUpload(file) {
       this.audioFiles.push({name: file.name, size: file.size, uuid:file.upload.uuid});
@@ -537,9 +530,17 @@ export default {
       if (this.audioURL.length) toUpload.url = this.audioURL;
       toUpload.audioImportType = this.audioImportType;
       toUpload.audioImportQuality = this.audioImportQuality;
+      
+      let uploadPromise;
+      
+      if (this.type === 'parse_replace') {
+        uploadPromise = this.parseReplaceAudio([toUpload]);
+      } else {
+        uploadPromise = this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload, this.book ? this.book.bookid : null]);
+      }
 
       //this.isUploading = true
-      return this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload, this.book ? this.book.bookid : null])
+      return uploadPromise
         .then(response => {
           if (response.status===200) {
             this.uploadFinished = true
@@ -625,6 +626,13 @@ export default {
           });
           reportHtml+= `\n`;
         }
+        if (Array.isArray(report.errors_parse_replace) && report.errors_parse_replace.length > 0) {
+          reportHtml+= `Audio can’t be parsed. WAV audio file, specified in the JSON audio map is not found in:\n`;
+          report.errors_parse_replace.forEach(err => {
+            reportHtml+= ` - ${err.dir}\n`;
+          });
+          reportHtml+= `\n`;
+        }
         content+= reportHtml;
         el.innerHTML = content;
         el.select();
@@ -648,7 +656,8 @@ export default {
       this.uploadInfo.success = true;
       this.$emit('close');
     },
-    ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign'])
+    ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign']),
+    ...mapActions('audioExport', ['parseReplaceAudio'])
 
   },
   watch: {

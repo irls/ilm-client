@@ -34,20 +34,32 @@
             <a v-on:click="goToBlock(exportData.range.end)">{{getIdShort(exportData.range.end)}}</a> -->
           </template>
         </div>
-        <div>
+        <div v-if="exportData.path">
           <a :href="this.API_URL + 'download/complete_audio?path=' + exportData.path" v-if="!exportData.in_process" target="_blank" class="btn btn-primary">
             Download
           </a>
         </div>
       </template>
     </fieldset>
+    <fieldset>
+      <legend>Replace block audio</legend>
+      <div>
+        <button class="btn btn-primary" v-on:click="replaceAudioModal()">Replace</button>
+        <button class="btn btn-primary" v-on:click="parseAndReplaceAudioModal()">Parse & Replace</button>
+      </div>
+    </fieldset>
   </div>
 </template>
 <script>
   import { mapGetters, mapActions } from 'vuex';
+  import Vue from 'vue';
+  import AudioImportModal from '../../audio/AudioImport.vue';
   import time_methods from '../../../mixins/time_methods.js';
   import blockid_short from '../../../mixins/blockid_short';
   import api_config from '../../../mixins/api_config';
+  import v_modal from 'vue-js-modal';
+  
+  Vue.use(v_modal, {dialog: true});
   export default {
     data() {
       return {
@@ -118,6 +130,27 @@
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
+      },
+      replaceAudioModal() {
+        this.$modal.show(AudioImportModal, {
+          book: this.currentBookMeta,
+          uploadInfo: {},
+          type: 'replace'
+        }, {
+          height: 'auto',
+          width: '700px'
+        });
+      },
+      parseAndReplaceAudioModal() {
+        this.$modal.show(AudioImportModal, {
+          book: this.currentBookMeta,
+          uploadInfo: {},
+          type: 'parse_replace',
+          multiple: false
+        }, {
+          height: 'auto',
+          width: '700px'
+        });
       },
       ...mapActions('audioExport', ['blockAudioExport'])
     }

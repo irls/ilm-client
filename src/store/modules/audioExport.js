@@ -32,6 +32,13 @@ export default {
         .catch(err => {
           
         });
+    },
+    parseReplaceAudio({state, rootState, commit}, [toUpload]) {
+      return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/parse_replace_audio`, toUpload)
+        .then(response => {
+          commit('set_updateAudiobookProgress', false, {root: true});
+          return Promise.resolve(response);
+        });
     }
   }
 }
