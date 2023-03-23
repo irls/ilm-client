@@ -13,7 +13,6 @@
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
           :columns="headers"
-          :rowsPerPage="100"
           @clickRow="selectBook"
           @dblClickRow="openBook"
           @orderChanged="moveBook(collection, $event)"
@@ -321,22 +320,6 @@
           handler(val, oldVal) {
             if(val._id && !oldVal._id) {
 
-            }
-          }
-        },
-        filteredBooks: {
-          handler(newVal, oldVal) {
-            const selectedBookId = this.selectedBooks[0] || this.$route.params.bookid;
-            console.log(`CollectionGrid.watch.filteredBooks: `, selectedBookId);
-            if (!(selectedBookId && this.filteredBooks.some((book)=>book.bookid == selectedBookId))) {
-              if (this.$refs.books_grid) {
-                this.$refs.books_grid.currentPage = 0;
-              }
-              this.selectedBooks = [];
-              this.$router.replace({ name: 'CollectionBooks' });
-              //this.$router.replace({ name: 'CollectionBooks', params: {
-              //  collectionid: this.currentCollection._id
-              //} });
             }
           }
         },

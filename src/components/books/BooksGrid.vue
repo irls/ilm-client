@@ -44,7 +44,7 @@ export default {
       'adminOrLibrarian'
     ]),
     ...mapGetters({
-      bookdFilters:   'gridFilters/booksFilters',
+      booksFilters:   'gridFilters/booksFilters',
       filteredBooks: 'gridFilters/filteredBooks'
     }),
 
@@ -203,22 +203,10 @@ export default {
         }
       }
     },
-    filteredBooks: {
-      handler(newVal, oldVal) {
-        const selectedBookId = this.selectedBooks[0] || this.$route.params.bookid;
-        console.log(`BooksGrid.watch.filteredBooks: `, selectedBookId);
-        if (!(selectedBookId && this.filteredBooks.some((book)=>book.bookid == selectedBookId))) {
-          if (this.$refs.books_grid) {
-            this.$refs.books_grid.currentPage = 0;
-          }
-          this.selectedBooks = [];
-          this.$router.replace({ name: 'Books' });
-        }
-      }
-    },
     booksFilters: {
       deep: true,
       handler(newVal, oldVal) {
+        console.log(`BooksGrid.watch.booksFilters: `, this.$route.params.bookid);
         if (this.$route.params.hasOwnProperty('bookid')) {
           const bookid = this.$route.params.bookid;
           const found = this.filteredBooks.find((book)=>{
@@ -233,7 +221,7 @@ export default {
           } else {
             if (this.$refs.books_grid) {
               this.$refs.books_grid.currentPage = 0;
-              this.$router.replace({ path: '/books' });
+              this.$router.replace({ name: 'Books' });
             }
           }
         } else {

@@ -160,7 +160,7 @@ Features:
     },
     computed: {
       noPages () { // No. pages as an array. Used for rendering paginator
-        let pages = Math.ceil(this.filteredData.length / this.rowsPerPage)
+        let pages = Math.ceil(this.filteredData.length / this._rowsPerPage)
         return [...Array(pages).keys()]
       },
       emptyTableText () { // Default text shown when there's no data in the table
@@ -193,9 +193,14 @@ Features:
       },
       limitedData () { // Data limited to a page
         return this.filteredData.slice(
-          this.currentPage * this.rowsPerPage,
-          this.rowsPerPage * (this.currentPage + 1)
+          this.currentPage * this._rowsPerPage,
+          this._rowsPerPage * (this.currentPage + 1)
         )
+      },
+      _rowsPerPage: {
+        get: function () {
+          return process.env.GRID_ROWS || this.rowsPerPage;
+        }
       }
     },
     methods: {
