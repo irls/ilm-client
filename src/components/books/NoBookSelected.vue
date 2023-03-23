@@ -25,6 +25,8 @@
     display: flex;
     justify-content: center;
     flex-direction: column;
+    border: 1px solid #ccc;
+    border-top-left-radius: 4px;
     .empty-meta-placeholder {
       display: flex;
       justify-content: center;

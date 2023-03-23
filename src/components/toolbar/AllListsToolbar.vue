@@ -473,17 +473,36 @@ input.form-control {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    /*border-bottom: 1px solid gray;*/
     .p-tabview {
+      margin-bottom: -1px;
       .p-tabview-nav {
+        /*border-bottom: 1px solid gray;*/
         .p-tabview-nav-link {
-          font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-          font-size: 1.0em;
+          font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+          font-size: 1.1em;
           font-weight: 400;
+          margin-bottom: -2px;
+          color: gray;
+          /*border-top: 1px solid #ccc;
+          border-left: 1px solid #ccc;
+          border-right: 1px solid #ccc;
+          border-top-left-radius: 4px;
+          border-top-right-radius: 4px;*/
+        }
+        li {
+          /*border-bottom: 1px solid gray;*/
+          margin-bottom: -1px;
         }
         li.p-highlight {
+          /*border-bottom: 1px solid transparent;
+          margin-bottom: -1px;*/
           .p-tabview-nav-link {
             background: #eaf1fc;
-            font-weight: 600;
+            /*font-weight: 600;*/
+            color: black;
+            border-color: gray;
+
           }
         }
       }
