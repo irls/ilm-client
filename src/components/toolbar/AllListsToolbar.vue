@@ -438,12 +438,14 @@ input.form-control {
     .form-control.book-filter {
       width: 17.5em;
       padding-right:30px;
+      margin-bottom: 1px;
     }
     .p-multiselect {
       min-width: 14rem;
       border-radius: 4px;
       border: 1px solid #ccc;
       box-shadow: none;
+      margin-bottom: 1px;
 
       &:hover, &.p-focus {
         box-shadow: none;
