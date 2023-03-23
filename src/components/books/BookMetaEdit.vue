@@ -1265,16 +1265,19 @@ export default {
       if (event && !collectionId) {
         this.unlinkCollectionWarning = true;
       } else {
+        this.unlinkCollectionWarning = false;
         return this.updateBookCollection(collectionId)
           .then(response => {
-            this.unlinkCollectionWarning = false;
             if (response.status === 200) {
               if (collectionId) {
-                this.$router.replace({path: '/collections/' + collectionId + '/' + this.currentBook.bookid});
-              } else {
-                Vue.nextTick(() => {
-                  this.$router.replace({path: '/books'});
+                this.$router.replace({
+                  name: 'CollectionBook',
+                  params: {collectionid: collectionId, bookid: this.currentBook.bookid}
                 });
+              } else {
+                //Vue.nextTick(() => {
+                //  this.$router.replace({path: '/books'});
+                //});
               }
             }
           })
