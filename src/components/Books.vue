@@ -130,15 +130,15 @@ export default {
     },
 
     hasCollectionSelected () {
-      return this.$route.name === 'Collection';
+      return ['Collection', 'CollectionBooks'].indexOf(this.$route.name) >= 0;
     },
 
     isCollectionRoute () {
-      return ['Collections', 'Collection'].indexOf(this.$route.name) > -1;
+      return ['Collections', 'Collection', 'CollectionBooks'].indexOf(this.$route.name) >= 0;
     },
 
     isBookRoute () {
-      return ['Books', 'BooksGrid', 'CollectionBooks', 'CollectionBook'].indexOf(this.$route.name) > -1;
+      return ['Books', 'BooksGrid', 'CollectionBooks', 'CollectionBook'].indexOf(this.$route.name) >= 0;
     },
 
     isBookEditRoute () {

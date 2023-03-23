@@ -91,7 +91,7 @@
               {
                 title: 'Collection Title',
                 path: 'title',
-                addClass: 'booktitle',
+                addClass: 'booktitle width-36-p',
                 isPassFull: true,
                 html (val) {
                   return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title.length ? val.title : val._id}`
@@ -100,17 +100,45 @@
               {
                 title: 'Author',
                 path: 'author',
-                addClass: 'author',
+                addClass: 'author width-16-p',
                 render(val) {
                   return val && Array.isArray(val) ? val.join(', ') : val;
                 }
               },
               {
-                title: 'Title EN',
-                path: 'title_en',
-                addClass: 'author',
-                html (val) {
-                  return `${val}`
+                title: 'Published',
+                path: 'pubVersion',
+                addClass: 'width-135',
+                isPassFull: true,
+                html(val) {
+                  let date = '';
+                  let pubVersion = '';
+                  if (val.pubVersionDate) {
+                    date = new Date(val.pubVersionDate);
+                    date = `${date.getFullYear()}.${('0'+(date.getMonth()+1)).slice(-2)}.${('0'+date.getDate()).slice(-2)}`;
+                    if (val.pubVersion) {
+                      pubVersion = `v.${val.pubVersion}`;
+                    }
+                  }
+                  return `<i>${date}</i> ${pubVersion}`;
+                }
+              },
+              {
+                title: 'Updated',
+                path: 'currVersion',
+                addClass: 'width-135',
+                isPassFull: true,
+                html(val) {
+                  let date = '';
+                  if (val.currVersionDate) {
+                    date = new Date(val.currVersionDate);
+                    date = `${date.getFullYear()}.${('0'+(date.getMonth()+1)).slice(-2)}.${('0'+date.getDate()).slice(-2)}`;
+                  }
+                  let currVersion = 'v.1.0';
+                  if (val.currVersion) {
+                    currVersion = `v.${val.currVersion}`;
+                  }
+                  return `<i>${date}</i> ${currVersion}`;
                 }
               },
               {

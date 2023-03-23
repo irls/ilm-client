@@ -89,6 +89,9 @@ export default {
       if (state.booksFilters.jobStatus.length) {
         state.booksFilters.jobStatus = state.booksFilters.jobStatus.filter((code)=>availableJobStatuses.has(code));
       }
+      if (state.multiBookFilters.jobStatus.length) {
+        state.multiBookFilters.jobStatus = state.multiBookFilters.jobStatus.filter((obj)=>availableJobStatuses.has(obj.value));
+      }
       return Array.from(availableJobStatuses).map((code)=>{
         const captionFound = state.mapFilterJobStatus.find((el)=>el.value === code);
         return {caption: (captionFound ? captionFound.caption : code), value: code}
@@ -110,6 +113,9 @@ export default {
       }
       if (state.booksFilters.importStatus.length) {
         state.booksFilters.importStatus = state.booksFilters.importStatus.filter((code)=>availableImportStatuses.has(code));
+      }
+      if (state.multiBookFilters.importStatus.length) {
+        state.multiBookFilters.importStatus = state.multiBookFilters.importStatus.filter((obj)=>availableImportStatuses.has(obj.value));
       }
       return Array.from(availableImportStatuses).map((code)=>{
         const captionFound = state.mapFilterImportStatus.find((el)=>el.value === code);

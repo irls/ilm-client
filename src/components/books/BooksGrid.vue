@@ -49,7 +49,7 @@ export default {
     }),
 
     booksMeta () { // because our grid does not work with nested values
-      let result = []
+      let result = [] //TODO: check in gridFilters flow
       for (let book of this.filteredBooks) {
         if (book.importStatus == 'staging' && book.blocksCount <= 2){
           if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
@@ -180,8 +180,11 @@ export default {
     return loadBooks
     .then(()=>{
       if (this.$route.params.hasOwnProperty('bookid')) {
-        this.goToBookPage(this.$route.params.bookid);
-        this.scrollToRow(this.$route.params.bookid);
+        const selectedBookId = this.$route.params.bookid;
+        if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
+          this.goToBookPage(this.$route.params.bookid);
+          this.scrollToRow(this.$route.params.bookid);
+        }
       }
     })
     .catch((e)=>{
@@ -197,6 +200,19 @@ export default {
         this.selectedBooks = [];
         if (this.$refs.books_grid) {
           this.$refs.books_grid.currentPage = 0;
+        }
+      }
+    },
+    filteredBooks: {
+      handler(newVal, oldVal) {
+        const selectedBookId = this.selectedBooks[0] || this.$route.params.bookid;
+        console.log(`BooksGrid.watch.filteredBooks: `, selectedBookId);
+        if (!(selectedBookId && this.filteredBooks.some((book)=>book.bookid == selectedBookId))) {
+          if (this.$refs.books_grid) {
+            this.$refs.books_grid.currentPage = 0;
+          }
+          this.selectedBooks = [];
+          this.$router.replace({ name: 'Books' });
         }
       }
     },
@@ -277,7 +293,7 @@ export default {
     /*width: 100%;*/
     /*height: 100%;*/
     min-width: 900px;
-    padding-top: 4px;
+    /*padding-top: 4px;*/
   }
 
   #books_grid tbody tr:hover {

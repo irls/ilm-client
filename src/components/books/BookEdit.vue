@@ -98,7 +98,7 @@
 
   </div>
   <!--<div class="container-block">   -->
-  <AudioFAB 
+  <AudioFAB
     @onAudioFab="onAudioFab"/>
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -2266,7 +2266,7 @@ export default {
             }
           });
       },
-      
+
       goToAudioBlock(block) {
         return new Promise((resolve, reject) => {
           let elementBack = this.$refs.viewBlocks.$el.querySelector(`[blockid="${block.blockid}"]`);
@@ -2423,7 +2423,7 @@ export default {
           console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       },
-      
+
       onAudioFab() {
         if (this.playingBlock.playingPauseAfter) {
           switch (this.playingBlock.state) {
@@ -2616,7 +2616,7 @@ export default {
 //       }
 //     },
     '$route' (toRoute, fromRoute) {
-      //console.log('$route', toRoute, fromRoute);
+      console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
         let taskType = toRoute.params.task_type;
         return this.$store.dispatch('searchBlocksChain', {
@@ -2678,6 +2678,7 @@ export default {
             if (this.parlistO.startId) {
               params.block = this.parlistO.startId;
             }
+            console.log(`currentJobInfo.workflow.status: `, val, this.mode);
             this.$router.push({ name: 'BookEdit', params: params });
           }
         }

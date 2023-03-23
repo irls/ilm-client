@@ -236,6 +236,7 @@
             .then(() => {
               return this.getCurrentJobInfo()
                 .then(() => {
+                  console.log(`_setJobStatus: `, this.$route.name, this.currentCollectionId);
                   //TODO check!
                   /*if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1)
                   if (!this.currentCollectionId) {

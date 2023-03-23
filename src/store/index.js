@@ -1838,6 +1838,7 @@ export const store = new Vuex.Store({
     },
 
     updateBooksList ({state, commit, dispatch}) {
+      console.log(`updateBooksList: `);
       return axios.get(state.API_URL + 'books')///user/' + state.auth.getSession().user_id
         .then((answer) => {
           commit('SET_BOOKLIST', answer.data.books)
@@ -1926,7 +1927,8 @@ export const store = new Vuex.Store({
       if (state.loadBookWait) {
         return state.loadBookWait
       }
-      //console.log('loading currentBook: ', book_id)
+      console.log('loading currentBook: ', book_id);
+
       // if (!book_id) return  // if no currentbookid, exit
       // if (book_id === context.state.currentBookid) return // skip if already loaded
 
@@ -3986,7 +3988,7 @@ export const store = new Vuex.Store({
           if (state.currentBookMeta.bookid) {
             state.currentBookMeta.job_status = status;
           }
-          dispatch('updateBooksList');
+          //dispatch('updateBooksList');
           if (state.currentBookMeta.bookid) {
             dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
             state.currentBookid = null;

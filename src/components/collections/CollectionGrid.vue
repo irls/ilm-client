@@ -54,13 +54,16 @@
       },
       methods: {
         rowClick(collection, event) {
-//           if (collection._id !== this.currentCollection._id/* && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1*/) {
-//             this.$emit('selectCollection', collection._id);
-//             this.selectedBooks = [];
-//           } else if (this.selectedBooks.length) {
-//             this.selectedBooks = [];
-//             this.$router.replace({ path: '/collections/' + collection._id })
-//           }
+          console.log(`rowClick: `, collection._id, this.currentCollection._id);
+          //if (collection._id !== this.currentCollection._id) {
+            //this.$emit('selectCollection', collection._id);
+            this.selectedBooks = [];
+            this.$router.replace({ name: 'CollectionBooks' });
+          //}
+          /*else if (this.selectedBooks.length) {
+            this.selectedBooks = [];
+            this.$router.replace({ path: '/collections/' + collection._id })
+          }*/
         },
         selectBook(book) {
           const bookid = book.bookid;
@@ -321,6 +324,22 @@
             }
           }
         },
+        filteredBooks: {
+          handler(newVal, oldVal) {
+            const selectedBookId = this.selectedBooks[0] || this.$route.params.bookid;
+            console.log(`CollectionGrid.watch.filteredBooks: `, selectedBookId);
+            if (!(selectedBookId && this.filteredBooks.some((book)=>book.bookid == selectedBookId))) {
+              if (this.$refs.books_grid) {
+                this.$refs.books_grid.currentPage = 0;
+              }
+              this.selectedBooks = [];
+              this.$router.replace({ name: 'CollectionBooks' });
+              //this.$router.replace({ name: 'CollectionBooks', params: {
+              //  collectionid: this.currentCollection._id
+              //} });
+            }
+          }
+        },
         collectionsFilters: {
           deep: true,
           handler(newVal, oldVal) {
@@ -336,11 +355,11 @@
                 this.scrollToRow(bookid);
               } else {
                 if (collectionid) {
-                  this.$router.push({ name: 'CollectionBooks', params: {
+                  this.$router.replace({ name: 'CollectionBooks', params: {
                     collectionid: collectionid
                   } });
                 } else {
-                  this.$router.push({ name: 'Collections' });
+                  this.$router.replace({ name: 'Collections' });
                 }
               }
             } else {
