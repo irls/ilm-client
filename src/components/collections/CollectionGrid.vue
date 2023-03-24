@@ -243,7 +243,8 @@
                 addClass: 'booktitle width-36-p',
                 isPassFull: true,
                 html (val) {
-                  return `<span data-tooltip="${val.title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title}</span>`
+                  const title = val.title.length ? val.title : val.bookid;
+                  return `<span data-tooltip="${title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
                 }
               },
               {
