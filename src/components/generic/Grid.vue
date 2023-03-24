@@ -199,7 +199,7 @@ Features:
       },
       _rowsPerPage: {
         get: function () {
-          return process.env.GRID_ROWS || this.rowsPerPage;
+          return process.env.GRID_ROWS || this.rowsPerPage || 10;
         }
       }
     },

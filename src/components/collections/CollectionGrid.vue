@@ -13,6 +13,7 @@
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
           :columns="headers"
+          :rowsPerPage="100"
           @clickRow="selectBook"
           @dblClickRow="openBook"
           @orderChanged="moveBook(collection, $event)"
