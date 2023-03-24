@@ -72,7 +72,23 @@
           this.$router.push({ name: 'CollectionBook', params: { collectionid: currentId, bookid: bookid} })
         },
         openBook(book) {
-          this.$router.push({ name: 'CollectionBookEditDisplay', params: { collectionid: this.currentCollection._id, bookid: this.selectedBooks[0] } });
+          const bookid = book.bookid;
+          if (bookid) {
+            switch(true) {
+              case this.adminOrLibrarian : case this.isEditor : {
+                this.$router.replace({name: 'CollectionBookEdit', params: { bookid:bookid }});
+              } break;
+              case this.isNarrator : {
+                this.$router.replace({name: 'CollectionBookNarrate', params: { bookid:bookid }});
+              } break;
+              case this.isProofer : {
+                this.$router.replace({name: 'CollectionBookProofread', params: { bookid:bookid }});
+              } break;
+              default : {
+                this.$router.replace({name: 'CollectionBookEditDisplay', params: { bookid:bookid }});
+              } break;
+            };
+          }
         },
         scrollToRow(bookId) {
           let t = setTimeout(function() {
@@ -131,6 +147,9 @@
           'collectionsFilters',
           'allowCollectionsEdit',
           'adminOrLibrarian',
+          'isEditor',
+          'isNarrator',
+          'isProofer'
         ]),
         ...mapGetters({
           booksFilters:       'gridFilters/booksFilters',

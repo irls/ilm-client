@@ -19,6 +19,7 @@
 import { mapGetters, mapActions } from 'vuex'
 import Grid from '../generic/Grid'
 import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
+//import taskControls from '@src/mixins/task_controls.js';
 
 export default {
 
@@ -41,7 +42,10 @@ export default {
 
     ...mapGetters([
       'allBooks',
-      'adminOrLibrarian'
+      'adminOrLibrarian',
+      'isEditor',
+      'isNarrator',
+      'isProofer'
     ]),
     ...mapGetters({
       booksFilters:   'gridFilters/booksFilters',
@@ -236,8 +240,8 @@ export default {
   methods: {
     ...mapActions(['updateBooksList']),
     // A row in the table has been clicked. Returns Vue data object bound to the row.
-    rowClick (ev) {
-      const bookid = ev.bookid;
+    rowClick (book) {
+      const bookid = book.bookid;
       if (bookid) {
         this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
         const book = this.filteredBooks.find(book=>book.bookid === bookid);
@@ -248,10 +252,23 @@ export default {
         }
       }
     },
-    openBook (ev) {
-      const bookid = ev.bookid;
+    openBook (book) {
+      const bookid = book.bookid;
       if (bookid) {
-        this.$router.push('/books/' + bookid + '/display');
+        switch(true) {
+          case this.adminOrLibrarian : case this.isEditor : {
+            this.$router.replace({name: 'BookEdit', params: { bookid:bookid }});
+          } break;
+          case this.isNarrator : {
+            this.$router.replace({name: 'BookNarrate', params: { bookid:bookid }});
+          } break;
+          case this.isProofer : {
+            this.$router.replace({name: 'BookProofread', params: { bookid:bookid }});
+          } break;
+          default : {
+            this.$router.replace({name: 'BookEditDisplay', params: { bookid:bookid }});
+          } break;
+        };
       }
     },
     goToBookPage (bookId) {

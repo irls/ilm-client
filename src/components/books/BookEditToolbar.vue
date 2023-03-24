@@ -94,6 +94,7 @@ export default {
     editModesAvailable: {
       get() {
         let modes;
+        //TODO Check!
         if (this.$route.path.indexOf('/collections') === 0) {
           modes = {
             'CollectionBookEdit': 'Edit',
@@ -168,7 +169,7 @@ export default {
     goBack: function() {
       let path = '/books';
       if (this.isBookRoute) {
-        if (this.currentBookMeta && this.currentBookMeta.collection_id) {
+        if (this.currentBookMeta) {
           const currentBookid = this.$store.state.currentBookid;
           path = '/books' + (currentBookid?'/'+currentBookid:'')
         }
@@ -177,7 +178,7 @@ export default {
         const currentBookid = this.$store.state.currentBookid;
         path = '/collections/books/' + this.$route.params.collectionid + '/' + (currentBookid?currentBookid:'')
       }
-      this.$router.push(path);
+      this.$router.replace(path);
     },
     getCurrentBookUrl(format) {
       return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
