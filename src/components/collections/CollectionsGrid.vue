@@ -1,6 +1,7 @@
 <template>
-  <div id="books_grid">
+  <div id="books_grid" v-cloak>
      <Grid id='collections_grid'
+      ref="books_grid"
       :data="filteredCollections"
       :columns="headers"
       :rowsPerPage="100"
@@ -32,6 +33,7 @@
         return {
           idField: '_id',
           selectedBooks: [],
+          filterScrollTimer: null
         }
       },
       methods: {
@@ -48,13 +50,19 @@
             this.$router.push({ name: 'CollectionBooks', params: { collectionid: collectionId } });
           }
         },
+        goToBookPage (collId) {
+          if (this.$refs.books_grid) {
+            const index = this.$refs.books_grid.filteredData.findIndex((coll)=>coll._id === collId);
+            this.$refs.books_grid.goToIndex(index);
+          }
+        },
         scrollToRow(bookId) {
           let t = setTimeout(function() {
             let el = document.querySelector(`[data-id="${bookId}"]`);
             if (el) {
               el.scrollIntoView();
             }
-          }, 300);
+          }, 100);
         },
         ...mapActions(['updateBooksList'])
       },
@@ -63,9 +71,18 @@
         .then(()=>{
           if (this.$route && this.$route.params) {
             if (this.$route.params.collectionid) {
-              this.$store.dispatch('loadCollection', this.$route.params.collectionid);
-              this.selectedBooks = [this.$route.params.collectionid];
-              this.scrollToRow(this.$route.params.collectionid);
+              const selectedCollectionId = this.$route.params.collectionid;
+              Vue.nextTick(()=>{
+                clearTimeout(this.filterScrollTimer);
+                this.filterScrollTimer = setTimeout(()=>{
+                  if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
+                    this.$store.dispatch('loadCollection', selectedCollectionId)
+                    this.goToBookPage(selectedCollectionId);
+                    this.scrollToRow(selectedCollectionId);
+                    this.selectedBooks = [selectedCollectionId];
+                  }
+                }, 300)
+              });
             }
           }
           //console.log(`bookCollections: `, this.bookCollections);
@@ -81,6 +98,7 @@
           'adminOrLibrarian',
         ]),
         ...mapGetters({
+          fltrChangeTrigger:    'gridFilters/fltrChangeTrigger',
           booksFilters:         'gridFilters/booksFilters',
           collectionsFilters:   'gridFilters/collectionsFilters',
           filteredCollections:  'gridFilters/filteredCollections'
@@ -175,19 +193,21 @@
             }
           }
         },
-        booksFilters: { //collectionsFilters
-          deep: true,
+        fltrChangeTrigger: { //collectionsFilters
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('collectionid')) {
               const collectionid = this.$route.params.collectionid;
               const found = this.filteredCollections.find((collection)=>{
                 return collection._id === collectionid;
-                //return collection.bookids.find((book)=>{
-                //  return book === bookid;
-                //})
               })
               if (found) {
                 this.scrollToRow(collectionid);
+                clearTimeout(this.filterScrollTimer);
+                this.filterScrollTimer = setTimeout(()=>{
+                  this.goToBookPage(collectionid);
+                  this.scrollToRow(collectionid);
+                  this.selectedBooks = [collectionid];
+                }, 10)
               } else {
                 this.$router.replace({ path: '/collections' });
               }

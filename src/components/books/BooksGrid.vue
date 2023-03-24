@@ -48,8 +48,9 @@ export default {
       'isProofer'
     ]),
     ...mapGetters({
-      booksFilters:   'gridFilters/booksFilters',
-      filteredBooks: 'gridFilters/filteredBooks'
+      fltrChangeTrigger: 'gridFilters/fltrChangeTrigger',
+      booksFilters:      'gridFilters/booksFilters',
+      filteredBooks:     'gridFilters/filteredBooks'
     }),
 
     booksMeta () { // because our grid does not work with nested values
@@ -186,8 +187,12 @@ export default {
       if (this.$route.params.hasOwnProperty('bookid')) {
         const selectedBookId = this.$route.params.bookid;
         if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
-          this.goToBookPage(this.$route.params.bookid);
-          this.scrollToRow(this.$route.params.bookid);
+          clearTimeout(this.filterScrollTimer);
+          this.filterScrollTimer = setTimeout(()=>{
+            this.goToBookPage(selectedBookId);
+            this.scrollToRow(selectedBookId);
+            this.selectedBooks = [selectedBookId];
+          }, 10)
         }
       }
     })
@@ -207,25 +212,26 @@ export default {
         }
       }
     },
-    booksFilters: {
-      deep: true,
+    fltrChangeTrigger: {
       handler(newVal, oldVal) {
-        console.log(`BooksGrid.watch.booksFilters: `, this.$route.params.bookid);
         if (this.$route.params.hasOwnProperty('bookid')) {
           const bookid = this.$route.params.bookid;
+          const [selectedBookId] = this.selectedBooks;
           const found = this.filteredBooks.find((book)=>{
             return book.bookid === bookid;
           })
           if (found) {
             clearTimeout(this.filterScrollTimer);
             this.filterScrollTimer = setTimeout(()=>{
-              this.goToBookPage(found.bookid);
-              this.scrollToRow(found.bookid);
+              this.goToBookPage(selectedBookId);
+              this.scrollToRow(selectedBookId);
+              this.selectedBooks = [selectedBookId];
             }, 10)
           } else {
             if (this.$refs.books_grid) {
               this.$refs.books_grid.currentPage = 0;
               this.$router.replace({ name: 'Books' });
+              this.selectedBooks = [];
             }
           }
         } else {
@@ -243,13 +249,13 @@ export default {
     rowClick (book) {
       const bookid = book.bookid;
       if (bookid) {
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
         const book = this.filteredBooks.find(book=>book.bookid === bookid);
         if (book && book.collection_id) {
           this.$store.dispatch('loadCollection', book.collection_id);
         } else {
           this.$store.dispatch('loadCollection', false);
         }
+        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
       }
     },
     openBook (book) {
@@ -273,10 +279,8 @@ export default {
     },
     goToBookPage (bookId) {
       if (this.$refs.books_grid) {
-        //const index = this.cacheFiltered.findIndex((book)=>book.bookid === bookId);
         const index = this.$refs.books_grid.filteredData.findIndex((book)=>book.bookid === bookId);
-        const page = Math.trunc(index / this.$refs.books_grid.rowsPerPage);
-        this.$refs.books_grid.currentPage = page;
+        this.$refs.books_grid.goToIndex(index);
       }
     },
     scrollToRow(bookId) {
@@ -285,7 +289,7 @@ export default {
         if (el) {
           el.scrollIntoView();
         }
-      }, 300);
+      }, 100);
     },
   }
 

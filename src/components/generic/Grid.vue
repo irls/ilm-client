@@ -236,8 +236,13 @@ Features:
           ++this.currentPage
         }
       },
-      goToPage (page, e) { // Go to a specific page click handler
-        e.preventDefault()
+      goToPage (page, e = null) { // Go to a specific page click handler
+        if (e) e.preventDefault()
+        this.currentPage = page
+      },
+      goToIndex (index, e = null) { // Go to a specific page click handler
+        if (e) e.preventDefault();
+        const page = Math.trunc(index / this._rowsPerPage);
         this.currentPage = page
       },
       isSelected (id) {

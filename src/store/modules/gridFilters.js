@@ -4,6 +4,7 @@ import { Languages }                         from "@src/mixins/lang_config.js"
 export default {
   namespaced: true,
   state: {
+    fltrChangeTrigger: false,
 
     booksFilters: {
       filter: '',
@@ -67,11 +68,12 @@ export default {
     ],
   },
   getters: {
-    booksFilters:                   state => state.booksFilters,
-    collectionsFilters:             state => state.collectionsFilters,
-    multiBookFilters:               state => state.multiBookFilters,
+    fltrChangeTrigger:           state => state.fltrChangeTrigger,
+    booksFilters:                state => state.booksFilters,
+    collectionsFilters:          state => state.collectionsFilters,
+    multiBookFilters:            state => state.multiBookFilters,
 
-    mapFilterProjectTag:            state => state.mapFilterProjectTag,
+    mapFilterProjectTag:         state => state.mapFilterProjectTag,
 
     mapFilterJobStatus: (state, getters, rootState, rootGetters) => {
       if (!rootGetters.allBooks.length) {
@@ -246,10 +248,12 @@ export default {
           state.booksFilters[prop] = obj[prop];
         }
       }
+      state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
 
     set_clearBookFilters (state) {
       state.booksFilters = Object.assign({}, state.defaultBooksFilters);
+      state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
 
     set_collectionsFilters (state, obj) {
@@ -258,10 +262,12 @@ export default {
           state.collectionsFilters[prop] = obj[prop];
         }
       }
+      state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
 
     set_clearCollectionsFilters (state) {
       state.collectionsFilters = Object.assign({}, state.defaultCollectionsFilters);
+      state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
   },
 

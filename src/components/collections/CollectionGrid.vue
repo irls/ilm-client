@@ -49,7 +49,7 @@
         return {
           idField: '_id',
           selectedBooks: [],
-          openBookClickCounter: 0
+          filterScrollTimer: null
         }
       },
       methods: {
@@ -90,13 +90,21 @@
             };
           }
         },
+        goToBookPage (bookId) {
+          const gridRef = `grid-${this.currentCollection._id}`;
+          const gridComp = (this.$refs[gridRef] && this.$refs[gridRef][0]) ? this.$refs[gridRef][0] : false;
+          if (gridComp && gridComp.filteredData) {
+            const index = gridComp.filteredData.findIndex((book)=>book.bookid === bookId);
+            gridComp.goToIndex(index);
+          }
+        },
         scrollToRow(bookId) {
           let t = setTimeout(function() {
             let el = document.querySelector(`[data-id="${bookId}"]`);
             if (el) {
               el.scrollIntoView();
             }
-          }, 300);
+          }, 100);
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
@@ -118,23 +126,16 @@
         .then(()=>{
           if (this.$route && this.$route.params) {
             if (this.$route.params.bookid) {
-              this.selectedBooks = [this.$route.params.bookid];
-              this.scrollToRow(this.$route.params.bookid);
-//               let hasBook = this.selectedBooks.findIndex(b => {
-//                 return b.bookid === this.$route.params.bookid;
-//               });
-//               if (hasBook === -1) {
-//                 let book = this.allBooks.find(b => {
-//                   return b.bookid === this.$route.params.bookid;
-//                 });
-//                 if (book) {
-//                   this.selectBook(book);
-//                   this.scrollToRow(book.bookid);
-//                 }
-//               }
-            } /*else if (this.$route.params.collectionid) {
-              this.scrollToRow(this.$route.params.collectionid);
-            }*/
+              const selectedBookId = this.$route.params.bookid;
+              if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
+                clearTimeout(this.filterScrollTimer);
+                this.filterScrollTimer = setTimeout(()=>{
+                  this.goToBookPage(selectedBookId);
+                  this.scrollToRow(selectedBookId);
+                  this.selectedBooks = [selectedBookId];
+                }, 10)
+              }
+            }
           }
         })
       },
@@ -152,6 +153,7 @@
           'isProofer'
         ]),
         ...mapGetters({
+          fltrChangeTrigger:  'gridFilters/fltrChangeTrigger',
           booksFilters:       'gridFilters/booksFilters',
           collectionsFilters: 'gridFilters/collectionsFilters',
           filteredBooks:      'gridFilters/filteredCollectionBooks'
@@ -336,26 +338,24 @@
           },
           deep: true
         },
-        currentCollection: {
-          handler(val, oldVal) {
-            if(val._id && !oldVal._id) {
-
-            }
-          }
-        },
-        collectionsFilters: {
-          deep: true,
+        fltrChangeTrigger: {
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('bookid')) {
               const bookid = this.$route.params.bookid;
               const collectionid = this.$route.params.collectionid;
+              const [selectedBookId] = this.selectedBooks;
               const found = this.collectionsPage.find((collection)=>{
                 return collection.bookids.find((book)=>{
                   return book === bookid;
                 })
               })
               if (found) {
-                this.scrollToRow(bookid);
+                clearTimeout(this.filterScrollTimer);
+                this.filterScrollTimer = setTimeout(()=>{
+                  this.goToBookPage(selectedBookId);
+                  this.scrollToRow(selectedBookId);
+                  this.selectedBooks = [selectedBookId];
+                }, 10)
               } else {
                 if (collectionid) {
                   this.$router.replace({ name: 'CollectionBooks', params: {

@@ -6,13 +6,13 @@
       :value="booksFilters.filter"
       type="text" class="form-control book-filter"
       @keyup="filterChangeBooksDebounce('filter', $event)" ></input>
-    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter='';"></i>
+    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
 
     <input placeholder="Filter by Collection"
       :value="collectionsFilters.filter"
       type="text" class="form-control book-filter"
       @keyup="filterChangeCollectionsDebounce('filter', $event)"></input>
-    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter='';"></i>
+    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
       :options="mapFilterProjectTag"
@@ -176,7 +176,7 @@ export default {
       }, {});
       //console.log(`filterChangeBooks.newFilters: `, newFilters);
       if (key && key === 'filter') {
-        newFilters.filter = $event.target.value;
+        newFilters.filter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
       this.changeFilterVisual2();
@@ -191,7 +191,7 @@ export default {
         return acc;
       }, {});
       if (key && key === 'filter') {
-        newFilters.filter = $event.target.value;
+        newFilters.filter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
     },
