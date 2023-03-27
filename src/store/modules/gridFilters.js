@@ -269,6 +269,10 @@ export default {
       state.collectionsFilters = Object.assign({}, state.defaultCollectionsFilters);
       state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
+
+    set_fltrChangeTrigger (state) {
+      state.fltrChangeTrigger = !state.fltrChangeTrigger;
+    },
   },
 
   actions: {}
