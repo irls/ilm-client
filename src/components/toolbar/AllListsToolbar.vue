@@ -288,6 +288,7 @@ export default {
             this.$emit('collectionAdded', doc._id);
             this.$store.commit('SET_CURRENT_COLLECTION', doc._id);
             this.$router.push({ name: 'Collection', params: { collectionid: doc._id } });
+            this.$store.commit('gridFilters/set_fltrChangeTrigger');
           });
         }).catch(err => {})
     },
