@@ -1274,7 +1274,19 @@ export default {
                   name: 'CollectionBook',
                   params: {collectionid: collectionId, bookid: this.currentBook.bookid}
                 });
-              } else {
+              } else if (this.$route.params.hasOwnProperty('collectionid')) {
+                this.updateBooksList();
+                const collectionid = this.$route.params.collectionid;
+                this.$router.replace({
+                  name: 'CollectionBooks',
+                  params: {collectionid: collectionid}
+                });
+
+                /*this.$router.replace({
+                  name: 'BooksGrid',
+                  params: {bookid: this.currentBook.bookid}
+                });*/
+
                 //Vue.nextTick(() => {
                 //  this.$router.replace({path: '/books'});
                 //});
@@ -2208,7 +2220,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
 }
 
