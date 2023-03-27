@@ -50,10 +50,14 @@
             this.$router.push({ name: 'CollectionBooks', params: { collectionid: collectionId } });
           }
         },
-        goToBookPage (collId) {
-          if (this.$refs.books_grid) {
-            const index = this.$refs.books_grid.filteredData.findIndex((coll)=>coll._id === collId);
-            this.$refs.books_grid.goToIndex(index);
+        goToBookPage (collId = false) {
+          if(this.$refs.books_grid) {
+            if (collId) {
+              const index = this.$refs.books_grid.filteredData.findIndex((coll)=>coll._id === collId);
+              this.$refs.books_grid.goToIndex(index);
+            } else {
+              this.$refs.books_grid.goToIndex(0);
+            }
           }
         },
         scrollToRow(bookId) {
@@ -201,7 +205,6 @@
                 return collection._id === collectionid;
               })
               if (found) {
-                this.scrollToRow(collectionid);
                 clearTimeout(this.filterScrollTimer);
                 this.filterScrollTimer = setTimeout(()=>{
                   this.goToBookPage(collectionid);
@@ -209,9 +212,12 @@
                   this.selectedBooks = [collectionid];
                 }, 10)
               } else {
-                this.$router.replace({ path: '/collections' });
+                this.goToBookPage();
+                this.$router.replace({ name: 'Collections' });
+                this.selectedBooks = [];
               }
             } else {
+              this.goToBookPage();
               this.selectedBooks = []; // clean old selection
             }
           }

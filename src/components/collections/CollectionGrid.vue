@@ -90,12 +90,16 @@
             };
           }
         },
-        goToBookPage (bookId) {
+        goToBookPage (bookId = false) {
           const gridRef = `grid-${this.currentCollection._id}`;
           const gridComp = (this.$refs[gridRef] && this.$refs[gridRef][0]) ? this.$refs[gridRef][0] : false;
           if (gridComp && gridComp.filteredData) {
-            const index = gridComp.filteredData.findIndex((book)=>book.bookid === bookId);
-            gridComp.goToIndex(index);
+            if (bookId) {
+              const index = gridComp.filteredData.findIndex((book)=>book.bookid === bookId);
+              gridComp.goToIndex(index);
+            } else {
+              gridComp.goToIndex(0);
+            }
           }
         },
         scrollToRow(bookId) {
@@ -344,20 +348,21 @@
             if (this.$route.params.hasOwnProperty('bookid')) {
               const bookid = this.$route.params.bookid;
               const collectionid = this.$route.params.collectionid;
-              const [selectedBookId] = this.selectedBooks;
+              //const [selectedBookId] = this.selectedBooks;
               const found = this.collectionsPage.find((collection)=>{
-                return collection.bookids.find((book)=>{
-                  return book === bookid;
+                return collection.books_list.find((book)=>{
+                  return book.bookid === bookid;
                 })
               })
               if (found) {
                 clearTimeout(this.filterScrollTimer);
                 this.filterScrollTimer = setTimeout(()=>{
-                  this.goToBookPage(selectedBookId);
-                  this.scrollToRow(selectedBookId);
-                  this.selectedBooks = [selectedBookId];
+                  this.goToBookPage(bookid);
+                  this.scrollToRow(bookid);
+                  this.selectedBooks = [bookid];
                 }, 10)
               } else {
+                this.goToBookPage();
                 if (collectionid) {
                   this.$router.replace({ name: 'CollectionBooks', params: {
                     collectionid: collectionid
@@ -368,6 +373,7 @@
               }
             } else {
               this.selectedBooks = []; // clean old selection
+              this.goToBookPage();
             }
           }
         }
