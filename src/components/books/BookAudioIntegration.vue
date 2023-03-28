@@ -3,6 +3,16 @@
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
+          <div class="block-selection-info">
+            <template v-if="!blockSelection.start._id">
+              0 blocks selected
+            </template>
+            <template v-else>
+              {{alignCounter.countAudio}} Audio file block(s) in range
+              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
+              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            </template>
+          </div>
           <div class="file-catalogue-buttons" v-if="allowEditing">
             <div class="" v-if="allowEditing">
               <label class="checkbox-container">
@@ -109,6 +119,16 @@
         </div>
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
+        <div class="block-selection-info">
+          <template v-if="!blockSelection.start._id">
+            0 blocks selected
+          </template>
+          <template v-else>
+            {{alignCounter.countTTS}} TTS block(s) in range 
+            <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
+            <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+          </template>
+        </div>
         <div class="volume-slider-margin">
           <div class="tts-volume-label">Volume:</div>
           <Slider ref="slider" v-model="pre_volume" :step="0.1" :min="0.1" :max="1.0" />
@@ -1261,6 +1281,10 @@
       capitalizeFirst(text) {
         return _.upperFirst(text);
       },
+      
+      goToBlock(id) {
+        this.$emit('goToBlock', id);
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS'])
@@ -1314,7 +1338,7 @@
       },
       startAlignDisabled: {
         get() {
-          return this.alignCounter.count == 0 || this.selections.length == 0 || !this.allowAlignBlocksLimit;
+          return this.alignCounter.countAudio == 0 || this.selections.length == 0 || !this.allowAlignBlocksLimit;
         }
       },
       ...mapGetters({
@@ -1484,6 +1508,12 @@
 
       .volume-slider-margin {
         margin: 0px 8px;
+      }
+    }
+    .block-selection-info {
+      padding: 7px 20px 10px;
+      a {
+        cursor: pointer;
       }
     }
   }

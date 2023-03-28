@@ -266,16 +266,11 @@
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
-              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
-              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
-              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
-            </div>
-            <div v-else class="t-box red-message">Define block range</div>
             <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
+                @goToBlock="goToBlock"
               ></BookAudioIntegration>
           </vue-tab>
 
