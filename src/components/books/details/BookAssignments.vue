@@ -756,7 +756,7 @@
           }, 
           {
             height: 'auto',
-            width: '700px'
+            width: '590px'
           }, 
           {
             'closed': () => {

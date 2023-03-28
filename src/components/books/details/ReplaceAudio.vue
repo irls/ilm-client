@@ -138,7 +138,7 @@
           type: 'replace'
         }, {
           height: 'auto',
-          width: '700px'
+          width: '590px'
         });
       },
       parseAndReplaceAudioModal() {
@@ -149,7 +149,7 @@
           multiple: false
         }, {
           height: 'auto',
-          width: '700px'
+          width: '590px'
         });
       },
       ...mapActions('audioExport', ['blockAudioExport'])

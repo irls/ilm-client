@@ -5,7 +5,7 @@
         <h4 class="modal-title">{{importTitle}}</h4>
       </div>
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading || uploadErrors.length || audiobookReport">
-      <i class="fa fa-times" aria-hidden="true"></i>
+      <i class="close-modal" aria-hidden="true"></i>
       </button>
     </div>
     <div class="modal-body">
@@ -55,26 +55,26 @@
               </li>
            </ul>
           </div>
-          <div class="col-sm-12 audio-import-quality">
-            <div class="col-sm-3">
+          <div class="audio-import-quality">
+            <div class="audio-import-quality-item">
               Audio quality
             </div>
-            <div class="col-sm-3">
+            <div class="audio-import-quality-item">
               <label>
                 <input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" />
-                <div class="audio-quality -raw"></div>Raw
+                <div class="audio-quality -raw">Raw</div>
               </label>
             </div>
-            <div class="col-sm-3">
+            <div class="audio-import-quality-item">
               <label>
                 <input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" />
-                <div class="audio-quality -improved"></div>Improved
+                <div class="audio-quality -improved">Improved</div>
               </label>
             </div>
-            <div class="col-sm-3">
+            <div class="audio-import-quality-item">
               <label>
                 <input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" />
-                <div class="audio-quality -mastered"></div>Mastered</label>
+                <div class="audio-quality -mastered">Mastered</div></label>
             </div>
           </div>
           <div class="col-sm-12">
@@ -841,7 +841,6 @@ div.coverimg {
   color: inherit;
 }
 
-button.close i.fa {font-size: 18pt; padding-right: .5em;}
 .booktitle {font-family: times; padding-top:0; margin-top:0;}
 .bookauthor {font-family: times; color: gray; text-indent: 2.5em}
 .bookcover {float: right; max-width: 100px; max-height: 140px;
@@ -960,28 +959,42 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
     button.close {
       margin-top: -25px;
     }
+    button.close i.close-modal {
+      font-size: 18px;
+      padding-right: .5em;
+      &:before {
+        content: "\00d7";
+      }
+    }
   }
   .browse-audio, .browse-audio:hover {
     border: 1px solid #3187d5;
     border-radius: 5px;
     color: #3187d5;
-    padding: 8px 12px;
+    padding: 6px 12px;
     background: rgba(49, 135, 213, 0.1);
   }
   .input-group {
     width: 100%;
-    padding: 1px 0px;
     .playlist-url {
       background: rgba(238, 238, 238, 0.2);
     }
   }
   .audio-import-quality {
-    font-size: 15px;
+    font-size: 14px;
+    display: table-row;
+    .audio-import-quality-item {
+      display: table-cell;
+      vertical-align: top;
+      padding: 0px 35px 0px 0px;
+    }
     div.audio-quality {
-      width: 20px;
+      /* width: 20px; */
       height: 16px;
       display: inline-block;
       background-repeat: no-repeat;
+      padding-left: 18px;
+      vertical-align: top;
       &.-raw {
         background: url(/static/audio_quality/raw-16.png) no-repeat;
       }
@@ -991,6 +1004,29 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
       &.-mastered {
         background: url(/static/audio_quality/mastered-16.png) no-repeat;
       }
+    }
+    label {
+      margin-bottom: 0px;
+      font-weight: 400;
+    }
+  }
+  .modal-header {
+    border-bottom: none;
+    h4 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+  }
+  .modal-footer {
+    border-top: none;
+    .btn-default {
+      width: 88px;
+    }
+    .btn-primary {
+      width: 84px;
+    }
+    .btn {
+      margin: 0px 7px;
     }
   }
 }
