@@ -172,5 +172,10 @@
         }
       }
     }
+    label {
+      font-size: 14px;
+      font-weight: 400;
+      display: block;
+    }
   }
 </style>

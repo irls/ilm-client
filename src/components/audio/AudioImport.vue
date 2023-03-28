@@ -10,7 +10,7 @@
     </div>
     <div class="modal-body">
       <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
-        <div class="modal-body clearfix">
+        <div class="clearfix">
           <div class="col-sm-12">
             <h5>
               <template v-if="type === 'import'">
@@ -192,7 +192,7 @@ export default {
         break;
       case 'parse_replace':
         this.audioImportType = 'parse_replace';
-        this.acceptFiles = 'application/zip';
+        this.acceptFiles = 'zip,application/octet-stream,application/zip,application/x-zip,application/x-zip-compressed';
         break;
     }
   },
@@ -405,18 +405,23 @@ export default {
         if (!file.type) {
           allow = false;
         }
-        switch (this.acceptFiles) {
-          case 'audio/*':
-            if (!/^audio\/.*$/.test(file.type.toLowerCase())) {
-              allow = false;
-            }
-            break;
-          case 'audio/flac':
-          case 'application/zip':
-            if (file.type.toLowerCase() !== this.acceptFiles) {
-              allow = false;
-            }
-            break;
+        if (this.type === 'parse_replace') {
+          allow = file.type.toLowerCase().indexOf('zip') !== -1;
+        } else {
+          switch (this.acceptFiles) {
+            case 'audio/*':
+              if (!/^audio\/.*$/.test(file.type.toLowerCase())) {
+                allow = false;
+              }
+              break;
+            case 'audio/flac':
+              if (file.type.toLowerCase() !== this.acceptFiles) {
+                allow = false;
+              }
+              break;
+            case 'application/zip':
+              break;
+          }
         }
         if (allow) {
           this.addFileToUpload(file);
@@ -966,6 +971,9 @@ div.coverimg {
         content: "\00d7";
       }
     }
+  }
+  .modal-body {
+    padding: 0px 30px;
   }
   .browse-audio, .browse-audio:hover {
     border: 1px solid #3187d5;
