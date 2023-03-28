@@ -1270,9 +1270,13 @@ export default {
           .then(response => {
             if (response.status === 200) {
               if (collectionId) {
-                this.$router.replace({
+                /*this.$router.replace({
                   name: 'CollectionBook',
                   params: {collectionid: collectionId, bookid: this.currentBook.bookid}
+                });*/
+                this.$router.replace({
+                  name: 'BooksGrid',
+                  params: {bookid: this.currentBook.bookid}
                 });
               } else if (this.$route.params.hasOwnProperty('collectionid')) {
                 this.updateBooksList();
@@ -1281,11 +1285,6 @@ export default {
                   name: 'CollectionBooks',
                   params: {collectionid: collectionid}
                 });
-
-                /*this.$router.replace({
-                  name: 'BooksGrid',
-                  params: {bookid: this.currentBook.bookid}
-                });*/
 
                 //Vue.nextTick(() => {
                 //  this.$router.replace({path: '/books'});
