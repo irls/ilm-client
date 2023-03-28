@@ -201,6 +201,7 @@
           handler(newVal, oldVal) {
             if (this.$route.params.hasOwnProperty('collectionid')) {
               const collectionid = this.$route.params.collectionid;
+              const [selectedCollId] = this.selectedBooks;
               const found = this.filteredCollections.find((collection)=>{
                 return collection._id === collectionid;
               })
@@ -208,8 +209,10 @@
                 clearTimeout(this.filterScrollTimer);
                 this.filterScrollTimer = setTimeout(()=>{
                   this.goToBookPage(collectionid);
-                  this.scrollToRow(collectionid);
-                  this.selectedBooks = [collectionid];
+                  if (selectedCollId && selectedCollId !== collectionid) {
+                    this.scrollToRow(collectionid);
+                    this.selectedBooks = [collectionid];
+                  }
                 }, 10)
               } else {
                 this.goToBookPage();

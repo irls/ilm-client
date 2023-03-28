@@ -216,7 +216,7 @@ export default {
       handler(newVal, oldVal) {
         if (this.$route.params.hasOwnProperty('bookid')) {
           const bookid = this.$route.params.bookid;
-          //const [selectedBookId] = this.selectedBooks;
+          const [selectedBookId] = this.selectedBooks;
           const found = this.filteredBooks.find((book)=>{
             return book.bookid === bookid;
           })
@@ -224,8 +224,10 @@ export default {
             clearTimeout(this.filterScrollTimer);
             this.filterScrollTimer = setTimeout(()=>{
               this.goToBookPage(bookid);
-              this.scrollToRow(bookid);
-              this.selectedBooks = [bookid];
+              if (selectedBookId && selectedBookId !== bookid) {
+                this.scrollToRow(bookid);
+                this.selectedBooks = [bookid];
+              }
             }, 10)
           } else {
             this.goToBookPage();
