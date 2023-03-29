@@ -615,6 +615,12 @@ i.ico {
       position: relative;
       top: 5px;
       right: -2px;
+      opacity: 0.8;
+    }
+    &:hover {
+      &:before {
+        opacity: 1.0;
+      }
     }
   }
 
