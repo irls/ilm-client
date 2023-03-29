@@ -103,12 +103,17 @@
           }
         },
         scrollToRow(bookId) {
-          let t = setTimeout(function() {
-            let el = document.querySelector(`[data-id="${bookId}"]`);
-            if (el) {
-              el.scrollIntoView();
-            }
-          }, 100);
+          let el = document.querySelector(`[data-id="${bookId}"]`);
+          if (el) {
+            el.scrollIntoView();
+          } else {
+            let t = setTimeout(function() {
+              el = document.querySelector(`[data-id="${bookId}"]`);
+              if (el) {
+                el.scrollIntoView();
+              }
+            }, 100);
+          }
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
