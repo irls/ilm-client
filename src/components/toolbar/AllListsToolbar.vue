@@ -62,17 +62,23 @@
   </div>
 
   <div class="toolbar-second-row">
-    <TabView ref="booksListTabs" :activeIndex="activeTabIdx" :scrollable="false" @tab-change="onBooksListTabChange">
-      <TabPanel :header="filteredBooksCounter + ' Book' + (filteredBooksCounter===1 ? '':'s')"></TabPanel>
-      <TabPanel :header="filteredCollectionsCounter + ' Collection' + (filteredCollectionsCounter===1 ? '':'s')"></TabPanel>
-      <TabPanel v-if="currentCollection._id" :header="currentCollectionHeader"></TabPanel>
-    </TabView>
+    <div class="toolbar-tabview">
+      <div :class="['toolbar-nav-link', {'p-highlight': activeTabIdx == 0}]" @click="onBooksListTabChange({index: 0})">
+          {{filteredBooksCounter + ' Book' + (filteredBooksCounter===1 ? '':'s')}}
+      </div>
+      <div :class="['toolbar-nav-link', {'p-highlight': activeTabIdx == 1}]" @click="onBooksListTabChange({index: 1})">
+          {{filteredCollectionsCounter + ' Collection' + (filteredCollectionsCounter===1 ? '':'s')}}
+      </div>
+      <div :class="['toolbar-clip toolbar-nav-link', {'p-highlight': activeTabIdx == 2}]" @click="onBooksListTabChange({index: 2})"
+        v-html="currentCollectionHeader" >
+      </div>
+    </div>
 
     <div class="toolbar-second-row-buttons">
-      <button class="btn btn-primary" v-on:click="taskAddModalActive = true" v-if="(isAdmin || isLibrarian)">
+      <button class="btn btn-primary add-book-button" v-on:click="taskAddModalActive = true" v-if="(isAdmin || isLibrarian)">
         <i class="fa fa-plus"></i>&nbsp;Add Book
       </button>
-      <button class="btn btn-primary" v-on:click="addCollection" v-if="(isAdmin || isLibrarian) && allowCollectionsEdit">
+      <button class="btn btn-primary add-collection-button" v-on:click="addCollection" v-if="(isAdmin || isLibrarian) && allowCollectionsEdit">
         <i class="fa fa-plus"></i>&nbsp;Add Collection
       </button>
     </div>
@@ -162,7 +168,7 @@ export default {
     }),
     currentCollectionHeader () {
       if (this.currentCollection._id) {
-        return `${this.currentCollection.title || this.currentCollection._id} (${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})`;
+        return `<span class="text-clip-ellipsis">${this.currentCollection.title || this.currentCollection._id}</span><span>&nbsp;(${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})</span>`;
       }
       return '';
     }
@@ -293,6 +299,7 @@ export default {
         }).catch(err => {})
     },
     onBooksListTabChange(ev) {
+      this.activeTabIdx = ev.index;
       switch(ev.index) {
           case 2 : {
             if (this.currentCollection._id) {
@@ -318,7 +325,6 @@ export default {
           } break;
           case 0 : default : {
             if (this.currentBookMeta && this.currentBookMeta.bookid) {
-              console.log(`this.currentBookMeta: `, this.currentBookMeta.bookid);
               this.$router.push({ name: 'BooksGrid', params: { bookid: this.currentBookMeta.bookid } });
             } else {
               this.$router.push({ name: 'Books' });
@@ -475,43 +481,65 @@ input.form-control {
   .toolbar-second-row {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    /*border-bottom: 1px solid gray;*/
-    .p-tabview {
-      margin-bottom: -1px;
-      .p-tabview-nav {
-        /*border-bottom: 1px solid gray;*/
-        .p-tabview-nav-link {
-          font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-          font-size: 1.1em;
-          font-weight: 400;
-          margin-bottom: -2px;
-          color: gray;
-          /*border-top: 1px solid #ccc;
-          border-left: 1px solid #ccc;
-          border-right: 1px solid #ccc;
-          border-top-left-radius: 4px;
-          border-top-right-radius: 4px;*/
-        }
-        li {
-          /*border-bottom: 1px solid gray;*/
-          margin-bottom: -1px;
-        }
-        li.p-highlight {
-          /*border-bottom: 1px solid transparent;
-          margin-bottom: -1px;*/
-          .p-tabview-nav-link {
-            background: #eaf1fc;
-            /*font-weight: 600;*/
-            color: black;
-            border-color: gray;
 
+    .toolbar-tabview {
+      /*margin-bottom: -1px;*/
+      min-width: 370px;
+      flex: 1;
+      display: flex;
+      height: 34px;
+      overflow: hidden;
+
+      .toolbar-nav-link {
+        user-select: none;
+        cursor: pointer;
+        padding: 8px 10px;
+        margin-right: 5px;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 1.1em;
+        font-weight: 400;
+        line-height: 1;
+        color: gray;
+        white-space: nowrap;
+
+        &.toolbar-clip {
+          /*flex: 1;*/
+          display: flex;
+          white-space: nowrap;
+          overflow: hidden;
+
+          span {
+            display: inline-block;
+            white-space: nowrap;
+            &.text-clip-ellipsis {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+
+        &:hover {
+          background: #f3f2f1;
+          text-decoration: underline;
+          color: black;
+        }
+
+        &.p-highlight {
+          background: #eaf1fc;
+          &:hover {
+            background: #eaf1fc;
           }
         }
       }
-      .p-tabview-panels {
-        display: none;
-      }
+    }
+
+    .add-book-button {
+
+    }
+
+    .add-collection-button {
+      margin-right: 0px;
     }
   }
 }
