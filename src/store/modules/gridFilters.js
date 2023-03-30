@@ -1,5 +1,8 @@
-import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
-import { Languages }                         from "@src/mixins/lang_config.js"
+import {
+  prepareForFilter,
+  cleanDiacritics,
+  splitPrepareForFilter }  from '@src/filters/search.js';
+import { Languages }       from "@src/mixins/lang_config.js"
 
 export default {
   namespaced: true,
@@ -8,19 +11,21 @@ export default {
 
     booksFilters: {
       filter: '',
-      projectTag: '',
+      secFilter: '',
       multiProjectTag: [],
       importStatus: [],
       language: [],
-      jobStatus: ['active']
+      jobStatus: ['active'],
+      booksIds: [],
     },
     defaultBooksFilters: {
       filter: '',
-      projectTag: '',
+      secFilter: '',
       importStatus: [],
       multiProjectTag: [],
       language: [],
-      jobStatus: ['active']
+      jobStatus: ['active'],
+      booksIds: [],
     },
     collectionsFilters: {
       filter: '',
@@ -166,22 +171,30 @@ export default {
           const strParts = [
             book.title, book.subtitle, book.slug,
             bookAuthors, book.bookid, book.category,
-            book.hashTags, book.executors.editor._id,
-            book.executors.editor.name, book.executors.editor.title
+            //book.hashTags, book.executors.editor._id,
+            //book.executors.editor.name, book.executors.editor.title
             //book.description
           ];
           const str = prepareForFilter(strParts.join(' '));
-          const find = prepareForFilter(state.booksFilters.filter);
-          return (str.indexOf(find) > -1)
+          const find = splitPrepareForFilter(state.booksFilters.filter);
+          return find.every((fString)=>str.indexOf(fString) >= 0);
         })
-        //.filter(book => {
-        //  const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
-        //  const find = prepareForFilter(state.booksFilters.projectTag);
-        //  return (str.indexOf(find) > -1)
-        //})
-        //.filter(book => !book.collection_id)
+        .filter(book => {
+         const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+         const find = splitPrepareForFilter(state.booksFilters.secFilter);
+         return find.every((fString)=>str.indexOf(fString) >= 0);
+        })
+        /*.filter(book => { [Vue warn]: You may have an infinite update loop in a component render function.
+          if (state.collectionsFilters.filter.length > 0) {
+            if (state.booksFilters.booksIds.length > 0) {
+              return state.booksFilters.booksIds.indexOf(book.bookid) >= 0;
+            }
+            return false;
+          }
+          return true;
+        })*/
 
-      state.collectionsFilters.booksIds = filteredbooks.map((book)=>book.bookid);
+      //state.collectionsFilters.booksIds = filteredbooks.map((book)=>book.bookid);
       return filteredbooks;
     },
 
@@ -196,10 +209,10 @@ export default {
                 collAuthors, coll.category, coll._id
               ];
               const str = prepareForFilter(strParts.join(' '));
-              const find = prepareForFilter(state.collectionsFilters.filter);
-              return (str.indexOf(find) > -1)
+              const find = splitPrepareForFilter(state.booksFilters.secFilter);
+              return find.every((fString)=>str.indexOf(fString) >= 0);
             })
-            .filter(coll => {
+            /*.filter(coll => { [Vue warn]: You may have an infinite update loop in a component render function.
               if (state.booksFilters.filter.length > 0) {
                 if (state.collectionsFilters.booksIds.length > 0) {
                   if (coll.bookids.length > 0) {
@@ -211,7 +224,8 @@ export default {
                 return false;
               }
               return true;
-            })
+            })*/
+      //state.booksFilters.booksIds = filteredCollections.reduce((acc, coll)=>[...acc, ...coll.bookids], []);
       return filteredCollections;
     },
 
@@ -226,13 +240,18 @@ export default {
           const strParts = [
             book.title, book.subtitle, book.slug,
             bookAuthors, book.bookid, book.category,
-            book.hashTags, book.executors.editor._id,
-            book.executors.editor.name, book.executors.editor.title
+            //book.hashTags, book.executors.editor._id,
+            //book.executors.editor.name, book.executors.editor.title
             //book.description
           ];
           const str = prepareForFilter(strParts.join(' '));
-          const find = prepareForFilter(state.booksFilters.filter);
-          return (str.indexOf(find) > -1)
+          const find = splitPrepareForFilter(state.booksFilters.secFilter);
+          return find.every((fString)=>str.indexOf(fString) >= 0);
+        })
+        .filter(book => {
+          const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+          const find = splitPrepareForFilter(state.booksFilters.secFilter);
+          return find.every((fString)=>str.indexOf(fString) >= 0);
         })
       return filteredbooks;
     }
@@ -244,7 +263,7 @@ export default {
 
     set_booksFilters (state, obj) { // replace any property of bookFilters
       for (const prop in obj) {
-        if (['filter', 'multiProjectTag', 'importStatus', 'language', 'jobStatus'].indexOf(prop) > -1) {
+        if (['filter', 'secFilter', 'multiProjectTag', 'importStatus', 'language', 'jobStatus'].indexOf(prop) > -1) {
           state.booksFilters[prop] = obj[prop];
         }
       }

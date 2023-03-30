@@ -2,17 +2,27 @@
 <div class="books-list-toolbar">
   <div class="toolbar-first-row" ref="toolbarFirstRow">
     <!-- Meta Filter -->
-    <input placeholder="Filter by Book"
-      :value="booksFilters.filter"
-      type="text" class="form-control book-filter"
-      @keyup="filterChangeBooksDebounce('filter', $event)" ></input>
-    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
+    <span v-if="showBooksFilters">
+      <input placeholder="Filter by Title / Author / Category"
+        :value="booksFilters.filter"
+        type="text" class="form-control book-filter"
+        @keyup="filterChangeBooksDebounce('filter', $event)" ></input>
+      <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
 
-    <input placeholder="Filter by Collection"
-      :value="collectionsFilters.filter"
-      type="text" class="form-control book-filter"
-      @keyup="filterChangeCollectionsDebounce('filter', $event)"></input>
-    <i class="ico ico-clear-filter btn-inside"  aria-hidden="true" @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
+      <input placeholder="Filter by Editor / Tag"
+        :value="booksFilters.secFilter"
+        type="text" class="form-control book-filter second-filter"
+        @keyup="filterChangeBooksDebounce('secFilter', $event)" ></input>
+      <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="booksFilters.secFilter=''; filterChangeBooks('secFilter');"></i>
+    </span>
+
+    <span v-if="showCollectionsFilters">
+      <input placeholder="Filter by Title / Author / Category"
+        :value="collectionsFilters.filter"
+        type="text" class="form-control book-filter"
+        @keyup="filterChangeCollectionsDebounce('filter', $event)"></input>
+      <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
+    </span>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
       :options="mapFilterProjectTag"
@@ -35,7 +45,7 @@
       @change="filterChangeBooks" />
 
     <!-- Book status Dropdown -->
-    <MultiSelect v-if="mapFilterImportStatus.length > 1"
+    <MultiSelect v-if="showBooksFilters && mapFilterImportStatus.length > 1"
       v-model="multiBookFilters.importStatus"
       :options="mapFilterImportStatus" optionLabel="caption"
       data-captions="Statuses" placeholder="Status"
@@ -52,7 +62,7 @@
       </select> &nbsp;
     </template>-->
 
-    <MultiSelect v-if="adminOrLibrarian && mapFilterJobStatus.length > 1"
+    <MultiSelect v-if="showBooksFilters && adminOrLibrarian && mapFilterJobStatus.length > 1"
       v-model="multiBookFilters.jobStatus"
       :options="mapFilterJobStatus" optionLabel="caption"
       data-captions="States" placeholder="State"
@@ -171,7 +181,14 @@ export default {
         return `<span class="text-clip-ellipsis">${this.currentCollection.title || this.currentCollection._id}</span><span>&nbsp;(${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})</span>`;
       }
       return '';
-    }
+    },
+    showCollectionsFilters () {
+      return ['Collections', 'Collection'].indexOf(this.$route.name) >= 0;
+    },
+
+    showBooksFilters () {
+      return ['Books', 'BooksGrid', 'CollectionBooks', 'CollectionBook'].indexOf(this.$route.name) >= 0;
+    },
   },
 
   methods: {
@@ -180,13 +197,16 @@ export default {
         acc[key] = val.map((el)=>el.value);
         return acc;
       }, {});
-      //console.log(`filterChangeBooks.newFilters: `, newFilters);
       if (key && key === 'filter') {
         newFilters.filter = $event ? $event.target.value : '';
       }
+      if (key && key === 'secFilter') {
+        newFilters.secFilter = $event ? $event.target.value : '';
+      }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
-      this.changeFilterVisual2();
+      this.changeFilterVisual();
     },
+
     filterChangeBooksDebounce: _.debounce(function (key, $event) {
       this.filterChangeBooks(key, $event)
     }, 300),
@@ -201,16 +221,17 @@ export default {
       }
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
     },
+
     filterChangeCollectionsDebounce: _.debounce(function (key, $event) {
       this.filterChangeCollections(key, $event)
     }, 300),
 
-    changeFilterVisual1() {
+    changeFilterVisual() {
       Vue.nextTick(()=>{
         const vFilters = this.$refs.toolbarFirstRow.querySelectorAll('.p-multiselect-label-container .p-multiselect-label');
         for (const vContainer of vFilters) {
           const vTokens = vContainer.querySelectorAll('.p-multiselect-token');
-          const maxTokens = 3;
+          const maxTokens = 2;
           for (const [vIndex, vToken] of vTokens.entries()) {
             if (vIndex < maxTokens) {
               vToken.style.display = 'inline-block';
@@ -362,7 +383,7 @@ export default {
     this.toggleMetaVisible({force: true});
     await Vue.nextTick();
     this.syncRouteWithTab();
-    this.changeFilterVisual2();
+    this.changeFilterVisual();
   },
   watch:{
     async '$route' ($to, $from) {
@@ -446,6 +467,10 @@ input.form-control {
       width: 17.5em;
       padding-right:30px;
       margin-bottom: 2px;
+
+      &.second-filter {
+        width: 12.0em;
+      }
     }
     .p-multiselect {
       min-width: 14rem;
