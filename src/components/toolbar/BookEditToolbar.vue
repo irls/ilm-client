@@ -291,7 +291,7 @@ export default {
   },
   mounted() {
     this.bookSearch.string = "";
-    this.toggleMetaVisible({force: false});
+    this.toggleMetaVisible({force: true});
   }
 }
 </script>
