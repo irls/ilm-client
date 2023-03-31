@@ -46,10 +46,10 @@
 
 <script>
 import Vue from 'vue';
-import ButtonRadioGroup from '../generic/ButtonRadioGroup';
-import access from "../../mixins/access.js";
-import taskControls from '../../mixins/task_controls.js';
-import apiConfig from '../../mixins/api_config.js';
+import ButtonRadioGroup from '@src/components/generic/ButtonRadioGroup';
+import access from "@src/mixins/access.js";
+import taskControls from '@src/mixins/task_controls.js';
+import apiConfig from '@src/mixins/api_config.js';
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';

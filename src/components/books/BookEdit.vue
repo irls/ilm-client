@@ -191,7 +191,11 @@ export default {
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
           isAudioEditAligning: 'isAudioEditAligning',
-          bookSearch: 'bookSearch'
+          bookSearch: 'bookSearch',
+          adminOrLibrarian: 'adminOrLibrarian',
+          isEditor: 'isEditor',
+          isNarrator: 'isNarrator',
+          isProofer: 'isProofer'
       }),
       metaStyles: function () {
           let result = '';
@@ -1586,6 +1590,7 @@ export default {
       })
     },
     checkMode() {
+      console.log(`checkMode--: `, this.mode, this.currentJobInfo.id);
       if (this.currentJobInfo.id) {
         let allowed = false;
         switch (this.mode) {
@@ -1604,8 +1609,20 @@ export default {
           this.$store.commit('clear_storeList');
           this.$store.commit('clear_storeListO');
 
-          let params = this.$route.params ? this.$route.params : {};
-          this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
+          const params = this.$route.params ? this.$route.params : {};
+
+          if ((this.adminOrLibrarian || this.isEditor) && this.tc_showEditTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookEdit' : 'BookEdit', params: params});
+          }
+          else if (this.isNarrator && this.tc_showNarrateTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookNarrate' : 'BookNarrate', params: params});
+          }
+          else if (this.isProofer && this.tc_showProofreadTab()) {
+           this.$router.push({name: params.collectionid ? 'CollectionBookProofread' : 'BookProofread', params: params});
+          }
+          else {
+            this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
+          }
         }
       }
     },

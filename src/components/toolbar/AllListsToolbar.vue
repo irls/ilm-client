@@ -119,9 +119,9 @@
 import Vue from 'vue';
 import _ from 'lodash';
 import { mapGetters } from 'vuex'
-import BookImport from '../books/BookImport'
-import TaskAddModal from '../tasks/TaskAddModal'
-import { Languages } from "../../mixins/lang_config.js"
+import BookImport from '@src/components/books/BookImport'
+import TaskAddModal from '@src/components/tasks/TaskAddModal'
+import { Languages } from "@src/mixins/lang_config.js"
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import MultiSelect from 'primevue/multiselect';

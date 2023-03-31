@@ -60,8 +60,8 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import Clipboard from 'v-clipboard'
-import AllListsToolbar from './toolbar/AllListsToolbar'
-import BookEditToolbar from './books/BookEditToolbar'
+import AllListsToolbar from '@src/components/toolbar/AllListsToolbar'
+import BookEditToolbar from '@src/components/toolbar/BookEditToolbar'
 import BookMetaEdit from './books/BookMetaEdit'
 import NoBookSelected from './books/NoBookSelected'
 import CollectionTabs from './collections/CollectionTabs'

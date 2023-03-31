@@ -1177,15 +1177,6 @@ export default {
   methods: {
 
     init () {
-      // if( !this.validationErrors[this.currentBook.bookid])
-      //   this.validationErrors[this.currentBook.bookid] = {};
-      // if( !this.validationErrors[this.currentBook.bookid]['difficulty'])
-      //   this.validationErrors[this.currentBook.bookid]['difficulty'] = '';
-      // if( !this.validationErrors[this.currentBook.bookid]['weight'])
-      //   this.validationErrors[this.currentBook.bookid]['weight'] = '';
-      //
-      // this.validationErrorDifficulty = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['difficulty']) ? this.validationErrors[this.currentBook.bookid]['difficulty'] : '';
-      // this.validationErrorWeight = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['weight']) ? this.validationErrors[this.currentBook.bookid]['weight'] : '';
       this.validationErrorDifficulty ='';
       this.validationErrorWeight = '';
 

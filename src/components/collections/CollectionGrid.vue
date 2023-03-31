@@ -55,15 +55,8 @@
       methods: {
         rowClick(collection, event) {
           console.log(`rowClick: `, collection._id, this.currentCollection._id);
-          //if (collection._id !== this.currentCollection._id) {
-            //this.$emit('selectCollection', collection._id);
-            this.selectedBooks = [];
-            this.$router.replace({ name: 'CollectionBooks' });
-          //}
-          /*else if (this.selectedBooks.length) {
-            this.selectedBooks = [];
-            this.$router.replace({ path: '/collections/' + collection._id })
-          }*/
+          this.selectedBooks = [];
+          this.$router.replace({ name: 'CollectionBooks' });
         },
         selectBook(book) {
           const bookid = book.bookid;

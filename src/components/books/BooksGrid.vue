@@ -38,6 +38,8 @@ export default {
     }
   },
 
+  //mixins: [taskControls],
+
   computed: {
 
     ...mapGetters([
