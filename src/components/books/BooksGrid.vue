@@ -170,10 +170,6 @@ export default {
     }
   },
 
-  created () {
-    this.selectedBooks = [this.$route.params.bookid];
-  },
-
   mounted () {
     let loadBooks = new Promise((resolve, reject) => {
       if (this.allBooks.length === 0) {
@@ -207,10 +203,19 @@ export default {
   },
 
   watch: {
-    '$route' () {
-      if (this.$route.params.hasOwnProperty('bookid')) {
-        this.selectedBooks = [this.$route.params.bookid];
-      } else {
+//     '$route' (toRoute, fromRoute) {
+//       if (this.$route.params.hasOwnProperty('bookid')) {
+//         //this.selectedBooks = [this.$route.params.bookid];
+//         //this.$store.commit('gridFilters/set_fltrChangeTrigger');
+//       } else {
+//         this.selectedBooks = [];
+//         if (this.$refs.books_grid) {
+//           this.$refs.books_grid.currentPage = 0;
+//         }
+//       }
+//     },
+    '$route' (toRoute, fromRoute) {
+      if (!this.$route.params.hasOwnProperty('bookid')) {
         this.selectedBooks = [];
         if (this.$refs.books_grid) {
           this.$refs.books_grid.currentPage = 0;
@@ -219,7 +224,6 @@ export default {
     },
     fltrChangeTrigger: {
       handler(newVal, oldVal) {
-        console.log(`fltrChangeTrigger: `, newVal, oldVal);
         Vue.nextTick(()=>{
           if (this.$route.params.hasOwnProperty('bookid')) {
             const bookid = this.$route.params.bookid;
@@ -228,11 +232,9 @@ export default {
               return book.bookid === bookid;
             })
             if (found) {
-              console.log(`fltrChangeTrigger.found: `,found);
               clearTimeout(this.filterScrollTimer);
               this.filterScrollTimer = setTimeout(()=>{
                 this.goToBookPage(bookid);
-                console.log(`selectedBookId: `, selectedBookId, (!selectedBookId || (selectedBookId && selectedBookId !== bookid)));
                 if (!selectedBookId || (selectedBookId && selectedBookId !== bookid)) {
                   this.scrollToRow(bookid);
                   this.selectedBooks = [bookid];
@@ -263,6 +265,7 @@ export default {
         } else {
           this.$store.dispatch('loadCollection', false);
         }
+        this.selectedBooks = [book.bookid];
         this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
       }
     },

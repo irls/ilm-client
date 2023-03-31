@@ -333,13 +333,21 @@
         }
       },
       watch: {
-        currentBookMeta: {
-          handler() {
-            if (this.currentBookMeta.bookid) {
-              this.selectedBooks = [this.currentBookMeta.bookid];
+//         currentBookMeta: {
+//           handler() {
+//             if (this.currentBookMeta.bookid) {
+//               this.selectedBooks = [this.currentBookMeta.bookid];
+//             }
+//           },
+//           deep: true
+//         },
+        '$route' (toRoute, fromRoute) {
+          if (!this.$route.params.hasOwnProperty('bookid')) {
+            this.selectedBooks = [];
+            if (this.$refs.books_grid) {
+              this.$refs.books_grid.currentPage = 0;
             }
-          },
-          deep: true
+          }
         },
         fltrChangeTrigger: {
           handler(newVal, oldVal) {
