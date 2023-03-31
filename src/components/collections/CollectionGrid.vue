@@ -343,38 +343,40 @@
         },
         fltrChangeTrigger: {
           handler(newVal, oldVal) {
-            if (this.$route.params.hasOwnProperty('bookid')) {
-              const bookid = this.$route.params.bookid;
-              const collectionid = this.$route.params.collectionid;
-              const [selectedBookId] = this.selectedBooks;
-              const found = this.collectionsPage.find((collection)=>{
-                return collection.books_list.find((book)=>{
-                  return book.bookid === bookid;
+            Vue.nextTick(()=>{
+              if (this.$route.params.hasOwnProperty('bookid')) {
+                const bookid = this.$route.params.bookid;
+                const collectionid = this.$route.params.collectionid;
+                const [selectedBookId] = this.selectedBooks;
+                const found = this.collectionsPage.find((collection)=>{
+                  return collection.books_list.find((book)=>{
+                    return book.bookid === bookid;
+                  })
                 })
-              })
-              if (found) {
-                clearTimeout(this.filterScrollTimer);
-                this.filterScrollTimer = setTimeout(()=>{
-                  this.goToBookPage(bookid);
-                  if (selectedBookId && selectedBookId !== bookid) {
-                    this.scrollToRow(bookid);
-                    this.selectedBooks = [bookid];
-                  }
-                }, 10)
-              } else {
-                this.goToBookPage();
-                if (collectionid) {
-                  this.$router.replace({ name: 'CollectionBooks', params: {
-                    collectionid: collectionid
-                  } });
+                if (found) {
+                  clearTimeout(this.filterScrollTimer);
+                  this.filterScrollTimer = setTimeout(()=>{
+                    this.goToBookPage(bookid);
+                    if (selectedBookId && selectedBookId !== bookid) {
+                      this.scrollToRow(bookid);
+                      this.selectedBooks = [bookid];
+                    }
+                  }, 1)
                 } else {
-                  this.$router.replace({ name: 'Collections' });
+                  this.goToBookPage();
+                  if (collectionid) {
+                    this.$router.replace({ name: 'CollectionBooks', params: {
+                      collectionid: collectionid
+                    } });
+                  } else {
+                    this.$router.replace({ name: 'Collections' });
+                  }
                 }
+              } else {
+                this.selectedBooks = []; // clean old selection
+                this.goToBookPage();
               }
-            } else {
-              this.selectedBooks = []; // clean old selection
-              this.goToBookPage();
-            }
+            });
           }
         }
       }
