@@ -219,6 +219,7 @@ export default {
     },
     fltrChangeTrigger: {
       handler(newVal, oldVal) {
+        console.log(`fltrChangeTrigger: `, newVal, oldVal);
         Vue.nextTick(()=>{
           if (this.$route.params.hasOwnProperty('bookid')) {
             const bookid = this.$route.params.bookid;
@@ -231,6 +232,7 @@ export default {
               clearTimeout(this.filterScrollTimer);
               this.filterScrollTimer = setTimeout(()=>{
                 this.goToBookPage(bookid);
+                console.log(`selectedBookId: `, selectedBookId, (!selectedBookId || (selectedBookId && selectedBookId !== bookid)));
                 if (!selectedBookId || (selectedBookId && selectedBookId !== bookid)) {
                   this.scrollToRow(bookid);
                   this.selectedBooks = [bookid];
@@ -294,12 +296,17 @@ export default {
       }
     },
     scrollToRow(bookId) {
-      let t = setTimeout(function() {
-        let el = document.querySelector(`[data-id="${bookId}"]`);
-        if (el) {
-          el.scrollIntoView();
-        }
-      }, 100);
+      let el = document.querySelector(`[data-id="${bookId}"]`);
+      if (el) {
+        el.scrollIntoView();
+      } else {
+        let t = setTimeout(function() {
+          let el = document.querySelector(`[data-id="${bookId}"]`);
+          if (el) {
+            el.scrollIntoView();
+          }
+        }, 100);
+      }
     },
   }
 
