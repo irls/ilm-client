@@ -357,7 +357,7 @@
                   clearTimeout(this.filterScrollTimer);
                   this.filterScrollTimer = setTimeout(()=>{
                     this.goToBookPage(bookid);
-                    if (selectedBookId && selectedBookId !== bookid) {
+                    if (!selectedBookId || (selectedBookId && selectedBookId !== bookid)) {
                       this.scrollToRow(bookid);
                       this.selectedBooks = [bookid];
                     }
