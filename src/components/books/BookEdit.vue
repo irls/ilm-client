@@ -1605,26 +1605,23 @@ export default {
             break;
         }
         if (!allowed) {
-          // to prevent half book load before detect mode
-          this.$store.commit('clear_storeList');
-          this.$store.commit('clear_storeListO');
-
           const params = this.$route.params ? this.$route.params : {};
 
-          Vue.nextTick(()=>{
-            if ((this.adminOrLibrarian || this.isEditor) && this.tc_showEditTab()) {
-              this.$router.replace({name: params.collectionid ? 'CollectionBookEdit' : 'BookEdit', params: params});
-            }
-            else if (this.isNarrator && this.tc_showNarrateTab()) {
-              this.$router.replace({name: params.collectionid ? 'CollectionBookNarrate' : 'BookNarrate', params: params});
-            }
-            else if (this.isProofer && this.tc_showProofreadTab()) {
-              this.$router.replace({name: params.collectionid ? 'CollectionBookProofread' : 'BookProofread', params: params});
-            }
-            else {
-              this.$router.replace({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
-            }
-          });
+          if ((this.adminOrLibrarian || this.isEditor) && this.tc_showEditTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookEdit' : 'BookEdit', params: params});
+          }
+          else if (this.isNarrator && this.tc_showNarrateTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookNarrate' : 'BookNarrate', params: params});
+          }
+          else if (this.isProofer && this.tc_showProofreadTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookProofread' : 'BookProofread', params: params});
+          }
+          else {
+            // to prevent half book load before detect mode
+            this.$store.commit('clear_storeList');
+            this.$store.commit('clear_storeListO');
+            this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
+          }
         }
       }
     },
