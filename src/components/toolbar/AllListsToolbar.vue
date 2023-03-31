@@ -390,6 +390,7 @@ export default {
       if ($to.name !== $from.name) {
         await Vue.nextTick();
         this.syncRouteWithTab();
+        this.changeFilterVisual();
       }
     }
   },
