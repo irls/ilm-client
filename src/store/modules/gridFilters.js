@@ -209,7 +209,7 @@ export default {
                 collAuthors, coll.category, coll._id
               ];
               const str = prepareForFilter(strParts.join(' '));
-              const find = splitPrepareForFilter(state.booksFilters.secFilter);
+              const find = splitPrepareForFilter(state.collectionsFilters.filter);
               return find.every((fString)=>str.indexOf(fString) >= 0);
             })
             /*.filter(coll => { [Vue warn]: You may have an infinite update loop in a component render function.
@@ -245,7 +245,7 @@ export default {
             //book.description
           ];
           const str = prepareForFilter(strParts.join(' '));
-          const find = splitPrepareForFilter(state.booksFilters.secFilter);
+          const find = splitPrepareForFilter(state.booksFilters.filter);
           return find.every((fString)=>str.indexOf(fString) >= 0);
         })
         .filter(book => {

@@ -6,13 +6,15 @@
       <input placeholder="Filter by Title / Author / Category"
         :value="booksFilters.filter"
         type="text" class="form-control book-filter"
-        @keyup="filterChangeBooksDebounce('filter', $event)" ></input>
+        @keyup="filterChangeBooksDebounce('filter', $event)"
+        @paste="filterChangeBooksDebounce('filter', $event)" ></input>
       <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
 
       <input placeholder="Filter by Editor / Tag"
         :value="booksFilters.secFilter"
         type="text" class="form-control book-filter second-filter"
-        @keyup="filterChangeBooksDebounce('secFilter', $event)" ></input>
+        @keyup="filterChangeBooksDebounce('secFilter', $event)"
+        @paste="filterChangeBooksDebounce('secFilter', $event)"></input>
       <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="booksFilters.secFilter=''; filterChangeBooks('secFilter');"></i>
     </span>
 
@@ -20,7 +22,8 @@
       <input placeholder="Filter by Title / Author / Category"
         :value="collectionsFilters.filter"
         type="text" class="form-control book-filter"
-        @keyup="filterChangeCollectionsDebounce('filter', $event)"></input>
+        @keyup="filterChangeCollectionsDebounce('filter', $event)"
+        @paste="filterChangeCollectionsDebounce('filter', $event)" ></input>
       <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
     </span>
 
