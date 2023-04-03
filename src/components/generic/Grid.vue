@@ -328,11 +328,14 @@ Features:
   .width-50-p {
     width:50%;
   }
-  .width-37-p {
-    width:37%;
+  .width-45-p {
+    width:45%;
   }
   .width-36-p {
     width:36%;
+  }
+  .width-25-p {
+    width:25%;
   }
   .width-16-p {
     width:16%;

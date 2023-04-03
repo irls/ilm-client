@@ -122,7 +122,7 @@
               {
                 title: 'Collection Title',
                 path: 'title',
-                addClass: 'booktitle width-36-p',
+                addClass: 'booktitle width-45-p',
                 isPassFull: true,
                 html (val) {
                   return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title.length ? val.title : val._id}`
@@ -131,7 +131,7 @@
               {
                 title: 'Author',
                 path: 'author',
-                addClass: 'author width-16-p',
+                addClass: 'author width-25-p',
                 render(val) {
                   return val && Array.isArray(val) ? val.join(', ') : val;
                 }
@@ -172,7 +172,7 @@
                   return `<i>${date}</i> ${currVersion}`;
                 }
               },
-              {
+              /*{
                 title: 'Category',
                 path: 'category',
                 addClass: 'author width-150',
@@ -190,7 +190,7 @@
                   }
                   return `${val}`
                 }
-              },
+              },*/
             ];
             return headers;
           },
