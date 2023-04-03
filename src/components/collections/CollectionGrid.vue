@@ -112,6 +112,9 @@
             if (result) result = this.scrollToRow(selectedBookId);
             if (result) this.selectedBooks = [selectedBookId];
             return result;
+          } else {
+            this.$router.replace({ name: 'CollectionBooks' });
+            this.selectedBooks = [];
           }
           return result;
         },

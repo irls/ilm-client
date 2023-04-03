@@ -1260,26 +1260,33 @@ export default {
         return this.updateBookCollection(collectionId)
           .then(response => {
             if (response.status === 200) {
+              console.log(`this.$route.name: `, this.$route.name, ' collectionId:', this.$route.params.collectionid);
               if (collectionId) {
-                /*this.$router.replace({
-                  name: 'CollectionBook',
-                  params: {collectionid: collectionId, bookid: this.currentBook.bookid}
-                });*/
-                this.$router.replace({
-                  name: 'BooksGrid',
-                  params: {bookid: this.currentBook.bookid}
-                });
-              } else if (this.$route.params.hasOwnProperty('collectionid')) {
-                this.updateBooksList();
-                const collectionid = this.$route.params.collectionid;
-                this.$router.replace({
-                  name: 'CollectionBooks',
-                  params: {collectionid: collectionid}
-                });
-
-                //Vue.nextTick(() => {
-                //  this.$router.replace({path: '/books'});
-                //});
+                if (this.$route.name == 'BooksGrid') {
+                  this.$store.dispatch('loadCollection', collectionId);
+                }
+                if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
+                  if (this.$route.params.collectionid !== collectionId) {
+                    //this.$router.replace({
+                    //  name: 'CollectionBook',
+                    //  params: {collectionid: collectionId, bookid: this.currentBook.bookid}
+                    //});
+                    this.$router.replace({
+                      name: 'CollectionBooks',
+                      params: {collectionid: this.$route.params.collectionid}
+                    });
+                  }
+                }
+              } else {
+                if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
+                  this.updateBooksList();
+                  this.$router.replace({
+                    name: 'CollectionBooks',
+                    params: {collectionid: this.$route.params.collectionid}
+                  });
+                } else {
+                  this.$store.dispatch('loadCollection', false);
+                }
               }
             }
           })

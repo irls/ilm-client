@@ -302,12 +302,18 @@ export default {
     },
     async initScroll(selectedBookId) {
       let result = false;
-      if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
+      const found = this.filteredBooks.find((book)=>book.bookid == selectedBookId);
+      if (found) {
         await Vue.nextTick();
         result = this.goToBookPage(selectedBookId);
         await Vue.nextTick();
         if (result) result = this.scrollToRow(selectedBookId);
-        if (result) this.selectedBooks = [selectedBookId];
+        if (result) {
+          this.selectedBooks = [selectedBookId];
+          if (found.collection_id) {
+            this.$store.dispatch('loadCollection', found.collection_id);
+          }
+        }
         return result;
       }
       this.$router.replace({ name: 'Books' });
