@@ -186,14 +186,14 @@ export default {
       Vue.nextTick(()=>{
         if (this.$route.params.hasOwnProperty('bookid')) {
           const selectedBookId = this.$route.params.bookid;
-          if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
-            clearTimeout(this.filterScrollTimer);
-            this.filterScrollTimer = setTimeout(()=>{
+          clearTimeout(this.filterScrollTimer);
+          this.filterScrollTimer = setTimeout(()=>{
+            if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
               this.goToBookPage(selectedBookId);
               this.scrollToRow(selectedBookId);
               this.selectedBooks = [selectedBookId];
-            }, 1)
-          }
+            }
+          }, 10)
         }
       });
     })
@@ -203,17 +203,6 @@ export default {
   },
 
   watch: {
-//     '$route' (toRoute, fromRoute) {
-//       if (this.$route.params.hasOwnProperty('bookid')) {
-//         //this.selectedBooks = [this.$route.params.bookid];
-//         //this.$store.commit('gridFilters/set_fltrChangeTrigger');
-//       } else {
-//         this.selectedBooks = [];
-//         if (this.$refs.books_grid) {
-//           this.$refs.books_grid.currentPage = 0;
-//         }
-//       }
-//     },
     '$route' (toRoute, fromRoute) {
       if (!this.$route.params.hasOwnProperty('bookid')) {
         this.selectedBooks = [];

@@ -73,10 +73,10 @@
       mounted() {
         this.updateBooksList()
         .then(()=>{
-          if (this.$route && this.$route.params) {
-            if (this.$route.params.collectionid) {
-              const selectedCollectionId = this.$route.params.collectionid;
-              Vue.nextTick(()=>{
+          Vue.nextTick(()=>{
+            if (this.$route && this.$route.params) {
+              if (this.$route.params.collectionid) {
+                const selectedCollectionId = this.$route.params.collectionid;
                 clearTimeout(this.filterScrollTimer);
                 this.filterScrollTimer = setTimeout(()=>{
                   if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
@@ -85,11 +85,10 @@
                     this.scrollToRow(selectedCollectionId);
                     this.selectedBooks = [selectedCollectionId];
                   }
-                }, 300)
-              });
+                }, 10)
+              }
             }
-          }
-          //console.log(`bookCollections: `, this.bookCollections);
+          })
         })
       },
       computed: {
