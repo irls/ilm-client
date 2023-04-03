@@ -187,11 +187,15 @@ export default {
         if (this.$route && this.$route.params) {
           if (this.$route.params.hasOwnProperty('bookid')) {
             const selectedBookId = this.$route.params.bookid;
-            if (!this.initScroll(selectedBookId)) {
-              this.filterScrollTimer = setTimeout(()=>{
-                this.initScroll(selectedBookId)
-              }, 100)
-            }
+            this.initScroll(selectedBookId)
+            .then((isOk)=>{
+              console.log(`initScroll.isOk: `, isOk);
+              if (isOk !== true) {
+                this.filterScrollTimer = setTimeout(()=>{
+                  this.initScroll(selectedBookId)
+                }, 100)
+              }
+            })
           }
         }
       });
@@ -296,15 +300,19 @@ export default {
       }
       return false;
     },
-    initScroll(selectedBookId) {
+    async initScroll(selectedBookId) {
       let result = false;
       if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
+        await Vue.nextTick();
         result = this.goToBookPage(selectedBookId);
+        await Vue.nextTick();
         if (result) result = this.scrollToRow(selectedBookId);
         if (result) this.selectedBooks = [selectedBookId];
         return result;
       }
-      return result;
+      this.$router.replace({ name: 'Books' });
+      this.selectedBooks = [];
+      return false;
     }
   }
 
