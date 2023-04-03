@@ -93,20 +93,27 @@
             } else {
               gridComp.goToIndex(0);
             }
+            return true;
           }
+          return false;
         },
         scrollToRow(bookId) {
-          let el = document.querySelector(`[data-id="${bookId}"]`);
+          const el = document.querySelector(`[data-id="${bookId}"]`);
           if (el) {
             el.scrollIntoView();
-          } else {
-            let t = setTimeout(function() {
-              el = document.querySelector(`[data-id="${bookId}"]`);
-              if (el) {
-                el.scrollIntoView();
-              }
-            }, 100);
+            return true;
           }
+          return false;
+        },
+        initScroll(selectedBookId) {
+          let result = false;
+          if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
+            result = this.goToBookPage(selectedBookId);
+            if (result) result = this.scrollToRow(selectedBookId);
+            if (result) this.selectedBooks = [selectedBookId];
+            return result;
+          }
+          return result;
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
@@ -128,19 +135,16 @@
         .then(()=>{
           Vue.nextTick(()=>{
             if (this.$route && this.$route.params) {
-              if (this.$route.params.bookid) {
+              if (this.$route.params.hasOwnProperty('bookid')) {
                 const selectedBookId = this.$route.params.bookid;
-                clearTimeout(this.filterScrollTimer);
-                this.filterScrollTimer = setTimeout(()=>{
-                  if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
-                    this.goToBookPage(selectedBookId);
-                    this.scrollToRow(selectedBookId);
-                    this.selectedBooks = [selectedBookId];
-                  }
-                }, 10)
+                if (!this.initScroll(selectedBookId)) {
+                  this.filterScrollTimer = setTimeout(()=>{
+                    this.initScroll(selectedBookId)
+                  }, 100)
+                }
               }
             }
-          })
+          });
         })
       },
       computed: {

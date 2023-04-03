@@ -184,16 +184,15 @@ export default {
     return loadBooks
     .then(()=>{
       Vue.nextTick(()=>{
-        if (this.$route.params.hasOwnProperty('bookid')) {
-          const selectedBookId = this.$route.params.bookid;
-          clearTimeout(this.filterScrollTimer);
-          this.filterScrollTimer = setTimeout(()=>{
-            if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
-              this.goToBookPage(selectedBookId);
-              this.scrollToRow(selectedBookId);
-              this.selectedBooks = [selectedBookId];
+        if (this.$route && this.$route.params) {
+          if (this.$route.params.hasOwnProperty('bookid')) {
+            const selectedBookId = this.$route.params.bookid;
+            if (!this.initScroll(selectedBookId)) {
+              this.filterScrollTimer = setTimeout(()=>{
+                this.initScroll(selectedBookId)
+              }, 100)
             }
-          }, 10)
+          }
         }
       });
     })
@@ -285,21 +284,28 @@ export default {
         } else {
           this.$refs.books_grid.goToIndex(0);
         }
+        return true;
       }
+      return false;
     },
     scrollToRow(bookId) {
-      let el = document.querySelector(`[data-id="${bookId}"]`);
+      const el = document.querySelector(`[data-id="${bookId}"]`);
       if (el) {
         el.scrollIntoView();
-      } else {
-        let t = setTimeout(function() {
-          let el = document.querySelector(`[data-id="${bookId}"]`);
-          if (el) {
-            el.scrollIntoView();
-          }
-        }, 100);
+        return true;
       }
+      return false;
     },
+    initScroll(selectedBookId) {
+      let result = false;
+      if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
+        result = this.goToBookPage(selectedBookId);
+        if (result) result = this.scrollToRow(selectedBookId);
+        if (result) this.selectedBooks = [selectedBookId];
+        return result;
+      }
+      return result;
+    }
   }
 
 }

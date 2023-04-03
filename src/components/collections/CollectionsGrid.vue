@@ -58,15 +58,27 @@
             } else {
               this.$refs.books_grid.goToIndex(0);
             }
+            return true;
           }
+          return false;
         },
         scrollToRow(bookId) {
-          let t = setTimeout(function() {
-            let el = document.querySelector(`[data-id="${bookId}"]`);
-            if (el) {
-              el.scrollIntoView();
-            }
-          }, 100);
+          const el = document.querySelector(`[data-id="${bookId}"]`);
+          if (el) {
+            el.scrollIntoView();
+            return true;
+          }
+          return false;
+        },
+        initScroll(selectedCollectionId) {
+          let result = false;
+          if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
+            result = this.goToBookPage(selectedCollectionId);
+            if (result) result = this.scrollToRow(selectedCollectionId);
+            if (result) this.selectedBooks = [selectedCollectionId];
+            return result;
+          }
+          return result;
         },
         ...mapActions(['updateBooksList'])
       },
@@ -75,17 +87,15 @@
         .then(()=>{
           Vue.nextTick(()=>{
             if (this.$route && this.$route.params) {
-              if (this.$route.params.collectionid) {
+              if (this.$route.params.hasOwnProperty('collectionid')) {
                 const selectedCollectionId = this.$route.params.collectionid;
-                clearTimeout(this.filterScrollTimer);
-                this.filterScrollTimer = setTimeout(()=>{
-                  if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
-                    this.$store.dispatch('loadCollection', selectedCollectionId)
-                    this.goToBookPage(selectedCollectionId);
-                    this.scrollToRow(selectedCollectionId);
-                    this.selectedBooks = [selectedCollectionId];
-                  }
-                }, 10)
+                if (!this.initScroll(selectedCollectionId)) {
+                  this.filterScrollTimer = setTimeout(()=>{
+                    if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
+                      this.initScroll(selectedCollectionId)
+                    }
+                  }, 10)
+                }
               }
             }
           })
