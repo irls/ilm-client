@@ -255,7 +255,8 @@
                 isPassFull: true,
                 html (val) {
                   const title = val.title.length ? val.title : val.bookid;
-                  return `<span data-tooltip="${title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
+                  // data-tooltip="${title}"
+                  return `<span><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
                 }
               },
               {
@@ -264,7 +265,8 @@
                 addClass: 'author width-16-p',
                 html(val) {
                   const text = val && Array.isArray(val) ? val.join(', ') : val;
-                  return `<span data-tooltip="${text}">${text}</span>`;
+                  // data-tooltip="${text}"
+                  return `<span>${text}</span>`;
                 }
               },
               {

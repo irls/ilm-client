@@ -80,10 +80,10 @@ export default {
             isPassFull: true,
             html (val) {
               const title = val.title.length ? val.title : val.bookid;
-              if (val.collection_id) {
-                return `<span data-tooltip="${title}"><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
-              }
-              return `<span data-tooltip="${title}"><i class='fa fa-book'></i>&nbsp;&nbsp;${title}</span>`
+              if (val.collection_id) { // data-tooltip="${title}"
+                return `<span><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
+              } // data-tooltip="${title}"
+              return `<span><i class='fa fa-book'></i>&nbsp;&nbsp;${title}</span>`
             }
           },
           {
@@ -92,7 +92,8 @@ export default {
             addClass: 'author width-16-p',
             html(val) {
               const text = val && Array.isArray(val) ? val.join(', ') : val;
-              return `<span data-tooltip="${text}">${text}</span>`;
+              // data-tooltip="${text}"
+              return `<span>${text}</span>`;
             }
           },
           {
