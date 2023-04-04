@@ -71,37 +71,24 @@
           }
           return false;
         },
-        initScroll(selectedCollectionId) {
-          let result = false;
+        async initScroll(selectedCollectionId) {
           if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
-            result = this.goToBookPage(selectedCollectionId);
-            if (result) result = this.scrollToRow(selectedCollectionId);
-            if (result) this.selectedBooks = [selectedCollectionId];
-            return result;
+            this.$store.dispatch('loadCollection', selectedCollectionId);
+            await Vue.nextTick();
+            this.goToBookPage(selectedCollectionId);
+            await Vue.nextTick();
+            this.scrollToRow(selectedCollectionId);
+            this.selectedBooks = [selectedCollectionId];
           }
-          return result;
         },
         ...mapActions(['updateBooksList'])
       },
       mounted() {
-        this.updateBooksList()
-        .then(()=>{
-          Vue.nextTick(()=>{
-            if (this.$route && this.$route.params) {
-              if (this.$route.params.hasOwnProperty('collectionid')) {
-                const selectedCollectionId = this.$route.params.collectionid;
-                this.$store.dispatch('loadCollection', selectedCollectionId);
-                if (!this.initScroll(selectedCollectionId)) {
-                  this.filterScrollTimer = setTimeout(()=>{
-                    if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
-                      this.initScroll(selectedCollectionId)
-                    }
-                  }, 10)
-                }
-              }
-            }
-          })
-        })
+        if (this.$route && this.$route.params) {
+          if (this.$route.params.hasOwnProperty('collectionid')) {
+            this.initScroll(this.$route.params.collectionid)
+          }
+        }
       },
       computed: {
         ...mapGetters([
@@ -200,11 +187,15 @@
         }
       },
       watch: {
-        currentCollection: {
-          handler(val, oldVal) {
-            if(val._id  !== oldVal._id) {
-              this.selectedBooks = [val._id];
-              //this.scrollToRow(val._id);
+        'filteredCollections.length': {
+          handler(newVal, oldVal) {
+            if (oldVal == 0 && newVal > 0) {
+              if (this.$route && this.$route.params) {
+                if (this.$route.params.hasOwnProperty('collectionid')) {
+                  console.log(`filteredCollections.length.initScroll: `,oldVal, newVal);
+                  this.initScroll(this.$route.params.collectionid)
+                }
+              }
             }
           }
         },
