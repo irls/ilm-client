@@ -90,6 +90,7 @@
             if (this.$route && this.$route.params) {
               if (this.$route.params.hasOwnProperty('collectionid')) {
                 const selectedCollectionId = this.$route.params.collectionid;
+                this.$store.dispatch('loadCollection', selectedCollectionId);
                 if (!this.initScroll(selectedCollectionId)) {
                   this.filterScrollTimer = setTimeout(()=>{
                     if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
