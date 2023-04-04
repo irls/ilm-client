@@ -106,7 +106,8 @@ Features:
       idField: String, // name of field to used as a unique id
       selected: Array, // list of,
       draggable: false,
-      sortable: true
+      sortable: true,
+      scrollTopOnPageClick: false
     },
     components: {
       draggable: draggable
@@ -227,18 +228,29 @@ Features:
       previous (e) { // Previous page click handler
         e.preventDefault()
         if (this.currentPage !== 0) {
-          --this.currentPage
+          --this.currentPage;
+
+          if (this.scrollTopOnPageClick) {
+            this.$refs.grid_component_ref.scrollIntoView();
+          }
         }
       },
       next (e) { // Next page click handler
         e.preventDefault()
         if (this.currentPage + 1 !== this.noPages.length) {
-          ++this.currentPage
+          ++this.currentPage;
+
+          if (this.scrollTopOnPageClick) {
+            this.$refs.grid_component_ref.scrollIntoView();
+          }
         }
       },
       goToPage (page, e = null) { // Go to a specific page click handler
         if (e) e.preventDefault()
-        this.currentPage = page
+        this.currentPage = page;
+        if (this.scrollTopOnPageClick) {
+          this.$refs.grid_component_ref.scrollIntoView();
+        }
       },
       goToIndex (index, e = null) { // Go to a specific page click handler
         if (e) e.preventDefault();

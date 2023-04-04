@@ -10,6 +10,7 @@
       :selected="selectedBooks"
       :idField="idField"
       :filter-key="''"
+      :scrollTopOnPageClick="true"
       customEmptyTableText="No Collections found" />
   </div>
 </template>

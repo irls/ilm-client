@@ -10,6 +10,7 @@
       :selected="selectedBooks"
       :idField="idField"
       :filter-key="''"
+      :scrollTopOnPageClick="true"
       customEmptyTableText="No Books found" />
   </div>
   <!--<div class="router-view-wrapper"-->

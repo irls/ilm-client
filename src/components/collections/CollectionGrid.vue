@@ -24,6 +24,7 @@
           :sortable="false"
           :ref="'grid-' + collection._id"
           :class="['collection-books-grid']"
+          :scrollTopOnPageClick="true"
           customEmptyTableText="No Books found" />
     </div>
   </div>
