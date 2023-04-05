@@ -2991,7 +2991,7 @@ Revert to original block audio?`,
                         return false;
                       }
                       $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
-                      $('.selection.segment').css('left', x - 5)
+                      $('.selection.segment').css('left', x);
                       let startX = 0;
                       if (this.selection && typeof this.selection.end !== 'undefined') {
                         startX = this.selection.end / (this.getPixelsPerSecond());
