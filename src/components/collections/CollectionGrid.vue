@@ -135,21 +135,11 @@
         ...mapActions(['updateBooksList'])
       },
       mounted() {
-        //this.updateBooksList()
-        //.then(()=>{
-//           Vue.nextTick(()=>{
-//             if (this.$route && this.$route.params) {
-//               if (this.$route.params.hasOwnProperty('bookid')) {
-//                 const selectedBookId = this.$route.params.bookid;
-//                 if (!this.initScroll(selectedBookId)) {
-//                   this.filterScrollTimer = setTimeout(()=>{
-//                     this.initScroll(selectedBookId)
-//                   }, 100)
-//                 }
-//               }
-//             }
-//           });
-        //})
+        if (this.$route && this.$route.params) {
+          if (this.$route.params.hasOwnProperty('bookid')) {
+            this.initScroll(this.$route.params.bookid)
+          }
+        }
       },
       computed: {
         ...mapGetters([
