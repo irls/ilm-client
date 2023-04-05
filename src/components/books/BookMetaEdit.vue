@@ -582,11 +582,6 @@
         <a v-if="currentBook.mergedAudiofile" v-on:click="generatingAudiofile = false" class="btn btn-default">Cancel</a>
       </div>
     </modal>
-    <CoupletWarningPopup
-      v-if="isCoupletWarningPopupActive"
-      @close="(e) => cancelCoupletUpdate(e)"
-      @save="(e) => saveCoupletChanges(e)"
-    ></CoupletWarningPopup>
     <div v-if="showUnknownAuthor == 1" class="outside" v-on:click="showUnknownAuthor = -1"></div>
     <div v-if="showUnknownAuthorEn == 1" class="outside" v-on:click="showUnknownAuthorEn = -1"></div>
   </div>
@@ -625,6 +620,9 @@ import CompleteAudioExport  from './details/CompleteAudioExport';
 import PauseAfterBlock      from './details/PauseAfterBlock';
 import VTagSuggestion       from './details/HashTag';
 import ResizableTextarea    from '../generic/ResizableTextarea';
+import v_modal              from 'vue-js-modal';
+
+Vue.use(v_modal, {dialog: true});
 
 var BPromise = require('bluebird');
 
@@ -749,7 +747,6 @@ export default {
       },
       activeStyleTab: '',
       jobDescription: '',
-      isCoupletWarningPopupActive: false,
       blockType: '',
       styleKey: '',
       styleVal: '',
@@ -1925,7 +1922,23 @@ export default {
         document.cookie.includes('dontShowAgainCoupletWarning=true')) {
         this.selectStyle(blockType, styleKey, styleVal);
       } else {
-        this.isCoupletWarningPopupActive = true;
+        let coupletInfo = {};
+        this.$modal.show(CoupletWarningPopup, {
+          coupletInfo: coupletInfo
+        }, 
+        {
+          height: 'auto',
+          width: '454px'
+        }, 
+        {
+          'closed': (e) => {
+            if (coupletInfo && coupletInfo.success) {
+              this.saveCoupletChanges(coupletInfo.isDontShowAgain);
+            } else {
+              this.cancelCoupletUpdate(coupletInfo && coupletInfo.isDontShowAgain);
+            }
+          }
+        });
         this.blockType = blockType;
         this.styleKey = styleKey;
         this.styleVal = styleVal;

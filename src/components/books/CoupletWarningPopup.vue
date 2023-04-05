@@ -1,95 +1,40 @@
 <template>
-  <transition
-    name="modal"
-  >
-   <div
-     class="modal-mask"
-   >
-     <div
-       class="modal-wrapper"
-     >
-       <div
-         class="modal-container"
-         style="width: 454px;"
-       >
-         <div
-           class="modal-header couplet-modal"
-           style="letter-spacing: 0.02em;
-           line-height: 16.1px;
-           font-weight: 700;"
-         >
-           Confirm Couplet update
-         </div>
-         <div
-           class="modal-body couplet-modal"
-           style="font-weight: 400;
-           line-height: 150%;"
-         >
-           Couplet block style converts
-           <br>
-           forward slash /, pipe |, 3 spaces, tab, or any combination of them into a unified couplet line separator /
-           <br>
-           Save changes?
-           <br>
-           <div
-             class="warn"
-             style=""
-           >
-             <label
-              class="labelDontShow"
-              style="font-weight: 100"
-             >
-               <input
-                 type="checkbox"
-                 v-model="isDontShowAgain"
-                 style="width: 18px;
-                 height: 18px;
-                 vertical-align: middle;
-                 margin: 0 0 0 0;
-                 margin-right: 15px;"
-               >
-               Don't show this message again
-             </label>
-           </div>
-         </div>
-         <div
-           class="modal-footer"
-           style="display: flex; text-align: justify;
-           width: 100%;
-           padding: 0px;
-           margin-left: 0px;"
-         >
-           <button
-             class="btn btn-default modal-button"
-             type="button"
-             aria-label="Close"
-             @click="closePopup"
-             id="cancelCoupletUpdate"
-             style="
-             background-color: #FFFFFF;
-             font-size: 12px;
-             line-height: 15px;
-             color: #333333;"
-           >
-             Cancel
-           </button>
-           <button
-             class="btn btn-default modal-button"
-             type="button"
-             @click="saveChanges"
-             id="saveCoupletUpdates"
-             style="background-color: #337AB7;
-             line-height: 17px;
-             color: #FFFFFF;
-             margin-left: 0px;"
-           >
-             Save
-           </button>
-         </div>
-       </div>
-     </div>
-   </div>
-  </transition>
+  <div class="couplet-warning">
+    <div class="modal-header">
+      <h4>Confirm Couplet update</h4>
+    </div>
+    <div class="modal-body">
+      Couplet block style converts
+      <br>
+      forward slash /, pipe |, 3 spaces, tab, or any combination of them into a unified couplet line separator /
+      <br>
+      Save changes?
+      <br>
+      <div class="warn">
+        <label class="dont-show">
+          <input type="checkbox" v-model="isDontShowAgain" />
+          Don't show this message again
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button
+        class="btn btn-default"
+        type="button"
+        aria-label="Close"
+        @click="closePopup"
+        id="cancelCoupletUpdate">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        type="button"
+        @click="saveChanges"
+        id="saveCoupletUpdates">
+        Save
+      </button>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -102,6 +47,7 @@ export default {
     alert,
   },
   mixins: [modalMixin],
+  props: ['coupletInfo'],
   data() {
     return {
       isDontShowAgain: false,
@@ -109,40 +55,60 @@ export default {
   },
   methods: {
     closePopup() {
-      this.$emit('close', this.isDontShowAgain);
+      this.coupletInfo.isDontShowAgain = this.isDontShowAgain;
+      this.coupletInfo.success = false;
+      this.$emit('close');
     },
     saveChanges() {
-      this.$emit('save', this.isDontShowAgain);
+      this.coupletInfo.isDontShowAgain = this.isDontShowAgain;
+      this.coupletInfo.success = true;
+      this.$emit('close');
     }
   },
 }
 </script>
 
-<style scoped>
-.warn {
-  padding-top: 15px;
-  font-family: Arial, Helvetica, sans-serif;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 150%;
-}
-.labelDontShow {
-  font-weight: 0;
-}
-.couplet-modal {
-  padding-top: 15px;
-  padding-left: 20px;
-  font-size: 14px;
-  font-style: normal;
-  font-family: Arial, Helvetica, sans-serif;
-}
-.modal-button {
-  width: 50%;
-  height: 40px;
-  letter-spacing: 0.02em;
-  padding: 0px;
-  font-family: Inter;
-  font-weight: 400;
-}
+<style lang="less">
+  .couplet-warning {
+    .modal-header {
+      border-bottom: none;
+      padding: 15px 15px;
+      h4 {
+        padding: 0px;
+        margin: 0px;
+        font-weight: 700;
+        font-size: 16px;
+      }
+    }
+    .modal-body {
+      padding: 0px 15px 15px 15px;
+    }
+    .modal-footer {
+      padding: 0px;
+      border-top: none;
+      .btn {
+        width: 50%;
+        margin: 0px;
+        float: left;
+      }
+    }
+    .warn {
+      padding-top: 15px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 150%;
+    }
+    .dont-show {
+      color: #808080;
+      font-size: 14px;
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0px;
+        vertical-align: text-bottom;
+      }
+    }
+  }
 </style>
