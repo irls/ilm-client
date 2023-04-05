@@ -106,18 +106,18 @@
           }
           return false;
         },
-        initScroll(selectedBookId) {
-          let result = false;
+        async initScroll(selectedBookId) {
           if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
-            result = this.goToBookPage(selectedBookId);
-            if (result) result = this.scrollToRow(selectedBookId);
-            if (result) this.selectedBooks = [selectedBookId];
-            return result;
+            await Vue.nextTick();
+            this.goToBookPage(selectedBookId);
+            await Vue.nextTick();
+            this.scrollToRow(selectedBookId);
+            this.selectedBooks = [selectedBookId];
           } else {
             this.$router.replace({ name: 'CollectionBooks' });
             this.selectedBooks = [];
           }
-          return result;
+          return true;
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
@@ -135,21 +135,21 @@
         ...mapActions(['updateBooksList'])
       },
       mounted() {
-        this.updateBooksList()
-        .then(()=>{
-          Vue.nextTick(()=>{
-            if (this.$route && this.$route.params) {
-              if (this.$route.params.hasOwnProperty('bookid')) {
-                const selectedBookId = this.$route.params.bookid;
-                if (!this.initScroll(selectedBookId)) {
-                  this.filterScrollTimer = setTimeout(()=>{
-                    this.initScroll(selectedBookId)
-                  }, 100)
-                }
-              }
-            }
-          });
-        })
+        //this.updateBooksList()
+        //.then(()=>{
+//           Vue.nextTick(()=>{
+//             if (this.$route && this.$route.params) {
+//               if (this.$route.params.hasOwnProperty('bookid')) {
+//                 const selectedBookId = this.$route.params.bookid;
+//                 if (!this.initScroll(selectedBookId)) {
+//                   this.filterScrollTimer = setTimeout(()=>{
+//                     this.initScroll(selectedBookId)
+//                   }, 100)
+//                 }
+//               }
+//             }
+//           });
+        //})
       },
       computed: {
         ...mapGetters([
@@ -345,14 +345,18 @@
         }
       },
       watch: {
-//         currentBookMeta: {
-//           handler() {
-//             if (this.currentBookMeta.bookid) {
-//               this.selectedBooks = [this.currentBookMeta.bookid];
-//             }
-//           },
-//           deep: true
-//         },
+       'filteredBooks.length': {
+          handler(newVal, oldVal) {
+            if (oldVal == 0 && newVal > 0) {
+              if (this.$route && this.$route.params) {
+                if (this.$route.params.hasOwnProperty('bookid')) {
+                  console.log(`filteredBooks.length.initScroll: `,oldVal, newVal);
+                  this.initScroll(this.$route.params.bookid)
+                }
+              }
+            }
+          }
+        },
         '$route' (toRoute, fromRoute) {
           if (!this.$route.params.hasOwnProperty('bookid')) {
             this.selectedBooks = [];

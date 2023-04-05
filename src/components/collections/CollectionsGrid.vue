@@ -199,6 +199,14 @@
             }
           }
         },
+        '$route' (toRoute, fromRoute) {
+          if (!this.$route.params.hasOwnProperty('collectionid')) {
+            this.selectedBooks = [];
+            if (this.$refs.books_grid) {
+              this.goToBookPage()
+            }
+          }
+        },
         fltrChangeTrigger: { //collectionsFilters
           handler(newVal, oldVal) {
             Vue.nextTick(()=>{
