@@ -101,7 +101,11 @@
         scrollToRow(bookId) {
           const el = document.querySelector(`[data-id="${bookId}"]`);
           if (el) {
-            el.scrollIntoView();
+            el.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'center'
+            });
             return true;
           }
           return false;

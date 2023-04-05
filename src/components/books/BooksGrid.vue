@@ -191,7 +191,6 @@ export default {
             const selectedBookId = this.$route.params.bookid;
             this.initScroll(selectedBookId)
             .then((isOk)=>{
-              console.log(`initScroll.isOk: `, isOk);
               if (isOk !== true) {
                 this.filterScrollTimer = setTimeout(()=>{
                   this.initScroll(selectedBookId)
@@ -297,7 +296,11 @@ export default {
     scrollToRow(bookId) {
       const el = document.querySelector(`[data-id="${bookId}"]`);
       if (el) {
-        el.scrollIntoView();
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
         return true;
       }
       return false;
