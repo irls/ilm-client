@@ -4,9 +4,7 @@
       <h4>Confirm Couplet update</h4>
     </div>
     <div class="modal-body">
-      Couplet block style converts
-      <br>
-      forward slash /, pipe |, 3 spaces, tab, or any combination of them into a unified couplet line separator /
+      Couplet block style converts forward slash /, pipe |, 3 spaces, tab, or any combination of them into a unified couplet line separator /
       <br>
       Save changes?
       <br>
@@ -77,11 +75,13 @@ export default {
         padding: 0px;
         margin: 0px;
         font-weight: 700;
-        font-size: 16px;
+        font-size: 14px;
       }
     }
     .modal-body {
       padding: 0px 15px 15px 15px;
+      font-weight: 400;
+      line-height: 21px;
     }
     .modal-footer {
       padding: 0px;
@@ -90,23 +90,18 @@ export default {
         width: 50%;
         margin: 0px;
         float: left;
+        height: 40px;
       }
-    }
-    .warn {
-      padding-top: 15px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-style: normal;
-      font-weight: 400;
-      font-size: 14px;
-      line-height: 150%;
     }
     .dont-show {
       color: #808080;
+      font-weight: 400;
       font-size: 14px;
+      padding: 15px 0px 0px 0px;
       input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        margin: 0px;
+        margin: 0px 12px 0px 0px;
         vertical-align: text-bottom;
       }
     }

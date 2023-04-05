@@ -1928,7 +1928,7 @@ export default {
         }, 
         {
           height: 'auto',
-          width: '454px'
+          width: '440px'
         }, 
         {
           'closed': (e) => {
