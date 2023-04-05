@@ -137,7 +137,9 @@
       mounted() {
         if (this.$route && this.$route.params) {
           if (this.$route.params.hasOwnProperty('bookid')) {
-            this.initScroll(this.$route.params.bookid)
+            if (this.filteredBooks.some((book)=>book.bookid == this.$route.params.bookid)) {
+              this.initScroll(this.$route.params.bookid)
+            }
           }
         }
       },
