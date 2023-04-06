@@ -667,7 +667,9 @@ let SuggestButton = MediumEditor.Extension.extend({
           }
           let parent = node.parentNode;
           node.childNodes.forEach(n => {
-            delete n.dataset.sugg;
+            if (n.dataset) {
+              delete n.dataset.sugg;
+            }
           });
           while (node.firstChild) parent.insertBefore(node.firstChild, node);
           parent.removeChild(node);
