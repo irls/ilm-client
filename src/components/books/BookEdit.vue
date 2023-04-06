@@ -2501,6 +2501,7 @@ export default {
 
       this.loadBookMounted() // also handle route params
       .then((metaResp)=>{
+        this.$store.commit('reset_storeListO');
         this.initEditorPosition();
         this.processOpenedBook();
         const startBlock = this.$route.params.block || false;

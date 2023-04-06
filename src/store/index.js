@@ -1209,6 +1209,10 @@ export const store = new Vuex.Store({
       state.storeListO = new BookBlocks();
     },
 
+    reset_storeListO (state) {
+      state.storeListO.startRId = state.storeListO.listRIds[0] || false;
+    },
+
     // async set_block_selection({ state, commit, dispatch },selection) {
     //   console.log('set_block_selection:start')
     //
