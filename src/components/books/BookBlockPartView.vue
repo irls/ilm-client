@@ -357,11 +357,6 @@
     <!--<div class="table-row controls-bottom">-->
   </div>
   <div :id="this.block.blockid + '-part-' + this.blockPartIdx + '-toolbar-container'" class="toolbar-container"></div>
-  <CoupletWarningPopup
-    v-if="isCoupletWarningPopupActive"
-    @close="(e) => cancelCoupletUpdate(e)"
-    @save="(e) => saveCoupletChanges(e)"
-  ></CoupletWarningPopup>
 </div>
 </template>
 
@@ -1613,6 +1608,23 @@ export default {
         if (block.hasClass('whitespace', 'couplet')) {
           if (!document.cookie.includes('dontShowAgainCoupletWarning=true')) {
             this.isCoupletWarningPopupActive = new Deferred();
+            let coupletInfo = {};
+            this.$modal.show(CoupletWarningPopup, {
+              coupletInfo: coupletInfo
+            }, 
+            {
+              height: 'auto',
+              width: '440px'
+            }, 
+            {
+              'closed': (e) => {
+                if (coupletInfo && coupletInfo.success) {
+                  this.saveCoupletChanges(coupletInfo.isDontShowAgain);
+                } else {
+                  this.cancelCoupletUpdate(coupletInfo && coupletInfo.isDontShowAgain);
+                }
+              }
+            });
             const popResult = await this.isCoupletWarningPopupActive;
             this.isCoupletWarningPopupActive = false;
             if (popResult === false) return Promise.reject();
