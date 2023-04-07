@@ -4,27 +4,33 @@
     <!-- Meta Filter -->
     <span v-if="showBooksFilters">
       <input placeholder="Filter by Title / Author / Category"
-        :value="booksFilters.filter"
-        type="text" class="form-control book-filter"
+        :value="booksFilters.filter" type="text"
+        :class="['form-control book-filter', {filled: booksFilters.filter!=''}]"
         @keyup="filterChangeBooksDebounce('filter', $event)"
         @paste="filterChangeBooksDebounce('filter', $event)" ></input>
-      <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
+      <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+        v-if="booksFilters.filter!=''"
+        @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
 
       <input placeholder="Filter by Editor / Tag"
-        :value="booksFilters.secFilter"
-        type="text" class="form-control book-filter second-filter"
+        :value="booksFilters.secFilter" type="text"
+        :class="['form-control book-filter second-filter', {filled: booksFilters.secFilter!=''}]"
         @keyup="filterChangeBooksDebounce('secFilter', $event)"
         @paste="filterChangeBooksDebounce('secFilter', $event)"></input>
-      <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="booksFilters.secFilter=''; filterChangeBooks('secFilter');"></i>
+      <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+        v-if="booksFilters.secFilter!=''"
+        @click="booksFilters.secFilter=''; filterChangeBooks('secFilter');"></i>
     </span>
 
     <span v-if="showCollectionsFilters">
       <input placeholder="Filter by Title / Author / Category"
-        :value="collectionsFilters.filter"
-        type="text" class="form-control book-filter"
+        :value="collectionsFilters.filter" type="text"
+        :class="['form-control book-filter', {filled: collectionsFilters.filter!=''}]"
         @keyup="filterChangeCollectionsDebounce('filter', $event)"
         @paste="filterChangeCollectionsDebounce('filter', $event)" ></input>
-      <i class="ico ico-clear-filter btn-inside" aria-hidden="true" @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
+      <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+        v-if="collectionsFilters.filter!=''"
+        @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
     </span>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
@@ -83,7 +89,7 @@
           {{filteredCollectionsCounter + ' Collection' + (filteredCollectionsCounter===1 ? '':'s')}}
       </div>
       <div :class="['toolbar-clip toolbar-nav-link', {'p-highlight': activeTabIdx == 2}]" @click="onBooksListTabChange({index: 2})"
-        v-html="currentCollectionHeader" >
+        v-if="currentCollectionHeader.length" v-html="currentCollectionHeader" >
       </div>
     </div>
 
@@ -468,12 +474,16 @@ input.form-control {
     margin-bottom: 1px;
 
     .form-control.book-filter {
-      width: 17.5em;
-      padding-right:30px;
+      width: 16.2em;
       margin-bottom: 2px;
 
+      &.filled {
+        /*width: 17.5em;*/
+        padding-right:30px;
+      }
+
       &.second-filter {
-        width: 12.0em;
+        width: 10.9em;
       }
     }
     .p-multiselect {
