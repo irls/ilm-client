@@ -69,7 +69,7 @@
             el.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
-              inline: 'center'
+              inline: 'start'
             });
             return true;
           }
@@ -279,12 +279,6 @@
     cursor: pointer;
     &.selected {
       background-color: #c6c2c2;
-    }
-  }
-  div.collection-container {
-    border: 1px solid #ddd;
-    div.collection-books-grid {
-      padding: 0px 15px;
     }
   }
 </style>

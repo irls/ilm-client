@@ -104,7 +104,7 @@
             el.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
-              inline: 'center'
+              inline: 'start'
             });
             return true;
           }
@@ -442,7 +442,7 @@
   div.collection-container {
     border: 1px solid #ddd;
     div.collection-books-grid {
-      padding: 0px 15px;
+      padding: 0px 0px;
     }
   }
 </style>

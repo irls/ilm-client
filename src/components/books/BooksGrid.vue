@@ -299,7 +299,7 @@ export default {
         el.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
-          inline: 'center'
+          inline: 'start'
         });
         return true;
       }
