@@ -1468,3 +1468,7 @@ w {
 sg:not(:has(*)) {
   background: @suggestion_word_color;
 }
+
+sg + :not(w) {
+  background: @suggestion_word_color;
+}

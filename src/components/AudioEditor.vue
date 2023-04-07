@@ -2207,7 +2207,7 @@
           let tokens = [];
           let currentLength = 0;
           text = text.replace(/[\r\n]/img, '');// remove line breaks for clear regular expressions
-          text = text.replace(/<sg\s*?data-suggestion(\=\"\")?[^>]*>[^<]+<\/sg>/img, '');// clear empty suggestion
+          text = text.replace(/<sg\s*?data-suggestion(\=\"\")?(\s*data-sugg)?>[\s\S]+?<\/sg>/img, '');// clear empty suggestion
           text = $('<textarea/>').html(text).text();// remove html entities
           while((match = textRg.exec(text))) {
             let word = match[2];
