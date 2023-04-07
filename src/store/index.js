@@ -1211,6 +1211,7 @@ export const store = new Vuex.Store({
 
     reset_storeListO (state) {
       state.storeListO.startRId = state.storeListO.listRIds[0] || false;
+      state.storeListO.startId = state.storeListO.listIds[0] || false;
     },
 
     // async set_block_selection({ state, commit, dispatch },selection) {
