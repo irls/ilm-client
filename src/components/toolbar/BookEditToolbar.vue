@@ -308,7 +308,7 @@ h3 {
   margin-right: .5em;
 
   &.btn-meta {
-      margin-left: 20px;
+      margin-left: 10px;
     &:focus {
       background: rgb(255, 255, 255);
       border-color: rgb(204, 204, 204);

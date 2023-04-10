@@ -370,7 +370,7 @@ export default {
       margin-bottom: 3px;
 
       .pull-right {
-        min-width: 460px;
+        min-width: 505px;
         text-align: right;
       }
 

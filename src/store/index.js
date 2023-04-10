@@ -306,42 +306,50 @@ export const store = new Vuex.Store({
         b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
 
         if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
-            if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
-              var pDate = new Date(b.publishLog.publishTime);
-              var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
-            } else {
-              var publishDate = '';
-            }
-
-            if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
-              var uDate = new Date(b.publishLog.updateTime);
-              var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
-            } else {
-              var updateDate = '';
-            }
-
-            if (b.publishedVersion && b.publishedVersion == b.version){
-              updateDate = '';
-            }
-
-            if (b.pub_ver){
-                b.pub_ver = publishDate + ' v. ' + b.pub_ver;
-            } else {
-                 b.pub_ver = publishDate;
-            }
-            if (b.cur_ver){
-                b.cur_ver = updateDate + ' v. ' + b.cur_ver;
-            } else {
-                b.cur_ver = updateDate;
-            }
+          if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
+            var pDate = new Date(b.publishLog.publishTime);
+            var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
           } else {
-            if (b.pub_ver){
-                b.pub_ver = ' v. ' + b.pub_ver;
-            }
-            if (b.cur_ver){
-                b.cur_ver = ' v. ' + b.cur_ver;
-            }
+            var publishDate = '';
           }
+
+          if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+            var uDate = new Date(b.publishLog.updateTime);
+            var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
+          } else {
+            var updateDate = '';
+          }
+
+          if (b.publishedVersion && b.publishedVersion == b.version){
+            updateDate = '';
+          }
+
+          if (b.pub_ver){
+              b.pub_ver = publishDate + ' v. ' + b.pub_ver;
+          } else {
+                b.pub_ver = publishDate;
+          }
+          if (b.cur_ver){
+              b.cur_ver = updateDate + ' v. ' + b.cur_ver;
+          } else {
+              b.cur_ver = updateDate;
+          }
+        } else {
+          if (b.pub_ver){
+              b.pub_ver = ' v. ' + b.pub_ver;
+          }
+          if (b.cur_ver){
+              b.cur_ver = ' v. ' + b.cur_ver;
+          }
+        }
+
+        if (b.importStatus == 'staging' && b.blocksCount <= 2){
+          if (!b.hasOwnProperty('publishLog') || b.publishLog == null){
+            b.importStatus = 'staging_empty'
+          } else if (!b.publishLog.updateTime){
+            b.importStatus = 'staging_empty'
+          }
+        }
       });
       return state.books_meta;
     },
@@ -971,13 +979,6 @@ export const store = new Vuex.Store({
             let book = booksList.find(_b => _b.bookid === b);
             if (book) {
               pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
-              if (book.importStatus == 'staging' && book.blocksCount <= 2){
-                if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-                  book.importStatus = 'staging_empty'
-                } else if (!book.publishLog.updateTime){
-                  book.importStatus = 'staging_empty'
-                }
-              }
               books.push(book);
             }
           });

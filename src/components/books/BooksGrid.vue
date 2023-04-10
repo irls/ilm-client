@@ -2,7 +2,7 @@
   <div class="router-view-wrapper" v-cloak>
     <Grid id='books_grid'
       ref="books_grid"
-      :data="booksMeta"
+      :data="filteredBooks"
       :columns="headers"
       :rowsPerPage="100"
       @clickRow="rowClick"
@@ -57,20 +57,6 @@ export default {
       filteredBooks:     'gridFilters/filteredBooks'
     }),
 
-    booksMeta () { // because our grid does not work with nested values
-      let result = [] //TODO: check in gridFilters flow
-      for (let book of this.filteredBooks) {
-        if (book.importStatus == 'staging' && book.blocksCount <= 2){
-          if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-            book.importStatus = 'staging_empty'
-          } else if (!book.publishLog.updateTime){
-            book.importStatus = 'staging_empty'
-          }
-        }
-        result.push(book)
-      }
-      return result
-    },
     headers: {
       get() {
         let headers = [
