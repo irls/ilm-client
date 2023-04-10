@@ -1,49 +1,32 @@
 <template>
-  <div id='booksarea' v-cloak>
-    <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
-
-      <BookEditToolbar v-if="isEditMode()"
-      :toggleMetaVisible="toggleMetaVisible"
-      :hasBookSelected="hasBookSelected"
-      :metaVisible="metaVisible"/>
-      <CollectionsToolbar v-else
-      :hasItemSelected="hasItemSelected"
-      :metaVisible="metaVisible"
-      :hasBookSelected="hasBookSelected"
-      @collectionAdded="onCollectionAdded"
-      @toggleMetaVisible="toggleMetaVisible"/>
-
-
-      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
+  <div class="router-view-wrapper" v-cloak>
+    <!--<div :class="['content-meta-wrapper', 'meta-visible']">
+      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">-->
           <template v-if="isEditMode()">
             <BookEdit v-if="bookEditMode == 'Editor'" :mode="mode"/>
             <BookEditHtml v-else-if="bookEditMode == 'HTML'" />
             <BookEditJson v-else-if="bookEditMode == 'JSON'" />
             <BookEditDisplay v-else="bookEditMode == 'Display'" />
           </template>
-          <CollectionsGrid v-else
+          <CollectionGrid v-else
             @selectCollection="selectCollection"
             @selectBook="selectBook"/>
-      </div>
+  <!--</div>
+    </div>-->
 
-    </div>
-
-    <div class='metaedit' v-if='metaVisible'>
-      <CollectionTabs v-if="collectionMetaVisible"
-        @collectionRemoved="collectionRemoved"></CollectionTabs>
-      <BookMetaEdit v-if="bookMetaVisible"
-        :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
-    </div>
+    <!--<div class='metaedit' v-if='hasBookSelected'>
+      <CollectionTabs @collectionRemoved="collectionRemoved"></CollectionTabs>
+      <BookMetaEdit :blocksForAlignment="blocksForAlignment"></BookMetaEdit>
+    </div>-->
 
     <v-dialog :clickToClose="false"/>
   </div>
+  <!--<div class="router-view-wrapper"-->
 </template>
 <script>
-  import BookEditToolbar from './books/BookEditToolbar';
-  import CollectionsToolbar from './collections/CollectionsToolbar';
-  import CollectionsGrid from './collections/CollectionsGrid';
-  import CollectionTabs from './collections/CollectionTabs';
-  import BookMetaEdit from './books/BookMetaEdit';
+  import CollectionGrid from './collections/CollectionGrid';
+  //import CollectionTabs from './collections/CollectionTabs';
+  //import BookMetaEdit from './books/BookMetaEdit';
   import { mapGetters, mapActions } from 'vuex';
   import BookEdit from './books/BookEdit'
   import Vue from 'vue';
@@ -55,23 +38,16 @@
   export default {
       name: 'Collections',
       components: {
-        BookEditToolbar: BookEditToolbar,
-        CollectionsToolbar: CollectionsToolbar,
-        CollectionsGrid: CollectionsGrid,
-        CollectionTabs: CollectionTabs,
-        BookMetaEdit: BookMetaEdit,
+        CollectionGrid: CollectionGrid,
+        //CollectionTabs: CollectionTabs,
+        //BookMetaEdit: BookMetaEdit,
         BookEdit: BookEdit
       },
       mixins: [api_config, task_controls],
       data() {
         return {
           collectionMetaVisible: false,
-          bookMetaVisible: false,
-          blocksForAlignment: {
-            start: {},
-            end: {},
-            count: 0
-          },
+          bookMetaVisible: true,
           currentBook: {}
         }
       },
@@ -86,37 +62,22 @@
           })
         },
         onCollectionAdded(id) {
-          //let current = this.bookCollections.find(bk => bk._id == id);
-          //if (current) {
-          //this.loadCollection(false);
           if (this.currentCollection._id !== id) {
             this.$store.commit('SET_CURRENT_COLLECTION', false);
-            this.selectCollection(id);
-            this.collectionMetaVisible = true;
-            this.scrollToRow(id);
-          }
-          //}
-        },
-        toggleMetaVisible() {
-          if (this.currentBookMeta._id) {
-            this.bookMetaVisible = !this.bookMetaVisible;
-          } else if (this.currentCollection._id) {
-            this.collectionMetaVisible = !this.collectionMetaVisible;
+            this.selectCollection(id)
+            .then(() => {
+              this.scrollToRow(id);
+            })
           }
         },
         selectCollection(id) {
-          //if (!this.currentCollection || collection._id !== this.currentCollection._id) {
-            //this.currentCollection = collection;
-            //this.currentBook = false;
-            //this.bookMetaVisible = false;
-            //this.$router.replace({ path: '/collections/' + this.currentCollection._id })
-          //}
           if (this.currentCollection._id !== id) {
-            this.loadCollection(id)
+            return this.loadCollection(id)
               .then(() => {
                 this.$router.replace({ path: '/collections/' + id });
               });
           }
+          return Promise.resolve();
         },
         selectBook(id, collection_id) {
           this.loadBook(id);
@@ -135,7 +96,7 @@
             }
           }, 500);
         },
-        getBlockSelectionInfo() {
+        /*getBlockSelectionInfo() {
           this.blocksForAlignment.count = 0;
           if (this.blocksForAlignment.start._id && this.blocksForAlignment.end._id) {
             let api_url = this.API_URL + 'books/' + this.$store.state.currentBookid + '/selection_alignment';
@@ -151,7 +112,7 @@
                 }
               })
           }
-        },
+        },*/
         showModal(params) {
           //console.log('MODAL SHOW')
           this.$modal.show('dialog', params);
@@ -170,11 +131,11 @@
         if (this.$route.params.hasOwnProperty('bookid')) {
             this.loadBook(this.$route.params.bookid);
         }
-        this.$root.$on('from-bookedit:set-selection', (start, end) => {
+        /*this.$root.$on('from-bookedit:set-selection', (start, end) => {
           this.blocksForAlignment.start = start;
           this.blocksForAlignment.end = end;
           this.getBlockSelectionInfo();
-        });
+        });*/
         this.$root.$on('from-bookblockview:voicework-type-changed', () => {
           this.getBlockSelectionInfo();
         });
@@ -193,7 +154,7 @@
           }
         },
         ...mapGetters([
-          'currentCollection', 'currentBookMeta', 'collectionsFilter', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
+          'currentCollection', 'currentBookMeta', 'collectionsFilters', 'bookEditMode', 'currentBookCounters', 'currentCollectionId'
         ])
       },
       watch: {

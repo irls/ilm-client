@@ -1,49 +1,26 @@
 <template>
-  <div id="books_grid">
-    <!-- <Grid id='collections_grid'
-      :data="bookCollections"
+  <div id="books_grid" v-cloak>
+     <Grid id='collections_grid'
+      ref="books_grid"
+      :data="filteredCollections"
       :columns="headers"
       :rowsPerPage="100"
       @clickRow="rowClick"
+      @dblClickRow="openCollection"
       :selected="selectedBooks"
       :idField="idField"
-      :filter-key="''">
-    </Grid> -->
-    <div v-for="collection in collectionsPage" class="collection-container">
-      <div v-on:click="rowClick(collection, $event)"
-        :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
-        :data-id="collection._id">
-        <span slot="header" class="collection-title" @click.prevent.self>
-          <i class="fa fa-book"></i>&nbsp;
-          {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
-        </span>
-      </div>
-      <Grid id='books_grid_grid'
-          v-if="isOpenPanel(collection)"
-          :data="collection.books_list"
-          :columns="headers"
-          :rowsPerPage="100"
-          @clickRow="selectBook"
-          @orderChanged="moveBook(collection, $event)"
-          :selected="selectedBooks"
-          :idField="'bookid'"
-          :filter-key="''"
-          :draggable="allowCollectionsEdit"
-          :sortable="false"
-          :ref="'grid-' + collection._id"
-          :class="['collection-books-grid']"
-          :customEmptyTableText="'No books'"></Grid>
-    </div>
+      :filter-key="''"
+      :scrollTopOnPageClick="true"
+      customEmptyTableText="No Collections found" />
   </div>
 </template>
 <script>
   import Grid from '../generic/Grid';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
-  import superlogin from 'superlogin-client';
-  import PouchDB from 'pouchdb';
-  import lodash from 'lodash';
+  //import lodash from 'lodash';
   import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
+  import { Languages } from "../../mixins/lang_config.js"
 
   export default {
       name: 'CollectionsGrid',
@@ -57,286 +34,211 @@
         return {
           idField: '_id',
           selectedBooks: [],
-          openBookClickCounter: 0
+          filterScrollTimer: null
         }
       },
       methods: {
         rowClick(collection, event) {
-          if (collection._id !== this.currentCollection._id/* && event.target && ['fa fa-book', 'panel-heading accordion-toggle', 'collection-title'].indexOf(event.target.className) !== -1*/) {
-            this.$emit('selectCollection', collection._id);
-            this.selectedBooks = [];
-          } else if (this.selectedBooks.length) {
-            this.selectedBooks = [];
-            this.$router.replace({ path: '/collections/' + collection._id })
+          if (collection._id !== this.currentCollection._id) {
+            this.$store.dispatch('loadCollection', collection._id);
+            this.$router.replace({ path: '/collections/' + collection._id });
+            this.selectedBooks = [collection._id];
           }
         },
-        selectBook(book) {
-          let bookid = book.bookid;
-          if (bookid) {
-
-            this.openBookClickCounter++;
-
-
-            if(this.openBookClickCounter == 1) {
-              this.timer = setTimeout(() => {
-                this.openBookClickCounter = 0;
-                this.selectedBooks = [book.bookid];
-                this.$emit('selectBook', book.bookid, book.collection_id);
-              }, 300);
-
-              return;
-            }
-            clearTimeout(this.timer);
-            //this.bookFilters.filter = '';
-            //this.bookFilters.projectTag = '';
-            this.openBookClickCounter = 0;
-            this.$router.push('/books/' + book.bookid + '/display')
+        openCollection(collection, event) {
+          const collectionId = collection._id;
+          if (collectionId) {
+            this.$router.push({ name: 'CollectionBooks', params: { collectionid: collectionId } });
           }
-
+        },
+        goToBookPage (collId = false) {
+          if(this.$refs.books_grid) {
+            if (collId) {
+              const index = this.$refs.books_grid.filteredData.findIndex((coll)=>coll._id === collId);
+              this.$refs.books_grid.goToIndex(index);
+            } else {
+              this.$refs.books_grid.goToIndex(0);
+            }
+            return true;
+          }
+          return false;
         },
         scrollToRow(bookId) {
-          let t = setTimeout(function() {
-            let el = document.querySelector(`[data-id="${bookId}"]`);
-            if (el) {
-              el.scrollIntoView();
-            }
-          }, 300);
-        },
-        isOpenPanel(collection) {
-          if (this.currentCollection._id) {
-            return this.currentCollection._id === collection._id;
+          const el = document.querySelector(`[data-id="${bookId}"]`);
+          if (el) {
+            el.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'start'
+            });
+            return true;
           }
-          return collection.book_match || collection.bookids.indexOf(this.currentBookMeta.bookid) !== -1;
+          return false;
         },
-        moveBook(collection, data) {
-          if (this.allowCollectionsEdit
-            && typeof data.from !== 'undefined'
-            && typeof data.to !== 'undefined'
-            && data.from != data.to) {
+        async initScroll(selectedCollectionId) {
+          if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
+            this.$store.dispatch('loadCollection', selectedCollectionId);
+            await Vue.nextTick();
+            this.goToBookPage(selectedCollectionId);
+            await Vue.nextTick();
+            this.scrollToRow(selectedCollectionId);
+            this.selectedBooks = [selectedCollectionId];
           }
         },
         ...mapActions(['updateBooksList'])
       },
       mounted() {
-        this.updateBooksList()
-        .then(()=>{
-          if (this.$route && this.$route.params) {
-            if (this.$route.params.bookid) {
-              let hasBook = this.selectedBooks.findIndex(b => {
-                return b.bookid === this.$route.params.bookid;
-              });
-              if (hasBook === -1) {
-                let book = this.allBooks.find(b => {
-                  return b.bookid === this.$route.params.bookid;
-                });
-                if (book) {
-                  this.selectBook(book);
-                  this.scrollToRow(book.bookid);
-                }
-              }
-            } else if (this.$route.params.collectionid) {
-              this.scrollToRow(this.$route.params.collectionid);
-            }
+        if (this.$route && this.$route.params) {
+          if (this.$route.params.hasOwnProperty('collectionid')) {
+            this.initScroll(this.$route.params.collectionid)
           }
-        })
+        }
       },
       computed: {
         ...mapGetters([
-          'collectionsFilter',
           'bookCollections',
           'allBooks',
           'currentBookMeta',
           'currentCollection',
-          'collectionsFilter',
           'allowCollectionsEdit',
           'adminOrLibrarian',
         ]),
-        collectionsPage: {
-          get() {
-            if (!this.bookCollections || !this.bookCollections.length) {
-              return [];
-            }
-            let collections = lodash.cloneDeep(this.bookCollections);
-            collections.forEach(c => {
-              c.book_match = false;
-            });
-            for (var field in this.collectionsFilter) {
-              if (this.collectionsFilter[field].length > 0) {
-                let filter = prepareForFilter(this.collectionsFilter[field]);
-                switch (field) {
-                  case 'title':
-                    collections = collections.filter(collection => {
-                      let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
-                      if (!match) {
-                        collection.books_list = collection.books_list.filter(book => {
-                          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-                          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-                          return (str.indexOf(filter) > -1)
-                        });
-                      }
-                      let book_match = !match && collection.books_list.length > 0;
-                      collection.match = match;
-                      collection.book_match = book_match;
-                      return match || book_match;
-                    });
-                    break;
-                  case 'language':
-                    collections = collections.filter(collection => {
-                      return collection.language == filter;
-                    });
-                    break;
-                  case 'jobStatus':
-                    collections = collections.filter(collection => {
-                      if (!collection.books_list) return false;
-                      collection.books_list = collection.books_list.filter(b => {
-                        return b.job_status === filter;
-                      });
-                      return collection.books_list.length > 0;
-                    });
-                    break;
-                  case 'projectTag':
-                    collections = collections.filter(collection => {
-                      collection.books_list = collection.books_list.filter(b => {
-                        let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
-                        return (str.indexOf(filter) > -1)
-                      });
-                      let book_match =  collection.books_list.length > 0;
-                      collection.match = book_match;
-                      collection.book_match = book_match;
-                      return book_match;
-
-                    });
-                    break;
-
-                }
-              }
-            }
-            return collections;
-          }
-        },
+        ...mapGetters({
+          fltrChangeTrigger:    'gridFilters/fltrChangeTrigger',
+          booksFilters:         'gridFilters/booksFilters',
+          collectionsFilters:   'gridFilters/collectionsFilters',
+          filteredCollections:  'gridFilters/filteredCollections'
+        }),
         headers: {
           get() {
             let headers = [
               {
-                title: 'Book Title',
+                title: 'Collection Title',
                 path: 'title',
-                addClass: 'booktitle',
+                addClass: 'booktitle width-45-p',
+                isPassFull: true,
                 html (val) {
-                  return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+                  return `<i class='ico ico-collection'></i>&nbsp;&nbsp;${val.title.length ? val.title : val._id}`
                 }
               },
               {
                 title: 'Author',
                 path: 'author',
-                addClass: 'author',
+                addClass: 'author width-25-p',
                 render(val) {
                   return val && Array.isArray(val) ? val.join(', ') : val;
                 }
               },
               {
-                title: 'Editor',
-                path: 'executors',
-                render(val) {
-                  return val && val.editor ? val.editor.title : '';
-                }
-              },
-              {
                 title: 'Published',
-                path: 'pub_ver'
+                path: 'pubVersion',
+                addClass: 'width-135',
+                isPassFull: true,
+                html(val) {
+                  let date = '';
+                  let pubVersion = '';
+                  if (val.pubVersionDate) {
+                    date = new Date(val.pubVersionDate);
+                    date = `${date.getFullYear()}.${('0'+(date.getMonth()+1)).slice(-2)}.${('0'+date.getDate()).slice(-2)}`;
+                    if (val.pubVersion) {
+                      pubVersion = `v.${val.pubVersion}`;
+                    }
+                  }
+                  return `<i>${date}</i> ${pubVersion}`;
+                }
               },
               {
                 title: 'Updated',
-                path: 'cur_ver'
+                path: 'currVersion',
+                addClass: 'width-135',
+                isPassFull: true,
+                html(val) {
+                  let date = '';
+                  if (val.currVersionDate) {
+                    date = new Date(val.currVersionDate);
+                    date = `${date.getFullYear()}.${('0'+(date.getMonth()+1)).slice(-2)}.${('0'+date.getDate()).slice(-2)}`;
+                  }
+                  let currVersion = 'v.1.0';
+                  if (val.currVersion) {
+                    currVersion = `v.${val.currVersion}`;
+                  }
+                  return `<i>${date}</i> ${currVersion}`;
+                }
+              },
+              /*{
+                title: 'Category',
+                path: 'category',
+                addClass: 'author width-150',
+                render(val) {
+                  return val && Array.isArray(val) ? val.join(', ') : val;
+                }
               },
               {
-                title: 'Status',
-                path: 'importStatus',
-                render(val) {
-                  switch (val) {
-                    case 'staging_empty':
-                      return 'No content';
-                      break;
-                    case 'staging':
-                      return 'Text Cleanup';
-                      break;
-                    case 'narrating':
-                      return 'Narration';
-                      break;
-                    case 'proofing':
-                      return 'Proofreading';
-                      break;
-                    case 'mastering':
-                      return 'Mastering';
-                      break;
-                    case 'completed':
-                      return 'Done';
-                      break;
-                    default:
-                      return val ? val : 'Book Import';
+                title: 'Language',
+                path: 'language',
+                addClass: 'author width-100',
+                html (val) {
+                  if (Languages.hasOwnProperty(val)) {
+                    return `${Languages[val]}`;
                   }
+                  return `${val}`
                 }
-              }
+              },*/
             ];
-            if (this.adminOrLibrarian) {
-              headers.push({
-                title: 'State',
-                path: 'job_status',
-                render(val) {
-                  switch (val) {
-                    case 'active':
-                      return 'Active';
-                    case 'archived':
-                      return 'Archived';
-                    case 'completed':
-                      return 'Completed';
-                    case 'suspended':
-                      return 'Suspended';
-                    default:
-                      return val;
-                  }
-                }
-              });
-            }
             return headers;
           },
-          cache: false
+          //cache: false
         }
       },
       watch: {
-        currentBookMeta: {
-          handler() {
-            if (this.currentBookMeta.bookid) {
-              this.selectedBooks = [this.currentBookMeta.bookid];
-            }
-          },
-          deep: true
-        },
-        currentCollection: {
-          handler(val, oldVal) {
-            if(val._id && !oldVal._id) {
-
+        'filteredCollections.length': {
+          handler(newVal, oldVal) {
+            if (oldVal == 0 && newVal > 0) {
+              if (this.$route && this.$route.params) {
+                if (this.$route.params.hasOwnProperty('collectionid')) {
+                  console.log(`filteredCollections.length.initScroll: `,oldVal, newVal);
+                  this.initScroll(this.$route.params.collectionid)
+                }
+              }
             }
           }
         },
-        collectionsFilter: {
-          deep: true,
-          handler(newVal, oldVal) {
-            if (this.$route.params.hasOwnProperty('bookid')) {
-              const bookid = this.$route.params.bookid;
-              const collectionid = this.$route.params.collectionid;
-              const found = this.collectionsPage.find((collection)=>{
-                return collection.bookids.find((book)=>{
-                  return book === bookid;
-                })
-              })
-              if (found) {
-                this.scrollToRow(bookid);
-              } else {
-                this.$router.replace({ path: '/collections' });
-              }
-            } else {
-              this.selectedBooks = []; // clean old selection
+        '$route' (toRoute, fromRoute) {
+          if (!this.$route.params.hasOwnProperty('collectionid')) {
+            this.selectedBooks = [];
+            if (this.$refs.books_grid) {
+              this.goToBookPage()
             }
+          }
+        },
+        fltrChangeTrigger: { //collectionsFilters
+          handler(newVal, oldVal) {
+            Vue.nextTick(()=>{
+              if (this.$route.params.hasOwnProperty('collectionid')) {
+                const collectionid = this.$route.params.collectionid;
+                const [selectedCollId] = this.selectedBooks;
+                const found = this.filteredCollections.find((collection)=>{
+                  return collection._id === collectionid;
+                })
+                if (found) {
+                  clearTimeout(this.filterScrollTimer);
+                  this.filterScrollTimer = setTimeout(()=>{
+                    this.goToBookPage(collectionid);
+                    if (!selectedCollId || (selectedCollId && selectedCollId !== collectionid)) {
+                      this.scrollToRow(collectionid);
+                      this.selectedBooks = [collectionid];
+                    }
+                  }, 1)
+                } else {
+                  this.goToBookPage();
+                  this.$router.replace({ name: 'Collections' });
+                  this.selectedBooks = [];
+                }
+              } else {
+                this.goToBookPage();
+                this.selectedBooks = []; // clean old selection
+              }
+            });
           }
         }
       }
@@ -370,19 +272,13 @@
     }
   }
   div.collection-title {
-    padding: 10px 5px;
+    /*padding: 10px 5px;*/
     background-color: #f5f5f5;
     border-color: #ddd;
     color: #333;
     cursor: pointer;
     &.selected {
       background-color: #c6c2c2;
-    }
-  }
-  div.collection-container {
-    border: 1px solid #ddd;
-    div.collection-books-grid {
-      padding: 0px 15px;
     }
   }
 </style>

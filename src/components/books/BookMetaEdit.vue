@@ -674,7 +674,7 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      currentBook: {},
+      currentBook: { author: [] },
       masteringTask: {},
       importTask: {},
       linkTaskError: '',
@@ -1176,15 +1176,6 @@ export default {
   methods: {
 
     init () {
-      // if( !this.validationErrors[this.currentBook.bookid])
-      //   this.validationErrors[this.currentBook.bookid] = {};
-      // if( !this.validationErrors[this.currentBook.bookid]['difficulty'])
-      //   this.validationErrors[this.currentBook.bookid]['difficulty'] = '';
-      // if( !this.validationErrors[this.currentBook.bookid]['weight'])
-      //   this.validationErrors[this.currentBook.bookid]['weight'] = '';
-      //
-      // this.validationErrorDifficulty = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['difficulty']) ? this.validationErrors[this.currentBook.bookid]['difficulty'] : '';
-      // this.validationErrorWeight = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['weight']) ? this.validationErrors[this.currentBook.bookid]['weight'] : '';
       this.validationErrorDifficulty ='';
       this.validationErrorWeight = '';
 
@@ -1264,16 +1255,37 @@ export default {
       if (event && !collectionId) {
         this.unlinkCollectionWarning = true;
       } else {
+        this.unlinkCollectionWarning = false;
         return this.updateBookCollection(collectionId)
           .then(response => {
-            this.unlinkCollectionWarning = false;
             if (response.status === 200) {
+              //console.log(`this.$route.name: `, this.$route.name, ' collectionId:', this.$route.params.collectionid);
               if (collectionId) {
-                this.$router.replace({path: '/collections/' + collectionId + '/' + this.currentBook.bookid});
+                if (this.$route.name == 'BooksGrid') {
+                  this.$store.dispatch('loadCollection', collectionId);
+                }
+                if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
+                  if (this.$route.params.collectionid !== collectionId) {
+                    //this.$router.replace({
+                    //  name: 'CollectionBook',
+                    //  params: {collectionid: collectionId, bookid: this.currentBook.bookid}
+                    //});
+                    this.$router.replace({
+                      name: 'CollectionBooks',
+                      params: {collectionid: this.$route.params.collectionid}
+                    });
+                  }
+                }
               } else {
-                Vue.nextTick(() => {
-                  this.$router.replace({path: '/books'});
-                });
+                if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
+                  this.updateBooksList();
+                  this.$router.replace({
+                    name: 'CollectionBooks',
+                    params: {collectionid: this.$route.params.collectionid}
+                  });
+                } else {
+                  this.$store.dispatch('loadCollection', false);
+                }
               }
             }
           })
@@ -2204,7 +2216,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-<div class="toolbar">
+<div class="toolbar toolbar-first-row">
 
   <h3 v-if="currentBook" class='title'>
     <i class="fa fa-minus-square-o -smaller-uncheck" aria-hidden="true"
@@ -22,7 +22,7 @@
 
     <ButtonRadioGroup ref="modesButton" :values="editModesAvailable" :default="currRoute" @onChange='viewSelect'></ButtonRadioGroup>
 
-    <button v-if="(showSearchIn.includes(currRoute) && hasBookSelected())" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
+    <button v-if="showSearchIn.includes(currRoute) && hasBookSelected" class='btn btn-default' @click='toggleSearchVisible' v-tooltip.top="'Search'"><i class="fa fa-lg fa-search"></i></button>
     <div id="search-panel-container"></div>
     <OverlayPanel ref="searchPanel" :dismissable="false" appendTo="search-panel-container">
       <div class="search-box">
@@ -38,7 +38,7 @@
       </div>
     </OverlayPanel>
 
-    <button v-if='hasBookSelected()' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
+    <button v-if='hasBookSelected' class='btn btn-default btn-meta' @click='toggleMetaVisible'><i :class="[metaVisible ? 'fa-chevron-right': 'fa-chevron-left', 'fa fa-lg collapsebtn']" aria-hidden="true"></i>Details</button>
 
   </div>
 </div>
@@ -46,10 +46,10 @@
 
 <script>
 import Vue from 'vue';
-import ButtonRadioGroup from '../generic/ButtonRadioGroup';
-import access from "../../mixins/access.js";
-import taskControls from '../../mixins/task_controls.js';
-import apiConfig from '../../mixins/api_config.js';
+import ButtonRadioGroup from '@src/components/generic/ButtonRadioGroup';
+import access from "@src/mixins/access.js";
+import taskControls from '@src/mixins/task_controls.js';
+import apiConfig from '@src/mixins/api_config.js';
 import { dropdown } from 'vue-strap';
 import {mapGetters, mapActions} from 'vuex';
 import OverlayPanel from 'primevue/overlaypanel';
@@ -94,6 +94,7 @@ export default {
     editModesAvailable: {
       get() {
         let modes;
+        //TODO Check!
         if (this.$route.path.indexOf('/collections') === 0) {
           modes = {
             'CollectionBookEdit': 'Edit',
@@ -130,6 +131,20 @@ export default {
         return modes;
       }
     },
+
+    isBookRoute () {
+      return [
+        'BookEdit', 'BookEditDisplay',
+        'BookNarrate', 'BookProofread'
+      ].indexOf(this.$route.name) >= 0;
+    },
+    isCollectionRoute () {
+      return [
+        'CollectionBookEdit', 'CollectionBookEditDisplay',
+        'CollectionBookNarrate', 'CollectionBookProofread'
+      ].indexOf(this.$route.name) >= 0;
+    },
+
     ...mapGetters([
       'currentBookMeta',
       'currentBookid',
@@ -148,19 +163,21 @@ export default {
         this.$router.push({ name: val, params: { block: this.$route.params.block } });
       } else if (this.storeListO.meta && this.currentBookid == this.storeListO.meta.bookid && this.storeListO.startId) {
         this.$router.push({ name: val, params: { block: this.storeListO.startId } });
-
       } else this.$router.push({ name: val });
     },
     goBack: function() {
-      if (this.currentBookMeta && this.currentBookMeta.collection_id) {
-        let currentBookid = this.$store.state.currentBookid
-        let path = '/collections/' + this.currentBookMeta.collection_id + '/' + (currentBookid?currentBookid:'')
-        this.$router.push(path)
-      } else {
-        let currentBookid = this.$store.state.currentBookid
-        let path = '/books' + (currentBookid?'/'+currentBookid:'')
-        this.$router.push(path)
+      let path = '/books';
+      if (this.isBookRoute) {
+        if (this.currentBookMeta) {
+          const currentBookid = this.$store.state.currentBookid;
+          path = '/books' + (currentBookid?'/'+currentBookid:'')
+        }
       }
+      if (this.isCollectionRoute && this.$route.params && this.$route.params.collectionid) {
+        const currentBookid = this.$store.state.currentBookid;
+        path = '/collections/books/' + this.$route.params.collectionid + '/' + (currentBookid?currentBookid:'')
+      }
+      this.$router.replace(path);
     },
     getCurrentBookUrl(format) {
       return this.API_URL + 'books/' + this.$store.state.currentBookid +  "/download/" + format;
@@ -254,18 +271,6 @@ export default {
   directives: {
     'tooltip': Tooltip
   },
-  // watch: {
-  //   'this.editMode' () {
-  //     this.editModeChange()
-  //     console.log('Watcher for editmode')
-  //   }
-  // },
-  // events: {
-  //   changeEditMode: function(editMode) {
-  //     this.editMode = editMode
-  //     console.log('Caught event changeEditMode', editMode)
-  //   }
-  // },
   created: function () {
     if (!this.isAdmin) delete this.editModes.JSON;
   },
@@ -285,12 +290,7 @@ export default {
   },
   mounted() {
     this.bookSearch.string = "";
-  },
-  destroyed: function () {
-
-  },
-  beforeDestroy: function() {
-
+    this.toggleMetaVisible({force: true});
   }
 }
 </script>
@@ -308,7 +308,7 @@ h3 {
   margin-right: .5em;
 
   &.btn-meta {
-      margin-left: 20px;
+      margin-left: 10px;
     &:focus {
       background: rgb(255, 255, 255);
       border-color: rgb(204, 204, 204);
