@@ -259,7 +259,7 @@ export default {
   methods: {
 
     toggleMetaVisible ($event = {}) {
-      console.log(`toggleMetaVisible: `, $event.force, $event.hasOwnProperty('force'));
+      //console.log(`toggleMetaVisible: `, $event.force, $event.hasOwnProperty('force'));
       if ($event.hasOwnProperty('force')) {
         this.metaVisible = $event.force;
       } else {

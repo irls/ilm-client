@@ -57,7 +57,6 @@ export default {
       if (this.$route.name === 'BookEditDisplay') {
         mode = 'display';
       }
-      console.log(`App.vue.$route: `, mode, this.$route.params.bookid);
       this.$store.commit('set_book_mode', mode);
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.loadBook(this.$route.params.bookid)

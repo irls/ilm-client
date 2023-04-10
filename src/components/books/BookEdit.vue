@@ -1590,7 +1590,7 @@ export default {
       })
     },
     checkMode() {
-      console.log(`checkMode--: `, this.mode, this.currentJobInfo.id);
+      //console.log(`checkMode--: `, this.mode, this.currentJobInfo.id);
       if (this.currentJobInfo.id) {
         let allowed = false;
         switch (this.mode) {
@@ -2633,7 +2633,7 @@ export default {
 //       }
 //     },
     '$route' (toRoute, fromRoute) {
-      console.log('$route', toRoute, fromRoute);
+      //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
         let taskType = toRoute.params.task_type;
         return this.$store.dispatch('searchBlocksChain', {

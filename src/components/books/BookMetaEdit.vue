@@ -944,7 +944,6 @@ export default {
   mixins: [task_controls, api_config, access, time_methods, number_methods, toc_methods],
 
   mounted() {
-    console.log(`BookMetaEdit.mounted: `, this.currentBookid);
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
 
     this.getAudioBook({bookid: this.currentBookid})
@@ -1260,7 +1259,7 @@ export default {
         return this.updateBookCollection(collectionId)
           .then(response => {
             if (response.status === 200) {
-              console.log(`this.$route.name: `, this.$route.name, ' collectionId:', this.$route.params.collectionid);
+              //console.log(`this.$route.name: `, this.$route.name, ' collectionId:', this.$route.params.collectionid);
               if (collectionId) {
                 if (this.$route.name == 'BooksGrid') {
                   this.$store.dispatch('loadCollection', collectionId);
