@@ -349,22 +349,18 @@
                   </fieldset>
                   <fieldset class="block-style-fieldset trim-silence-config">
                     <legend>Trim silence</legend>
-                    <div>
-                      <label class="style-label"
-                        @click="setTrimSilenceConfig('audio_tts_narration')">
-                        <i v-if="trimSilenceConfigCalculated === 'audio_tts_narration'" class="fa fa-check-circle-o"></i>
-                        <i v-else class="fa fa-circle-o"></i>
-                        Audio file, Narration, TTS
-                      </label>
-                    </div>
-                    <div>
-                      <label class="style-label"
-                        @click="setTrimSilenceConfig('tts_narration')">
-                        <i v-if="trimSilenceConfigCalculated === 'tts_narration'" class="fa fa-check-circle-o"></i>
-                        <i v-else class="fa fa-circle-o"></i>
-                        Narration, TTS
-                      </label>
-                    </div>
+                    <label class="block-style-label"
+                       v-on="trimSilenceConfigCalculated === 'audio_tts_narration' ?
+                      {click: () => setTrimSilenceConfig('tts_narration')} :
+                      {click: () => setTrimSilenceConfig('audio_tts_narration')}">
+                      <template>
+                        <i
+                          v-bind:class="{'fa fa-square-o': trimSilenceConfigCalculated === 'audio_tts_narration',
+                          'fa fa-check-square-o -checked': trimSilenceConfigCalculated === 'tts_narration'}"
+                        ></i>
+                      </template>
+                      Don’t trim file import blocks
+                    </label>
                   </fieldset>
 
                 </vue-tab>
