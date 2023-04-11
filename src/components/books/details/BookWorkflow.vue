@@ -236,18 +236,7 @@
             .then(() => {
               return this.getCurrentJobInfo()
                 .then(() => {
-                  //console.log(`_setJobStatus: `, this.$route.name, this.currentCollectionId);
-                  //TODO check!
-                  /*if (this.$route && ['BooksGrid', 'CollectionBook'].indexOf(this.$route.name) !== -1)
-                  if (!this.currentCollectionId) {
-                    if (this.booksFilters.jobStatus !== '') {
-                      this.$router.replace({path: '/books', params: {}});
-                    }
-                  } else {
-                    if (this.collectionsFilters.jobStatus !== '') {
-                      this.$router.replace({name: 'Collection', params: {collectionid: this.currentCollectionId}});
-                    }
-                  }*/
+                  this.$store.commit('gridFilters/set_fltrChangeTrigger');
                   this.archiveInProcess = false;
                 })
                 .catch(err => {
