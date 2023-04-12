@@ -21,7 +21,7 @@
         :metaVisible="metaVisible"/>
         <!--@import_finished="bookImportFinished"-->
 
-      <BookReimport v-if="isBookEditRoute && showBookReimport"
+      <BookReimport v-if="showBookReimport"
         :multiple="false"
         @close_modal="reimportBookClose"
         :bookId="getBookid" />
