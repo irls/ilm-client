@@ -135,10 +135,10 @@
           this.blocksForAlignment.start = start;
           this.blocksForAlignment.end = end;
           this.getBlockSelectionInfo();
-        });*/
+        });
         this.$root.$on('from-bookblockview:voicework-type-changed', () => {
           this.getBlockSelectionInfo();
-        });
+        });*/
         this.$root.$on('show-modal', (params) => {this.showModal(params)})
         this.$root.$on('hide-modal', () => {this.hideModal()})
       },
