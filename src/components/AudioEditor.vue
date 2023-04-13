@@ -2207,7 +2207,14 @@
           let tokens = [];
           let currentLength = 0;
           text = text.replace(/[\r\n]/img, '');// remove line breaks for clear regular expressions
-          text = text.replace(/<sg\s*?data-suggestion(\=\"\")?(\s*data-sugg)?>[\s\S]+?<\/sg>/img, '');// clear empty suggestion
+          //text = text.replace(/<sg\s*?data-suggestion(\=\"\")?(\s*data-sugg)?>[\s\S]+?<\/sg>/img, '');// clear empty suggestion
+          let parser = new DOMParser();
+          let doc = parser.parseFromString(text, "text/html");
+          doc.querySelectorAll('sg').forEach(sg => {
+            if (sg.dataset && (!sg.dataset.suggestion || sg.dataset.suggestion.length === 0)) {
+              text = text.replace(sg.toString(), '');
+            }
+          });
           text = $('<textarea/>').html(text).text();// remove html entities
           while((match = textRg.exec(text))) {
             let word = match[2];
