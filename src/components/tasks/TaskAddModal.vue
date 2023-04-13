@@ -145,7 +145,7 @@ export default {
   },
   methods: {
     ...mapActions([
-      'createDummyBook', 'getTaskUsers'
+      'createDummyBook', 'getTaskUsers', 'updateBooksList'
     ]),
     cancel() {
       this.$emit('closed', false)
@@ -190,11 +190,16 @@ export default {
               if (!this.$refs.bookImport.saveDisabled) {
                 this.$refs.bookImport.onFormSubmit()
                 .then((res)=>{
-                  this.isUploading = false;
-                  this.$emit('closed', true);
-                  if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
-                    this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
-                  }
+                  this.updateBooksList().then(()=>{
+                    if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                      this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                    } else {
+                      this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
+                      this.$store.commit('gridFilters/set_fltrChangeTrigger');
+                    }
+                    this.isUploading = false;
+                    this.$emit('closed', true);
+                  })
                 }).catch(error => {
                   this.isUploading = false;
                   this.deleteTask();
@@ -203,10 +208,16 @@ export default {
                 if (this.$refs.bookImport.isDummyBook == true) {
                   this.createDummyBook({book_id: this.createdJob.bookid, jobId: this.createdJob['@rid']})
                   .then((res)=>{
-                    this.$emit('closed', true)
+                    this.updateBooksList().then(()=>{
                     if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
                       this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                    } else {
+                      this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
+                      this.$store.commit('gridFilters/set_fltrChangeTrigger');
                     }
+                    this.isUploading = false;
+                    this.$emit('closed', true);
+                  })
                   }).catch(error => {
                     this.deleteTask()
                   });
