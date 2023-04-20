@@ -49,19 +49,17 @@
   </div>
 </template>
 <script>
-  import VueSlider from 'vue-slider-component';
   import Slider    from 'primevue/slider';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
   import _ from 'lodash'
   export default {
     name: "PauseAfterBlock",
-    components: {Slider, VueSlider},
+    components: { Slider },
     props: ["blockType", "styleValue", "styleProps"],
     data() {
       return {
         pause: 0,
-        pauseUpdateEmitted: false,
         min: 0,
         max: 4,
         interval: 0.1,
@@ -69,10 +67,7 @@
         range: [],
         blockList: [],
         player: null,
-        nowPlaying: false,
-        lastIncrement: null,
-        setUndefined: false,
-        callModal: false,
+        nowPlaying: false
       }
     },
     mounted() {
@@ -86,20 +81,19 @@
           this.pauseValueChange(pauseVal);
         }
       }, 300),
+
       pauseValueChange(pauseVal) {
         const blk = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
           return b.pause_after != pauseVal;
         }) : false;
         if (blk) {
-          this.$emit('setPauseAfter', this.blockType, pauseVal);
+          this.pause = pauseVal;
           this.range = [pauseVal];
+          this.$emit('setPauseAfter', this.blockType, pauseVal);
         }
-        this.pause = pauseVal;
       },
+
       recalcPauseAfterRange(reset_pause = false) {
-        if (this.range.length === 1 && this.lastIncrement !== null) {
-          return false;
-        }
         let range = [];
         let selectedProps = this.styleProps.get(this.blockType);
         if (selectedProps) {
@@ -117,7 +111,7 @@
           return a > b ? 1 : -1;
         });
 
-        //console.log('recalc range', this.pause, this.range[0], reset_pause);
+        //console.log('recalc range', this.pause, this.range, reset_pause);
         if (this.range.length === 1 && this.pause !== this.range[0] && reset_pause) {
           this.pause = +(+this.range[0]).toFixed(this.precision);
         }
@@ -126,6 +120,7 @@
         this.range = this.range.map(()=>0);
       },
       resetPause() {
+        //console.log('resetPause', this.pause, this.range);
         this.recalcPauseAfterRange();
         let val = 0;
         if (this.range.length === 1 && this.range[0] !== 'none') {
@@ -390,8 +385,7 @@
         storeList: 'storeList',
         storeListO: 'storeListO',
         bookMode: 'bookMode',
-        selectedBlocks: 'filteredSelectedBlocks',
-        pauseAfterBlockUpdate: 'pauseAfterBlockUpdate'
+        selectedBlocks: 'filteredSelectedBlocks'
       })
     },
     watch: {
