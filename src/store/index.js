@@ -277,7 +277,6 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
-    pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
   },
 
@@ -676,9 +675,6 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
-    },
-    pauseAfterBlockUpdate: state => {
-      return state.pauseAfterBlockXhr !== null;
     }
   },
 
@@ -1588,7 +1584,7 @@ export const store = new Vuex.Store({
       width = (34*1)+34*(width/100);
 
       dispatch('setSelectionModalProgressWidth',width)
-      console.log(`set_selected_blocksAsyncIteration ${idx}`)
+      //console.log(`set_selected_blocksAsyncIteration ${idx}`)
 
       if(idx<=size && status == 'ok'){
         setTimeout( function() {
@@ -2131,7 +2127,6 @@ export const store = new Vuex.Store({
 
       if (currMeta.bookid) {
         if (currMeta.published === true) {
-          //console.log('updateBookVersion published', update);
           return dispatch('updateBookMeta', update)
         } else if (update.major && update.major == true) {
           if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
@@ -2141,15 +2136,18 @@ export const store = new Vuex.Store({
             if (parseInt(cVers[0]) === parseInt(pVers[0])) {
               delete update['major'];
               update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-              //console.log('updateBookVersion unpublished', update);
             }
+          }
+          if (update['version'] && update['version'] !== currMeta['version']) {
+            return dispatch('updateBookMeta', update);
           }
         }
       }
-      return dispatch('updateBookMeta', update);
+      return Promise.resolve();
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
+      //console.log(`updateBookMeta.update: `, update);
 
       update.bookid = state.currentBookMeta._id;
 
@@ -2201,7 +2199,6 @@ export const store = new Vuex.Store({
             if (parseInt(cVers[0]) === parseInt(pVers[0])) {
               delete update['major'];
               update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-              console.log('updateBookMeta unpublished', update);
             }
           }
         }
@@ -4817,38 +4814,32 @@ export const store = new Vuex.Store({
     },
     setPauseAfter({state}, [blockType, value]) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
-        let xhrId = `${Date.now()}-${value}`;
-        state.pauseAfterBlockXhr = xhrId;
         return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_after`, {
-          range: {start_id: state.blockSelection.start._id,
-          end_id: state.blockSelection.end._id},
+          range: {
+            start_id: state.blockSelection.start._id,
+            end_id: state.blockSelection.end._id
+          },
           block_type: blockType,
           value: value === 'none' ? null : value,
           mode: state.bookMode
         })
-          .then((response) => {
-            if (state.pauseAfterBlockXhr !== xhrId) {
-              return Promise.resolve(false);
-            }
-            if (Array.isArray(response.data)) {
-              response.data.forEach(b => {
-                let block = state.storeList.get(b.blockid);
-                if (block && block.updated < b.updated) {
-                  block.setUpdated(b.updated);
-                  block.setPauseAfter(b.pause_after);
-                  block.status.marked = b.status.marked;
-                }
-              });
-            }
-            state.pauseAfterBlockXhr = null;
-            return Promise.resolve(true);
-          })
-          .catch(err => {
-            if (state.pauseAfterBlockXhr === xhrId) {
-              state.pauseAfterBlockXhr = null;
-            }
-            return Promise.reject(err);
-          });
+        .then((response) => {
+          if (Array.isArray(response.data)) {
+            response.data.forEach(b => {
+              let block = state.storeList.get(b.blockid);
+              if (block) {
+                block.setUpdated(b.updated);
+                //block.setPauseAfter(b.pause_after);
+                block.status.marked = b.status.marked;
+                console.log(`block: `, block);
+              }
+            });
+          }
+          return Promise.resolve(true);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
       }
     },
     updateAudiobook({state, commit, dispatch}, [id, data, bookid = null]) {
@@ -5241,7 +5232,7 @@ export const store = new Vuex.Store({
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
-              
+
               state.storeListO.updBlockByRid(response.data.id, {out: response.data.out, updated: response.data.updated});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});

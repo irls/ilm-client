@@ -8,35 +8,62 @@
         <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
-    <template v-if="bookMode !== 'proofread'">
-      <Slider v-model="pause"
-        :step="interval"
-        :min="min" :max="max"
-        @change="inputPauseDebounced"
-        :class="['block-pause-slider']" />
-      <br/>
+    <template v-if="bookMode !== 'proofread' && !allowConfirmPopup">
+      <vue-slider v-model="pause"
+                  :min="min"
+                  :max="max"
+                  :interval="interval"
+                  :width="'auto'"
+                  tooltip="none"
+                  :lazy="true"
+                  :silent="true"
+                  :debug="false"
+                  ref="pause_after_slider"
+                  @input="pauseValueChange"
+                  @drag-end="pauseDragEnd"></vue-slider>
     </template>
 
-    <div class="hidden">pause: "{{pause}}", {{pause}}, range: {{range}}</div><!-- class="hidden" -->
-    <div class="hidden">{{pause === min}},{{pause === max}}</div>
+    <template v-if="bookMode !== 'proofread' && allowConfirmPopup">
+      <vue-slider v-model="pause"
+                  :min="min"
+                  :max="max"
+                  :interval="interval"
+                  :width="'auto'"
+                  tooltip="none"
+                  :lazy="true"
+                  :silent="true"
+                  :debug="false"
+                  ref="pause_after_slider"
+                  @input="showConfirmPopup"
+                  @drag-end="showConfirmPopup"></vue-slider>
+    </template>
+
+    <div class="hidden">pause: "{{pause}}", {{parseFloatToFixed(pause)}}, range: {{range}}</div><!-- class="hidden" -->
+    <div class="hidden">{{parseFloatToFixed(pause) === min}},{{parseFloatToFixed(pause) === max}}</div>
     <div class="col-md-12">
       <div class="pause-after-input col-md-8">
         <template v-if="bookMode === 'proofread'">
           <input  class="pause-after" type="number" disabled
             v-if="range.length > 1"/>
-          <input type="number" class="pause-after" :value="pause" disabled v-else />
+          <input type="number" class="pause-after" v-model="pause" disabled v-else />
         </template>
         <template v-else>
 
-          <button @click="decreasePause" :disabled="pause === min" class="minus"></button>
+          <button v-if="allowConfirmPopup" @click="confirmPauseUptdMessage(range)" class="minus"></button>
+          <button v-else @click="decreasePause" :disabled="parseFloatToFixed(pause) === min" class="minus"></button>
 
-          <input :value="pause"
-            class="pause-after" type="number"
-            :min="min" :max="max"
+          <input  class="pause-after" type="number" @click="confirmPauseUptdMessage(range)"
+            v-if="range.length > 1 && this.callModal"/>
+          <input  class="pause-after" type="number" v-model="pauseInput"
+            :min="min"
+            :max="max"
             :step="interval"
-            @change="inputPauseManually" />
+            v-on:change="onPauseInput"
+            v-on:focusout="onFocusout"
+            v-else/>
 
-          <button @click="increasePause" class="plus" :disabled="pause === max"></button>
+          <button v-if="allowConfirmPopup" @click="confirmPauseUptdMessage(range)" class="plus"></button>
+          <button v-else @click="increasePause" class="plus" :disabled="parseFloatToFixed(pause) === max"></button>
         </template>
       </div>
       <div class="listen-block col-md-4" v-if="listenBlockDisplay">
@@ -50,53 +77,113 @@
 </template>
 <script>
   import VueSlider from 'vue-slider-component';
-  import Slider    from 'primevue/slider';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
-  import _ from 'lodash'
+  //import _ from 'lodash'
   export default {
     name: "PauseAfterBlock",
-    components: {Slider, VueSlider},
+    components: {VueSlider},
     props: ["blockType", "styleValue", "styleProps"],
     data() {
       return {
         pause: 0,
+        pausePreValue: 0,
         pauseUpdateEmitted: false,
         min: 0,
         max: 4,
         interval: 0.1,
-        precision: 1,
         range: [],
         blockList: [],
         player: null,
         nowPlaying: false,
+        lastEvent: null,
         lastIncrement: null,
         setUndefined: false,
         callModal: false,
       }
     },
     mounted() {
+      //console.log(`MOUNTED`, this.selectedValues, this.styleValue(this.blockType, 'pause_before', 'none'))
+      //setInterval(() => {
+        //this.$refs.pause_before_slider.refresh();
+      //}, 1000)
+      //setTimeout(() => {
+        //this.pause = 2.9;
+        //this.$refs.pause_before_slider.setValue(2.9);
+      //}, 5000);
       this.resetPause();
+      /*let sorted = Array.from(this.storeList).sort((a, b) => {
+        return a[1].index > b[1].index ? 1 : -1;
+      }).map((a) => {
+        return a[1];
+      });*/
+      //this.blockList = blockList;
+    },
+    activated: function() {
+      console.log(`ACTIVATED`, this.blockType)
     },
     methods: {
-      inputPauseDebounced: _.debounce(function (pauseVal) {
-        if (this.allowConfirmPopup) {
-          this.confirmPauseUptdMessage(this.range);
-        } else {
-          this.pauseValueChange(pauseVal);
+      setPauseAfter(val) {
+        //console.log(val, typeof val);
+        if (val && val % 1 !== 0) {
+          val = parseFloat(parseFloat(val).toFixed(1));
         }
-      }, 300),
-      pauseValueChange(pauseVal) {
-        const blk = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
-          return b.pause_after != pauseVal;
-        }) : false;
-        if (blk) {
-          this.$emit('setPauseAfter', this.blockType, pauseVal);
-          this.range = [pauseVal];
+        this.$emit('setPauseAfter', this.blockType, val);
+      },
+      showConfirmPopup() {
+        if(this.pauseUpdateEmitted)
+          return this.confirmPauseUptdMessage(this.range);
+      },
+      pauseValueChange(val) {
+          //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
+        if (this.setUndefined) {
+          this.setUndefined = false;
         }
-        this.pause = pauseVal;
+        if (this.pauseUpdateEmitted) {
+          if (val !== this.lastIncrement) {
+            this.lastIncrement = null;
+          }
+          let blk = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
+            return b.pause_after != val;
+          }) : false;
+          if (blk) {
+            //console.log('ON INPUT', val, typeof val);
+            val = this.parseFloatToFixed(val);
+            //if (this.pause != val) {
+            //this.lastEvent = `${val}-${Date.now()}`;
+            //let currentEvent = this.lastEvent;
+            if (this.lastIncrement === null) {
+              this.$emit('setPauseAfter', this.blockType, val);
+              this.range = [val];
+            } else {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                  if (this.lastIncrement === val) {
+                    this.$emit('setPauseAfter', this.blockType, val);
+                    this.range = [val];
+                    //setTimeout(() => {// avoid updates from live_db
+                      //this.lastIncrement = null;
+                    //}, 300);
+                  }
+                }, 300);
+              });
+            }
+            //}
+          }
+        }
+      },
+      pauseDragEnd(val) {
+        //console.log('DRAG END');
+        //console.log(arguments)
+        if (val && typeof val.getValue === 'function') {
+          this.pauseValueChange(val.getValue(),this.range);
+          this.pauseUpdateEmitted = false;
+        }
       },
       recalcPauseAfterRange(reset_pause = false) {
+        if (this.pauseAfterBlockUpdate) {
+          return false;
+        }
         if (this.range.length === 1 && this.lastIncrement !== null) {
           return false;
         }
@@ -109,7 +196,7 @@
               if (v === 'none') {
                 v = 0;
               }
-              return +(+v).toFixed(this.precision)
+              return this.parseFloatToFixed(v);
             });
           }
         }
@@ -119,52 +206,148 @@
 
         //console.log('recalc range', this.pause, this.range[0], reset_pause);
         if (this.range.length === 1 && this.pause !== this.range[0] && reset_pause) {
-          this.pause = +(+this.range[0]).toFixed(this.precision);
+          this.pauseUpdateEmitted = false;
+          this.pause = this.range[0];
         }
-      },
-      flatPauseAfterRange(){
-        this.range = this.range.map(()=>0);
       },
       resetPause() {
+        this.pauseUpdateEmitted = false;
         this.recalcPauseAfterRange();
-        let val = 0;
+        let val;
         if (this.range.length === 1 && this.range[0] !== 'none') {
-          val = +(+this.range[0]).toFixed(this.precision);
+          val = this.parseFloatToFixed(this.range[0]);
+        } else {
+          setTimeout(() => {
+            this.callModal = true;
+          }, 800);
+          val = 0;
         }
-
-        if (this.pause !== val) {
-          this.pause = val;
-        };
+        let changedVal = this.pause != val;
+        //console.log('reset', this.pause, val);
+        this.pause = val;
+        if (!changedVal) {
+          this.pauseUpdateEmitted = true;
+        }
       },
       increasePause() {
-        if (this.allowConfirmPopup) {
-          this.confirmPauseUptdMessage(this.range);
+        if (this.setUndefined) {
+          this.setUndefined = false;
+          this.pause = 0;
+          this.pauseUpdateEmitted = true;
+          this.pauseValueChange(this.pause);
         } else {
-          const newVal = this.pause + this.interval;
-          this.pause = +newVal.toFixed(this.precision);
-          this.inputPauseDebounced(this.pause);
+          if (this.range.length > 1) {
+            this.pause = this.min;
+            this.pauseUpdateEmitted = true;
+            this.pauseValueChange(this.pause);
+            this.resetPause();
+          } else if (this.pause <= this.max - this.interval) {
+            this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) + this.interval);
+            this.pause = this.lastIncrement;
+          }
         }
+
       },
       decreasePause() {
-        if (this.allowConfirmPopup) {
-          this.confirmPauseUptdMessage(this.range);
+        if (this.setUndefined) {
+          this.setUndefined = false;
+          this.pause = 0;
+          this.pauseUpdateEmitted = true;
+          this.pauseValueChange(this.pause);
         } else {
-          const newVal = this.pause - this.interval;
-          this.pause = +newVal.toFixed(this.precision);
-          this.inputPauseDebounced(this.pause);
+          if (this.pause >= this.min + this.interval) {
+            this.lastIncrement = this.parseFloatToFixed(this.parseFloatToFixed(this.pause) - this.interval);
+            this.pause = this.lastIncrement;
+          }
         }
       },
-      inputPauseManually(ev) {
-        ev.preventDefault();
-        if (this.allowConfirmPopup) {
-          this.confirmPauseUptdMessage(this.range);
-        } else {
-          let newVal = +(+ev.target.value).toFixed(this.precision);
-          newVal = newVal > this.max ? this.max : newVal;
-          newVal = newVal < this.min ? this.min : newVal;
-          this.pause = newVal;
-          this.inputPauseDebounced(this.pause);
+      defer(func, val, time = 300) {
+        this.lastEvent = `${val}-${Date.now()}`;
+        let currentEvent = this.lastEvent;
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (currentEvent === this.lastEvent) {
+              func.call(this);
+            }
+          }, time);
+        });
+      },
+      parseFloatToFixed(val, precision = 1) {
+        if (val && (val % 1 !== 0 || typeof val === 'string')) {
+          val = parseFloat(parseFloat(val).toFixed(precision));
         }
+        return val;
+      },
+      recalcBlocks() {
+        return;
+        let blockList = [];
+        if (this.blockSelection.start && this.blockSelection.start._id && this.blockSelection.end && this.blockSelection.end._id) {
+          let crossId = this.blockSelection.start._id;
+          for (let idx = 0; idx < this.storeList.size; idx++) {
+            let block = this.storeList.get(crossId);
+            if (block) {
+              if (this.bookMode === 'edit') {
+                blockList.push(block);
+              } else if (this.bookMode === 'narrate') {
+                if (block.voicework === 'narrate') {
+                  blockList.push(block);
+                }
+              }
+              /*let hasAssignment = this.currentJobInfo.mastering  || this.currentJobInfo.text_cleanup;
+              let hasTask = this.tc_currentBookTasks.tasks.find((t) => {
+                return t.blockid == block._id;
+              })
+              //if (!hasAssignment && state.adminOrLibrarian) {
+                //hasAssignment = state.currentJobInfo.completed;
+              //}
+              if (!hasTask && this.adminOrLibrarian) {
+                hasTask = this.currentJobInfo.can_resolve_tasks.find((t) => {
+                  return t.blockid == block._id;
+                });
+              }
+              if ((block.status && block.status.marked) || (!hasAssignment && !hasTask)) {
+                switch (block.voicework) {
+                  case 'audio_file' :
+                    ++approved;
+                    break;
+                  case 'tts':
+                    ++approved_tts;
+                    break;
+                  case 'narration':
+                    ++approved_narration;
+                    break;
+                }
+                if (block.voicework !== 'tts' && block.footnotes && Array.isArray(block.footnotes) && block.footnotes.length > 0) {
+                  let ftn = block.footnotes.find(f => {
+                    return f.voicework === 'tts';
+                  });
+                  if (ftn) {
+                    ++approved_tts;
+                  }
+                }
+              }
+              if (block.isChanged || block.isAudioChanged) {
+                if (block.voicework === 'audio_file') {
+                  ++changed_in_range;
+                }
+                if (block.voicework === 'tts') {
+                  ++changed_in_range_tts;
+                }
+                if (block.voicework === 'narration') {
+                  ++changed_in_range_narration;
+                }
+              }*/
+              if (block.blockid == this.blockSelection.end._id) {
+                break;
+              }
+              crossId = this.storeListO.getOutId(block.blockid);
+              if (!crossId) {
+                break;
+              }
+            } else break;
+          }
+        }
+        this.blockList = blockList;
       },
       listenBlock() {
         let length = 3;
@@ -274,6 +457,22 @@
       goToBlock(blockId) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockId);
       },
+      onPauseInput($ev) {
+        //console.log($ev.target.value);
+        let value = parseFloat($ev.target.value);
+        if ((isNaN(value) || !value) && !this.setUndefined) {
+          value = 0;
+        }
+        if (this.setUndefined) {
+          this.setUndefined = false;
+        }
+        this.pause = this.parseFloatToFixed(value);
+      },
+      onFocusout($ev) {
+        if (/[^\d\.\,]/.test($ev.target.value)) {
+          $ev.target.value = this.pause;
+        }
+      },
       confirmPauseUptdMessage(range) {
         this.$root.$emit('show-modal', {
           title: 'Confirm pause update',
@@ -282,7 +481,7 @@
             {
               title: 'Cancel',
               handler: () => {
-                this.pause = 0;
+                this.$refs.pause_after_slider.setValue(0);
                 this.$root.$emit('hide-modal');
               },
               'class': 'btn btn-default'
@@ -290,8 +489,8 @@
             {
               title: 'Confirm',
               handler: () => {
-                this.pause = 0;
-                this.flatPauseAfterRange();
+                this.$refs.pause_after_slider.setValue(0);
+                this.callModal = false;
                 this.$root.$emit('hide-modal');
                 // this.updates ();
               },
@@ -301,13 +500,20 @@
           class: ['modal-width align-modal']
         });
       },
+/*
+      updates () {
+        // this.range = 1;
+        // this.setUndefined = true;
+        this.callModal = false;
+      },
+*/
 
     },
     computed: {
       allowConfirmPopup: {
         get() {
-          const checkPause = (this.range[0] && this.range[0] !== 'none') ? this.range[0] : 0;
-          return this.range.length > 1 && !this.range.every((pause)=>pause == checkPause);
+          // this.coversReposition();
+          return this.range.length > 1 && this.callModal;
         },
       },
 
@@ -318,6 +524,9 @@
             return range[0];
           }
           return 0;
+        },
+        set(val) {
+          this.setPauseAfter(val);
         }
       },
       pausesAfterRange: {
@@ -350,6 +559,21 @@
             return blocks;
           }
           return [];
+        }
+      },
+      pauseInput: {
+        get() {
+          if(this.setUndefined){
+            this.pause = undefined;
+          }
+          return this.pause;
+        },
+        set(val) {
+          /*console.log(arguments);
+          let wait = _.debounce((key,event) => {
+            console.log(key, event, val);
+          },  500);
+          wait();*/
         }
       },
       selectedBlock: {
@@ -395,10 +619,26 @@
       })
     },
     watch: {
+      'pause': {
+        handler(val) {
+          Vue.nextTick(() => {
+            this.pauseUpdateEmitted = true;
+          });
+        }
+      },
+      /*'blockSelection': {
+        handler(val) {
+          this.resetPause();
+          this.recalcBlocks();
+        },
+        deep: true
+      },*/
       'blockSelection.start._id': {
         handler(val, oldVal) {
+          this.lastIncrement = null;
           if (val) {
             this.resetPause();
+            this.recalcBlocks();
           }
         }
       },
@@ -406,15 +646,32 @@
         handler(val, oldVal) {
           let singleSelection = !oldVal && val === this.blockSelection.start._id;
           if (this.blockSelection.start._id && this.blockSelection.end._id && (this.blockSelection.start._id !== this.blockSelection.end._id || !singleSelection)) {
+            this.lastIncrement = null;
             this.resetPause();
+            this.recalcBlocks();
           }
         }
       },
       'blockSelection.refresh': {
         handler() {
           Vue.nextTick(() => {
+            if (this.lastIncrement === null) {
               this.recalcPauseAfterRange(true);
+            }
           });
+        }
+      },
+      'styleProps': {
+        handler() {
+          //this.recalcPauseAfterRange(true);
+          //this.pauseUpdateEmitted = false;
+          //this.resetPause();
+        },
+        deep: true
+      },
+      'bookMode': {
+        handler() {
+          this.recalcBlocks();
         }
       }
     }
@@ -426,38 +683,6 @@
   }
   .pause-after-container {
     position: relative;
-
-    .p-slider.block-pause-slider {
-      z-index: 0;
-      margin: 0px 8px;
-      border-radius: 4px;
-
-      &:not(.p-disabled):hover {
-        background-color: #c8c6c4;
-      }
-
-      &.p-slider-horizontal {
-        height: 6px;
-      }
-
-      span.p-slider-range {
-        transition: all 0.2s ease 0s;
-        border-radius: 4px;
-        background-color: #3498db;
-        &:hover {
-          background-color: #3498db;
-        }
-      }
-
-      span.p-slider-handle {
-        transition: all 0.2s ease 0s;
-        border: none;
-        box-shadow:.5px .5px 2px 1px rgba(0,0,0,.32);
-        cursor: pointer;
-      }
-
-    }
-
     .vue-slider-component.vue-slider-horizontal {
       z-index: 0;
     }
