@@ -1,6 +1,7 @@
 <template>
   <textarea class="resizable-textarea" 
     v-on:change="onValueChanged($event)"
+    v-on:blur="onBlur($event)"
     v-model="textareaValue"
     :disabled="disabled"
     rows="1">
@@ -34,6 +35,9 @@
         Vue.nextTick(() => {
           this.initSize();
         })
+      },
+      onBlur(event) {
+        this.$emit('onBlur', event);
       }
     },
     mounted () {

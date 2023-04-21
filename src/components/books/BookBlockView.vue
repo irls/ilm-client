@@ -1440,8 +1440,8 @@ Save or discard your changes to continue editing`,
         'saveBlockAudio',
         'updateStoreFlag',
         'changeBlocksVoicework',
-        'loadBookTocSections'
       ]),
+    ...mapActions('tocSections', ['loadBookTocSections']),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
