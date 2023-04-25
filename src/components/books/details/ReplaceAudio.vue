@@ -81,7 +81,7 @@
         get() {
           if (this.selectedBlocks.length > 0) {
             return this.selectedBlocks.filter(blk => {
-              return !blk.disabled && blk.audiosrc && blk.audiosrc.length > 0;
+              return blk.audiosrc && blk.audiosrc.length > 0;
             }).length;
           } else {
             /*if (this.currentBookCounters.enabled_blocks !== null) {
@@ -89,7 +89,7 @@
             }*/
             let blocks = Array.from(this.storeList.values());
             return blocks.filter(blk => {
-              return !blk.disabled && blk.audiosrc && blk.audiosrc.length > 0;
+              return blk.audiosrc && blk.audiosrc.length > 0;
             }).length;
           }
         },
