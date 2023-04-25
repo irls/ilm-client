@@ -235,6 +235,11 @@ export default {
           },
           'ctrl+up': (ev)=>{
             //console.log('ctrl+up arrow');
+            if (ev && ev.target) {
+              if (ev.target.className.indexOf('edit-section-') === 0) {
+                return;
+              }
+            }
             const idsArray = this.parlistO.idsArray();
             const jumpStep = Math.floor(idsArray.length * 0.1);
             const currIdx = this.hotkeyScrollTo;
@@ -246,6 +251,11 @@ export default {
           },
           'ctrl+down': (ev)=>{
             //console.log('ctrl+down arrow');
+            if (ev && ev.target) {
+              if (ev.target.className.indexOf('edit-section-') === 0) {
+                return;
+              }
+            }
             const idsArray = this.parlistO.idsArray();
             const jumpStep = Math.floor(idsArray.length * 0.1);
             const currIdx = this.hotkeyScrollTo;

@@ -16,36 +16,26 @@
             Sections
           </button>
         </div>
-        <div class="toc-button">
+        <div class="toc-button -toc-actions">
           <template v-if="sectionsMode && adminOrLibrarian">
             <span class="btn btn-primary book-generating" v-if="tocSectionBook.isBuilding">
               <span class="book-generating-spinner"></span>
-              Rebuild
             </span>
             <template v-else>
               <button class="btn btn-default btn-build-book toc-book-settings" v-on:click="openSettings($event)">
-                <i class="fa fa-cog"></i>
               </button>
-              <button class="btn btn-primary btn-build-book" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)">
-                <i class="fa fa-file-archive-o"></i>
+              <button class="btn btn-primary btn-build-book toc-export" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)">
               </button>
-              <span class="btn btn-primary btn-build-book book-build-disabled" v-else>
-                <i class="fa fa-file-archive-o"></i>
+              <span class="btn btn-primary btn-build-book book-build-disabled toc-export" v-else>
+              </span>
+              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)">
+              </a>
+              <span class="btn btn-primary book-build-disabled btn-download-book" v-else>
               </span>
             </template>
           </template>
         </div>
-        <div class="toc-button">
-          <template v-if="sectionsMode && adminOrLibrarian">
-            <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)">
-              <i class="fa fa-download"></i>
-            </a>
-            <span class="btn btn-primary book-build-disabled btn-download-book" v-else>
-              <i class="fa fa-download"></i>
-            </span>
-          </template>
-        </div>
-        <div class="toc-button">
+        <div class="toc-button -refresh-toc">
           <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)">
             <i class="fa fa-refresh refresh-toc"></i>
           </button>
@@ -62,17 +52,17 @@
           </div>
           <div>
             <label>
-              <input type="checkbox" v-model="displaySettings.title" />Title
+              <input type="checkbox" v-model="displaySettings.title" /><span></span>Title
             </label>
           </div>
           <div>
             <label>
-              <input type="checkbox" v-model="displaySettings.titleEn" />Title English
+              <input type="checkbox" v-model="displaySettings.titleEn" /><span></span>Title English
             </label>
           </div>
           <div>
             <label>
-              <input type="checkbox" v-model="displaySettings.toc" />TOC
+              <input type="checkbox" v-model="displaySettings.toc" /><span></span>TOC
             </label>
           </div>
         </div>
@@ -196,7 +186,7 @@
                 </td>
               </template>
             </tr>
-            <tr class="toc-section-title" v-if="displayTitle">
+            <tr :class="['toc-section-title', '-num-' + toc.section.index]" v-if="displayTitle && toc.section && toc.section.id">
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title')" v-on:dblclick="sectionEditMode(toc.section, 'title')">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
                   <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title']}]"
@@ -211,7 +201,7 @@
                 </template>
               </td>
             </tr>
-            <tr class="toc-section-title-en" v-if="displayTitleEn">
+            <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEn && toc.section && toc.section.id">
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn')" v-on:dblclick="sectionEditMode(toc.section, 'titleEn')">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
                   <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn']}]"
@@ -375,7 +365,7 @@ export default {
             }
           }
           if (section) {
-            if (this.editingSectionId !== section.id) {
+            if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
               if (this.hasError()) {
                 this.showNameError();
                 return false;
@@ -399,10 +389,111 @@ export default {
         this.editingSectionId = section.id;
         this.editingFieldValue = section[field];
         this.editingFieldName = field;
+        Vue.nextTick(() => {
+          let el = document.getElementsByClassName('edit-section-' + this.editingFieldName);
+          if (el && el[0]) {
+            el[0].addEventListener('keydown', this.moveToNextField);
+          }
+        });
       } else {
         this.editingSectionId = null;
         this.editingFieldValue = '';
         this.editingFieldName = '';
+      }
+    },
+    
+    moveToNextField(event) {
+      if (event) {
+        let isPrev = event.key === 'ArrowUp';
+        let isNext = event.key === 'ArrowDown';
+        if (isPrev || isNext) {
+          let targetSection = this.currentBookTocCombined.find(toc => {
+            return toc.section && toc.section.id === this.editingSectionId;
+          }).section;
+          let targetField;
+          if (!event.ctrlKey) {
+            if (this.editingFieldName === 'titleEn') {// move to title field
+              if (isPrev) {
+                if (this.displayTitle) {
+                  targetField = 'title';
+                } else {
+                  targetField = 'slug';
+                }
+              } else if (isNext) {
+                targetSection = this.currentBookTocCombined.find(toc => {
+                  return toc.section && toc.section.index === targetSection.index + 1;
+                });
+                if (targetSection) {
+                  targetSection = targetSection.section;
+                  targetField = 'slug';
+                }
+              }
+            } else if (this.editingFieldName === 'title') {
+              if (isPrev) {
+                targetField = 'slug';
+              } else if (isNext) {
+                if (this.displayTitleEn) {
+                  targetField = 'titleEn';
+                } else {
+                  targetSection = this.currentBookTocCombined.find(toc => {
+                    return toc.section && toc.section.index === targetSection.index + 1;
+                  });
+                  if (targetSection) {
+                    targetSection = targetSection.section;
+                    targetField = 'slug';
+                  }
+                }
+              }
+            } else if (this.editingFieldName === 'slug') {
+              if (isPrev) {
+                targetSection = this.currentBookTocCombined.find(toc => {
+                  return toc.section && toc.section.index === targetSection.index - 1;
+                });
+                if (targetSection) {
+                  targetSection = targetSection.section;
+                  targetField = 'titleEn';
+                  if (this.displayTitleEn) {
+                    targetField = 'titleEn';
+                  } else if (this.displayTitle) {
+                    targetField = 'title';
+                  } else {
+                    targetField = 'slug';
+                  }
+                }
+              } else if (isNext) {
+                if (this.displayTitle) {
+                  targetField = 'title';
+                } else if (this.displayTitleEn) {
+                  targetField = 'titleEn';
+                } else {
+                  targetSection = this.currentBookTocCombined.find(toc => {
+                    return toc.section && toc.section.index === targetSection.index + 1;
+                  });
+                  if (targetSection) {
+                    targetSection = targetSection.section;
+                      targetField = 'slug';
+                    }
+                  }
+              }
+            }
+          } else {
+            targetField = this.editingFieldName;
+            let targetIndex = isPrev ? targetSection.index - 1 : targetSection.index + 1;
+            targetSection = this.currentBookTocCombined.find(toc => {
+              return toc.section && toc.section.index === targetIndex;
+            });
+            if (targetSection) {
+              targetSection = targetSection.section;
+            }
+          }
+          if (targetField && targetSection) {
+            event.preventDefault();
+            this.sectionEditMode(null);
+            Vue.nextTick(() => {
+              this.sectionEditMode(targetSection, targetField);
+            });
+          }
+        }
       }
     },
     
@@ -896,6 +987,27 @@ export default {
         i.fa {
           color: white;
         }
+        background: url(/static/toc/settings.png);
+        width: 47px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      &.toc-export {
+        background: url(/static/toc/build.png);
+        width: 50px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: #337AB7;
+      }
+      &.btn-download-book {
+        background: url(/static/toc/download.png);
+        width: 45px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: #337AB7;
       }
     }
     .section-generating {
@@ -937,6 +1049,13 @@ export default {
         margin: 0px 5px;
         padding: 0px 5px;
         width: 105px;
+        &.-toc-actions {
+          width: 160px;
+        }
+        &.-refresh-toc {
+          width: 115px;
+          text-align: right;
+        }
       }
     }
     span.validation-error {
@@ -969,12 +1088,41 @@ export default {
         label {
           font-size: 14px;
           font-weight: 400;
+          position: relative;
         }
         input[type="checkbox"] {
-          width: 18px;
+          /*width: 18px;
           height: 18px;
           margin: 0px 5px 0px 0px;
+          vertical-align: middle;*/
+          width: 0px;
+          height: 0px;
+          visibility: hidden;
+        }
+        input[type="checkbox"] + span {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border: 1px solid #CCCCCC;
+          border-radius: 2px;
           vertical-align: middle;
+          margin: 0px 5px 0px 0px;
+        }
+        input[type="checkbox"]:checked + span {
+          background-color: #337AB7;
+          &:after {
+            content: '';
+            position: absolute;
+            width: 11px;
+            height: 6px;
+            background: transparent;
+            top: 5px;
+            left: 4px;
+            border: 2px solid white;
+            border-top: none;
+            border-right: none;
+            transform: rotate(-45deg);
+          }
         }
       }
     }
