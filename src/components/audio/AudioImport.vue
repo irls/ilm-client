@@ -340,7 +340,7 @@ export default {
         }
         switch (this.type) {
           case 'import':
-            return 'Import Audio';
+            return 'Import audio';
             break;
           case 'replace':
             return 'Replace audio';
