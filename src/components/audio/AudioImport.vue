@@ -396,17 +396,6 @@ export default {
       //return;
       //let fieldName = e.target.name
       let fileList = [file];//e.target.files || e.dataTransfer.files//e.file
-      if (!this.multiple) {
-        let addedFiles = this.$refs.uploadDropzone.getAddedFiles();
-        if (addedFiles && addedFiles.length > 1) {
-          for (let i = 0; i < addedFiles.length - 2; ++i) {
-            this.$refs.uploadDropzone.removeFile(addedFiles[i]);
-          }
-        }
-        this.audioFiles = [];
-        this.formData = new FormData();
-        this.uploadFiles = 0;
-      }
       for(let file of fileList) {
         let allow = true;
         if (!file.type) {
@@ -429,6 +418,17 @@ export default {
             case 'application/zip':
               break;
           }
+        }
+        if (allow && !this.multiple) {
+          let addedFiles = this.$refs.uploadDropzone.getAddedFiles();
+          if (addedFiles && addedFiles.length > 1) {
+            for (let i = 0; i < addedFiles.length - 2; ++i) {
+              this.$refs.uploadDropzone.removeFile(addedFiles[i]);
+            }
+          }
+          this.audioFiles = [];
+          this.formData = new FormData();
+          this.uploadFiles = 0;
         }
         if (allow) {
           this.addFileToUpload(file);
@@ -544,6 +544,10 @@ export default {
       toUpload.audioImportQuality = this.audioImportQuality;
       
       let uploadPromise;
+      
+      if (toUpload.files.length === 0) {
+        return Promise.resolve();
+      }
       
       if (this.type === 'parse_replace') {
         uploadPromise = this.parseReplaceAudio([toUpload]);
