@@ -81,15 +81,16 @@
                     </div>
                     <div class="-option -name">
                       <template v-if="editingSectionId === toc.section.id && editingFieldName === 'slug'">
-                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug']}]" 
+                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug'][toc.section.id]}]" 
                           v-model="editingFieldValue"
                           v-on:keyup.enter="blurEditingField(null)"
                           v-on:change="updateSectionField(editingFieldValue)"
                           v-on:blur="blurEditingField(null)"
                           v-on:input="editingFieldChanged($event)" />
-                        <span class="validation-error" v-if="validationErrors['slug']">{{validationErrors['slug']}}</span>
                       </template>
-                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>{{toc.section.slug}}</label>
+                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>
+                        {{toc.section.slug}}
+                      </label>
                     </div>
                     <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
                     <div class="-option -remove -hidden">
@@ -100,17 +101,20 @@
                       <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
                       <div class="section-generating" v-if="toc.section.isBuilding"></div>
                       <template v-else>
-                        <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
-                        <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
+                        <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
+                        <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
                       </template>
                     </div>
                     <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
-                      <i class="fa fa-download" title="Download"></i>
+                      <i class="" title="Download"></i>
                     </a>
                     <a class="-option -download -hidden" v-else>
-                      <i class="fa fa-download" title="Download" disabled></i>
+                      <i class="" title="Download" disabled></i>
                     </a>
                   </div>
+                    <span class="validation-error" v-if="validationErrors['slug'][toc.section.id]">
+                      {{validationErrors['slug'][toc.section.id].text}}
+                    </span>
                 </td>
               </tr>
             </template>
@@ -189,7 +193,7 @@
             <tr :class="['toc-section-title', '-num-' + toc.section.index]" v-if="displayTitle && toc.section && toc.section.id">
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title')" v-on:dblclick="sectionEditMode(toc.section, 'title')">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
-                  <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title']}]"
+                  <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title'][toc.section.id]}]"
                     v-model="editingFieldValue"
                     v-on:keyup.enter="blurEditingField(null)"
                     v-on:change="updateSectionField(editingFieldValue)"
@@ -204,7 +208,7 @@
             <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEn && toc.section && toc.section.id">
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn')" v-on:dblclick="sectionEditMode(toc.section, 'titleEn')">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
-                  <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn']}]"
+                  <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
                     v-model="editingFieldValue"
                     v-on:keyup.enter="blurEditingField(null)"
                     v-on:change="updateSectionField(editingFieldValue)"
@@ -246,9 +250,9 @@ export default {
       tocSectionCombined: [],
       editingSectionId: null,
       validationErrors: {
-        slug: '',
-        title: '',
-        titleEn: '',
+        slug: {},
+        title: {},
+        titleEn: {},
       },
       editingFieldValue: '',
       editingFieldName: '',
@@ -262,6 +266,9 @@ export default {
         unique: {
           slug: 'Section name is not unique',
           title: '',
+        },
+        empty: {
+          slug: 'Define section Name'
         }
       }
     }
@@ -279,8 +286,8 @@ export default {
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'bookTocSections', 'currentBookid', 'adminOrLibrarian']),
-    ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined']),
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid', 'adminOrLibrarian']),
+    ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined', 'bookTocSections']),
     buildBookButtonEnabled: {
       get() {
         let hasSections = this.currentBookTocCombined.find(toc => {
@@ -366,7 +373,7 @@ export default {
           }
           if (section) {
             if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
-              if (this.hasError()) {
+              if (this.editingSectionId && this.hasError()) {
                 this.showNameError();
                 return false;
               }
@@ -375,7 +382,7 @@ export default {
             this.focusEditingField();
             return resolve();
           } else {
-            if (!this.hasError()) {
+            if (!this.hasError(this.editingSectionId)) {
               this.setEditingSection(null);
             }
             return resolve();
@@ -497,31 +504,34 @@ export default {
       }
     },
     
-    validateSectionField(value, field) {
-      this.validationErrors[field] = '';
+    validateSectionField(value, field, section_id = null) {
+      if (field !== 'slug') {// only slug now checked for unique and not empty
+        return true;
+      }
+      if (!section_id) {
+        section_id = this.editingSectionId;
+      }
+      let editingSection = this.currentBookTocCombined.find(tc => {
+        return tc.section && tc.section.id === section_id;
+      }).section;
+      if (!editingSection) {
+        return false;
+      }
+      delete this.validationErrors[field][editingSection.id];
+      //if (!value) {
+        //return true;
+      //}
       if (!value) {
-        return true;
-      }
-      if (field !== 'slug') {
-        return true;
-      }
-      let checkField = null;
-      switch (field) {
-        case 'slug':
-          checkField = this.editingSectionId;
-          break;
-        case 'title':
-          checkField = this.editingTitleId;
-          break;
-        case 'titleEn':
-          checkField = this.editingTitleEnId;
-          break;
+        this.validationErrors[field][editingSection.id] = {text: this.validationErrorsText.empty[field], type: 'empty'};
+        this.$forceUpdate();
+        return false;
       }
       let section = this.currentBookTocCombined.find(tc => {
-        return tc.section && tc.section[field] === value && tc.section.id !== checkField;
+        return tc.section && tc.section[field] === value && tc.section.id !== section_id;
       });
       if (section) {
-        this.validationErrors[field] = this.validationErrorsText.unique[field];
+        this.validationErrors[field][editingSection.id] = {text: this.validationErrorsText.unique[field], type: 'unique'};
+        this.$forceUpdate();
         return false;
       }
       return true;
@@ -626,9 +636,11 @@ export default {
     },
     
     exportBook(ev) {
-      if (this.checkOnAction(null, ev)) {
-        this.exportTocSectionBook();
+      if (!this.fullValidate()) {
+        this.showNameError();
+        return false;
       }
+      this.exportTocSectionBook();
     },
     
     downloadSectionLink(sectionId) {
@@ -639,18 +651,22 @@ export default {
       return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download`);
     },
     
-    hasError() {
+    hasError(section_id = null) {
       let hasError = false;
       Object.keys(this.validationErrors).forEach(k => {
         if (!hasError && this.validationErrors[k]) {
-          hasError = true;
+          if (!section_id && Object.keys(this.validationErrors[k]).length > 0) {
+            hasError = true;
+          } else if (section_id && this.validationErrors[k][section_id]) {
+            hasError = true;
+          }
         }
       });
       return hasError;
     },
     
     editingFieldChanged(event) {
-      this.validationErrors[this.editingFieldName] = '';
+      delete this.validationErrors[this.editingFieldName][this.editingSectionId];
     },
     
     checkOnAction(sectionId = null, ev = null) {
@@ -665,27 +681,56 @@ export default {
     },
     
     showNameError() {
-      let currentSection = null;
-      let tc = this.currentBookTocCombined.find(toc => {
-        return toc.section && toc.section.id === this.editingSectionId;
-      });
-      if (tc && tc.section && tc.section.id) {
-        currentSection = tc.section;
-      }
-      this.$root.$emit('show-modal', {
-        title: 'Duplicate section name',
-        text: `Book section ${currentSection ? currentSection.index : ''} name is not unique.`,
-        buttons: [
-          {
-            title: 'Ok',
-            handler: () => {
-              this.$root.$emit('hide-modal');
-              this.focusEditingField('middle');
-            },
-            class: ['btn btn-primary']
+      let slugErrors = Object.keys(this.validationErrors.slug);
+      if (slugErrors.length > 0) {
+        let empty = [];
+        let unique = [];
+        slugErrors.forEach(sectionId => {
+          let section = this.bookTocSections.find(sc => {
+            return sc.id === sectionId;
+          });
+          if (section) {
+            switch (this.validationErrors.slug[sectionId].type) {
+              case 'empty':
+                empty.push(section.index);
+                break;
+              case 'unique':
+                unique.push(section.index);
+                break;
+            }
           }
-        ]
-      });
+        });
+        if (empty.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Define section name',
+            text: `Book section(s) ${empty.join(', ')} Name is not defined`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn', 'btn-primary'],
+              }
+            ]
+          });
+        } else if (unique.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Duplicate section name',
+            text: `Book section(s) ${unique.join(', ')} Name is not unique`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //this.focusEditingField('middle');
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+        }
+      }
     },
     removeSection(id) {
       return this.removeTocSection(id)
@@ -699,7 +744,7 @@ export default {
     
     clearErrors() {
       Object.keys(this.validationErrors).forEach(k => {
-        this.validationErrors[k] = '';
+        this.validationErrors[k] = {};
       });
     },
     
@@ -723,7 +768,7 @@ export default {
       let tc = this.currentBookTocCombined.find(toc => {
         return toc.section && toc.section.id === this.editingSectionId;
       });
-      if (tc && tc.section && tc.section[this.editingFieldName] === this.editingFieldValue && !this.validationErrors[this.editingFieldName]) {
+      if (tc && tc.section && tc.section[this.editingFieldName] === this.editingFieldValue && !this.validationErrors[this.editingFieldName][this.editingSectionId]) {
         this.sectionEditMode(null);
       }
     },
@@ -742,6 +787,15 @@ export default {
           namePattern: settings.namePattern,
           titlePattern: settings.titlePattern
       }])
+    },
+    fullValidate() {
+      let errors = 0;
+      this.currentBookTocCombined.forEach(toc => {
+        if (toc.section && toc.section.id) {
+          errors+= this.validateSectionField(toc.section.slug, 'slug', toc.section.id) ? 0 : 1;
+        }
+      });
+      return errors > 0 ? false : true;
     }
   },
 
@@ -858,8 +912,8 @@ export default {
                 transparent 55%, transparent
                 );
             padding: 3px 5px 3px 0px;
-            width: 300px;
-            max-width: 300px;
+            width: 295px;
+            max-width: 295px;
             color: gray;
             label {
               margin: 0px;
@@ -895,13 +949,28 @@ export default {
             }
           }
           &.-download {
-            .fa[disabled] {
+            /*.fa[disabled] {
               color: #d6d6d6;
+            }*/
+            i {
+              background: url(/static/toc/download-section.png);
+              width: 24px;
+              height: 24px;
+              display: inline-block;
+              vertical-align: middle;
             }
           }
           &.-build {
-            .fa[disabled] {
+            /*.fa[disabled] {
               color: #d6d6d6;
+            }*/
+            i {
+              background: url(/static/toc/build-section.png);
+              width: 24px;
+              height: 24px;
+              display: inline-block;
+              vertical-align: middle;
+              cursor: pointer;
             }
             &.-building {
               vertical-align: middle;

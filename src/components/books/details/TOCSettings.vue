@@ -1,7 +1,7 @@
 <template>
   <div class="toc-settings-modal">
     <div class="modal-header">
-      <h4>Edit section meta</h4>
+      <h4>Name and Title generation pattern</h4>
       <button class="close" v-on:click="closeModal">
         <i class=""></i>
       </button>
@@ -20,9 +20,13 @@
             
           </resizable-textarea>
         </div>
+        <span v-ilm-tooltip.top="{value: 'This will generate Names based on your input<br>combined with block or section number', classList: {tooltip: 'white-tooltip'}}" class="field-tooltip-info">i</span>
         <div class="setting-buttons">
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('name_pattern', 'block_number')">Block number</button>
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('name_pattern', 'section_number')">Section number</button>
+          <button v-for="(pattern_value, pattern_name) in patternCustomTypes.name_pattern"
+            class="btn btn-default insert-toc-pattern" 
+            v-on:click="addPattern('name_pattern', pattern_name)">
+            {{pattern_value.title}}
+          </button>
         </div>
       </div>
       <div class="setting-row">
@@ -38,13 +42,13 @@
               
           </resizable-textarea>
         </div>
+        <span v-ilm-tooltip.top="{value: 'This will generate Titles based on your input<br>combined with block text', classList: {tooltip: 'white-tooltip'}}" class="field-tooltip-info">i</span>
         <div class="setting-buttons">
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('title_pattern', 'block_number')">Block number</button>
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('title_pattern', 'section_header')">Section header</button>
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('title_pattern', 'chapter_header')">Chapter header</button>
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('title_pattern', 'subheader')">Subheader</button>
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('title_pattern', 'sub_subheader')">Sub subheader</button>
-          <button class="btn btn-default insert-toc-pattern" v-on:click="addPattern('title_pattern', 'paragraph')">Paragraph</button>
+          <button v-for="(pattern_value, pattern_name) in patternCustomTypes.title_pattern" 
+            class="btn btn-default insert-toc-pattern" 
+            v-on:click="addPattern('title_pattern', pattern_name)">
+            {{pattern_value.title}}
+          </button>
         </div>
       </div>
     </div>
@@ -57,17 +61,28 @@
 <script>
   import ResizableTextarea from '../../generic/ResizableTextarea.vue';
   import { mapGetters, mapActions } from 'vuex';
+  import Vue from 'vue';
+  import IlmTooltip from '../../../directives/ilm-tooltip/ilm-tooltip.js';
+  import '../../../directives/ilm-tooltip/ilm-tooltip.css';
+  
+  Vue.directive('ilm-tooltip', IlmTooltip);
+  
   export default {
     data() {
       return {
         patternCustomTypes: {
-          block_number: '[block #]',
-          section_number: '[section #]',
-          section_header: '[section_header]',
-          chapter_header: '[chapter_header]',
-          subheader: '[subheader]',
-          sub_subheader: '[sub_subheader]',
-          paragraph: '[paragraph]',
+          name_pattern: {
+            block_number: {value: '[block #]', title: 'Block number'},
+            section_number: {value: '[section #]', title: 'Section number'},
+          },
+          title_pattern: {
+            block_number: {value: '[block #]', title: 'Block number'},
+            section_header: {value: '[section_header]', title: 'Section header'},
+            chapter_header: {value: '[chapter_header]', title: 'Chapter header'},
+            subheader: {value: '[subheader]', title: 'Subheader'},
+            sub_subheader: {value: '[sub_subheader]', title: 'Sub subheader'},
+            paragraph: {value: '[paragraph]', title: 'Paragraph'},
+          }
         },
         lastCursorPosition: {
           name_pattern: null,
@@ -103,7 +118,7 @@
       addPattern(field, type) {
         let fieldRef = this.$refs[field];
         if (fieldRef) {
-          let text = this.patternCustomTypes[type] || '';
+          let text = this.patternCustomTypes[field][type] ? this.patternCustomTypes[field][type].value : '';
           if (this.lastCursorPosition[field] === null) {
             fieldRef.$el.value+= text;
           } else {
@@ -133,6 +148,7 @@
     position: absolute;
     background: white;
     left: 0px;
+    z-index: 999;
     .modal-header {
       padding: 10px 15px;
       border-bottom: none;
@@ -162,6 +178,12 @@
         }
         .setting-field {
           border: 1px solid #b9b6b6;
+          border-radius: 4px;
+          display: inline-block;
+          width: 92%;
+          textarea {
+            resize: none;
+          }
         }
         .setting-buttons {
           margin: 5px 0px 5px -5px;
@@ -174,6 +196,21 @@
             margin: 5px;
             padding: 2px 10px;
           }
+        }
+        .field-tooltip-info {
+          border: 1.6px solid #337AB7;
+          color: #337AB7;
+          border-radius: 15px;
+          padding: 1px 1px;
+          cursor: pointer;
+          width: 16px;
+          height: 16px;
+          text-align: center;
+          display: inline-block;
+          font-size: 10px;
+          vertical-align: top;
+          font-weight: 700;
+          margin-top: 5px;
         }
       }
     }
