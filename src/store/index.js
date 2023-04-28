@@ -2527,6 +2527,7 @@ export const store = new Vuex.Store({
           .then(response => {
             //console.log('putBlock', response);
             if (response.data) {
+              dispatch('tocSections/checkUpdatedBlock', [block.blockid]);
               return dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
                 .then(() => {
                   return Promise.resolve(response);

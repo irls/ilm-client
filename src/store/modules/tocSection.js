@@ -148,6 +148,16 @@ export default {
             }
           });
       }
+    },
+    
+    checkUpdatedBlock({dispatch, state}, [blockid]) {
+      
+      let inToc = state.bookTocSections.find(section => {
+        return section.startBlockid === blockid;
+      });
+      if (inToc) {
+        dispatch('loadBookTocSections', []);
+      }
     }
   }
 }

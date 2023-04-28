@@ -1441,7 +1441,7 @@ Save or discard your changes to continue editing`,
         'updateStoreFlag',
         'changeBlocksVoicework',
       ]),
-    ...mapActions('tocSections', ['loadBookTocSections']),
+    ...mapActions('tocSections', ['loadBookTocSections', 'checkUpdatedBlock']),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
@@ -1768,6 +1768,7 @@ Save or discard your changes to continue editing`,
         .then((block)=>{
           this.isChanged = false;
           this.isIllustrationChanged = false;
+          this.checkUpdatedBlock([this.block.blockid]);
           if (this._isDestroyed) {
             this.block.isChanged = false;
             this.block.isIllustrationChanged = false;

@@ -626,13 +626,18 @@ export default {
     },
     
     exportSection(id, ev) {
+      let section = this.bookTocSections.find(se => {
+        return se.id === id;
+      });
+      if (!section) {
+        return false;
+      }
+      if (!this.validateSectionField(section.slug, 'slug', section.id)) {
+        this.showNameError();
+        return false;
+      }
       if (this.checkOnAction(id, ev)) {
-        let toc = this.currentBookTocCombined.find(tocC => {
-          return tocC.section && tocC.section.id === id;
-        });
-        if (toc) {
-          toc.section.isBuilding = true;
-        }
+        section.isBuilding = true;
         return this.exportTocSection(id);
       }
     },
@@ -961,9 +966,6 @@ export default {
                   outline-color: red;
                 }
               }
-            }
-            &.-lang-fa, &.-lang-ar {
-              direction: rtl;
             }
           }
           &.-remove {
