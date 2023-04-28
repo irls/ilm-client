@@ -547,7 +547,7 @@ export default {
       
       let uploadPromise;
       
-      if (toUpload.files.length === 0) {
+      if (toUpload.files.length === 0 && !toUpload.url) {
         return Promise.resolve();
       }
       
