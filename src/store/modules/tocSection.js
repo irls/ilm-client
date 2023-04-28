@@ -35,7 +35,12 @@ export default {
       sections.forEach(section => {
         let blk = this.getters.storeList.get(section.startBlockid);
         if (blk) {
-          section.firstSectionBlock = blk;
+          section.firstSectionBlock = {...blk};
+        } else {
+          section.firstSectionBlock = {};
+        }
+        if (!section.firstSectionBlock.language) {
+          section.firstSectionBlock.language = 'en';
         }
       });
       state.bookTocSections = sections;

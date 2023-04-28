@@ -79,7 +79,7 @@
                     <div class="-option -index">
                       {{toc.section.index}}
                     </div>
-                    <div class="-option -name">
+                    <div :class="['-option -name', '-lang-' + toc.section.firstSectionBlock.language]">
                       <template v-if="editingSectionId === toc.section.id && editingFieldName === 'slug'">
                         <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug'][toc.section.id]}]" 
                           v-model="editingFieldValue"
@@ -190,7 +190,7 @@
                 </td>
               </template>
             </tr>
-            <tr :class="['toc-section-title', '-num-' + toc.section.index]" v-if="displayTitle && toc.section && toc.section.id">
+            <tr :class="['toc-section-title', '-num-' + toc.section.index, '-lang-' + toc.section.firstSectionBlock.language]" v-if="displayTitle && toc.section && toc.section.id">
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title')" v-on:dblclick="sectionEditMode(toc.section, 'title')">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
                   <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title'][toc.section.id]}]"
@@ -201,11 +201,13 @@
                     v-on:input="editingFieldChanged($event)" />
                 </template>
                 <template v-else>
-                  <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]">{{toc.section.title || 'Define Title'}}</label>
+                  <div class="section-title">
+                    <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]">{{toc.section.title || 'Define Title'}}</label>
+                  </div>
                 </template>
               </td>
             </tr>
-            <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEn && toc.section && toc.section.id">
+            <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEnSection(toc.section)">
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn')" v-on:dblclick="sectionEditMode(toc.section, 'titleEn')">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
                   <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
@@ -439,7 +441,7 @@ export default {
               if (isPrev) {
                 targetField = 'slug';
               } else if (isNext) {
-                if (this.displayTitleEn) {
+                if (this.displayTitleEnSection(targetSection)) {
                   targetField = 'titleEn';
                 } else {
                   targetSection = this.currentBookTocCombined.find(toc => {
@@ -459,7 +461,7 @@ export default {
                 if (targetSection) {
                   targetSection = targetSection.section;
                   targetField = 'titleEn';
-                  if (this.displayTitleEn) {
+                  if (this.displayTitleEnSection(targetSection)) {
                     targetField = 'titleEn';
                   } else if (this.displayTitle) {
                     targetField = 'title';
@@ -470,7 +472,7 @@ export default {
               } else if (isNext) {
                 if (this.displayTitle) {
                   targetField = 'title';
-                } else if (this.displayTitleEn) {
+                } else if (this.displayTitleEnSection(targetSection)) {
                   targetField = 'titleEn';
                 } else {
                   targetSection = this.currentBookTocCombined.find(toc => {
@@ -796,6 +798,11 @@ export default {
         }
       });
       return errors > 0 ? false : true;
+    },
+    
+    displayTitleEnSection(section) {
+      return this.displayTitleEn && section && section.id && section.firstSectionBlock.language !== 'en';
+      
     }
   },
 
@@ -887,8 +894,24 @@ export default {
           font-style: italic;
         }
         .toc-section-title, .toc-section-title-en {
+          max-width: 290px;
           label {
             margin-left: 25px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+          div.section-title {
+            width: 295px;
+            max-width: 295px;
+          }
+          &.-lang-fa, &.-lang-ar {
+            label, input {
+              direction: rtl;
+              max-width: 295px;
+              /*margin-left: 0px;*/
+              /*padding-right: 90px;*/
+            }
           }
         }
       }
@@ -938,6 +961,9 @@ export default {
                   outline-color: red;
                 }
               }
+            }
+            &.-lang-fa, &.-lang-ar {
+              direction: rtl;
             }
           }
           &.-remove {
