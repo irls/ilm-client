@@ -199,6 +199,7 @@ export default {
   mounted: function () {
     this.dropzoneOptionsCommon.url = this.uploadUrl;
     this.dropzoneOptionsCommon.headers = {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password};
+    this.checkMultipleFileInput();
   },
   components: {
     Vue, dropzone
@@ -432,6 +433,7 @@ export default {
         }
         if (allow) {
           this.addFileToUpload(file);
+          this.checkMultipleFileInput();
         }
       }
     },
@@ -590,8 +592,13 @@ export default {
         f.progress = 100;
       }
     },
-    onUploadError() {
+    onUploadError(file, error, xhr) {
+      console.log('upload error');
       console.log(arguments);
+      //file.status = 'added';
+      //this.$refs.uploadDropzone.removeAllFiles(true);
+      //this.$refs.uploadDropzone.manuallyAddFile(file, '');
+      this.checkMultipleFileInput();
     },
     copyReport() {
       let content = 'Import Audio Report\n\n' + this.convertTime(new Date(), true) + '\n\n';
@@ -671,6 +678,16 @@ export default {
     uploadOk() {
       this.uploadInfo.success = true;
       this.$emit('close');
+    },
+    checkMultipleFileInput() {
+      if (!this.multiple) {
+        Vue.nextTick(() => {
+          let fileInput = document.querySelector('input[type="file"].dz-hidden-input');
+          if (fileInput) {
+            fileInput.multiple = false;
+          }
+        });
+      }
     },
     ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign']),
     ...mapActions('audioExport', ['parseReplaceAudio'])
