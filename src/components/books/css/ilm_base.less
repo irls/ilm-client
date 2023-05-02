@@ -1463,3 +1463,9 @@ w {
     }
   }
 }
+
+/* text inside empty suggestion, without <w> */
+sg:not(:has(*)) {
+  background: @suggestion_word_color;
+}
+

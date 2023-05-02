@@ -18,7 +18,6 @@
       <task-add-modal
         :show="taskAddModalActive"
         @closed="taskAddModalClose">
-
       </task-add-modal>
       <!-- Import Books Modal Popup -->
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"

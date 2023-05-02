@@ -18,6 +18,7 @@ import userActions from './modules/user';
 import alignActions from './modules/align';
 import tasks from './modules/tasks';
 import audioExport from './modules/audioExport';
+import gridFilters from './modules/gridFilters';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -79,7 +80,8 @@ export const store = new Vuex.Store({
     userActions,
     alignActions,
     tasks,
-    audioExport
+    audioExport,
+    gridFilters
   },
   state: {
     SelectionModalProgress:0,
@@ -126,9 +128,8 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
     bookSearch: {string: '', resultCounter: 0, searchPointer: 0},
-    defaultBookFilters: {filter: '', projectTag: '', language: '', jobStatus: 'active'},
+
     editMode: 'Editor',
     allowBookEditMode: false,
     tc_currentBookTasks: {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false},
@@ -137,7 +138,6 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
-    collectionsFilter: {title: '', language: '', jobStatus: 'active', projectTag: ''},
     currentCollection: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
@@ -279,7 +279,8 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
-    pauseAfterBlockXhr: null
+    pauseAfterBlockXhr: null,
+    pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
   },
 
   getters: {
@@ -308,46 +309,53 @@ export const store = new Vuex.Store({
         b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
 
         if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
-            if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
-              var pDate = new Date(b.publishLog.publishTime);
-              var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
-            } else {
-              var publishDate = '';
-            }
-
-            if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
-              var uDate = new Date(b.publishLog.updateTime);
-              var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
-            } else {
-              var updateDate = '';
-            }
-
-            if (b.publishedVersion && b.publishedVersion == b.version){
-              updateDate = '';
-            }
-
-            if (b.pub_ver){
-                b.pub_ver = publishDate + ' v. ' + b.pub_ver;
-            } else {
-                 b.pub_ver = publishDate;
-            }
-            if (b.cur_ver){
-                b.cur_ver = updateDate + ' v. ' + b.cur_ver;
-            } else {
-                b.cur_ver = updateDate;
-            }
+          if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
+            var pDate = new Date(b.publishLog.publishTime);
+            var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
           } else {
-            if (b.pub_ver){
-                b.pub_ver = ' v. ' + b.pub_ver;
-            }
-            if (b.cur_ver){
-                b.cur_ver = ' v. ' + b.cur_ver;
-            }
+            var publishDate = '';
           }
+
+          if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+            var uDate = new Date(b.publishLog.updateTime);
+            var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
+          } else {
+            var updateDate = '';
+          }
+
+          if (b.publishedVersion && b.publishedVersion == b.version){
+            updateDate = '';
+          }
+
+          if (b.pub_ver){
+              b.pub_ver = publishDate + ' v. ' + b.pub_ver;
+          } else {
+                b.pub_ver = publishDate;
+          }
+          if (b.cur_ver){
+              b.cur_ver = updateDate + ' v. ' + b.cur_ver;
+          } else {
+              b.cur_ver = updateDate;
+          }
+        } else {
+          if (b.pub_ver){
+              b.pub_ver = ' v. ' + b.pub_ver;
+          }
+          if (b.cur_ver){
+              b.cur_ver = ' v. ' + b.cur_ver;
+          }
+        }
+
+        if (b.importStatus == 'staging' && b.blocksCount <= 2){
+          if (!b.hasOwnProperty('publishLog') || b.publishLog == null){
+            b.importStatus = 'staging_empty'
+          } else if (!b.publishLog.updateTime){
+            b.importStatus = 'staging_empty'
+          }
+        }
       });
       return state.books_meta;
     },
-    bookFilters: state => state.bookFilters,
     bookSearch: state => state.bookSearch,
     currentBookid: state => state.currentBookid,
     currentBook: state => state.currentBook,
@@ -372,7 +380,6 @@ export const store = new Vuex.Store({
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
     currentCollectionId: state => state.currentCollectionId,
-    collectionsFilter: state => state.collectionsFilter,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
       let result = [];
@@ -717,18 +724,6 @@ export const store = new Vuex.Store({
       //console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
     },
 
-    SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
-      for (var prop in obj) if (['filter', 'projectTag', 'language', 'jobStatus'].indexOf(prop) > -1) {
-        state.bookFilters[prop] = obj[prop]
-         //console.log("Setting bookfilter."+prop, obj[prop])
-         //console.log('SET_CURRENTBOOK_FILTER', state.bookFilters)
-      }
-    },
-
-    CLEAR_CURRENTBOOK_FILTER (state) {
-      state.bookFilters = Object.assign({}, state.defaultBookFilters);
-    },
-
     // initiateBooks (state, books) {
     //   state.books = books
     //   if (state.route.params.hasOwnProperty('bookid')) state.currentBookid = state.route.params.bookid
@@ -845,6 +840,7 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENT_COLLECTION (state, _id) {
+      //console.log(`SET_CURRENT_COLLECTION: `, _id);
       let currentCollection = null;
       if (_id) {
         let collection = state.bookCollections.find(c => {
@@ -858,15 +854,8 @@ export const store = new Vuex.Store({
         currentCollection = new Collection({});
       }
       state.currentCollection = currentCollection;
-      state.currentCollection.sortBooks();
+      if (state.currentCollection) state.currentCollection.sortBooks();
       state.currentCollectionId = _id;
-    },
-
-    SET_COLLECTIONS_FILTER (state, filter) {
-      for(var field in filter) {
-        state.collectionsFilter[field] = filter[field];
-      }
-      //console.log(state.collectionsFilter)
     },
 
     SET_CURRENT_LIBRARY (state, library) {
@@ -993,13 +982,6 @@ export const store = new Vuex.Store({
             let book = booksList.find(_b => _b.bookid === b);
             if (book) {
               pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
-              if (book.importStatus == 'staging' && book.blocksCount <= 2){
-                if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-                  book.importStatus = 'staging_empty'
-                } else if (!book.publishLog.updateTime){
-                  book.importStatus = 'staging_empty'
-                }
-              }
               books.push(book);
             }
           });
@@ -1231,6 +1213,11 @@ export const store = new Vuex.Store({
       state.storeListO = new BookBlocks();
     },
 
+    reset_storeListO (state) {
+      state.storeListO.startRId = state.storeListO.listRIds[0] || false;
+      state.storeListO.startId = state.storeListO.listIds[0] || false;
+    },
+
     // async set_block_selection({ state, commit, dispatch },selection) {
     //   console.log('set_block_selection:start')
     //
@@ -1410,6 +1397,12 @@ export const store = new Vuex.Store({
         }
       } else if (data.action === 'change' && data.block) {
         if (blockStore) {
+          let paused = state.pauseLiveDBBlocks.find(blk => {
+            return blk.blockid === blockStore.blockid;
+          });
+          if (paused) {
+            return;
+          }
           if (blockStore.audiosrc_config) {// stored only locally
             data.block.audiosrc_config = blockStore.audiosrc_config;
           }
@@ -1477,7 +1470,7 @@ export const store = new Vuex.Store({
     set_audioFadeConfig(state, config) {
       state.audioFadeConfig = config;
     },
-    
+
     clear_blockSelection(state) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
         let idsArrayRange = state.storeListO.ridsArrayRange(state.blockSelection.start._id, state.blockSelection.end._id);
@@ -1488,6 +1481,27 @@ export const store = new Vuex.Store({
           }
         });
         this.dispatch('setBlockSelection', {start: {}, end: {}});
+      }
+    },
+    pause_liveDBBlock(state, blockId, blockRid) {
+      let index = state.pauseLiveDBBlocks.findIndex(record => {
+        return record.blockid === blockId;
+      });
+      if (index === -1) {
+        state.pauseLiveDBBlocks.push({
+          blockid: blockId,
+          rid: blockRid
+        });
+      }
+    },
+    resume_liveDBBlock(state, blockId, blockRid) {
+      let index = state.pauseLiveDBBlocks.findIndex(record => {
+        return record.blockid === blockId;
+      });
+      if (index !== -1) {
+        setTimeout(() => {
+          state.pauseLiveDBBlocks.splice(index, 1);
+        }, 500);// server's timeout for update
       }
     }
   },
@@ -1860,6 +1874,7 @@ export const store = new Vuex.Store({
     },
 
     updateBooksList ({state, commit, dispatch}) {
+      console.log(`updateBooksList: `);
       return axios.get(state.API_URL + 'books')///user/' + state.auth.getSession().user_id
         .then((answer) => {
           commit('SET_BOOKLIST', answer.data.books)
@@ -1948,7 +1963,8 @@ export const store = new Vuex.Store({
       if (state.loadBookWait) {
         return state.loadBookWait
       }
-      //console.log('loading currentBook: ', book_id)
+      console.log('loading currentBook: ', book_id);
+
       // if (!book_id) return  // if no currentbookid, exit
       // if (book_id === context.state.currentBookid) return // skip if already loaded
 
@@ -2014,7 +2030,7 @@ export const store = new Vuex.Store({
 
           state.watched['metaV'] = book_id;
 
-          console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
+          //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
@@ -2252,26 +2268,6 @@ export const store = new Vuex.Store({
     },
 
     loadCollection({commit, state, dispatch}, id) {
-      /*if (id) {
-        let collection = state.bookCollections.find(c => {
-          return c._id === id;
-        });
-        if (collection) {
-          state.currentCollectionId = id;
-          commit('SET_CURRENT_COLLECTION', collection);
-        } else {
-          return axios.get(`${state.API_URL}/collection/${id}`)
-            .then(response => {
-              if (response && response.data) {
-                state.currentCollectionId = id;
-                commit('SET_CURRENT_COLLECTION', response.data);
-              }
-            })
-        }
-      } else {
-        commit('SET_CURRENT_COLLECTION', {});
-        commit('SET_ALLOW_COLLECTION_PUBLISH', false);
-      }*/
       if (id) {
         return dispatch('getCollection', id)
           .then(collection => {
@@ -2289,7 +2285,7 @@ export const store = new Vuex.Store({
             return Promise.reject(err);
           });
       } else {
-        commit('SET_CURRENT_COLLECTION', id);
+        commit('SET_CURRENT_COLLECTION', false);
         return Promise.resolve();
       }
     },
@@ -4028,7 +4024,7 @@ export const store = new Vuex.Store({
           if (state.currentBookMeta.bookid) {
             state.currentBookMeta.job_status = status;
           }
-          dispatch('updateBooksList');
+          //dispatch('updateBooksList');
           if (state.currentBookMeta.bookid) {
             dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
             state.currentBookid = null;
@@ -4985,7 +4981,7 @@ export const store = new Vuex.Store({
     loadBookTocSections({state, dispatch, commit}, [bookid = null]) {
       if (state.adminOrLibrarian) {
         const reqBookid = bookid ? bookid : state.currentBookid;
-        console.log(`loadBookTocSections.reqBookid: `, reqBookid);
+        //console.log(`loadBookTocSections.reqBookid: `, reqBookid);
         if (!reqBookid) return Promise.resolve({});
         return axios.get(`${state.API_URL}toc_section/book/${reqBookid}/all`)
           .then(data => {
@@ -5242,13 +5238,17 @@ export const store = new Vuex.Store({
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       update.mode = state.bookMode;
+      commit('pause_liveDBBlock', blockid, storeBlock._id);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
+              
+              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out, updated: response.data.updated});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
+              commit('resume_liveDBBlock', blockid, storeBlock._rid);
             });
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
@@ -5310,6 +5310,7 @@ export const store = new Vuex.Store({
       let currentOut = currentBlockO.out;
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
+      commit('pause_liveDBBlock', blockid, storeBlock._id);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
         partIdx: partIdx,
         mode: state.bookMode
@@ -5318,9 +5319,11 @@ export const store = new Vuex.Store({
 
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
+              state.storeListO.updBlockByRid(response.data.id, {out: response.data.out, updated: response.data.updated});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
               }
+              commit('resume_liveDBBlock', blockid, storeBlock._rid);
             });
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');

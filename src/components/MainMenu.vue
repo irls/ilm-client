@@ -11,9 +11,9 @@
         v-show="isAdmin || isEditor || isLibrarian || isProofer || isNarrator"
         ><a>Books</a></router-link>
 
-        <router-link to="/collections" tag="li">
+        <!--<router-link to="/collections" tag="li">
           <a>Collections</a>
-        </router-link>
+        </router-link>-->
 
         <router-link to="/users" class='presentation' tag='li'
         v-show="isAdmin || isBookkeeper || isLibrarian"
@@ -81,7 +81,7 @@ export default {
       }
     },
     ...mapGetters(['tc_userTasks','livedbStatus']),
-  
+
 
 
 
