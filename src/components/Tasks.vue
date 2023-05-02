@@ -23,11 +23,6 @@
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"
                   :importTaskId="import_book_task_id"
                   :bookId="import_book_id" />
-      <AudioImport v-if="show_import_audio_modal" @closeOk="importAudioClose" @close="importAudioClose"
-                  :book="import_book"
-                  :importTask="import_audio_task"
-                  :audiobook="task_audiobook"
-                  :multiple="audio_import_multiple"/>
 
       <div class="overflow-wrapper">
 
@@ -87,7 +82,7 @@
     </v-tab>
   </vue-tabs>
 
-
+    <modals-container></modals-container>
   </div>
   <!--<div class="area-wrapper">-->
 </template>
@@ -99,11 +94,15 @@ import TaskAddModal from './tasks/TaskAddModal'
 import TaskHistory from './tasks/TaskHistory'
 import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
-import AudioImport from './audio/AudioImport'
+import AudioImport from './audio/AudioImport.vue';
 import { mapGetters, mapActions } from 'vuex'
 import api_config from '../mixins/api_config.js';
 import task_controls from '../mixins/task_controls.js';
+import Vue from 'vue';
+import v_modal from 'vue-js-modal';
 var BPromise = require('bluebird');
+
+Vue.use(v_modal, { dialog: true });
 
 export default {
   data () {
@@ -115,13 +114,11 @@ export default {
         total: 0
       },
       show_import_book_modal: false,
-      show_import_audio_modal: false,
       import_book_task_id: '',
       import_audio_task: {},
       import_book_id: '',
       import_book: {},
-      task_audiobook: {},
-      audio_import_multiple: true
+      task_audiobook: {}
     }
   },
 
@@ -132,8 +129,7 @@ export default {
     VTab,
     TaskAddModal,
     BookImport,
-    TaskHistory,
-    AudioImport
+    TaskHistory
   },
 
   computed: mapGetters([
@@ -208,16 +204,23 @@ export default {
     importAudio(task, book_meta) {
       this.import_book = book_meta
       this.import_audio_task = task
-      this.show_import_audio_modal = true
-      this.audio_import_multiple = true
       this.task_audiobook = {}
-    },
-    importExportAudio(task, book_meta, book_audio) {
-      this.import_book = book_meta
-      this.import_audio_task = task
-      this.show_import_audio_modal = true
-      this.audio_import_multiple = false
-      this.task_audiobook = book_audio || {}
+      
+      let uploadInfo = {};
+      
+      this.$modal.show(AudioImport, {
+          book: book_meta,
+          uploadInfo: uploadInfo
+        }, 
+        {
+          height: 'auto',
+          width: '590px'
+        }, 
+        {
+          'closed': () => {
+            this.importAudioClose();
+          }
+        });
     },
     importBookClose(response) {
       if (response) {
@@ -233,7 +236,6 @@ export default {
       self.import_book_task_id = ''
     },
     importAudioClose(response) {
-      this.show_import_audio_modal = false
       this.import_book = {}
       this.import_audio_task = {};
       this.import_book_id = ''
