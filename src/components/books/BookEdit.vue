@@ -191,7 +191,11 @@ export default {
           audioTasksQueueBlock: 'audioTasksQueueBlock',
           audioTasksQueueBlockOrPart: 'audioTasksQueueBlockOrPart',
           isAudioEditAligning: 'isAudioEditAligning',
-          bookSearch: 'bookSearch'
+          bookSearch: 'bookSearch',
+          adminOrLibrarian: 'adminOrLibrarian',
+          isEditor: 'isEditor',
+          isNarrator: 'isNarrator',
+          isProofer: 'isProofer'
       }),
       metaStyles: function () {
           let result = '';
@@ -1589,6 +1593,7 @@ export default {
       })
     },
     checkMode() {
+      //console.log(`checkMode--: `, this.mode, this.currentJobInfo.id);
       if (this.currentJobInfo.id) {
         let allowed = false;
         switch (this.mode) {
@@ -1603,12 +1608,23 @@ export default {
             break;
         }
         if (!allowed) {
-          // to prevent half book load before detect mode
-          this.$store.commit('clear_storeList');
-          this.$store.commit('clear_storeListO');
+          const params = this.$route.params ? this.$route.params : {};
 
-          let params = this.$route.params ? this.$route.params : {};
-          this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
+          if ((this.adminOrLibrarian || this.isEditor) && this.tc_showEditTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookEdit' : 'BookEdit', params: params});
+          }
+          else if (this.isNarrator && this.tc_showNarrateTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookNarrate' : 'BookNarrate', params: params});
+          }
+          else if (this.isProofer && this.tc_showProofreadTab()) {
+            this.$router.push({name: params.collectionid ? 'CollectionBookProofread' : 'BookProofread', params: params});
+          }
+          else {
+            // to prevent half book load before detect mode
+            this.$store.commit('clear_storeList');
+            this.$store.commit('clear_storeListO');
+            this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
+          }
         }
       }
     },
@@ -2488,6 +2504,7 @@ export default {
 
       this.loadBookMounted() // also handle route params
       .then((metaResp)=>{
+        this.$store.commit('reset_storeListO');
         this.initEditorPosition();
         this.processOpenedBook();
         const startBlock = this.$route.params.block || false;
@@ -2681,6 +2698,7 @@ export default {
             if (this.parlistO.startId) {
               params.block = this.parlistO.startId;
             }
+            console.log(`currentJobInfo.workflow.status: `, val, this.mode);
             this.$router.push({ name: 'BookEdit', params: params });
           }
         }

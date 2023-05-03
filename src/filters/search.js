@@ -1,5 +1,7 @@
 'use strict';
 
+const bookFilterDelim = '/';
+
 const cleanDiacritics = (str) => {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 };
@@ -101,11 +103,17 @@ const prepareForFilter = (str, isWithSpace = false) => {
   return cleanDiacritics(replaceSpecials(replaceHTMLSpecials(str), isWithSpace));
 }
 
+const splitPrepareForFilter = (str, isWithSpace = false) => {
+  const strings = str.split(bookFilterDelim);
+  return strings.map((string)=>cleanDiacritics(replaceSpecials(replaceHTMLSpecials(string), isWithSpace)));
+}
+
 export {
   prepareForFilter,
   cleanDiacritics,
   replaceSpecials,
   replaceParsing,
   replaceSuperscript,
-  replaceHTMLSpecials
+  replaceHTMLSpecials,
+  splitPrepareForFilter
 }

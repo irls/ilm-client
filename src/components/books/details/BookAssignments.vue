@@ -663,7 +663,8 @@
               switch (type) {
                 case 'text-cleanup':
                   lookup = this.storeListO.lookupList[this.storeListO.listObjs[i].blockRid];
-                  if (lookup && this.currentBookMeta.importStatus === 'staging' && !lookup.status.marked) {
+                  const importStatus = this.currentBookMeta.importStatus || 'staging';
+                  if (lookup && (importStatus === 'staging' || importStatus === 'staging_empty') && !lookup.status.marked) {
                     this.taskBlockMap.map[type].next = this.storeListO.listObjs[i].blockId;
                     found = true;
                   }

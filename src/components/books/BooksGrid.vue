@@ -1,20 +1,27 @@
 <template>
-  <Grid id='books_grid'
-    ref="books_grid"
-    :data="booksMeta"
-    :columns="headers"
-    :rowsPerPage="100"
-    @clickRow="rowClick"
-    :selected="selectedBooks"
-    :idField="idField"
-    :filter-key="''">
-  </Grid>
+  <div class="router-view-wrapper" v-cloak>
+    <Grid id='books_grid'
+      ref="books_grid"
+      :data="filteredBooks"
+      :columns="headers"
+      :rowsPerPage="100"
+      @clickRow="rowClick"
+      @dblClickRow="openBook"
+      :selected="selectedBooks"
+      :idField="idField"
+      :filter-key="''"
+      :scrollTopOnPageClick="true"
+      customEmptyTableText="No Books found" />
+  </div>
+  <!--<div class="router-view-wrapper"-->
 </template>
 
 <script>
+import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex'
 import Grid from '../generic/Grid'
 import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
+//import taskControls from '@src/mixins/task_controls.js';
 
 export default {
 
@@ -33,85 +40,71 @@ export default {
     }
   },
 
+  //mixins: [taskControls],
+
   computed: {
 
     ...mapGetters([
-      'bookFilters',
       'allBooks',
-      'adminOrLibrarian'
+      'adminOrLibrarian',
+      'isEditor',
+      'isNarrator',
+      'isProofer'
     ]),
+    ...mapGetters({
+      fltrChangeTrigger: 'gridFilters/fltrChangeTrigger',
+      booksFilters:      'gridFilters/booksFilters',
+      filteredBooks:     'gridFilters/filteredBooks'
+    }),
 
-    books () { // filtered list of books
-      if (!this.allBooks.length) return [];
-      let filteredbooks = this.allBooks
-        .filter(book => (this.bookFilters.language == '' || book.language === this.bookFilters.language))
-        .filter(book => this.bookFilters.jobStatus ? book.job_status === this.bookFilters.jobStatus : true)
-        .filter(book => {
-          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-          let find = prepareForFilter(this.bookFilters.filter);
-          return (str.indexOf(find) > -1)
-        })
-        .filter(book => {
-          let str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
-          let find = prepareForFilter(this.bookFilters.projectTag);
-          return (str.indexOf(find) > -1)
-        })
-        .filter(book => !book.collection_id)
-      return filteredbooks
-    },
-
-    booksMeta () { // because our grid does not work with nested values
-      let result = []
-      for (let book of this.books) {
-        if (book.importStatus == 'staging' && book.blocksCount <= 2){
-          if (!book.hasOwnProperty('publishLog') || book.publishLog == null){
-            book.importStatus = 'staging_empty'
-          } else if (!book.publishLog.updateTime){
-            book.importStatus = 'staging_empty'
-          }
-        }
-        result.push(book)
-      }
-      return result
-    },
     headers: {
       get() {
         let headers = [
           {
             title: 'Book Title',
             path: 'title',
-            addClass: 'booktitle',
+            addClass: 'booktitle width-36-p',
+            isPassFull: true,
             html (val) {
-              return `<i class='fa fa-book'></i>&nbsp;&nbsp;${val}`
+              const title = val.title.length ? val.title : val.bookid;
+              if (val.collection_id) { // data-tooltip="${title}"
+                return `<span><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
+              } // data-tooltip="${title}"
+              return `<span><i class='fa fa-book'></i>&nbsp;&nbsp;${title}</span>`
             }
           },
           {
             title: 'Author',
             path: 'author',
-            addClass: 'author',
-            render(val) {
-              return val && Array.isArray(val) ? val.join(', ') : val;
+            addClass: 'author width-16-p',
+            html(val) {
+              const text = val && Array.isArray(val) ? val.join(', ') : val;
+              // data-tooltip="${text}"
+              return `<span>${text}</span>`;
             }
           },
           {
             title: 'Editor',
             path: 'executors',
+            addClass: 'width-150',
             render(val) {
               return val && val.editor ? val.editor.title : '';
             }
           },
           {
             title: 'Published',
-            path: 'pub_ver'
+            path: 'pub_ver',
+            addClass: 'width-135'
           },
           {
             title: 'Updated',
-            path: 'cur_ver'
+            path: 'cur_ver',
+            addClass: 'width-135'
           },
           {
             title: 'Status',
             path: 'importStatus',
+            addClass: 'width-100',
             render(val) {
               switch (val) {
                 case 'staging_empty':
@@ -135,13 +128,14 @@ export default {
                 default:
                   return val ? val : 'Book Import';
               }
-            }
+            },
           }
         ];
         if (this.adminOrLibrarian) {
           headers.push({
             title: 'State',
             path: 'job_status',
+            addClass: 'width-90',
             render(val) {
               switch (val) {
                 case 'active':
@@ -164,10 +158,6 @@ export default {
     }
   },
 
-  created () {
-    this.selectedBooks = [this.$route.params.bookid]
-  },
-
   mounted () {
     let loadBooks = new Promise((resolve, reject) => {
       if (this.allBooks.length === 0) {
@@ -181,10 +171,21 @@ export default {
     });
     return loadBooks
     .then(()=>{
-      if (this.$route.params.hasOwnProperty('bookid')) {
-        this.goToBookPage(this.$route.params.bookid);
-        this.scrollToRow(this.$route.params.bookid);
-      }
+      Vue.nextTick(()=>{
+        if (this.$route && this.$route.params) {
+          if (this.$route.params.hasOwnProperty('bookid')) {
+            const selectedBookId = this.$route.params.bookid;
+            this.initScroll(selectedBookId)
+            .then((isOk)=>{
+              if (isOk !== true) {
+                this.filterScrollTimer = setTimeout(()=>{
+                  this.initScroll(selectedBookId)
+                }, 100)
+              }
+            })
+          }
+        }
+      });
     })
     .catch((e)=>{
       console.error(e)
@@ -192,41 +193,41 @@ export default {
   },
 
   watch: {
-    '$route' () {
-      if (this.$route.params.hasOwnProperty('bookid')) {
-        this.selectedBooks = [this.$route.params.bookid];
-      } else {
+    '$route' (toRoute, fromRoute) {
+      if (!this.$route.params.hasOwnProperty('bookid')) {
         this.selectedBooks = [];
         if (this.$refs.books_grid) {
           this.$refs.books_grid.currentPage = 0;
         }
       }
     },
-    bookFilters: {
-      deep: true,
+    fltrChangeTrigger: {
       handler(newVal, oldVal) {
-        if (this.$route.params.hasOwnProperty('bookid')) {
-          const bookid = this.$route.params.bookid;
-          const found = this.books.find((book)=>{
-            return book.bookid === bookid;
-          })
-          if (found) {
-            clearTimeout(this.filterScrollTimer);
-            this.filterScrollTimer = setTimeout(()=>{
-              this.goToBookPage(found.bookid);
-              this.scrollToRow(found.bookid);
-            }, 10)
-          } else {
-            if (this.$refs.books_grid) {
-              this.$refs.books_grid.currentPage = 0;
-              this.$router.replace({ path: '/books' });
+        Vue.nextTick(()=>{
+          if (this.$route.params.hasOwnProperty('bookid')) {
+            const bookid = this.$route.params.bookid;
+            const [selectedBookId] = this.selectedBooks;
+            const found = this.filteredBooks.find((book)=>{
+              return book.bookid === bookid;
+            })
+            if (found) {
+              clearTimeout(this.filterScrollTimer);
+              this.filterScrollTimer = setTimeout(()=>{
+                this.goToBookPage(bookid);
+                if (!selectedBookId || (selectedBookId && selectedBookId !== bookid)) {
+                  this.scrollToRow(bookid);
+                  this.selectedBooks = [bookid];
+                }
+              }, 1)
+            } else {
+              this.goToBookPage();
+              this.$router.replace({ name: 'Books' });
+              this.selectedBooks = [];
             }
+          } else {
+            this.goToBookPage();
           }
-        } else {
-          if (this.$refs.books_grid) {
-            this.$refs.books_grid.currentPage = 0;
-          }
-        }
+        });
       }
     }
   },
@@ -234,44 +235,82 @@ export default {
   methods: {
     ...mapActions(['updateBooksList']),
     // A row in the table has been clicked. Returns Vue data object bound to the row.
-    rowClick (ev) {
-      let bookid = ev.bookid
+    rowClick (book) {
+      const bookid = book.bookid;
       if (bookid) {
-
-        this.openBookClickCounter++;
-
-        if(this.openBookClickCounter == 1) {
-          this.timer = setTimeout(() => {
-            this.openBookClickCounter = 0;
-            this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
-          }, 300);
-
-          return;
+        const book = this.filteredBooks.find(book=>book.bookid === bookid);
+        if (book && book.collection_id) {
+          this.$store.dispatch('loadCollection', book.collection_id);
+        } else {
+          this.$store.dispatch('loadCollection', false);
         }
-        clearTimeout(this.timer);
-        this.openBookClickCounter = 0;
-	    //this.bookFilters.filter = '';
-	    //this.bookFilters.projectTag = '';
-        this.$router.push('/books/' + bookid + '/display')
-
+        this.selectedBooks = [book.bookid];
+        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
       }
     },
-    goToBookPage (bookId) {
-      if (this.$refs.books_grid) {
-        //const index = this.cacheFiltered.findIndex((book)=>book.bookid === bookId);
-        const index = this.$refs.books_grid.filteredData.findIndex((book)=>book.bookid === bookId);
-        const page = Math.trunc(index / this.$refs.books_grid.rowsPerPage);
-        this.$refs.books_grid.currentPage = page;
+    openBook (book) {
+      const bookid = book.bookid;
+      if (bookid) {
+        switch(true) {
+          case this.adminOrLibrarian : case this.isEditor : {
+            this.$router.replace({name: 'BookEdit', params: { bookid:bookid }});
+          } break;
+          case this.isNarrator : {
+            this.$router.replace({name: 'BookNarrate', params: { bookid:bookid }});
+          } break;
+          case this.isProofer : {
+            this.$router.replace({name: 'BookProofread', params: { bookid:bookid }});
+          } break;
+          default : {
+            this.$router.replace({name: 'BookEditDisplay', params: { bookid:bookid }});
+          } break;
+        };
       }
+    },
+    goToBookPage (bookId = false) {
+      if (this.$refs.books_grid) {
+        if (bookId) {
+          const index = this.$refs.books_grid.filteredData.findIndex((book)=>book.bookid === bookId);
+          this.$refs.books_grid.goToIndex(index);
+        } else {
+          this.$refs.books_grid.goToIndex(0);
+        }
+        return true;
+      }
+      return false;
     },
     scrollToRow(bookId) {
-      let t = setTimeout(function() {
-        let el = document.querySelector(`[data-id="${bookId}"]`);
-        if (el) {
-          el.scrollIntoView();
-        }
-      }, 300);
+      const el = document.querySelector(`[data-id="${bookId}"]`);
+      if (el) {
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'start'
+        });
+        return true;
+      }
+      return false;
     },
+    async initScroll(selectedBookId) {
+      let result = false;
+      const found = this.filteredBooks.find((book)=>book.bookid == selectedBookId);
+      if (found) {
+        await Vue.nextTick();
+        result = this.goToBookPage(selectedBookId);
+        await Vue.nextTick();
+        if (result) result = this.scrollToRow(selectedBookId);
+        if (result) {
+          this.selectedBooks = [selectedBookId];
+          if (found.collection_id) {
+            this.$store.dispatch('loadCollection', found.collection_id);
+          }
+        }
+        return result;
+      }
+      this.$router.replace({ name: 'Books' });
+      this.selectedBooks = [];
+      return false;
+    }
   }
 
 }
@@ -280,9 +319,10 @@ export default {
 
 <style>
   #books_grid {
-    width: 100%;
-    overflow-y: auto;
-    padding-top: 4px;
+    /*width: 100%;*/
+    /*height: 100%;*/
+    min-width: 900px;
+    /*padding-top: 4px;*/
   }
 
   #books_grid tbody tr:hover {

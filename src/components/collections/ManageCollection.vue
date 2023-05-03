@@ -342,7 +342,9 @@
             .then((response) => {
               if (response.status===200) {
                 this.$emit('collectionRemoved');
-                this.$router.replace({ path: '/collections' });
+                if (this.$route.params.hasOwnProperty('collectionid')) {
+                  this.$store.commit('gridFilters/set_fltrChangeTrigger');
+                }
               } else {
 
               }
