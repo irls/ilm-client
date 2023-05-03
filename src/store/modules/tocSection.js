@@ -17,13 +17,19 @@ export default {
     },
     currentBookTocCombined: (state, getters, rootState) => {
       let currentBookTocCombined = [];
-      if (!state.bookTocSections) return [];
+      if (!state.bookTocSections || state.bookTocSections.length === 0) return [];
       rootState.currentBookToc.data.forEach(toc => {
         let section = state.bookTocSections.find(s => {
           return s.startBlockid === toc.blockid;
         });
         currentBookTocCombined.push(Object.assign(toc, {section: section ? section : {}}));
       });
+      let firstToc = rootState.currentBookToc.data.find(toc => {
+        return toc.blockid === state.bookTocSections[0].startBlockid;
+      });
+      if (!firstToc) {
+        currentBookTocCombined.unshift(Object.assign({}, {section: state.bookTocSections[0]}));
+      }
       return currentBookTocCombined;
     },
   },

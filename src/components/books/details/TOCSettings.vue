@@ -16,6 +16,7 @@
             :initValue="tocSectionBook.namePattern"
             @valueChanged="onInputPattern('name_pattern', $event)"
             @onBlur="onBlurPattern('name_pattern', $event)"
+            @onKeyup="settingValueChanged('name_pattern')"
             ref="name_pattern">
             
           </resizable-textarea>
@@ -38,6 +39,7 @@
             :initValue="tocSectionBook.titlePattern"
             @valueChanged="onInputPattern('title_pattern', $event)"
             @onBlur="onBlurPattern('title_pattern', $event)"
+            @onKeyup="settingValueChanged('title_pattern')"
             ref="title_pattern">
               
           </resizable-textarea>
@@ -54,7 +56,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-default" v-on:click="closeModal()">Cancel</button>
-      <button class="btn btn-primary" v-on:click="saveChanges()">Apply</button>
+      <button class="btn btn-primary" v-on:click="saveChanges()" :disabled="applyDisabled">Apply</button>
     </div>
   </div>
 </template>
@@ -87,7 +89,8 @@
         lastCursorPosition: {
           name_pattern: null,
           title_pattern: null
-        }
+        },
+        applyDisabled: true
       }
     },
     components: {
@@ -101,7 +104,7 @@
         this.$emit('close');
       },
       onInputPattern(field, event) {
-        console.log(field, event.target.value)
+        //console.log(field, event.target.value)
       },
       onBlurPattern(field, event) {
         //console.log('onBlurPattern', event.relatedTarget.classList, event.target.selectionStart);
@@ -129,6 +132,7 @@
             fieldRef.$el.selectionEnd = fieldRef.$el.selectionStart;
           }
           fieldRef.$el.dispatchEvent(new Event('input'));
+          this.applyDisabled = false;
         }
       },
       saveChanges() {
@@ -136,6 +140,23 @@
           namePattern: this.$refs.name_pattern.$el.value,
           titlePattern: this.$refs.title_pattern.$el.value,
         });
+      },
+      settingValueChanged(setting_name) {
+        if (this.applyDisabled) {
+          let ref = this.$refs[setting_name];
+          if (ref && ref.$el) {
+            let disabled = true;
+            switch (setting_name) {
+              case 'name_pattern':
+                disabled = this.tocSectionBook.namePattern === ref.$el.value;
+                break;
+              case 'title_pattern':
+                disabled = this.tocSectionBook.titlePattern === ref.$el.value;
+                break;
+            }
+            this.applyDisabled = disabled;
+          }
+        }
       }
     }
   }

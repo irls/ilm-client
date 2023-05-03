@@ -74,7 +74,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug')" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
+                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug')" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -260,7 +260,7 @@ export default {
       editingFieldName: '',
       tocSettingsModalActive: false,
       displaySettings: {
-        title: true,
+        title: false,
         titleEn: false,
         toc: true
       },
@@ -362,7 +362,10 @@ export default {
       this.sectionsMode = !this.sectionsMode;
     },
     
-    sectionEditMode(section, field) {
+    sectionEditMode(section, field, event) {
+      if (event && event.target && event.target.classList && event.target.classList.contains('fa')) {
+        return;
+      }
       return new Promise((resolve, reject) => {
         Vue.nextTick(() => {
           if (!(section instanceof Object)) {
@@ -552,25 +555,27 @@ export default {
     updateSectionField(value) {
       value = value.trim();
       if (this.editingSectionId) {
-        let tc = this.currentBookTocCombined.find(toc => {
-          return toc.section && toc.section.id === this.editingSectionId;
+        let section = this.bookTocSections.find(sect => {
+          return sect.id === this.editingSectionId;
         });
-        if (tc && tc.section) {
-          if (this.validateSectionField(value, this.editingFieldName)) {
-            if (tc.section[this.editingFieldName] !== this.editingFieldValue) {
-              let update = {buildModified: tc.section.zipPath ? true : false};
+        if (section) {
+          if (!value || this.validateSectionField(value, this.editingFieldName)) {
+            if (section[this.editingFieldName] !== this.editingFieldValue) {
+              let update = {buildModified: section.zipPath ? true : false};
               update[this.editingFieldName] = value;
-              let isManual = value ? true : false;
-              switch (this.editingFieldName) {
-                case 'slug':
-                  update.manualSlug = isManual;
-                  break;
-                case 'title':
-                  update.manualTitle = isManual;
-                  break;
-                //case 'titleEn':
-                  //update.manualTitleEn = isManual;
-                  //break;
+              if (value) {
+                let isManual = value ? true : false;
+                switch (this.editingFieldName) {
+                  case 'slug':
+                    update.manualSlug = isManual;
+                    break;
+                  case 'title':
+                    update.manualTitle = isManual;
+                    break;
+                  //case 'titleEn':
+                    //update.manualTitleEn = isManual;
+                    //break;
+                }
               }
               return this.updateSection(update)
                 .then(() => {
@@ -587,12 +592,12 @@ export default {
                   }
                   if (slugError) {
                     //tc.section.slug = slug;
-                    this.sectionEditMode(tc.section, this.editingFieldName)
+                    this.sectionEditMode(section, this.editingFieldName)
                       .then(() => {
                         //this.editingFieldValue = '';
                         //Vue.nextTick(() => {
-                          this.editingFieldValue = slug;
-                          this.validationErrors.slug = slugError;
+                          this.editingFieldValue = value;
+                          this.validationErrors.slug[section.id] = slugError;
                           //let el = document.getElementsByClassName('edit-section-slug');
                           //if (el && el[0]) {
                             //el[0].value = '';
@@ -614,7 +619,7 @@ export default {
             this.sectionEditMode(null);
           } else {
             //setTimeout(() => {
-              this.sectionEditMode(tc.section, this.editingFieldName);
+              this.sectionEditMode(section, this.editingFieldName);
             //}, 5000);
           }
         }
@@ -788,12 +793,17 @@ export default {
     },
     saveSettings(settings) {
       this.tocSettingsModalActive = false;
-      this.tocSectionBook.namePattern = settings.namePattern;
-      this.tocSectionBook.titlePattern = settings.titlePattern;
-      return this.updateTocSectionBook([this.tocSectionBook.id, {
-          namePattern: settings.namePattern,
-          titlePattern: settings.titlePattern
-      }])
+      let update = {};
+      if (this.tocSectionBook.namePattern !== settings.namePattern) {
+        this.tocSectionBook.namePattern = settings.namePattern;
+        update.namePattern = settings.namePattern;
+      }
+      if (this.tocSectionBook.titlePattern !== settings.titlePattern) {
+        this.tocSectionBook.titlePattern = settings.titlePattern;
+        update.titlePattern = settings.titlePattern;
+      
+      }
+      return this.updateTocSectionBook([this.tocSectionBook.id, update])
     },
     fullValidate() {
       let errors = 0;
