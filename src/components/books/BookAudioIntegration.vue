@@ -425,7 +425,8 @@
           uploadInfo: {}
         }, {
           height: 'auto',
-          width: '590px'
+          width: '590px',
+          clickToClose: false
         });
       },
       renameAudiofile(id) {
