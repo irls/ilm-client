@@ -46,7 +46,7 @@
                 <div :class="[{'go-to-block': task.blockid != null && !task.complete}]" v-on:click="goToBlockCheck(task.blockid, counter.key)">
                 <template v-if="task.link && !task.complete">
                   <template v-for="link in task.link">
-                    <span v-if="link=='audio_dialog'" class="go-to-block" v-on:click="$emit('showModal_audio')">
+                    <span v-if="link=='audio_dialog'" class="go-to-block" v-on:click="showModalAudio()">
                       {{task.title}}
                     </span>
                     <span v-else-if="link=='book_dialog'" class="go-to-block" v-on:click="$root.$emit('book-reimport-modal')">
@@ -116,8 +116,12 @@
 <script>
   import task_controls from '../../../mixins/task_controls.js';
   import access from '../../../mixins/access.js';
+  import AudioImportModal from '../../audio/AudioImport.vue';
   import { mapGetters, mapActions } from 'vuex';
   import { modal } from 'vue-strap';
+  import Vue from 'vue';
+  import v_modal from 'vue-js-modal';
+  Vue.use(v_modal, {dialog: true});
   export default {
     name: 'BookAssignments',
     data() {
@@ -744,6 +748,25 @@
           this.usersList[role].unshift({'_id':'unassigned', 'email':'', 'name':'Unassigned'});
         }
         this.$forceUpdate();
+      },
+      showModalAudio() {
+        let uploadInfo = {};
+        this.$modal.show(AudioImportModal, {
+            book: this.currentBookMeta,
+            uploadInfo: uploadInfo
+          }, 
+          {
+            height: 'auto',
+            width: '590px',
+            clickToClose: false
+          }, 
+          {
+            'closed': () => {
+              if (uploadInfo && uploadInfo.success) {
+                this.$emit('audioImportOk');
+              }
+            }
+          });
       },
       ...mapActions(['updateBookMeta', 'setCurrentBookCounters', 'completeTextCleanup', 'completeAudioMastering', 'completeBatchApproveEditAndAlign', 'completeBatchApproveModifications', 'getCurrentJobInfo', 'tc_loadBookTask', 'reloadBook', 'getTaskUsers']),
     },
