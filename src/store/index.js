@@ -823,6 +823,9 @@ export const store = new Vuex.Store({
         if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
+        if (meta.hasOwnProperty('coverimgURL')) {
+          this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: meta.coverimgURL});
+        }
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';

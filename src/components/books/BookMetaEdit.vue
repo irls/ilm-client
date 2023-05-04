@@ -1071,17 +1071,15 @@ export default {
       },
       deep: true
     },
-    currentBookFiles: {
+    /*currentBookFiles: {
       handler (val) {
         this.currentBook.coverimg = this.currentBookFiles.coverimg
       },
       deep: true
     },
     currentBookBlocksLeft: {
-      handler(val) {
-
-      }
-    },
+      handler(val) {}
+    },*/
     audiobook: {
       handler(val) {
 
@@ -1199,7 +1197,7 @@ export default {
   },
 
   created () {
-    this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, 1000);
+    this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, 500);
     this.init();
   },
 
@@ -1464,6 +1462,7 @@ export default {
         });
 
         this.currentBook = Object.assign(this.currentBookMeta, update);
+        this.currentBook.coverimg = this.currentBookFiles.coverimg;
 
         this.lockLanguage = false;
         if (Object.keys(update).includes('numbering')) {
