@@ -10,11 +10,16 @@
         @save="saveSettings" />
       <div class="toc-buttons">
         <div class="toc-button">
-          <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()" v-if="adminOrLibrarian">
-            <i class="fa fa-eye-slash" v-if="!sectionsMode"></i>
-            <i class="fa fa-eye" v-else></i>
-            Sections
-          </button>
+          <template v-if="adminOrLibrarian">
+            <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()" v-if="!sectionsMode" title="Show sections">
+              <i class="fa fa-eye-slash"></i>
+              Sections
+            </button>
+            <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()" title="Hide sections" v-else>
+              <i class="fa fa-eye"></i>
+              Sections
+            </button>
+          </template>
         </div>
         <div class="toc-button -toc-actions">
           <template v-if="sectionsMode && adminOrLibrarian">
@@ -22,21 +27,21 @@
               <span class="book-generating-spinner"></span>
             </span>
             <template v-else>
-              <button class="btn btn-default btn-build-book toc-book-settings" v-on:click="openSettings($event)">
+              <button class="btn btn-default btn-build-book toc-book-settings" v-on:click="openSettings($event)" title="Name and Title generation pattern">
               </button>
-              <button class="btn btn-primary btn-build-book toc-export" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)">
+              <button class="btn btn-primary btn-build-book toc-export" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)" title="Build">
               </button>
-              <span class="btn btn-primary btn-build-book book-build-disabled toc-export" v-else>
+              <span class="btn btn-primary btn-build-book -disabled toc-export" title="Build" v-else>
               </span>
-              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)">
+              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)" title="Download">
               </a>
-              <span class="btn btn-primary book-build-disabled btn-download-book" v-else>
+              <span class="btn btn-primary -disabled btn-download-book" title="Download" v-else>
               </span>
             </template>
           </template>
         </div>
         <div class="toc-button -refresh-toc">
-          <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)">
+          <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)" title="Refresh">
             <i class="fa fa-refresh refresh-toc"></i>
           </button>
         </div>
@@ -88,8 +93,8 @@
                           v-on:blur="blurEditingField(null)"
                           v-on:input="editingFieldChanged($event)" />
                       </template>
-                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>
-                        {{toc.section.slug}}
+                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>
+                        {{toc.section.slug ? toc.section.slug : 'Section Name'}}
                       </label>
                     </div>
                     <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
@@ -202,7 +207,7 @@
                 </template>
                 <template v-else>
                   <div class="section-title">
-                    <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]">{{toc.section.title || 'Define Title'}}</label>
+                    <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]" :title="toc.section.title">{{toc.section.title || 'Define Title'}}</label>
                   </div>
                 </template>
               </td>
@@ -218,7 +223,7 @@
                     v-on:input="editingFieldChanged($event)" />
                 </template>
                 <template v-else>
-                  <label :class="[{'no-section-title': !toc.section.titleEn}]">{{toc.section.titleEn || 'Define Title English'}}</label>
+                  <label :class="[{'no-section-title': !toc.section.titleEn}]" :title="toc.section.titleEn">{{toc.section.titleEn || 'Define Title English'}}</label>
                 </template>
               </td>
             </tr>
@@ -363,8 +368,13 @@ export default {
     },
     
     sectionEditMode(section, field, event) {
-      if (event && event.target && event.target.classList && event.target.classList.contains('fa')) {
-        return;
+      if (event && event.target) {
+        if (event.target.classList && event.target.classList.contains('fa')) {
+          return;
+        }
+        if (event.target.nodeName === 'I') {
+          return;
+        }
       }
       return new Promise((resolve, reject) => {
         Vue.nextTick(() => {
@@ -915,6 +925,7 @@ export default {
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
+            max-width: 295px;
           }
           div.section-title {
             width: 295px;
@@ -996,6 +1007,9 @@ export default {
               height: 24px;
               display: inline-block;
               vertical-align: middle;
+              &[disabled] {
+                background: url(/static/toc/download-section-disabled.png);
+              }
             }
           }
           &.-build {
@@ -1009,6 +1023,9 @@ export default {
               display: inline-block;
               vertical-align: middle;
               cursor: pointer;
+              &[disabled] {
+                background: url(/static/toc/build-section-disabled.png);
+              }
             }
             &.-building {
               vertical-align: middle;
@@ -1083,12 +1100,6 @@ export default {
       i.fa {
         vertical-align: middle;
       }
-      &.book-build-disabled {
-        color: #b1b1b1;
-        i.fa {
-          color: #b1b1b1;
-        }
-      }
       &.toc-book-settings {
         border: 1px solid #337AB7;
         i.fa {
@@ -1107,6 +1118,13 @@ export default {
         background-repeat: no-repeat;
         background-position: center;
         background-color: #337AB7;
+        &.-disabled {
+          /*background: url(/static/toc/build-disabled.png);*/
+          background-color: rgba(51, 122, 183, 0.5);
+          /*background-repeat: no-repeat;
+          background-position: center;*/
+          border: none;
+        }
       }
       &.btn-download-book {
         background: url(/static/toc/download.png);
@@ -1115,6 +1133,10 @@ export default {
         background-repeat: no-repeat;
         background-position: center;
         background-color: #337AB7;
+        &.-disabled {
+          background-color: rgba(51, 122, 183, 0.5);
+          border: none;
+        }
       }
     }
     .section-generating {
