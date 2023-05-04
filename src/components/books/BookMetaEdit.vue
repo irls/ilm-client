@@ -89,21 +89,21 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' v-on:change="debounceUpdate('title', $event.target.value, $event, true)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="debounceUpdate('title', $event.target.value, $event, false)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title en</td>
-                  <td><input v-model='currentBook.title_en' v-on:change="debounceUpdate('title_en', $event.target.value, $event, true) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
+                  <td><input v-model='currentBook.title_en' v-on:change="debounceUpdate('title_en', $event.target.value, $event, false) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en']" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
 
                 <tr class='subtitle'>
                   <td>Subtitle</td>
-                  <td><input v-model='currentBook.subtitle' v-on:change="debounceUpdate('subtitle', $event.target.value, $event, true);" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.subtitle' v-on:change="debounceUpdate('subtitle', $event.target.value, $event, false);" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='author'>
