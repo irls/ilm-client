@@ -1461,22 +1461,24 @@ export default {
           target.disabled = false
         });
 
-        this.currentBook = Object.assign(this.currentBookMeta, update);
-        this.currentBook.coverimg = this.currentBookFiles.coverimg;
+        if (response && response.bookid === this.currentBook.bookid) {// ILM-5595 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
+          this.currentBook = Object.assign(this.currentBookMeta, update);
+          this.currentBook.coverimg = this.currentBookFiles.coverimg;
 
-        this.lockLanguage = false;
-        if (Object.keys(update).includes('numbering')) {
-          this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
-        }
+          this.lockLanguage = false;
+          if (Object.keys(update).includes('numbering')) {
+            this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+          }
 
-        if (Object.keys(update).includes('language')) {
-          setTimeout(() => {
-            this.reloadBook()
-            .then(() => {
-              this.$root.$emit('book-reimported');
-              this.isBatchProgress = false;
-            })
-          }, 1500)
+          if (Object.keys(update).includes('language')) {
+            setTimeout(() => {
+              this.reloadBook()
+              .then(() => {
+                this.$root.$emit('book-reimported');
+                this.isBatchProgress = false;
+              })
+            }, 1500)
+          }
         }
         return response;
       })
