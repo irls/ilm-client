@@ -1906,7 +1906,7 @@ export default {
       }
     },
     selectPauseAfter(blockType, styleVal) {
-      //console.log(blockType, styleKey, styleVal);
+      //console.log('selectPauseAfter', blockType, styleVal);
       if (this.proofreadModeReadOnly) {
         return;
       }
@@ -1927,9 +1927,9 @@ export default {
             if (update) {
               this.tc_loadBookTask(this.currentBookMeta._id);
               this.getCurrentJobInfo();
-              this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
               Vue.nextTick(() => {
-                this.$refs.pauseAfterControl[0].recalcPauseAfterRange(true);
+                this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+                //this.$refs.pauseAfterControl[0].recalcPauseAfterRange(true);
               });
             }
           });
