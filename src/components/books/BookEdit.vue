@@ -722,7 +722,9 @@ export default {
 
       },
     eventKeyDown: function(key) {
+      if (this.$events) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
+      }
     },
     onMediaSuccess_msr(stream) {
       if (!this.recorder || (this.recorderStream && !this.recorderStream.active && this.recorderStream.id !== stream.id && stream.active)) {
