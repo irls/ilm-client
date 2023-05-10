@@ -38,6 +38,7 @@ export default {
       state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
     },
     set_book_toc_sections(state, sections) {
+      let language = this.getters.currentBookMeta ? this.getters.currentBookMeta.language : 'en';
       sections.forEach(section => {
         let blk = this.getters.storeList.get(section.startBlockid);
         if (blk) {
@@ -46,7 +47,7 @@ export default {
           section.firstSectionBlock = {};
         }
         if (!section.firstSectionBlock.language) {
-          section.firstSectionBlock.language = 'en';
+          section.firstSectionBlock.language = language;
         }
       });
       state.bookTocSections = sections;

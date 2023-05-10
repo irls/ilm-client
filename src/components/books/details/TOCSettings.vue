@@ -164,11 +164,12 @@
 <style lang="less">
   .toc-settings-modal {
     height: auto;
-    width: 100%;
+    width: 420px;
     border: 1px solid #b9b6b6;
     position: absolute;
     background: white;
-    left: 0px;
+    left: 100%;
+    margin-left: -440px;
     z-index: 999;
     .modal-header {
       padding: 10px 15px;

@@ -47,7 +47,7 @@
         </div>
       </div>
       <div v-if="tocSectionBook.zipTime && sectionsMode" class="book-zip-time">
-        Latest build: {{convertTime(tocSectionBook.zipTime, true)}}
+        Latest build: {{convertTime(new Date(tocSectionBook.zipTime).toISOString(), true)}}
       </div>
       <!-- {{bookTocSections}} -->
       <div v-if="currentBookTocCombined.length > 0" class="toc-list">
@@ -93,9 +93,7 @@
                           v-on:blur="blurEditingField(null)"
                           v-on:input="editingFieldChanged($event)" />
                       </template>
-                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>
-                        {{toc.section.slug ? toc.section.slug : 'Section Name'}}
-                      </label>
+                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>{{toc.section.slug ? toc.section.slug : 'Section Name'}}</label>
                     </div>
                     <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
                     <div class="-option -remove -hidden">
@@ -376,6 +374,17 @@ export default {
           return;
         }
       }
+      let cursorPosition = null;
+      if (section) {
+        try {
+          let selection = window.getSelection().getRangeAt(0);
+          cursorPosition = selection.startOffset;
+          //if (selection.startContainer)
+          //console.log(selection.startContainer.nodeName);
+        } catch (e) {
+          
+        }
+      }
       return new Promise((resolve, reject) => {
         Vue.nextTick(() => {
           if (!(section instanceof Object)) {
@@ -394,7 +403,7 @@ export default {
               }
               this.setEditingSection(section, field);
             }
-            this.focusEditingField();
+            this.focusEditingField(false, cursorPosition);
             return resolve();
           } else {
             if (!this.hasError(this.editingSectionId)) {
@@ -512,7 +521,15 @@ export default {
             event.preventDefault();
             this.sectionEditMode(null);
             Vue.nextTick(() => {
-              this.sectionEditMode(targetSection, targetField);
+              this.sectionEditMode(targetSection, targetField)
+                .then(() => {
+                  Vue.nextTick(() => {
+                    let editingField = document.querySelector('[class^=edit-section-]');
+                    if (editingField) {
+                      editingField.select();
+                    }
+                  });
+                });
             });
           }
         }
@@ -554,9 +571,12 @@ export default {
     
     updateSection(update) {
       if (this.editingSectionId) {
-        return this.updateBookTocSection([this.editingSectionId, update])
+        let updateSectionId = this.editingSectionId;
+        return this.updateBookTocSection([updateSectionId, update])
           .then(response => {
-            this.sectionEditMode(null);
+            if (updateSectionId === this.editingSectionId) {
+              this.sectionEditMode(null);
+            }
             return Promise.resolve();
           });
       }
@@ -770,10 +790,13 @@ export default {
       });
     },
     
-    focusEditingField(scrollTo = false) {
+    focusEditingField(scrollTo = false, cursorPosition = null) {
       Vue.nextTick(() => {
         let el = document.getElementsByClassName('edit-section-' + this.editingFieldName);
         if (el && el[0]) {
+          if (cursorPosition !== null) {
+            this.setCursorPosition(cursorPosition);
+          }
           el[0].focus();
           if (scrollTo === 'middle') {
             el[0].scrollIntoView({
@@ -784,6 +807,30 @@ export default {
           }
         }
       });
+    },
+    
+    setCursorPosition(caretPos) {
+      if (caretPos === null) {
+        return;
+      }
+      let elem = document.getElementsByClassName('edit-section-' + this.editingFieldName);
+
+      if(elem && elem[0]) {
+        elem = elem[0];
+        if(elem.createTextRange) {
+          let range = elem.createTextRange();
+          range.move('character', caretPos);
+          range.select();
+        } else {
+          if(elem.selectionStart) {
+            elem.focus();
+            elem.setSelectionRange(caretPos, caretPos);
+          }
+          else {
+            elem.focus();
+          }
+        }
+      }
     },
     
     blurEditingField() {
@@ -864,7 +911,7 @@ export default {
 <style lang="less">
  fieldset.toc-items-list {
     padding-left: 5px;
-
+    position: static;
     .table-striped>tr:nth-of-type(odd) {
       background-color: #f9f9f9;
     }
@@ -1154,8 +1201,10 @@ export default {
         background-image: url(/static/preloader-bubble-20-white.png);
         display: inline-block;
         width: 20px;
-        height: 20px;
+        height: 25px;
         vertical-align: middle;
+        background-repeat: no-repeat;
+        background-position: center;
       }
     }
     .section-generating-hover {
@@ -1173,6 +1222,9 @@ export default {
     }
     .toc-buttons {
       display: table-row;
+      position: sticky;
+      top: 0;
+      background-color: white;
       .toc-button {
         display: table-cell;
         margin: 0px 5px;
@@ -1210,6 +1262,9 @@ export default {
     }
     .toc-display-settings {
       padding: 10px 7px 5px 7px;
+      position: sticky;
+      top: 34px;
+      background-color: white;
       div {
         display: inline-block;
         width: auto;
