@@ -1,6 +1,9 @@
 <template>
   <textarea class="resizable-textarea" 
     v-on:change="onValueChanged($event)"
+    v-on:blur="onBlur($event)"
+    v-on:keypress="onKeypress($event)"
+    v-on:keyup="onKeyup($event)"
     v-model="textareaValue"
     :disabled="disabled"
     rows="1">
@@ -34,6 +37,15 @@
         Vue.nextTick(() => {
           this.initSize();
         })
+      },
+      onBlur(event) {
+        this.$emit('onBlur', event);
+      },
+      onKeypress(event) {
+        this.$emit('onKeypress', event);
+      },
+      onKeyup(event) {
+        this.$emit('onKeyup', event);
       }
     },
     mounted () {

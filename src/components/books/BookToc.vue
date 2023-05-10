@@ -5,54 +5,72 @@
       <div class="preloader-spinner"></div>
     </template>
     <template v-else>
+      <TOCSettingsModal v-if="tocSettingsModalActive"
+        @close="closeSettings"
+        @save="saveSettings" />
       <div class="toc-buttons">
         <div class="toc-button">
-          <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()" v-if="adminOrLibrarian">
-            <i class="fa fa-eye-slash" v-if="!sectionsMode"></i>
-            <i class="fa fa-eye" v-else></i>
-            Sections
-          </button>
+          <template v-if="adminOrLibrarian">
+            <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()" v-if="!sectionsMode" title="Show sections">
+              <i class="fa fa-eye-slash"></i>
+              Sections
+            </button>
+            <button class="btn btn-default toggle-sections-mode" v-on:click="toggleSectionsMode()" title="Hide sections" v-else>
+              <i class="fa fa-eye"></i>
+              Sections
+            </button>
+          </template>
         </div>
-        <div class="toc-button">
+        <div class="toc-button -toc-actions">
           <template v-if="sectionsMode && adminOrLibrarian">
             <span class="btn btn-primary book-generating" v-if="tocSectionBook.isBuilding">
               <span class="book-generating-spinner"></span>
-              Rebuild
             </span>
             <template v-else>
-              <button class="btn btn-primary btn-build-book" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)">
-                <i class="fa fa-file-archive-o"></i>
-                <template v-if="!tocSectionBook.zipPath">Build</template>
-                <template v-else>Rebuild</template>
+              <button class="btn btn-default btn-build-book toc-book-settings" v-on:click="openSettings($event)" title="Name and Title generation pattern">
               </button>
-              <span class="btn btn-primary btn-build-book book-build-disabled" v-else>
-                <i class="fa fa-file-archive-o"></i>
-                {{tocSectionBook.zipPath ? 'Rebuild' : 'Build'}}
+              <button class="btn btn-primary btn-build-book toc-export" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)" title="Build">
+              </button>
+              <span class="btn btn-primary btn-build-book -disabled toc-export" title="Build" v-else>
+              </span>
+              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)" title="Download">
+              </a>
+              <span class="btn btn-primary -disabled btn-download-book" title="Download" v-else>
               </span>
             </template>
           </template>
         </div>
-        <div class="toc-button">
-          <template v-if="sectionsMode && adminOrLibrarian">
-            <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)">
-              <i class="fa fa-download"></i>
-              Download
-            </a>
-            <span class="btn btn-primary book-build-disabled btn-download-book" v-else>
-              <i class="fa fa-download"></i>
-              Download
-            </span>
-          </template>
-        </div>
-        <div class="toc-button">
-          <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)"><i class="fa fa-refresh refresh-toc"></i>Refresh</button>
+        <div class="toc-button -refresh-toc">
+          <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)" title="Refresh">
+            <i class="fa fa-refresh refresh-toc"></i>
+          </button>
         </div>
       </div>
       <div v-if="tocSectionBook.zipTime && sectionsMode" class="book-zip-time">
-        Latest build: {{convertTime(tocSectionBook.zipTime, true)}}
+        Latest build: {{convertTime(new Date(tocSectionBook.zipTime).toISOString(), true)}}
       </div>
       <!-- {{bookTocSections}} -->
       <div v-if="currentBookTocCombined.length > 0" class="toc-list">
+        <div class="toc-display-settings" v-if="sectionsMode">
+          <div>
+            <label>Display:</label>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" v-model="displaySettings.title" /><span></span>Title
+            </label>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" v-model="displaySettings.titleEn" /><span></span>Title English
+            </label>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" v-model="displaySettings.toc" /><span></span>TOC
+            </label>
+          </div>
+        </div>
         <!--<div :class="['toc-item', toc.level]" v-for="(toc, tocIdx) in tocs" v-bind:key="tocIdx">
           <span :class="['toc-item-number', toc.level]">{{toc.secnum?toc.secnum:''}}</span>
           <span class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</span>
@@ -61,22 +79,21 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
+                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug')" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
                     </div>
-                    <div class="-option -name">
-                      <template v-if="editingSectionId === toc.section.id">
-                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug']}]" 
-                          v-model="editingSlug"
-                          v-on:keyup.enter="blurEditingSlug(null)"
-                          v-on:change="updateSlug(editingSlug)"
-                          v-on:blur="blurEditingSlug(null)"
-                          v-on:input="editingSlugChanged($event)" />
-                        <span class="validation-error" v-if="validationErrors['slug']">{{validationErrors['slug']}}</span>
+                    <div :class="['-option -name', '-lang-' + toc.section.firstSectionBlock.language]">
+                      <template v-if="editingSectionId === toc.section.id && editingFieldName === 'slug'">
+                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug'][toc.section.id]}]" 
+                          v-model="editingFieldValue"
+                          v-on:keyup.enter="blurEditingField(null)"
+                          v-on:change="updateSectionField(editingFieldValue)"
+                          v-on:blur="blurEditingField(null)"
+                          v-on:input="editingFieldChanged($event)" />
                       </template>
-                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug}]" v-else>{{toc.section.slug}}</label>
+                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>{{toc.section.slug ? toc.section.slug : 'Section Name'}}</label>
                     </div>
                     <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
                     <div class="-option -remove -hidden">
@@ -87,17 +104,20 @@
                       <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
                       <div class="section-generating" v-if="toc.section.isBuilding"></div>
                       <template v-else>
-                        <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
-                        <i class="fa fa-file-archive-o" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
+                        <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
+                        <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
                       </template>
                     </div>
                     <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
-                      <i class="fa fa-download" title="Download"></i>
+                      <i class="" title="Download"></i>
                     </a>
                     <a class="-option -download -hidden" v-else>
-                      <i class="fa fa-download" title="Download" disabled></i>
+                      <i class="" title="Download" disabled></i>
                     </a>
                   </div>
+                    <span class="validation-error" v-if="validationErrors['slug'][toc.section.id]">
+                      {{validationErrors['slug'][toc.section.id].text}}
+                    </span>
                 </td>
               </tr>
             </template>
@@ -122,24 +142,88 @@
                 </template>
               </td>
               <template v-if="toc.level == 'toc1'">
-                <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td colspan="4" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+                <td :class="['toc-item-number', toc.level]" width="10">
+                  <template v-if="displayTOC">
+                    {{toc.secnum?toc.secnum:''}}
+                  </template>
+                </td>
+                <td colspan="4" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
+                  <template v-if="displayTOC">
+                    {{toc.content}}
+                  </template>
+                </td>
               </template>
               <template v-if="toc.level == 'toc2'">
                 <td></td>
-                <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+                <td :class="['toc-item-number', toc.level]" width="10">
+                  <template v-if="displayTOC">
+                    {{toc.secnum?toc.secnum:''}}
+                  </template>
+                </td>
+                <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
+                  <template v-if="displayTOC">
+                    {{toc.content}}
+                  </template>
+                </td>
               </template>
               <template v-if="toc.level == 'toc3'">
                 <td></td><td></td>
-                <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+                <td :class="['toc-item-number', toc.level]" width="10">
+                  <template v-if="displayTOC">
+                    {{toc.secnum?toc.secnum:''}}
+                  </template>
+                </td>
+                <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
+                  <template v-if="displayTOC">
+                    {{toc.content}}
+                  </template>
+                </td>
               </template>
               <template v-if="toc.level == 'toc4'">
                 <td></td><td></td><td></td>
-                <td :class="['toc-item-number', toc.level]" width="10">{{toc.secnum?toc.secnum:''}}</td>
-                <td :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">{{toc.content}}</td>
+                <td :class="['toc-item-number', toc.level]" width="10">
+                  <template v-if="displayTOC">
+                    {{toc.secnum?toc.secnum:''}}
+                  </template>
+                </td>
+                <td :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
+                  <template v-if="displayTOC">
+                    {{toc.content}}
+                  </template>
+                </td>
               </template>
+            </tr>
+            <tr :class="['toc-section-title', '-num-' + toc.section.index, '-lang-' + toc.section.firstSectionBlock.language]" v-if="displayTitle && toc.section && toc.section.id">
+              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title')" v-on:dblclick="sectionEditMode(toc.section, 'title')">
+                <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
+                  <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title'][toc.section.id]}]"
+                    v-model="editingFieldValue"
+                    v-on:keyup.enter="blurEditingField(null)"
+                    v-on:change="updateSectionField(editingFieldValue)"
+                    v-on:blur="blurEditingField(null)"
+                    v-on:input="editingFieldChanged($event)" />
+                </template>
+                <template v-else>
+                  <div class="section-title">
+                    <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]" :title="toc.section.title">{{toc.section.title || 'Define Title'}}</label>
+                  </div>
+                </template>
+              </td>
+            </tr>
+            <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEnSection(toc.section)">
+              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn')" v-on:dblclick="sectionEditMode(toc.section, 'titleEn')">
+                <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
+                  <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
+                    v-model="editingFieldValue"
+                    v-on:keyup.enter="blurEditingField(null)"
+                    v-on:change="updateSectionField(editingFieldValue)"
+                    v-on:blur="blurEditingField(null)"
+                    v-on:input="editingFieldChanged($event)" />
+                </template>
+                <template v-else>
+                  <label :class="[{'no-section-title': !toc.section.titleEn}]" :title="toc.section.titleEn">{{toc.section.titleEn || 'Define Title English'}}</label>
+                </template>
+              </td>
             </tr>
           </template>
         </table>
@@ -156,6 +240,7 @@
 import { mapGetters, mapActions } from 'vuex';
 import api_config from '../../mixins/api_config.js';
 import time_methods from '../../mixins/time_methods.js';
+import TOCSettingsModal from './details/TOCSettings.vue';
 import Vue from 'vue';
 
 export default {
@@ -170,9 +255,27 @@ export default {
       tocSectionCombined: [],
       editingSectionId: null,
       validationErrors: {
-        slug: ''
+        slug: {},
+        title: {},
+        titleEn: {},
       },
-      editingSlug: ''
+      editingFieldValue: '',
+      editingFieldName: '',
+      tocSettingsModalActive: false,
+      displaySettings: {
+        title: false,
+        titleEn: false,
+        toc: true
+      },
+      validationErrorsText: {
+        unique: {
+          slug: 'Section name is not unique',
+          title: '',
+        },
+        empty: {
+          slug: 'Define section Name'
+        }
+      }
     }
   },
 
@@ -180,11 +283,16 @@ export default {
     'bookId',
   ],
   
+  components: {
+    TOCSettingsModal
+  },
+  
   mixins: [api_config, time_methods],
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'bookTocSections', 'currentBookTocCombined', 'tocSectionBook', 'currentBookid', 'adminOrLibrarian']),
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid', 'adminOrLibrarian']),
+    ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined', 'bookTocSections']),
     buildBookButtonEnabled: {
       get() {
         let hasSections = this.currentBookTocCombined.find(toc => {
@@ -195,11 +303,30 @@ export default {
                 ) && hasSections;
       },
       cache: false
+    },
+    displayTOC: {
+      get() {
+        return this.sectionsMode ? this.displaySettings.toc : true;
+      },
+      cache: false
+    },
+    displayTitle: {
+      get() {
+        return this.sectionsMode ? this.displaySettings.title : false;
+      },
+      cache: false
+    },
+    displayTitleEn: {
+      get() {
+        return this.sectionsMode ? this.displaySettings.titleEn : false;
+      },
+      cache: false
     }
   },
 
   methods: {
-    ...mapActions(['freeze', 'unfreeze', 'loadBookToc', 'loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection', 'exportTocSection', 'exportTocSectionBook']),
+    ...mapActions(['freeze', 'unfreeze', 'loadBookToc']),
+    ...mapActions('tocSections', ['loadBookTocSections', 'updateBookTocSection', 'createBookTocSection', 'removeTocSection', 'exportTocSection', 'exportTocSectionBook', 'updateTocSectionBook']),
 
     goToBlock(blockId, ev) {
       //console.log('goToBlock', blockId, this.$route.name);
@@ -238,7 +365,26 @@ export default {
       this.sectionsMode = !this.sectionsMode;
     },
     
-    sectionEditMode(section) {
+    sectionEditMode(section, field, event) {
+      if (event && event.target) {
+        if (event.target.classList && event.target.classList.contains('fa')) {
+          return;
+        }
+        if (event.target.nodeName === 'I') {
+          return;
+        }
+      }
+      let cursorPosition = null;
+      if (section) {
+        try {
+          let selection = window.getSelection().getRangeAt(0);
+          cursorPosition = selection.startOffset;
+          //if (selection.startContainer)
+          //console.log(selection.startContainer.nodeName);
+        } catch (e) {
+          
+        }
+      }
       return new Promise((resolve, reject) => {
         Vue.nextTick(() => {
           if (!(section instanceof Object)) {
@@ -250,20 +396,18 @@ export default {
             }
           }
           if (section) {
-            if (this.editingSectionId !== section.id) {
-              if (this.hasError()) {
+            if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
+              if (this.editingSectionId && this.hasError()) {
                 this.showNameError();
                 return false;
               }
-              this.editingSectionId = section.id;
-              this.editingSlug = section.slug;
+              this.setEditingSection(section, field);
             }
-            this.focusEditingSlug();
+            this.focusEditingField(false, cursorPosition);
             return resolve();
           } else {
-            if (!this.hasError()) {
-              this.editingSectionId = null;
-              this.editingSlug = '';
+            if (!this.hasError(this.editingSectionId)) {
+              this.setEditingSection(null);
             }
             return resolve();
           }
@@ -271,16 +415,155 @@ export default {
       });
     },
     
-    validateSlug(slug) {
-      this.validationErrors['slug'] = '';
-      if (!slug) {
+    setEditingSection(section, field) {
+      if (section && section.id) {
+        this.editingSectionId = section.id;
+        this.editingFieldValue = section[field];
+        this.editingFieldName = field;
+        Vue.nextTick(() => {
+          let el = document.getElementsByClassName('edit-section-' + this.editingFieldName);
+          if (el && el[0]) {
+            el[0].addEventListener('keydown', this.moveToNextField);
+          }
+        });
+      } else {
+        this.editingSectionId = null;
+        this.editingFieldValue = '';
+        this.editingFieldName = '';
+      }
+    },
+    
+    moveToNextField(event) {
+      if (event) {
+        let isPrev = event.key === 'ArrowUp';
+        let isNext = event.key === 'ArrowDown';
+        if (isPrev || isNext) {
+          let targetSection = this.currentBookTocCombined.find(toc => {
+            return toc.section && toc.section.id === this.editingSectionId;
+          }).section;
+          let targetField;
+          if (!event.ctrlKey) {
+            if (this.editingFieldName === 'titleEn') {// move to title field
+              if (isPrev) {
+                if (this.displayTitle) {
+                  targetField = 'title';
+                } else {
+                  targetField = 'slug';
+                }
+              } else if (isNext) {
+                targetSection = this.currentBookTocCombined.find(toc => {
+                  return toc.section && toc.section.index === targetSection.index + 1;
+                });
+                if (targetSection) {
+                  targetSection = targetSection.section;
+                  targetField = 'slug';
+                }
+              }
+            } else if (this.editingFieldName === 'title') {
+              if (isPrev) {
+                targetField = 'slug';
+              } else if (isNext) {
+                if (this.displayTitleEnSection(targetSection)) {
+                  targetField = 'titleEn';
+                } else {
+                  targetSection = this.currentBookTocCombined.find(toc => {
+                    return toc.section && toc.section.index === targetSection.index + 1;
+                  });
+                  if (targetSection) {
+                    targetSection = targetSection.section;
+                    targetField = 'slug';
+                  }
+                }
+              }
+            } else if (this.editingFieldName === 'slug') {
+              if (isPrev) {
+                targetSection = this.currentBookTocCombined.find(toc => {
+                  return toc.section && toc.section.index === targetSection.index - 1;
+                });
+                if (targetSection) {
+                  targetSection = targetSection.section;
+                  targetField = 'titleEn';
+                  if (this.displayTitleEnSection(targetSection)) {
+                    targetField = 'titleEn';
+                  } else if (this.displayTitle) {
+                    targetField = 'title';
+                  } else {
+                    targetField = 'slug';
+                  }
+                }
+              } else if (isNext) {
+                if (this.displayTitle) {
+                  targetField = 'title';
+                } else if (this.displayTitleEnSection(targetSection)) {
+                  targetField = 'titleEn';
+                } else {
+                  targetSection = this.currentBookTocCombined.find(toc => {
+                    return toc.section && toc.section.index === targetSection.index + 1;
+                  });
+                  if (targetSection) {
+                    targetSection = targetSection.section;
+                      targetField = 'slug';
+                    }
+                  }
+              }
+            }
+          } else {
+            targetField = this.editingFieldName;
+            let targetIndex = isPrev ? targetSection.index - 1 : targetSection.index + 1;
+            targetSection = this.currentBookTocCombined.find(toc => {
+              return toc.section && toc.section.index === targetIndex;
+            });
+            if (targetSection) {
+              targetSection = targetSection.section;
+            }
+          }
+          if (targetField && targetSection) {
+            event.preventDefault();
+            this.sectionEditMode(null);
+            Vue.nextTick(() => {
+              this.sectionEditMode(targetSection, targetField)
+                .then(() => {
+                  Vue.nextTick(() => {
+                    let editingField = document.querySelector('[class^=edit-section-]');
+                    if (editingField) {
+                      editingField.select();
+                    }
+                  });
+                });
+            });
+          }
+        }
+      }
+    },
+    
+    validateSectionField(value, field, section_id = null) {
+      if (field !== 'slug') {// only slug now checked for unique and not empty
         return true;
       }
+      if (!section_id) {
+        section_id = this.editingSectionId;
+      }
+      let editingSection = this.currentBookTocCombined.find(tc => {
+        return tc.section && tc.section.id === section_id;
+      }).section;
+      if (!editingSection) {
+        return false;
+      }
+      delete this.validationErrors[field][editingSection.id];
+      //if (!value) {
+        //return true;
+      //}
+      if (!value) {
+        this.validationErrors[field][editingSection.id] = {text: this.validationErrorsText.empty[field], type: 'empty'};
+        this.$forceUpdate();
+        return false;
+      }
       let section = this.currentBookTocCombined.find(tc => {
-        return tc.section && tc.section.slug === slug && tc.section.id !== this.editingSectionId;
+        return tc.section && tc.section[field] === value && tc.section.id !== section_id;
       });
       if (section) {
-        this.validationErrors['slug'] = 'Section name is not unique';
+        this.validationErrors[field][editingSection.id] = {text: this.validationErrorsText.unique[field], type: 'unique'};
+        this.$forceUpdate();
         return false;
       }
       return true;
@@ -288,24 +571,43 @@ export default {
     
     updateSection(update) {
       if (this.editingSectionId) {
-        return this.updateBookTocSection([this.editingSectionId, update])
+        let updateSectionId = this.editingSectionId;
+        return this.updateBookTocSection([updateSectionId, update])
           .then(response => {
-            this.sectionEditMode(null);
+            if (updateSectionId === this.editingSectionId) {
+              this.sectionEditMode(null);
+            }
             return Promise.resolve();
           });
       }
     },
     
-    updateSlug(slug) {
-      slug = slug.trim();
+    updateSectionField(value) {
+      value = value.trim();
       if (this.editingSectionId) {
-        let tc = this.currentBookTocCombined.find(toc => {
-          return toc.section && toc.section.id === this.editingSectionId;
+        let section = this.bookTocSections.find(sect => {
+          return sect.id === this.editingSectionId;
         });
-        if (tc && tc.section) {
-          if (this.validateSlug(slug)) {
-            if (tc.section.slug !== slug) {
-              return this.updateSection({slug: slug, manualSlug: slug ? true : false, buildModified: tc.section.zipPath ? true : false})
+        if (section) {
+          if (!value || this.validateSectionField(value, this.editingFieldName)) {
+            if (section[this.editingFieldName] !== this.editingFieldValue) {
+              let update = {buildModified: section.zipPath ? true : false};
+              update[this.editingFieldName] = value;
+              if (value) {
+                let isManual = value ? true : false;
+                switch (this.editingFieldName) {
+                  case 'slug':
+                    update.manualSlug = isManual;
+                    break;
+                  case 'title':
+                    update.manualTitle = isManual;
+                    break;
+                  //case 'titleEn':
+                    //update.manualTitleEn = isManual;
+                    //break;
+                }
+              }
+              return this.updateSection(update)
                 .then(() => {
                   return Promise.resolve();
                 })
@@ -320,12 +622,12 @@ export default {
                   }
                   if (slugError) {
                     //tc.section.slug = slug;
-                    this.sectionEditMode(tc.section)
+                    this.sectionEditMode(section, this.editingFieldName)
                       .then(() => {
-                        //this.editingSlug = '';
+                        //this.editingFieldValue = '';
                         //Vue.nextTick(() => {
-                          this.editingSlug = slug;
-                          this.validationErrors.slug = slugError;
+                          this.editingFieldValue = value;
+                          this.validationErrors.slug[section.id] = slugError;
                           //let el = document.getElementsByClassName('edit-section-slug');
                           //if (el && el[0]) {
                             //el[0].value = '';
@@ -347,7 +649,7 @@ export default {
             this.sectionEditMode(null);
           } else {
             //setTimeout(() => {
-              this.sectionEditMode(tc.section);
+              this.sectionEditMode(section, this.editingFieldName);
             //}, 5000);
           }
         }
@@ -359,21 +661,28 @@ export default {
     },
     
     exportSection(id, ev) {
+      let section = this.bookTocSections.find(se => {
+        return se.id === id;
+      });
+      if (!section) {
+        return false;
+      }
+      if (!this.validateSectionField(section.slug, 'slug', section.id)) {
+        this.showNameError();
+        return false;
+      }
       if (this.checkOnAction(id, ev)) {
-        let toc = this.currentBookTocCombined.find(tocC => {
-          return tocC.section && tocC.section.id === id;
-        });
-        if (toc) {
-          toc.section.isBuilding = true;
-        }
+        section.isBuilding = true;
         return this.exportTocSection(id);
       }
     },
     
     exportBook(ev) {
-      if (this.checkOnAction(null, ev)) {
-        this.exportTocSectionBook();
+      if (!this.fullValidate()) {
+        this.showNameError();
+        return false;
       }
+      this.exportTocSectionBook();
     },
     
     downloadSectionLink(sectionId) {
@@ -384,18 +693,22 @@ export default {
       return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download`);
     },
     
-    hasError() {
+    hasError(section_id = null) {
       let hasError = false;
       Object.keys(this.validationErrors).forEach(k => {
         if (!hasError && this.validationErrors[k]) {
-          hasError = true;
+          if (!section_id && Object.keys(this.validationErrors[k]).length > 0) {
+            hasError = true;
+          } else if (section_id && this.validationErrors[k][section_id]) {
+            hasError = true;
+          }
         }
       });
       return hasError;
     },
     
-    editingSlugChanged(event) {
-      this.validationErrors['slug'] = '';
+    editingFieldChanged(event) {
+      delete this.validationErrors[this.editingFieldName][this.editingSectionId];
     },
     
     checkOnAction(sectionId = null, ev = null) {
@@ -410,27 +723,56 @@ export default {
     },
     
     showNameError() {
-      let currentSection = null;
-      let tc = this.currentBookTocCombined.find(toc => {
-        return toc.section && toc.section.id === this.editingSectionId;
-      });
-      if (tc && tc.section && tc.section.id) {
-        currentSection = tc.section;
-      }
-      this.$root.$emit('show-modal', {
-        title: 'Duplicate section name',
-        text: `Book section ${currentSection ? currentSection.index : ''} name is not unique.`,
-        buttons: [
-          {
-            title: 'Ok',
-            handler: () => {
-              this.$root.$emit('hide-modal');
-              this.focusEditingSlug('middle');
-            },
-            class: ['btn btn-primary']
+      let slugErrors = Object.keys(this.validationErrors.slug);
+      if (slugErrors.length > 0) {
+        let empty = [];
+        let unique = [];
+        slugErrors.forEach(sectionId => {
+          let section = this.bookTocSections.find(sc => {
+            return sc.id === sectionId;
+          });
+          if (section) {
+            switch (this.validationErrors.slug[sectionId].type) {
+              case 'empty':
+                empty.push(section.index);
+                break;
+              case 'unique':
+                unique.push(section.index);
+                break;
+            }
           }
-        ]
-      });
+        });
+        if (empty.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Define section name',
+            text: `Book section(s) ${empty.join(', ')} Name is not defined`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn', 'btn-primary'],
+              }
+            ]
+          });
+        } else if (unique.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Duplicate section name',
+            text: `Book section(s) ${unique.join(', ')} Name is not unique`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  //this.focusEditingField('middle');
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+        }
+      }
     },
     removeSection(id) {
       return this.removeTocSection(id)
@@ -444,14 +786,17 @@ export default {
     
     clearErrors() {
       Object.keys(this.validationErrors).forEach(k => {
-        this.validationErrors[k] = '';
+        this.validationErrors[k] = {};
       });
     },
     
-    focusEditingSlug(scrollTo = false) {
+    focusEditingField(scrollTo = false, cursorPosition = null) {
       Vue.nextTick(() => {
-        let el = document.getElementsByClassName('edit-section-slug');
+        let el = document.getElementsByClassName('edit-section-' + this.editingFieldName);
         if (el && el[0]) {
+          if (cursorPosition !== null) {
+            this.setCursorPosition(cursorPosition);
+          }
           el[0].focus();
           if (scrollTo === 'middle') {
             el[0].scrollIntoView({
@@ -463,20 +808,80 @@ export default {
         }
       });
     },
-    blurEditingSlug() {
+    
+    setCursorPosition(caretPos) {
+      if (caretPos === null) {
+        return;
+      }
+      let elem = document.getElementsByClassName('edit-section-' + this.editingFieldName);
+
+      if(elem && elem[0]) {
+        elem = elem[0];
+        if(elem.createTextRange) {
+          let range = elem.createTextRange();
+          range.move('character', caretPos);
+          range.select();
+        } else {
+          if(elem.selectionStart) {
+            elem.focus();
+            elem.setSelectionRange(caretPos, caretPos);
+          }
+          else {
+            elem.focus();
+          }
+        }
+      }
+    },
+    
+    blurEditingField() {
       let tc = this.currentBookTocCombined.find(toc => {
         return toc.section && toc.section.id === this.editingSectionId;
       });
-      if (tc && tc.section && tc.section.slug === this.editingSlug && !this.validationErrors.slug) {
+      if (tc && tc.section && tc.section[this.editingFieldName] === this.editingFieldValue && !this.validationErrors[this.editingFieldName][this.editingSectionId]) {
         this.sectionEditMode(null);
       }
+    },
+    openSettings() {
+      //this.$modal.show(TOCSettingsModal);
+      this.tocSettingsModalActive = true;
+    },
+    closeSettings() {
+      this.tocSettingsModalActive = false;
+    },
+    saveSettings(settings) {
+      this.tocSettingsModalActive = false;
+      let update = {};
+      if (this.tocSectionBook.namePattern !== settings.namePattern) {
+        this.tocSectionBook.namePattern = settings.namePattern;
+        update.namePattern = settings.namePattern;
+      }
+      if (this.tocSectionBook.titlePattern !== settings.titlePattern) {
+        this.tocSectionBook.titlePattern = settings.titlePattern;
+        update.titlePattern = settings.titlePattern;
+      
+      }
+      return this.updateTocSectionBook([this.tocSectionBook.id, update])
+    },
+    fullValidate() {
+      let errors = 0;
+      this.currentBookTocCombined.forEach(toc => {
+        if (toc.section && toc.section.id) {
+          errors+= this.validateSectionField(toc.section.slug, 'slug', toc.section.id) ? 0 : 1;
+        }
+      });
+      return errors > 0 ? false : true;
+    },
+    
+    displayTitleEnSection(section) {
+      return this.displayTitleEn && section && section.id && section.firstSectionBlock.language !== 'en';
+      
     }
   },
 
   mounted () {
     //console.log('mounted TOC', this.currBookId);
     this.loadBookTocProxy(true);
-    this.loadBookTocSections([]);
+    //this.loadBookTocSections([]);
     this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy)
   },
 
@@ -506,7 +911,7 @@ export default {
 <style lang="less">
  fieldset.toc-items-list {
     padding-left: 5px;
-
+    position: static;
     .table-striped>tr:nth-of-type(odd) {
       background-color: #f9f9f9;
     }
@@ -556,6 +961,32 @@ export default {
       }
       .toc-list-table {
         width: 100%;
+        .no-section-title {
+          color: rgba(0, 0, 0, 0.5);
+          font-style: italic;
+        }
+        .toc-section-title, .toc-section-title-en {
+          max-width: 290px;
+          label {
+            margin-left: 25px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 295px;
+          }
+          div.section-title {
+            width: 295px;
+            max-width: 295px;
+          }
+          &.-lang-fa, &.-lang-ar {
+            label, input {
+              direction: rtl;
+              max-width: 295px;
+              /*margin-left: 0px;*/
+              /*padding-right: 90px;*/
+            }
+          }
+        }
       }
       .section-options {
         display: table;
@@ -577,8 +1008,8 @@ export default {
                 transparent 55%, transparent
                 );
             padding: 3px 5px 3px 0px;
-            width: 300px;
-            max-width: 300px;
+            width: 295px;
+            max-width: 295px;
             color: gray;
             label {
               margin: 0px;
@@ -614,13 +1045,34 @@ export default {
             }
           }
           &.-download {
-            .fa[disabled] {
+            /*.fa[disabled] {
               color: #d6d6d6;
+            }*/
+            i {
+              background: url(/static/toc/download-section.png);
+              width: 24px;
+              height: 24px;
+              display: inline-block;
+              vertical-align: middle;
+              &[disabled] {
+                background: url(/static/toc/download-section-disabled.png);
+              }
             }
           }
           &.-build {
-            .fa[disabled] {
+            /*.fa[disabled] {
               color: #d6d6d6;
+            }*/
+            i {
+              background: url(/static/toc/build-section.png);
+              width: 24px;
+              height: 24px;
+              display: inline-block;
+              vertical-align: middle;
+              cursor: pointer;
+              &[disabled] {
+                background: url(/static/toc/build-section-disabled.png);
+              }
             }
             &.-building {
               vertical-align: middle;
@@ -643,7 +1095,7 @@ export default {
           }
         }
       }
-      tr.toc-section {
+      tr.toc-section, tr.toc-section-title, tr.toc-section-title-en {
         background-color: white;
       }
       .create-toc-section {
@@ -656,7 +1108,7 @@ export default {
         mask-image: url(/static/split-blocks.svg);
         cursor: pointer;
       }
-      .section-slug {
+      .section-slug, .section-title {
         &.-manual {
           color: #337ab7;
         }
@@ -688,15 +1140,49 @@ export default {
       }
     }
     .btn {
-      font-size: 12px;
+      font-size: 14px;
       padding: 4px 10px;
+      height: 34px;
+      font-weight: 400;
       i.fa {
         vertical-align: middle;
       }
-      &.book-build-disabled {
-        color: #b1b1b1;
+      &.toc-book-settings {
+        border: 1px solid #337AB7;
         i.fa {
-          color: #b1b1b1;
+          color: white;
+        }
+        background: url(/static/toc/settings.png);
+        width: 47px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      &.toc-export {
+        background: url(/static/toc/build.png);
+        width: 50px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: #337AB7;
+        &.-disabled {
+          /*background: url(/static/toc/build-disabled.png);*/
+          background-color: rgba(51, 122, 183, 0.5);
+          /*background-repeat: no-repeat;
+          background-position: center;*/
+          border: none;
+        }
+      }
+      &.btn-download-book {
+        background: url(/static/toc/download.png);
+        width: 45px;
+        height: 34px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: #337AB7;
+        &.-disabled {
+          background-color: rgba(51, 122, 183, 0.5);
+          border: none;
         }
       }
     }
@@ -715,8 +1201,10 @@ export default {
         background-image: url(/static/preloader-bubble-20-white.png);
         display: inline-block;
         width: 20px;
-        height: 20px;
+        height: 25px;
         vertical-align: middle;
+        background-repeat: no-repeat;
+        background-position: center;
       }
     }
     .section-generating-hover {
@@ -734,11 +1222,21 @@ export default {
     }
     .toc-buttons {
       display: table-row;
+      position: sticky;
+      top: 0;
+      background-color: white;
       .toc-button {
         display: table-cell;
         margin: 0px 5px;
         padding: 0px 5px;
         width: 105px;
+        &.-toc-actions {
+          width: 160px;
+        }
+        &.-refresh-toc {
+          width: 115px;
+          text-align: right;
+        }
       }
     }
     span.validation-error {
@@ -759,6 +1257,56 @@ export default {
         }
         .-visible {
           visibility: hidden;
+        }
+      }
+    }
+    .toc-display-settings {
+      padding: 10px 7px 5px 7px;
+      position: sticky;
+      top: 34px;
+      background-color: white;
+      div {
+        display: inline-block;
+        width: auto;
+        padding: 2px 14px 2px 0px;
+        label {
+          font-size: 14px;
+          font-weight: 400;
+          position: relative;
+        }
+        input[type="checkbox"] {
+          /*width: 18px;
+          height: 18px;
+          margin: 0px 5px 0px 0px;
+          vertical-align: middle;*/
+          width: 0px;
+          height: 0px;
+          visibility: hidden;
+        }
+        input[type="checkbox"] + span {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border: 1px solid #CCCCCC;
+          border-radius: 2px;
+          vertical-align: middle;
+          margin: 0px 5px 0px 0px;
+        }
+        input[type="checkbox"]:checked + span {
+          background-color: #337AB7;
+          &:after {
+            content: '';
+            position: absolute;
+            width: 11px;
+            height: 6px;
+            background: transparent;
+            top: 5px;
+            left: 4px;
+            border: 2px solid white;
+            border-top: none;
+            border-right: none;
+            transform: rotate(-45deg);
+          }
         }
       }
     }
