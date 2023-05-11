@@ -3,6 +3,7 @@
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
+          <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
           <div class="block-selection-info">
             <template v-if="!blockSelection.start._id">
               0 blocks selected
@@ -1354,7 +1355,8 @@
         audiobook: 'currentAudiobook',
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian',
-        allowAlignBlocksLimit: 'allowAlignBlocksLimit'})
+        allowAlignBlocksLimit: 'allowAlignBlocksLimit',
+        alignBlocksLimitMessage: 'alignBlocksLimitMessage'})
     },
     watch: {
       'audiobook': {
@@ -1711,6 +1713,12 @@
       border-left: 1px solid #ccc;
       margin-left: 3px;
       padding-left: 7px;
+    }
+    .align-blocks-limit {
+      padding: 0px 0px 0px 20px;
+    }
+    .red-message {
+      color: red;
     }
   }
   h4.panel-title {
