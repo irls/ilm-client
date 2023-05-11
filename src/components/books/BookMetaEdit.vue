@@ -266,7 +266,6 @@
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
@@ -765,7 +764,6 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
       currentBookCollection: 'currentBookCollection',
-      alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
       playingBlock: 'playingBlock'
     }),
@@ -2758,10 +2756,6 @@ ul.no-bullets {
   list-style-type: none;
   padding: 0;
   margin: 0;
-}
-.align-blocks-limit {
-  padding-left: 20px;
-  padding-bottom: 10px;
 }
 
 </style>
