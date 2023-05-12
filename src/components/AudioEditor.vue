@@ -167,7 +167,7 @@
 
   import _Playout from 'waveform-playlist/lib/Playout';
   import Track from 'waveform-playlist/lib/Track';
-  import { renderTrack } from '../store/audio/AudioTrackRender.js';
+  import { renderTrack, setState } from '../store/audio/AudioTrackMethods.js';
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
   import { setUpSource, onSourceEnded } from '../store/audio/AudioPlayout.js';
   import { updateEditor } from '../store/audio/AudioPlaylist.js';
@@ -260,6 +260,9 @@
         _Playout.prototype.setUpSource = function() {
           //console.log(self.audiosourceEditor.tracks[0].playout)
           setUpSource.call(this, self.playbackRate);
+        }
+        Track.prototype.setState = function(state) {
+          setState.call(this, state);
         }
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
@@ -786,7 +789,10 @@
 
               $('.playlist-overlay.state-select').on('mouseup', this._showSelectionBordersOnClick);
 
-              $('.playlist-overlay').on('click', (e) => {
+              $('.playlist-overlay').on('click, mouseup', (e) => {
+                if (e && e.type === 'mouseup' && e.button === 2) {// right mouse up during selecting
+                  return;
+                }
                 if (typeof this.audiosourceEditor !== 'undefined') {
                   let restart = this.isPlaying;
                   this.pause().then(() => {
@@ -834,7 +840,9 @@
                 if (e.button !== 0) {
                   return;
                 }
-
+                if (this.$refs.waveformContext) {
+                  this.$refs.waveformContext.close();
+                }
                 let stop = new Promise((resolve, reject) => {
                     if (this.isPlaying) {
                       return this.pause()
@@ -2406,6 +2414,9 @@
           return false;
         },
         onContext: function(e) {
+          if (!e || e.buttons !== 2) {// check for only right button pressed
+            return false;
+          }
           if (this.editingLocked) {
             return false;
           }
