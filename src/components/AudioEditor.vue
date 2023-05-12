@@ -2415,7 +2415,10 @@
           return false;
         },
         onContext: function(e) {
-          if (!e || e.buttons !== 2) {// check for only right button pressed
+          if (!e || e.button !== 2) {// check for only right button pressed
+            return false;
+          }
+          if (e && e.buttons === 3) {// two buttons pressed
             return false;
           }
           if (this.editingLocked) {
