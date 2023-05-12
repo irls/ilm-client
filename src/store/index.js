@@ -4651,7 +4651,7 @@ export const store = new Vuex.Store({
     discardAudioChanges({state}) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let queueBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit`;
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit`;
       if (queueBlock.partIdx !== null) {
         api_url+= '/part/' + queueBlock.partIdx;
       }
