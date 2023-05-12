@@ -842,6 +842,7 @@
                 }
                 if (this.$refs.waveformContext) {
                   this.$refs.waveformContext.close();
+                  this.contextPosition = null;
                 }
                 let stop = new Promise((resolve, reject) => {
                     if (this.isPlaying) {
