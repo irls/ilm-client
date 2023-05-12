@@ -19,7 +19,9 @@ export default class {
   }
 
   complete(x) {
-    this.emitSelection(x);
+    if (Math.abs(x - this.startX) > 0.1) {// avoid single cursor selection
+      this.emitSelection(x);
+    }
     this.active = false;
   }
 
