@@ -17,6 +17,9 @@ export default {
     },
     currentBookTocCombined: (state, getters, rootState) => {
       let currentBookTocCombined = [];
+      if (!rootState.adminOrLibrarian) {
+        return rootState.currentBookToc.data;
+      }
       if (!state.bookTocSections || state.bookTocSections.length === 0) return [];
       rootState.currentBookToc.data.forEach(toc => {
         let section = state.bookTocSections.find(s => {
