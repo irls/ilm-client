@@ -1918,7 +1918,8 @@ Save or discard your changes to continue editing`,
               }, 
               {
                 height: 'auto',
-                width: '440px'
+                width: '440px',
+                clickToClose: false
               }, 
               {
                 'closed': (e) => {

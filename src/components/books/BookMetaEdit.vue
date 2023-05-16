@@ -1928,7 +1928,8 @@ export default {
         }, 
         {
           height: 'auto',
-          width: '440px'
+          width: '440px',
+          clickToClose: false
         }, 
         {
           'closed': (e) => {
