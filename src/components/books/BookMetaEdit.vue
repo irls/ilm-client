@@ -84,39 +84,39 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="debounceUpdate('title', $event.target.value, $event, false)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title en</td>
-                  <td><input v-model='currentBook.title_en' v-on:change="updateWithDisabling('title_en', $event) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
+                  <td><input v-model='currentBook.title_en' v-on:change="debounceUpdate('title_en', $event.target.value, $event, false) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en']" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
 
                 <tr class='subtitle'>
                   <td>Subtitle</td>
-                  <td><input v-model='currentBook.subtitle' v-on:change="updateWithDisabling('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.subtitle' v-on:change="debounceUpdate('subtitle', $event.target.value, $event, false);" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]'  v-on:change="update('author', $event) " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
-                                                <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
-                                                  <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
-                                                </div>
-                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="update('author', $event); " :disabled="!allowMetadataEdit">
-                                                <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
-                                                  <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
-                                                </div>
-                                               <button v-if="i !== 0 && allowMetadataEdit" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
-                    <br/>
+                    <input v-model='currentBook.author[0]' v-on:change="debounceUpdate('author', $event.target.value, $event);" :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
+                    <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
+                      <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
+                      <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', currentBook.author);" >Unknown</div>
+                    </div>
+                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="debounceUpdate('author', $event.target.value, $event);" :disabled="!allowMetadataEdit">
+                      <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
+                        <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
+                        <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', currentBook.author);" >Unknown</div>
+                      </div>
+                      <button v-if="i !== 0 && allowMetadataEdit" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
+                      <br/>
                     </template>
                     <p v-if="allowMetadataEdit" style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author']" class="validation-error" style="text-align: right !important;">Define Author</span>
@@ -125,11 +125,11 @@
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author en</td>
-                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="update('author_en', $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
-                                                <div class="dropdown" v-if="allowMetadataEdit">
-                                                  <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                                                  <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
-                                                </div>
+                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="debounceUpdate('author_en', $event.target.value, $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
+                    <div class="dropdown" v-if="allowMetadataEdit">
+                      <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
+                      <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; debounceUpdate('author_en', 'Unknown');" >Unknown</div>
+                    </div>
                     <span style="text-align: right !important;" v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
 
                   </td>
@@ -138,7 +138,7 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.language' @change="change('language')" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
+                    <select class="form-control" v-model='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
                       <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
                       <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                     </select>
@@ -150,7 +150,13 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL slug</legend>
-                  <input v-model='currentBook.slug' v-on:change="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
+                  <input v-model='currentBook.slug'
+                  v-on:change="lockLanguage = true; debounceUpdate('slug', $event.target.value,  $event);"
+                  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 "
+                  :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]"
+                  maxlength="100" style="width: 100%;"
+                  :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug"
+                  :class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }" />
                   <br><span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug']" class="validation-error">Define URL Slug</span>
             </fieldset>
 
@@ -164,7 +170,7 @@
                 <tr class='category'>
                   <td>Category</td>
                   <td>
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="change('category')" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="debounceUpdate('category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <template v-for="(data, index) in subjectCategories">
                         <optgroup :label="data.group">
                           <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
@@ -178,7 +184,7 @@
                   <td>Difficulty</td>
                   <td>
                     <input v-model="currentBook.difficulty" :disabled="!allowMetadataEdit"
-                           v-on:change="updateWithDisabling('difficulty',$event,100)"  id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
+                           v-on:change="debounceUpdate('difficulty', $event.target.value, $event, true)" id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
                             'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{(this.validationErrorDifficulty )}}</span>
 <!--                    <span class="validation-error" >{{(validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'])}}</span>-->
@@ -187,7 +193,7 @@
 
                 <tr class='trans'>
                   <td>Translated by</td>
-                  <td><input v-model='currentBook.translator'  v-on:change="updateWithDisabling('translator', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.translator'  v-on:change="debounceUpdate('translator', $event.target.value, $event, true)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='transfrom'>
@@ -195,10 +201,10 @@
                   <!--<td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td>-->
                   <td>
                     <div class="trans-from-wrapper">
-                      <select id="select-field" class="form-control" v-model='currentBook.transfrom' v-on:change="updateWithDisabling('transfrom', $event)" :key="currentBookid" :disabled="!allowMetadataEdit">
+                      <select id="select-field" class="form-control" v-model='currentBook.transfrom' v-on:change="debounceUpdate('transfrom', $event.target.value, $event, true)" :key="currentBookid" :disabled="!allowMetadataEdit">
                         <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                       </select>
-                      <i class="pi pi-times" v-if="languages.hasOwnProperty(currentBook.transfrom)" v-on:click="updateWithDisabling('transfrom', '')"></i>
+                      <i class="pi pi-times" v-if="languages.hasOwnProperty(currentBook.transfrom)" v-on:click="debounceUpdate('transfrom', '', $event, true)"></i>
                     </div>
                   </td>
                 </tr>
@@ -230,21 +236,21 @@
             <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">
               <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
                 <div v-else class='coverimg-wrap'></div>
               </div>
               <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
             </template>
             <template v-else>
               <div class="coverimg pull-right">
-                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
               </div>
             </template>
           </fieldset>
 
           <fieldset class='description brief'>
             <legend>Brief description</legend>
-            <resizable-textarea @valueChanged="update('description_short', $event)"
+            <resizable-textarea @valueChanged="debounceUpdate('description_short', $event.target.value, $event)"
               :initValue="currentBook.description_short"
               ref="descriptionShort"
               :disabled="!allowMetadataEdit">
@@ -253,7 +259,7 @@
 
           <fieldset class='description long'>
             <legend>Long description</legend>
-            <resizable-textarea @valueChanged="update('description', $event)"
+            <resizable-textarea @valueChanged="debounceUpdate('description', $event.target.value, $event)"
               :initValue="currentBook.description"
               ref="descriptionLong"
               :disabled="!allowMetadataEdit">
@@ -282,7 +288,7 @@
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', '') } : {}">
+                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', '') } : {}">
                       <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -290,7 +296,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ocean') } : {}">
+                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ocean') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -298,7 +304,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ffa') } : {}">
+                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ffa') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -310,7 +316,7 @@
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x') } : {}">
+                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x') } : {}">
                       <i v-if="currentBook.numbering === 'x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -318,7 +324,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x_x') } : {}">
+                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x_x') } : {}">
                       <i v-if="currentBook.numbering === 'x_x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -326,7 +332,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'none') } : {}">
+                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'none') } : {}">
                       <i v-if="currentBook.numbering === 'none'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -544,7 +550,7 @@
     <book-edit-cover-modal
       :show="bookEditCoverModalActive"
       @closed="bookEditCoverModalActive = false"
-      :img="currentBook"
+      :img="currentBookFiles"
     ></book-edit-cover-modal>
 
     <modal :show.sync="generatingAudiofile" :backdrop="false" effect="fade">
@@ -608,6 +614,30 @@ Vue.use(v_modal, {dialog: true});
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
+
+function _debounce (func, timeout = 500) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func.apply(this, args);
+    }, timeout);
+  };
+};
+
+function _cacheDebounce (beforeHook, timeHook, timeout = 500) {
+  let timer, accum = [];
+  return (...args) => {
+    if (beforeHook.apply(this, args)) {
+      clearTimeout(timer);
+      accum.push(args);
+      timer = setTimeout(() => {
+        timeHook.apply(this, accum);
+        accum = []
+      }, timeout);
+    }
+  };
+};
 
 export default {
 
@@ -1017,26 +1047,25 @@ export default {
   watch: {
 
     currentBookMeta: {
-      handler (val) {
-        this.init();
-        this.lockLanguage = false;
-        //this.handleHashTags++;  // to force reload hashTags template
-
-        this.$refs['hashTags'].name = '';
+      handler (val, oldVal) {
+        if (oldVal.bookid === '' || oldVal.bookid !== val.bookid) {
+          this.init();
+          this.lockLanguage = false;
+          //this.handleHashTags++;  // to force reload hashTags template
+          this.$refs['hashTags'].name = '';
+        }
       },
       deep: true
     },
-    currentBookFiles: {
+    /*currentBookFiles: {
       handler (val) {
         this.currentBook.coverimg = this.currentBookFiles.coverimg
       },
       deep: true
     },
     currentBookBlocksLeft: {
-      handler(val) {
-
-      }
-    },
+      handler(val) {}
+    },*/
     audiobook: {
       handler(val) {
 
@@ -1154,7 +1183,8 @@ export default {
   },
 
   created () {
-    this.init()
+    this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, 500);
+    this.init();
   },
 
   methods: {
@@ -1286,7 +1316,7 @@ export default {
     },
 
     ttsUpdate(key, value) {
-      this.liveUpdate(key, value)
+      this.debounceUpdate(key, value)
     },
 
 
@@ -1295,7 +1325,7 @@ export default {
         return;
 
       this.currentBook.hashTags.splice(i,1)
-      this.liveUpdate('hashTags', this.currentBook.hashTags)
+      this.debounceUpdate('hashTags', this.currentBook.hashTags)
     },
     addTag(tag){
       if (!this.adminOrLibrarian)
@@ -1305,37 +1335,41 @@ export default {
         this.currentBook.hashTags.push(tag);
       else
         this.currentBook.hashTags = [tag];
-      this.liveUpdate('hashTags', this.currentBook.hashTags)
+      this.debounceUpdate('hashTags', this.currentBook.hashTags)
     },
 
-    change (key) {
-      this.liveUpdate(key, this.currentBook[key])
-      //if changed language let's refresh the page for update default block & footnote language.
+    debounceUpdate () {
+      // template function, will redefine in created() hook for debounce.
+    },
 
-      if (key == 'language'){
-        setTimeout(() => {
-          this.reloadBook()
-          .then(() => {
-            this.$root.$emit('book-reimported');
-            this.isBatchProgress = false;
-          })
-        }, 1500)
+    beforeMetaUpdateHook (...args) {
+      let [key, value = null, _event = false, disable = false] = args;
+
+      if (this.requiredFields[this.currentBook.bookid]
+      && this.requiredFields[this.currentBook.bookid][key]) {
+        if (key != 'author'){
+          delete this.requiredFields[this.currentBook.bookid][key];
+        } else {
+          if (this.currentBookMeta.author.join("").length !== 0){
+            delete this.requiredFields[this.currentBook.bookid][key];
+          }
+        }
       }
-    },
-    updateWithDisabling(key, event, debounceTime){
-      if(!debounceTime)
-        debounceTime = false;
 
-      return this.update(key, event, debounceTime, true);
-    },
+      if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
+      if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
 
-    update(key, event, debounceTime, disable){
-      if(!debounceTime)
-        debounceTime = false;
-      if(!disable)
-        disable = false;
-
-      if(key =='difficulty'){
+      if (key == 'difficulty') {
 
         let validationErrors = '';
 
@@ -1353,33 +1387,106 @@ export default {
         }
 
         if(validationErrors !=this.validationErrors['difficulty'] ){
-          // this.validationErrors[this.currentBook.bookid]['difficulty'] = validationErrors;
           this.validationErrorDifficulty = validationErrors;
         }
-        if(validationErrors && event && disable){
-          event.target.toggleAttribute('disable');
-          return;
+        if(validationErrors && _event && disable){
+          _event.target.toggleAttribute('disable');
+          return false;
         }
 
       }
 
-      if(disable && event) {
-        event.target.disabled = true;
+      //-- Set values immediately because of controls -- { --//
+      if (key === 'numbering') {
+        this.currentBook[key] = value;
       }
-      if(debounceTime){
-        let debouncedFunction = _.debounce((key,event)=>{
-          let val = typeof event === 'string' ? event : event.target.value;
-          this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
 
-        },  debounceTime, {
-          'leading': false,
-          'trailing': true
-        });
-        debouncedFunction(key,event);
-      }else{
-        let val = typeof event === 'string' ? event : event.target.value;
-        this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
+      let keys = key.split('.');
+      if (keys.length > 1) {
+        if (keys[0] && ['styles'].includes(keys[0])) {
+          this.currentBook[keys[0]][keys[1]] = value;
+        }
       }
+      //-- } -- end -- Set values immediately because of controls --//
+
+      if (_event && _event.target) {
+        if (disable) {
+          _event.target.disabled = true;
+        }
+      }
+      return true;
+    },
+
+    updateMetaHook (...args) {
+      let targets = [];
+      const update = args.reduce((acc, arg)=>{
+        let [key, value = null, _event = false, disable = false] = arg;
+
+        if (_event && _event.target) {
+          if (value === null) {
+            value = _event.target.value;
+          }
+          if (disable) {
+            targets.push(_event.target);
+          }
+        }
+
+        let keys = key.split('.');
+        key = keys[0];
+        if (keys.length > 1) {
+          const prevVal = this.currentBook[keys[0]];
+          prevVal[keys[1]] = value;
+          value = prevVal;
+        }
+
+        if (key == 'author') value = this.currentBook.author;
+
+        acc[key] = value;
+
+        // Batch updates
+        if (key === 'language') {
+          acc.voices = {};
+        }
+
+        return acc;
+      }, {});
+
+      //console.log(`debounceUpdate.update: `, update);
+      return this.updateBookMeta(update)
+      .then((response)=>{
+
+        targets.forEach((target)=>{
+          target.disabled = false
+        });
+
+        if (response && response.bookid === this.currentBook.bookid) {// ILM-5595 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
+          this.currentBook = Object.assign(this.currentBookMeta, update);
+          this.currentBook.coverimg = this.currentBookFiles.coverimg;
+
+          this.lockLanguage = false;
+          if (Object.keys(update).includes('numbering')) {
+            this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+          }
+
+          if (Object.keys(update).includes('language')) {
+            setTimeout(() => {
+              this.reloadBook()
+              .then(() => {
+                this.$root.$emit('book-reimported');
+                this.isBatchProgress = false;
+              })
+            }, 1500)
+          }
+        }
+        return response;
+      })
+      .catch(err => {
+        if (err instanceof Error) {
+          console.error(err);
+          //return BPromise.reject(err);
+        };
+        return true;
+      });
     },
 
     liveUpdate (key, value, event) {
@@ -1389,39 +1496,40 @@ export default {
       //      return ;
       //bad conflict fix
 
-        if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
-          if (key != 'author'){
+      //console.log(`liveUpdate: `, key, value, event);
+
+      if (this.requiredFields[this.currentBook.bookid]
+      && this.requiredFields[this.currentBook.bookid][key]) {
+        if (key != 'author'){
+          delete this.requiredFields[this.currentBook.bookid][key];
+        } else {
+          if (this.currentBookMeta.author.join("").length !== 0){
             delete this.requiredFields[this.currentBook.bookid][key];
-          } else {
-            if (this.currentBookMeta.author.join("").length !== 0){
-              delete this.requiredFields[this.currentBook.bookid][key];
-            }
           }
         }
+      }
 
-        if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
-        {
-            try {
-              delete this.requiredFields[this.currentBook.bookid]['slug'];
-            } catch (err){
-            }
-        }
-        if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
-        {
-            try {
-              delete this.requiredFields[this.currentBook.bookid]['slug'];
-            } catch (err){
-            }
-        }
+      if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
+      if (this.currentBook.author != 'en' && (key == 'title_en' || key == 'author_en'))
+      {
+        try {
+          delete this.requiredFields[this.currentBook.bookid]['slug'];
+        } catch (err) {}
+      }
 
-      var keys = key.split('.');
+      let keys = key.split('.');
       key = keys[0];
       if (keys.length > 1) {
           this.currentBook[keys[0]][keys[1]] = value;
           value = this.currentBook[keys[0]];
       }
 
-      var update = {
+      let update = {
         [key]: value
       }
 
@@ -1430,22 +1538,33 @@ export default {
         update.voices = {};
       }
 
+      //console.log(`updateBookMeta.update: `, update);
+
       return this.updateBookMeta(update)
       .then((response)=>{
-        if(event)
+
+        if (event) {
           event.target.disabled  = false ;
+        }
+
+        //console.log(`response: `, response);
+        //console.log(`update.response: `, key, update[key], response[key]);
+        //this.currentBook[key] = response[key];
 
         this.lockLanguage = false;
         if (key == 'numbering') {
           this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
         }
 
-          return response;
+        return response;
 
       })
       .catch(err => {
-        console.log(err);
-        return BPromise.reject(err);
+        if (err instanceof Error) {
+          console.error(err);
+          return BPromise.reject(err);
+        };
+        return true;
       });
 
     },
@@ -1484,7 +1603,7 @@ export default {
       var self = this
       self.showSharePrivateBookModal = false
         //axios.put(API_URL + 'books/' + self.currentBook._id + '/share_private')
-        self.liveUpdate('private', false)
+        self.debounceUpdate('private', false)
           .then((doc) => {
             axios.put(self.API_URL + 'task/' + self.currentBook._id + '/finish_cleanup')
               .then((doc) => {
@@ -1496,13 +1615,13 @@ export default {
                   self.$store.dispatch('getCurrentJobInfo');
                   self.$root.$emit('set-alert', 'Text cleanup task finished')
                 } else {
-                  self.liveUpdate('private', true)
+                  self.debounceUpdate('private', true)
                   this.$root.$emit('set-error-alert', doc.data.error);
                 }
               })
               .catch((err, test) => {
                 self.textCleanupProcess = false
-                self.liveUpdate('private', true)
+                self.debounceUpdate('private', true)
               })
           })
           .catch((err) => {
@@ -1511,12 +1630,14 @@ export default {
     },
     addAuthor() {
       this.currentBook.author.push('');
-      this.liveUpdate('author', this.currentBook.author);
+      this.debounceUpdate('author', false, this.currentBook.author);
+      //this.liveUpdate('author', this.currentBook.author);
     },
     removeAuthor(i) {
       if (i > 0 || this.currentBook.author.length > 1) {
         this.currentBook.author.splice(i, 1);
-        this.liveUpdate('author', this.currentBook.author);
+        this.debounceUpdate('author', false, this.currentBook.author);
+        //this.liveUpdate('author', this.currentBook.author);
       }
     },
     publish() {
@@ -1585,7 +1706,7 @@ export default {
     },
     startGenerateAudiofile() {
       this.currentBook.mergedAudiofile = null;
-      this.liveUpdate('mergedAudiofile', null);
+      this.debounceUpdate('mergedAudiofile', null);
       this.generatingAudiofile = true;
       axios.get(this.API_URL + 'books/' + this.currentBook.bookid + '/audiobooks/download')
       //:href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/download'" target="_blank"
@@ -2143,7 +2264,7 @@ export default {
         this.validationErrors[this.currentBook.bookid]['extid'] = ['Only lowercase letters (a-z) and numbers.']
       } else {
         this.validationErrors[this.currentBook.bookid]['extid'] = [];
-        this.liveUpdate('extid', event.target.value);
+        this.debounceUpdate('extid', event.target.value);
       }
     }, 500),
 
@@ -2151,7 +2272,7 @@ export default {
       let array = event.target.value.split(', ');
       console.log(array);
       this.currentBook.hashTags = array;
-      this.liveUpdate('hashTags', this.currentBook.hashTags)
+      this.debounceUpdate('hashTags', this.currentBook.hashTags)
     },
 
     updateWeigth (event,debounceTime) {
@@ -2186,7 +2307,7 @@ export default {
         let debouncedFunction = _.debounce((key,event)=>{
           let val = typeof event === 'string' ? event : event.target.value;
           val = val ? this.parseFloatToFixed(val, 2) : null;
-          this.liveUpdate(key, val, event)
+          this.debounceUpdate(key, val, event)
 
         },  debounceTime, {
           'leading': false,
@@ -2238,10 +2359,10 @@ export default {
     setTrimSilenceConfig(val, ev) {
       switch (val) {
         case 'audio_tts_narration':
-          return this.liveUpdate('trim_silence_config', {audio_file: true, tts: true, narration: true}, ev);
+          return this.debounceUpdate('trim_silence_config', {audio_file: true, tts: true, narration: true}, ev);
           break;
         case 'tts_narration':
-          return this.liveUpdate('trim_silence_config', {audio_file: false, tts: true, narration: true}, ev);
+          return this.debounceUpdate('trim_silence_config', {audio_file: false, tts: true, narration: true}, ev);
           break;
       }
     },

@@ -277,8 +277,9 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
-    pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
-  },
+    pauseLiveDBBlocks: [], // blocks with pending updates, shall be skipped from liveDB updates
+    pauseAfterBlockXhr: null
+  }, // end state
 
   getters: {
     getSelectionModalProgress: state=>state.SelectionModalProgress,
@@ -797,6 +798,9 @@ export const store = new Vuex.Store({
         if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
+        if (meta.hasOwnProperty('coverimgURL')) {
+          this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: meta.coverimgURL});
+        }
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
@@ -814,6 +818,7 @@ export const store = new Vuex.Store({
         //state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
         state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?v=' + (state.currentBookMeta['@version'] || Date.now());
       } else state.currentBookFiles[fileObj.fileName] = false;
+      //console.log(`state.currentBookFiles[${fileObj.fileName}] : `, state.currentBookFiles[fileObj.fileName] );
     },
 
     SET_CURRENT_COLLECTION (state, _id) {
@@ -873,7 +878,7 @@ export const store = new Vuex.Store({
       Vue.prototype.user_id = session ? session.user_id : null;
     },
 
-    updateBookMeta (state, meta) {
+    SET_CURRENTBOOK_META_RAW (state, meta) {
       state.currentBookMeta = meta
     },
 
@@ -1624,7 +1629,7 @@ export const store = new Vuex.Store({
                         && data.collection.slug.trim().length) {
                         delete collection.validationErrors.slug;
                       }
-                      state.bookCollectionsAll[cIdx] = {...collection, ...data.collection};
+                      state.bookCollectionsAll[cIdx] = new Collection({...collection, ...data.collection});
                       commit('PREPARE_BOOK_COLLECTIONS');
                     }
                   }
@@ -1653,9 +1658,9 @@ export const store = new Vuex.Store({
           }
         });
 
-        console.log(`liveDB.startWatch.pubMetaV: `);
+        //console.log(`liveDB.startWatch.pubMetaV: `);
         state.liveDB.startWatch('pubMetaV', 'pubMetaV', {bookid: 'pubMetaV'}, (data) => {
-          console.log(`liveDB.startWatch.pubMetaV.data: `, data);
+          //console.log(`liveDB.startWatch.pubMetaV.data: `, data);
           const cIdx = state.bookCollectionsAll.findIndex(c => {
             return c.id === data.meta.collection;
           });
@@ -1665,7 +1670,7 @@ export const store = new Vuex.Store({
               return c.bookid === data.meta.bookid;
             });
             if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
-              console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              //console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
@@ -1907,9 +1912,9 @@ export const store = new Vuex.Store({
 
           //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-            console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+            //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              // console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+              //console.log('metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
@@ -1953,6 +1958,21 @@ export const store = new Vuex.Store({
           dispatch('updateBookVersion', {minor: true})
           .then(()=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
+            return Promise.resolve();
+          })
+        }).catch(err => {
+          return Promise.reject(err);
+        })
+      }
+    },
+
+    removeBookCover({commit, state, dispatch}, data) {
+      if (state.currentBookMeta.bookid) {
+        return axios.delete(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
+        .then(doc => {
+          dispatch('updateBookVersion', {minor: true})
+          .then(()=>{
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
             return Promise.resolve();
           })
         }).catch(err => {
@@ -2030,9 +2050,10 @@ export const store = new Vuex.Store({
     updateBookMeta({state, dispatch, commit}, update) {
       //console.log(`updateBookMeta.update: `, update);
 
+      update = {...update};
       update.bookid = state.currentBookMeta._id;
 
-      let currMeta = state.currentBookMeta;
+      let currMeta = {...state.currentBookMeta};
       if (!currMeta.hasOwnProperty('publishLog')){
         currMeta.publishLog = {publishTime: false, updateTime: false}
       }
@@ -2045,10 +2066,10 @@ export const store = new Vuex.Store({
         if (update.major && update.major == true) updateVersion = {major: true}
       }
 
-      if (!(Object.keys(update).length === 2 &&
-              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined') &&
-              typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
-              //console.log('Update version');
+      if (!(Object.keys(update).length === 2
+        && (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined')
+        && typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
+        //console.log('Update version');
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
           let versions = currMeta.version.split('.');
           if (update.hasOwnProperty('hashTags')){
@@ -2083,28 +2104,26 @@ export const store = new Vuex.Store({
             }
           }
         }
-        if (currMeta.hasOwnProperty('publishLog')){
-          //console.log('income publishLog: ', currMeta.publishLog);
-          var publishLogAction = currMeta.publishLog || {publishTime: false, updateTime: false};
-          publishLogAction.updateTime = Date();
-        } else {
-          var publishLogAction = {
+        if (!update.hasOwnProperty('private')) {
+          let publishLogAction = {
             publishTime : false,
             updateTime : Date()
           };
-        }
-        if (!update.hasOwnProperty('private'))
+          if (currMeta.hasOwnProperty('publishLog') && currMeta.publishLog.publishTime){
+            publishLogAction.publishTime = currMeta.publishLog.publishTime;
+          }
           update.publishLog = publishLogAction;
-
+        }
       } else {
         delete update.major;
       }
 
-      let newMeta = Object.assign(state.currentBookMeta, update);
-      commit('SET_CURRENTBOOK_META', newMeta);
+      //let newMeta = Object.assign(state.currentBookMeta, update);
+      //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
+      //return Promise.resolve('No data updated');
 
-      return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
+      return axios.put(`${state.API_URL}meta/${state.currentBookMeta._id}`, update)
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
@@ -2114,7 +2133,7 @@ export const store = new Vuex.Store({
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
             }
 
-            let checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
+            const checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
             if (response.data.bookid === checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
               state.currentBookMeta['@version'] = response.data['@version'];
 
@@ -2133,6 +2152,7 @@ export const store = new Vuex.Store({
               commit('PREPARE_BOOK_COLLECTIONS');
             }
 
+            //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
@@ -4899,8 +4919,8 @@ export const store = new Vuex.Store({
       }
       return axios.put(`${state.API_URL}collection/${state.currentCollection._id}`, data)
         .then((response) => {
+          let updObj = {};
           if (response && response.data) {
-            let updObj = {};
             Object.keys(data).filter(k => {
               return !state.currentCollection.validationErrors[k];
             }).forEach(k => {
@@ -4918,10 +4938,17 @@ export const store = new Vuex.Store({
               }
             }
 
-            state.currentCollection = {...state.currentCollection, ...updObj};
-            //commit('PREPARE_BOOK_COLLECTIONS');
+            const cIdx = state.bookCollectionsAll.findIndex(c => {
+              return c.id === state.currentCollection.id;
+            });
+
+            if (cIdx > -1) {
+              const collection = state.bookCollectionsAll[cIdx];
+              state.bookCollectionsAll[cIdx] = new Collection({...collection, ...response.data});
+              commit('PREPARE_BOOK_COLLECTIONS');
+            }
           }
-          return Promise.resolve();
+          return updObj;
         })
         .catch(err => {
           return Promise.reject(err);
