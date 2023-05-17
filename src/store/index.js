@@ -843,6 +843,7 @@ export const store = new Vuex.Store({
         //state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
         state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?v=' + (state.currentBookMeta['@version'] || Date.now());
       } else state.currentBookFiles[fileObj.fileName] = false;
+      //console.log(`state.currentBookFiles[${fileObj.fileName}] : `, state.currentBookFiles[fileObj.fileName] );
     },
 
     SET_CURRENT_COLLECTION (state, _id) {
@@ -2063,6 +2064,21 @@ export const store = new Vuex.Store({
           dispatch('updateBookVersion', {minor: true})
           .then(()=>{
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: doc.data.coverimgURL});
+            return Promise.resolve();
+          })
+        }).catch(err => {
+          return Promise.reject(err);
+        })
+      }
+    },
+
+    removeBookCover({commit, state, dispatch}, data) {
+      if (state.currentBookMeta.bookid) {
+        return axios.delete(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
+        .then(doc => {
+          dispatch('updateBookVersion', {minor: true})
+          .then(()=>{
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
             return Promise.resolve();
           })
         }).catch(err => {

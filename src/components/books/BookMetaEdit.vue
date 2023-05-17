@@ -241,14 +241,14 @@
             <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">
               <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
                 <div v-else class='coverimg-wrap'></div>
               </div>
               <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
             </template>
             <template v-else>
               <div class="coverimg pull-right">
-                <img height="80" v-if="currentBook.coverimg" v-bind:src="currentBook.coverimg" />
+                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
               </div>
             </template>
           </fieldset>
@@ -567,7 +567,7 @@
     <book-edit-cover-modal
       :show="bookEditCoverModalActive"
       @closed="bookEditCoverModalActive = false"
-      :img="currentBook"
+      :img="currentBookFiles"
     ></book-edit-cover-modal>
 
     <modal :show.sync="generatingAudiofile" :backdrop="false" effect="fade">
