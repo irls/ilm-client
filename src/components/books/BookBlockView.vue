@@ -82,7 +82,7 @@
                       <li v-else class="disabled">
                         <i class="fa menu-preloader" aria-hidden="true"></i>
                         Insert block after</li>
-                      <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
+                      <li v-if="!isBlockLocked(prevId)" @click="confirmDeleteBlock()">
                         <i class="fa fa-trash" aria-hidden="true"></i>
                         Delete block</li>
                       <li v-else class="disabled">
@@ -513,63 +513,6 @@
     <!--<div :class="['table-cell'-->
     <div class="table-cell controls-right">
     </div>
-    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">
-      <div class="modal-header"></div>
-      <div class="modal-body">
-        <p>Delete block?</p>
-      </div>
-      <div class="modal-footer">
-        <template v-if="deletePending">
-          <div class="voicework-preloader"></div>
-        </template>
-        <template v-else>
-          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
-        </template>
-      </div>
-    </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal" @before-close="voicework_change_close($event)">
-      <!-- custom header -->
-      <div class="modal-header">
-        <h4 class="modal-title"><!--text-center-->
-          Voicework update
-        </h4>
-      </div>
-      <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <section v-if="isAllowBatchVoiceworkNarration">
-          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
-          <div class="modal-content-flex">
-            <div class="modal-content-flex-block">
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating || !adminOrLibrarian"/><span v-if="adminOrLibrarian">all {{blockTypeLabel}}s</span><span v-else style="color: #bbb;">all {{blockTypeLabel}}s</span></label>
-            <!--v-if="!block.status.marked"-->
-            </div>
-            <div class="modal-content-flex-block">
-            <label class="modal-content-empty">&nbsp;</label>
-            <label class="modal-content-empty">&nbsp;</label>
-            <label class="modal-content-empty">&nbsp;</label>
-            </div>
-          </div>
-          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
-          <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
-        </section>
-        <section v-else> <!--!isAllowBatchVoiceworkNarration-->
-          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
-          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>
-        </section>
-      </div>
-      <!-- custom buttons -->
-      <div class="modal-footer vue-dialog-buttons">
-        <template v-if="!voiceworkUpdating">
-          <button type="button" class="btn btn-cancel" @click="voiceworkChange = false; voiceworkUpdateType = 'single'">Cancel</button>
-          <button type="button" class="btn btn-primary" @click="updateVoicework()">Update voicework</button>
-        </template>
-        <template v-else>
-          <div class="voicework-preloader"></div>
-        </template>
-      </div>
-    </modal>
   </div>
 </template>
 
@@ -597,6 +540,8 @@ import BookBlockPartView from './BookBlockPartView';
 import LockedBlockActions from './block/LockedBlockActions';
 import FlagComment        from './block/FlagComment';
 import EditHTMLModal      from './block/EditHTML';
+import DeleteBlockModal   from './block/DeleteBlockModal';
+import ChangeVoiceworkModal from './block/ChangeVoiceworkModal';
 //import { tabs, tab } from 'vue-strap';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
@@ -866,8 +811,29 @@ Save or discard your changes to continue editing`,
             this.voiceworkChange = val;
             this.currentBookCounters.voiceworks_for_remove = 0;
             if (true/*!this.block.status.marked && this.currentJobInfo.text_cleanup*/) {
-              this.voiceworkUpdateType = 'single';
-              this.showModal('voicework-change');
+              //this.voiceworkUpdateType = 'single';
+              this.$modal.show(ChangeVoiceworkModal, 
+              {
+                blockType: this.blockTypeLabel,
+                blocksCount: this.currentBookCounters.voiceworks_for_remove,
+                voicework: this.blockVoiceworks[this.voiceworkChange],
+                isBatch: this.isAllowBatchVoiceworkNarration,
+                isNarratedBlockCompleteAudio: this.isNarratedBlockCompleteAudio,
+                adminOrLibrarian: this.adminOrLibrarian,
+                isSingleBlockRemoveAudio: this.isSingleBlockRemoveAudio,
+                updateVoicework: this.updateVoicework,
+              },
+              {
+                resizeable: false,
+                height: "auto",
+                width: "400px",
+              },
+              {
+                'closed': () => {
+                  this.voiceworkChange = false;
+                  this.voiceworkUpdateType = 'single';
+                }
+              });
             } else {
               this.voiceworkUpdateType = 'single';
               this.updateVoicework();
@@ -3458,6 +3424,21 @@ Save text changes and realign the Block?`,
           this.deletePending = true;
         }
       },
+      confirmDeleteBlock() {
+        this.$modal.show(DeleteBlockModal, {
+          deleteBlock: this.deleteBlock
+        },
+        {
+          resizeable: false,
+          clickToClose: false,
+          height: "auto"
+        }, 
+        {
+          'closed': () => {
+            
+          }
+        });
+      },
       showModal(name) {
         this.$modal.show(name + this.block._id);
       },
@@ -4611,13 +4592,13 @@ Save text changes and realign the Block?`,
           });
         }
       },
-      'voiceworkChange': {
-        handler(val) {
-          if (val === false) {
-            this.hideModal('voicework-change');
-          }
-        }
-      },
+      //'voiceworkChange': {
+        //handler(val) {
+          //if (val === false) {
+            //this.$modal.hide(ChangeVoiceworkModal);
+          //}
+        //}
+      //},
       'isChanged' : {
         handler(val) {
           if (val === false) {
