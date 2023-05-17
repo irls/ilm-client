@@ -62,9 +62,11 @@ export default {
         const reqBookid = bookid ? bookid : rootState.currentBookid;
         //console.log(`loadBookTocSections.reqBookid: `, reqBookid);
         if (!reqBookid) return Promise.resolve({});
-        return axios.get(`${rootState.API_URL}toc_section/book/${reqBookid}/all`)
+        state.bookTocSectionsXHR = axios.get(`${rootState.API_URL}toc_section/book/${reqBookid}/all`);
+        return state.bookTocSectionsXHR
           .then(data => {
             //console.log(data);
+            state.bookTocSectionsXHR = null;
             commit('set_book_toc_sections', data.data.sections);
             commit('set_toc_section_book', data.data.book);
             if (!this.bookTocSectionsTimer) {
@@ -78,6 +80,7 @@ export default {
             }
           })
           .catch(err => {
+            state.bookTocSectionsXHR = null;
             return Promise.reject(err);
           });
       }
@@ -99,11 +102,14 @@ export default {
 
     createBookTocSection({state, dispatch, rootState}, data) {
       if (rootState.adminOrLibrarian) {
-        return axios.post(`${rootState.API_URL}toc_section`, data)
+        state.bookTocSectionsXHR = axios.post(`${rootState.API_URL}toc_section`, data);
+        return state.bookTocSectionsXHR
           .then(created => {
+            state.bookTocSectionsXHR = null;
             return dispatch('loadBookTocSections', []);
           })
           .catch(err => {
+            state.bookTocSectionsXHR = null;
             return Promise.reject(err);
           });
       }
