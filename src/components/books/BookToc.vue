@@ -899,6 +899,7 @@ export default {
     'currentBookid': {
       handler() {
         this.sectionsMode = false;
+        this.tocSettingsModalActive = false;
       }
     }
   },

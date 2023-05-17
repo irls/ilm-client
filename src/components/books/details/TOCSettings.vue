@@ -14,6 +14,7 @@
         <div class="setting-field">
           <resizable-textarea
             :initValue="tocSectionBook.namePattern"
+            :rows="2"
             @valueChanged="onInputPattern('name_pattern', $event)"
             @onBlur="onBlurPattern('name_pattern', $event)"
             @onKeyup="settingValueChanged('name_pattern')"
@@ -37,6 +38,7 @@
         <div class="setting-field">
           <resizable-textarea
             :initValue="tocSectionBook.titlePattern"
+            :rows="4"
             @valueChanged="onInputPattern('title_pattern', $event)"
             @onBlur="onBlurPattern('title_pattern', $event)"
             @onKeyup="settingValueChanged('title_pattern')"
