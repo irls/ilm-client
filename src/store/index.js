@@ -1670,7 +1670,7 @@ export const store = new Vuex.Store({
               return c.bookid === data.meta.bookid;
             });
             if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
-              //console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              console.log(`liveDB.pubMetaV.data state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
@@ -1678,6 +1678,7 @@ export const store = new Vuex.Store({
               state.books_meta[bIdx].publishedVersion = data.meta.publishedVersion;
               state.books_meta[bIdx].version = data.meta.version;
               state.books_meta[bIdx].publishLog = data.meta.publishLog;
+              state.books_meta[bIdx].slug_status = data.meta.slug_status;
               commit('PREPARE_BOOK_COLLECTIONS');
             }
             // const collection = state.bookCollectionsAll[cIdx];
@@ -1912,9 +1913,9 @@ export const store = new Vuex.Store({
 
           //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-            //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+            //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version'], data.meta);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              //console.log('metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
+              console.log('liveDB metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
