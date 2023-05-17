@@ -1067,6 +1067,12 @@ export default {
           this.lockLanguage = false;
           //this.handleHashTags++;  // to force reload hashTags template
           this.$refs['hashTags'].name = '';
+        } else {
+          for (const [key, value] of Object.entries(val)) {
+            if (this.currentBook.hasOwnProperty(key)) {
+              this.currentBook[key] = value;
+            }
+          }
         }
       },
       deep: true
@@ -1232,7 +1238,7 @@ export default {
         }
       }
       this.currentBook = Object.assign({}, this.currentBookMeta);
-      this.currentBook.coverimg = this.currentBookFiles.coverimg;
+      //this.currentBook.coverimg = this.currentBookFiles.coverimg;
       this.isOwner = this.currentBook.owner == superlogin.getSession().user_id;
       if (this.currentBook.author && !Array.isArray(this.currentBook.author)) {
         this.currentBook.author = [this.currentBook.author];
