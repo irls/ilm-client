@@ -812,28 +812,7 @@ Save or discard your changes to continue editing`,
             this.currentBookCounters.voiceworks_for_remove = 0;
             if (true/*!this.block.status.marked && this.currentJobInfo.text_cleanup*/) {
               //this.voiceworkUpdateType = 'single';
-              this.$modal.show(ChangeVoiceworkModal, 
-              {
-                blockType: this.blockTypeLabel,
-                blocksCount: this.currentBookCounters.voiceworks_for_remove,
-                voicework: this.blockVoiceworks[this.voiceworkChange],
-                isBatch: this.isAllowBatchVoiceworkNarration,
-                isNarratedBlockCompleteAudio: this.isNarratedBlockCompleteAudio,
-                adminOrLibrarian: this.adminOrLibrarian,
-                isSingleBlockRemoveAudio: this.isSingleBlockRemoveAudio,
-                updateVoicework: this.updateVoicework,
-              },
-              {
-                resizeable: false,
-                height: "auto",
-                width: "400px",
-              },
-              {
-                'closed': () => {
-                  this.voiceworkChange = false;
-                  this.voiceworkUpdateType = 'single';
-                }
-              });
+              this.showChangeVoiceworkModal();
             } else {
               this.voiceworkUpdateType = 'single';
               this.updateVoicework();
@@ -4459,6 +4438,32 @@ Save text changes and realign the Block?`,
             }
           }
         });
+      },
+      showChangeVoiceworkModal() {
+        this.$modal.show(ChangeVoiceworkModal, 
+          {
+            blockType: this.blockTypeLabel,
+            blocksCount: this.currentBookCounters.voiceworks_for_remove,
+            voicework: this.blockVoiceworks[this.voiceworkChange],
+            isBatch: this.isAllowBatchVoiceworkNarration,
+            isNarratedBlockCompleteAudio: this.isNarratedBlockCompleteAudio,
+            adminOrLibrarian: this.adminOrLibrarian,
+            isSingleBlockRemoveAudio: this.isSingleBlockRemoveAudio,
+            updateVoicework: this.updateVoicework,
+            voiceworkUpdateProgress: this.voiceworkUpdating,
+          },
+          {
+            resizeable: false,
+            height: "auto",
+            width: "400px",
+            clickToClose: false
+          },
+          {
+            'closed': () => {
+              this.voiceworkChange = false;
+              this.voiceworkUpdateType = 'single';
+            }
+          });
       }
   },
   watch: {

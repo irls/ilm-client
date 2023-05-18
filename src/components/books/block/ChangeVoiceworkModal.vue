@@ -50,7 +50,10 @@
         voiceworkUpdateType: 'single',
       }
     },
-    props: ['blocksCount', 'blockType', 'voicework', 'isBatch', 'isNarratedBlockCompleteAudio', 'adminOrLibrarian', 'isSingleBlockRemoveAudio', 'updateVoicework'],
+    props: ['blocksCount', 'blockType', 'voicework', 'isBatch', 'isNarratedBlockCompleteAudio', 'adminOrLibrarian', 'isSingleBlockRemoveAudio', 'updateVoicework', 'voiceworkUpdateProgress'],
+    mounted() {
+      this.voiceworkUpdating = this.voiceworkUpdateProgress;
+    },
     methods: {
       close() {
         this.$emit('close');
