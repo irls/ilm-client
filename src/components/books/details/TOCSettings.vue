@@ -139,8 +139,8 @@
       },
       saveChanges() {
         this.$emit('save', {
-          namePattern: this.$refs.name_pattern.$el.value,
-          titlePattern: this.$refs.title_pattern.$el.value,
+          namePattern: (this.$refs.name_pattern.$el.value || '').trim(),
+          titlePattern: (this.$refs.title_pattern.$el.value || '').trim(),
         });
       },
       settingValueChanged(setting_name) {
