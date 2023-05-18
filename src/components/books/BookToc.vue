@@ -971,6 +971,7 @@ export default {
         .no-section-title {
           color: rgba(0, 0, 0, 0.5);
           font-style: italic;
+          font-weight: 400;
         }
         .toc-section-title, .toc-section-title-en {
           max-width: 290px;
