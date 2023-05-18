@@ -522,6 +522,10 @@ export default {
           }
           if (targetField && targetSection) {
             event.preventDefault();
+            let currentField = document.querySelector('[class^=edit-section-]');
+            if (currentField) {
+              currentField.dispatchEvent(new Event('change'));
+            }
             this.sectionEditMode(null);
             Vue.nextTick(() => {
               this.sectionEditMode(targetSection, targetField)
