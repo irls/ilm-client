@@ -79,7 +79,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug')" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
+                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug', $event)" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -194,7 +194,7 @@
               </template>
             </tr>
             <tr :class="['toc-section-title', '-num-' + toc.section.index, '-lang-' + toc.section.firstSectionBlock.language]" v-if="displayTitle && toc.section && toc.section.id">
-              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title')" v-on:dblclick="sectionEditMode(toc.section, 'title')">
+              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title', $event)" v-on:dblclick="sectionEditMode(toc.section, 'title', $event)">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
                   <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title'][toc.section.id]}]"
                     v-model="editingFieldValue"
@@ -211,7 +211,7 @@
               </td>
             </tr>
             <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEnSection(toc.section)">
-              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn')" v-on:dblclick="sectionEditMode(toc.section, 'titleEn')">
+              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn', $event)" v-on:dblclick="sectionEditMode(toc.section, 'titleEn', $event)">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
                   <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
                     v-model="editingFieldValue"
@@ -371,6 +371,9 @@ export default {
           return;
         }
         if (event.target.nodeName === 'I') {
+          return;
+        }
+        if (event.target.type === 'text') {
           return;
         }
       }
