@@ -79,7 +79,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug')" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
+                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug', $event)" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -121,6 +121,38 @@
                 </td>
               </tr>
             </template>
+            <tr :class="['toc-section-title', '-num-' + toc.section.index, '-lang-' + toc.section.firstSectionBlock.language]" v-if="displayTitle && toc.section && toc.section.id">
+              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title', $event)" v-on:dblclick="sectionEditMode(toc.section, 'title', $event)">
+                <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
+                  <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title'][toc.section.id]}]"
+                    v-model="editingFieldValue"
+                    v-on:keyup.enter="blurEditingField(null)"
+                    v-on:change="updateSectionField(editingFieldValue)"
+                    v-on:blur="blurEditingField(null)"
+                    v-on:input="editingFieldChanged($event)" />
+                </template>
+                <template v-else>
+                  <div class="section-title">
+                    <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]" :title="toc.section.title">{{toc.section.title || 'Define Title'}}</label>
+                  </div>
+                </template>
+              </td>
+            </tr>
+            <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEnSection(toc.section)">
+              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn', $event)" v-on:dblclick="sectionEditMode(toc.section, 'titleEn', $event)">
+                <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
+                  <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
+                    v-model="editingFieldValue"
+                    v-on:keyup.enter="blurEditingField(null)"
+                    v-on:change="updateSectionField(editingFieldValue)"
+                    v-on:blur="blurEditingField(null)"
+                    v-on:input="editingFieldChanged($event)" />
+                </template>
+                <template v-else>
+                  <label :class="[{'no-section-title': !toc.section.titleEn}]" :title="toc.section.titleEn">{{toc.section.titleEn || 'Define Title English'}}</label>
+                </template>
+              </td>
+            </tr>
             <!-- <tr>
               <td colspan="4">
                 <div style="display: table; width: 100%; height: 20px;">
@@ -192,38 +224,6 @@
                   </template>
                 </td>
               </template>
-            </tr>
-            <tr :class="['toc-section-title', '-num-' + toc.section.index, '-lang-' + toc.section.firstSectionBlock.language]" v-if="displayTitle && toc.section && toc.section.id">
-              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'title')" v-on:dblclick="sectionEditMode(toc.section, 'title')">
-                <template v-if="editingSectionId === toc.section.id && editingFieldName === 'title'">
-                  <input type="text" :class="['edit-section-title', {'-has-error': validationErrors['title'][toc.section.id]}]"
-                    v-model="editingFieldValue"
-                    v-on:keyup.enter="blurEditingField(null)"
-                    v-on:change="updateSectionField(editingFieldValue)"
-                    v-on:blur="blurEditingField(null)"
-                    v-on:input="editingFieldChanged($event)" />
-                </template>
-                <template v-else>
-                  <div class="section-title">
-                    <label :class="['section-title', {'no-section-title': !toc.section.title, '-manual': toc.section.manualTitle}]" :title="toc.section.title">{{toc.section.title || 'Define Title'}}</label>
-                  </div>
-                </template>
-              </td>
-            </tr>
-            <tr :class="['toc-section-title-en', '-num-' + toc.section.index]" v-if="displayTitleEnSection(toc.section)">
-              <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn')" v-on:dblclick="sectionEditMode(toc.section, 'titleEn')">
-                <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
-                  <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
-                    v-model="editingFieldValue"
-                    v-on:keyup.enter="blurEditingField(null)"
-                    v-on:change="updateSectionField(editingFieldValue)"
-                    v-on:blur="blurEditingField(null)"
-                    v-on:input="editingFieldChanged($event)" />
-                </template>
-                <template v-else>
-                  <label :class="[{'no-section-title': !toc.section.titleEn}]" :title="toc.section.titleEn">{{toc.section.titleEn || 'Define Title English'}}</label>
-                </template>
-              </td>
             </tr>
           </template>
         </table>
@@ -371,6 +371,9 @@ export default {
           return;
         }
         if (event.target.nodeName === 'I') {
+          return;
+        }
+        if (event.target.type === 'text') {
           return;
         }
       }
@@ -613,10 +616,12 @@ export default {
                 })
                 .catch(err => {
                   let slugError = err ? err.message : '';
+                  let slugErrorType = '';
                   if (err && err.response && err.response.data) {
                     switch (err.response.data) {
                       case 'slug_not_unique':
                         slugError = 'Section name is not unique';
+                        slugErrorType = 'unique';
                         break;
                     }
                   }
@@ -627,7 +632,8 @@ export default {
                         //this.editingFieldValue = '';
                         //Vue.nextTick(() => {
                           this.editingFieldValue = value;
-                          this.validationErrors.slug[section.id] = slugError;
+                          this.validationErrors.slug[section.id] = {text: slugError, type: slugErrorType};
+                          this.$forceUpdate();
                           //let el = document.getElementsByClassName('edit-section-slug');
                           //if (el && el[0]) {
                             //el[0].value = '';
@@ -965,6 +971,7 @@ export default {
         .no-section-title {
           color: rgba(0, 0, 0, 0.5);
           font-style: italic;
+          font-weight: 400;
         }
         .toc-section-title, .toc-section-title-en {
           max-width: 290px;
