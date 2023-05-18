@@ -522,6 +522,10 @@ export default {
           }
           if (targetField && targetSection) {
             event.preventDefault();
+            let currentField = document.querySelector('[class^=edit-section-]');
+            if (currentField) {
+              currentField.dispatchEvent(new Event('change'));
+            }
             this.sectionEditMode(null);
             Vue.nextTick(() => {
               this.sectionEditMode(targetSection, targetField)
@@ -575,9 +579,10 @@ export default {
     updateSection(update) {
       if (this.editingSectionId) {
         let updateSectionId = this.editingSectionId;
+        let editingFieldName = this.editingFieldName;
         return this.updateBookTocSection([updateSectionId, update])
           .then(response => {
-            if (updateSectionId === this.editingSectionId) {
+            if (updateSectionId === this.editingSectionId && editingFieldName === this.editingFieldName) {
               this.sectionEditMode(null);
             }
             return Promise.resolve();
