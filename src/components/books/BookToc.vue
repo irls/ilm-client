@@ -613,10 +613,12 @@ export default {
                 })
                 .catch(err => {
                   let slugError = err ? err.message : '';
+                  let slugErrorType = '';
                   if (err && err.response && err.response.data) {
                     switch (err.response.data) {
                       case 'slug_not_unique':
                         slugError = 'Section name is not unique';
+                        slugErrorType = 'unique';
                         break;
                     }
                   }
@@ -627,7 +629,8 @@ export default {
                         //this.editingFieldValue = '';
                         //Vue.nextTick(() => {
                           this.editingFieldValue = value;
-                          this.validationErrors.slug[section.id] = slugError;
+                          this.validationErrors.slug[section.id] = {text: slugError, type: slugErrorType};
+                          this.$forceUpdate();
                           //let el = document.getElementsByClassName('edit-section-slug');
                           //if (el && el[0]) {
                             //el[0].value = '';
