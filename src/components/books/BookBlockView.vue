@@ -3838,7 +3838,13 @@ Save text changes and realign the Block?`,
         }
         //this.blockO.checked = checked;
       },
-      updateVoicework() {
+      updateVoicework(voiceworkChange, voiceworkUpdateType) {
+        if (voiceworkChange) {
+          this.voiceworkChange = voiceworkChange;
+        }
+        if (voiceworkUpdateType) {
+          this.voiceworkUpdateType = voiceworkUpdateType;
+        }
         if (!this.voiceworkChange) {
           return false;
         }

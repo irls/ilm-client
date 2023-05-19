@@ -60,7 +60,7 @@
       },
       startUpdateVoicework() {
         this.voiceworkUpdating = true;
-        this.updateVoicework()
+        this.updateVoicework(false, this.voiceworkUpdateType)
           .then(() => {
             this.$emit('close');
           })
