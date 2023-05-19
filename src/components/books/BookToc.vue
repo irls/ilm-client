@@ -5,6 +5,7 @@
       <div class="preloader-spinner"></div>
     </template>
     <template v-else>
+      <div v-if="pendingSectionUpdate" class="pending-section-update"></div>
       <TOCSettingsModal v-if="tocSettingsModalActive"
         @close="closeSettings"
         @save="saveSettings" />
@@ -93,7 +94,7 @@
                           v-on:blur="blurEditingField(null)"
                           v-on:input="editingFieldChanged($event)" />
                       </template>
-                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>{{toc.section.slug ? toc.section.slug : 'Section Name'}}</label>
+                      <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>{{toc.section.slug ? toc.section.slug : 'Define Name'}}</label>
                     </div>
                     <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
                     <div class="-option -remove -hidden">
@@ -292,7 +293,7 @@ export default {
 
   computed: {
     ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid', 'adminOrLibrarian']),
-    ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined', 'bookTocSections']),
+    ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined', 'bookTocSections', 'pendingSectionUpdate']),
     buildBookButtonEnabled: {
       get() {
         let hasSections = this.currentBookTocCombined.find(toc => {
@@ -1236,7 +1237,8 @@ export default {
     .toc-buttons {
       display: table-row;
       position: sticky;
-      top: 45px;
+      /*top: 45px;*/
+      top: 0px;
       background-color: white;
       .toc-button {
         display: table-cell;
@@ -1276,7 +1278,8 @@ export default {
     .toc-display-settings {
       padding: 10px 7px 5px 7px;
       position: sticky;
-      top: 80px;
+      /*top: 80px;*/
+      top: 35px;
       background-color: white;
       div {
         display: inline-block;
@@ -1323,5 +1326,17 @@ export default {
         }
       }
     }
+  }
+  .pending-section-update {
+    width: 445px;
+    height: 100vh;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 1;
+    z-index: 100;
+    top: 85px;
+    background-image: url(/static/preloader-hole.gif);
+    background-repeat: no-repeat;
+    background-position: center;
   }
 </style>

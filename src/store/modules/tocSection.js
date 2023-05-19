@@ -7,6 +7,7 @@ export default {
     bookTocSectionsTimer: null,
     tocSectionBook: {},
     bookTocSections: [],
+    pendingSectionUpdate: false,
   },
   getters: {
     tocSectionBook: state => {
@@ -35,6 +36,9 @@ export default {
       }
       return currentBookTocCombined;
     },
+    pendingSectionUpdate: state => {
+      return state.pendingSectionUpdate;
+    }
   },
   mutations: {
     set_toc_section_book(state, tocSectionBook) {
@@ -63,10 +67,12 @@ export default {
         //console.log(`loadBookTocSections.reqBookid: `, reqBookid);
         if (!reqBookid) return Promise.resolve({});
         state.bookTocSectionsXHR = axios.get(`${rootState.API_URL}toc_section/book/${reqBookid}/all`);
+        //state.pendingSectionUpdate = true;
         return state.bookTocSectionsXHR
           .then(data => {
             //console.log(data);
             state.bookTocSectionsXHR = null;
+            //state.pendingSectionUpdate = false;
             commit('set_book_toc_sections', data.data.sections);
             commit('set_toc_section_book', data.data.book);
             if (!this.bookTocSectionsTimer) {
@@ -81,6 +87,7 @@ export default {
           })
           .catch(err => {
             state.bookTocSectionsXHR = null;
+            //state.pendingSectionUpdate = false;
             return Promise.reject(err);
           });
       }
@@ -89,12 +96,15 @@ export default {
     updateBookTocSection({state, dispatch, rootState}, [id, update]) {
       if (rootState.adminOrLibrarian) {
         state.bookTocSectionsXHR = axios.put(`${rootState.API_URL}toc_section/${encodeURIComponent(id)}`, update);
+        state.pendingSectionUpdate = true;
         return state.bookTocSectionsXHR.then(updated => {
             state.bookTocSectionsXHR = null;
+            state.pendingSectionUpdate = false;
             return dispatch('loadBookTocSections', []);
           })
           .catch(err => {
             state.bookTocSectionsXHR = null;
+            state.pendingSectionUpdate = false;
             return Promise.reject(err);
           });
       }
@@ -103,13 +113,16 @@ export default {
     createBookTocSection({state, dispatch, rootState}, data) {
       if (rootState.adminOrLibrarian) {
         state.bookTocSectionsXHR = axios.post(`${rootState.API_URL}toc_section`, data);
+        state.pendingSectionUpdate = true;
         return state.bookTocSectionsXHR
           .then(created => {
             state.bookTocSectionsXHR = null;
+            state.pendingSectionUpdate = false;
             return dispatch('loadBookTocSections', []);
           })
           .catch(err => {
             state.bookTocSectionsXHR = null;
+            state.pendingSectionUpdate = false;
             return Promise.reject(err);
           });
       }
@@ -117,12 +130,15 @@ export default {
 
     removeTocSection({state, dispatch, rootState}, id) {
       state.bookTocSectionsXHR = axios.delete(`${rootState.API_URL}toc_section/${encodeURIComponent(id)}`);
+      state.pendingSectionUpdate = true;
       return state.bookTocSectionsXHR.then((response) => {
           state.bookTocSectionsXHR = null;
+          state.pendingSectionUpdate = false;
           return dispatch('loadBookTocSections', []);
         })
         .catch(err => {
           state.bookTocSectionsXHR = null;
+          state.pendingSectionUpdate = false;
           return Promise.reject(err);
         });
     },
@@ -156,12 +172,18 @@ export default {
     
     updateTocSectionBook({state, rootState, dispatch, commit}, [id, update]) {
       if (rootState.adminOrLibrarian) {
+        state.pendingSectionUpdate = true;
         return axios.put(`${rootState.API_URL}toc_section_book/${encodeURIComponent(id)}`, update)
           .then(response => {
+            state.pendingSectionUpdate = false;
             if (response.status === 200) {
               commit('set_toc_section_book', response.data);
               dispatch('loadBookTocSections', []);
             }
+          })
+          .catch(err => {
+            state.pendingSectionUpdate = false;
+            return Promise.reject(err);
           });
       }
     },
