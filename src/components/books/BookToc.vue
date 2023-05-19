@@ -1335,7 +1335,7 @@ export default {
     opacity: 1;
     z-index: 100;
     top: 85px;
-    background-image: url(/static/preloader-hole.gif);
+    background-image: url(/static/preloader-arrows.gif);
     background-repeat: no-repeat;
     background-position: center;
   }

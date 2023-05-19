@@ -173,7 +173,14 @@ export default {
     updateTocSectionBook({state, rootState, dispatch, commit}, [id, update]) {
       if (rootState.adminOrLibrarian) {
         state.pendingSectionUpdate = true;
-        return axios.put(`${rootState.API_URL}toc_section_book/${encodeURIComponent(id)}`, update)
+        let updateRequest;
+        if (id) {
+          updateRequest = axios.put(`${rootState.API_URL}toc_section_book/${encodeURIComponent(id)}`, update);
+        } else {
+          update.bookid = rootState.currentBookid;
+          updateRequest = axios.post(`${rootState.API_URL}toc_section_book`, update)
+        }
+        return updateRequest
           .then(response => {
             state.pendingSectionUpdate = false;
             if (response.status === 200) {
