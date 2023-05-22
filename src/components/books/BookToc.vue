@@ -150,7 +150,7 @@
                     v-on:input="editingFieldChanged($event)" />
                 </template>
                 <template v-else>
-                  <label :class="[{'no-section-title': !toc.section.titleEn}]" :title="toc.section.titleEn">{{toc.section.titleEn || 'Define Title English'}}</label>
+                  <label :class="['section-title-en', {'no-section-title': !toc.section.titleEn}]" :title="toc.section.titleEn">{{toc.section.titleEn || 'Define Title English'}}</label>
                 </template>
               </td>
             </tr>
@@ -378,44 +378,62 @@ export default {
           return;
         }
       }
-      let cursorPosition = null;
-      if (section) {
-        try {
-          let selection = window.getSelection().getRangeAt(0);
-          cursorPosition = selection.startOffset;
-          //if (selection.startContainer)
-          //console.log(selection.startContainer.nodeName);
-        } catch (e) {
-          
+      let checkEvent = new Promise((resolve, reject) => {
+        if (section && event && event.type === 'click') {
+          setTimeout(() => {
+            if (!this.editingSectionId || (section.id && section.id !== this.editingSectionId) || (!section.id && section !== this.editingSectionId) || this.editingFieldName !== field) {
+              return resolve(true);
+            }
+            return resolve(false);
+          }, 100);
+        } else {
+          return resolve(true);
         }
-      }
-      return new Promise((resolve, reject) => {
-        Vue.nextTick(() => {
-          if (!(section instanceof Object)) {
-            let tc = this.currentBookTocCombined.find(toc => {
-              return toc.section && toc.section.id === section;
-            });
-            if (tc && tc.section) {
-              section = tc.section;
-            }
+      });
+      return checkEvent
+        .then((setSection) => {
+          if (!setSection) {
+            return false;
           }
+          let cursorPosition = null;
           if (section) {
-            if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
-              if (this.editingSectionId && this.hasError()) {
-                this.showNameError();
-                return false;
-              }
-              this.setEditingSection(section, field);
+            try {
+              let selection = window.getSelection().getRangeAt(0);
+              cursorPosition = selection.startOffset;
+              //if (selection.startContainer)
+              //console.log(selection.startContainer.nodeName);
+            } catch (e) {
+
             }
-            this.focusEditingField(false, cursorPosition);
-            return resolve();
-          } else {
-            if (!this.hasError(this.editingSectionId)) {
-              this.setEditingSection(null);
-            }
-            return resolve();
           }
-        });
+          return new Promise((resolve, reject) => {
+            Vue.nextTick(() => {
+              if (!(section instanceof Object)) {
+                let tc = this.currentBookTocCombined.find(toc => {
+                  return toc.section && toc.section.id === section;
+                });
+                if (tc && tc.section) {
+                  section = tc.section;
+                }
+              }
+              if (section) {
+                if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
+                  if (this.editingSectionId && this.hasError()) {
+                    this.showNameError();
+                    return false;
+                  }
+                  this.setEditingSection(section, field);
+                }
+                this.focusEditingField(false, cursorPosition);
+                return resolve();
+              } else {
+                if (!this.hasError(this.editingSectionId)) {
+                  this.setEditingSection(null);
+                }
+                return resolve();
+              }
+            });
+          });
       });
     },
     
@@ -912,6 +930,16 @@ export default {
       handler() {
         this.sectionsMode = false;
         this.tocSettingsModalActive = false;
+        this.validationErrors = {
+          slug: {},
+          title: {},
+          titleEn: {},
+        };
+        this.displaySettings = {
+          title: false,
+          titleEn: false,
+          toc: true
+        };
       }
     }
   },
@@ -1127,6 +1155,14 @@ export default {
           color: #337ab7;
         }
       }
+      /*label {
+        &.section-slug, &.section-title, &.section-title-en {
+          user-select: none;
+          -moz-user-select: none;
+          -webkit-user-select: none;
+          -ms-user-select: none;
+        }
+      }*/
       .-edit-mode {
         .section-options {
           .-option {
