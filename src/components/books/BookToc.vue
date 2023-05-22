@@ -531,12 +531,36 @@ export default {
             }
           } else {
             targetField = this.editingFieldName;
-            let targetIndex = isPrev ? targetSection.index - 1 : targetSection.index + 1;
-            targetSection = this.currentBookTocCombined.find(toc => {
-              return toc.section && toc.section.index === targetIndex;
-            });
-            if (targetSection) {
-              targetSection = targetSection.section;
+            let nextSection;
+            if (isPrev) {
+              for (let i = targetSection.index - 1; i >=0; --i) {
+                if (!nextSection) {
+                  let section = this.currentBookTocCombined.find(toc => {
+                    return toc.section && toc.section.index === i;
+                  });
+                  if (section) {
+                    if (section.section && (targetField !== 'titleEn' || (section.section.firstSectionBlock && section.section.firstSectionBlock.language !== 'en'))) {
+                      nextSection = section;
+                    }
+                  }
+                }
+              }
+            } else {
+              for (let i = targetSection.index + 1; i <= this.currentBookTocCombined.length; ++i) {
+                if (!nextSection) {
+                  let section = this.currentBookTocCombined.find(toc => {
+                    return toc.section && toc.section.index === i;
+                  });
+                  if (section) {
+                    if (section.section && (targetField !== 'titleEn' || (section.section.firstSectionBlock && section.section.firstSectionBlock.language !== 'en'))) {
+                      nextSection = section;
+                    }
+                  }
+                }
+              }
+            }
+            if (nextSection) {
+              targetSection = nextSection.section;
             }
           }
           if (targetField && targetSection) {
