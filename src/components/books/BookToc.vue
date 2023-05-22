@@ -930,6 +930,16 @@ export default {
       handler() {
         this.sectionsMode = false;
         this.tocSettingsModalActive = false;
+        this.validationErrors = {
+          slug: {},
+          title: {},
+          titleEn: {},
+        };
+        this.displaySettings = {
+          title: false,
+          titleEn: false,
+          toc: true
+        };
       }
     }
   },
