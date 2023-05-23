@@ -250,8 +250,6 @@ export default {
 
   data () {
     return {
-      currBookId: this.bookId,
-      loading: false,
       sectionsMode: false,
       tocSectionCombined: [],
       editingSectionId: null,
@@ -281,7 +279,7 @@ export default {
   },
 
   props: [
-    'bookId',
+    /*'bookId',*/
   ],
   
   components: {
@@ -343,22 +341,15 @@ export default {
       //}
     },
     loadBookTocProxy(isWait = false) {
-      //if (!isWait) this.freeze('loadBookToc');
-      if (this.loading) {
-        return false;
-      }
-      this.loading = true;
       this.clearErrors();
       this.sectionEditMode(null);
       this.loadBookTocSections([]);
-      this.loadBookToc({bookId: this.currBookId, isWait: isWait})
+      this.loadBookToc({bookId: this.currentBookid, isWait: isWait})
       .then((res)=>{
-        this.loading = false;
-        this.unfreeze('loadBookToc');
+        
       })
       .catch((err)=>{
-        this.loading = false;
-        this.unfreeze('loadBookToc');
+        
       });
     },
     
@@ -942,13 +933,13 @@ export default {
   watch: {
     '$route' () {
       //console.log('$route', this.currBookId, this.$route.params.bookid);
-      if (this.$route.params.hasOwnProperty('bookid')) {
+      /*if (this.$route.params.hasOwnProperty('bookid')) {
         if (this.currBookId !== this.$route.params.bookid) {
           this.currBookId = this.$route.params.bookid;
           this.loadBookTocProxy();
           this.loadBookTocSections([this.currBookId]);
         }
-      }
+      }*/
     },
     'currentBookid': {
       handler() {
@@ -964,6 +955,10 @@ export default {
           titleEn: false,
           toc: true
         };
+        if (this.currentBookid) {
+          this.loadBookTocProxy();
+          this.loadBookTocSections([]);
+        }
       }
     }
   },
