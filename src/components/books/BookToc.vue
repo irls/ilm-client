@@ -956,7 +956,7 @@ export default {
           toc: true
         };
         if (this.currentBookid) {
-          this.loadBookTocProxy();
+          this.loadBookTocProxy(true);
           this.loadBookTocSections([]);
         }
       }
