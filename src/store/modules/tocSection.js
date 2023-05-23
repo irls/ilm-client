@@ -75,8 +75,10 @@ export default {
             //console.log(data);
             state.bookTocSectionsXHR = null;
             //state.pendingSectionUpdate = false;
-            commit('set_book_toc_sections', data.data.sections);
-            commit('set_toc_section_book', data.data.book);
+            if (reqBookid === rootState.currentBookid) {
+              commit('set_book_toc_sections', data.data.sections);
+              commit('set_toc_section_book', data.data.book);
+            }
             if (!this.bookTocSectionsTimer) {
               this.bookTocSectionsTimer = setInterval(() => {
                 if (!state.bookTocSectionsXHR) {
