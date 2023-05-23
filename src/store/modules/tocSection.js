@@ -68,6 +68,9 @@ export default {
         const reqBookid = bookid ? bookid : rootState.currentBookid;
         //console.log(`loadBookTocSections.reqBookid: `, reqBookid);
         if (!reqBookid) return Promise.resolve({});
+        if (state.tocSectionBook.bookid && state.tocSectionBook.bookid !== reqBookid) {
+          state.pendingSectionUpdate = false;
+        }
         state.bookTocSectionsXHR = axios.get(`${rootState.API_URL}toc_section/book/${reqBookid}/all`);
         //state.pendingSectionUpdate = true;
         return state.bookTocSectionsXHR
