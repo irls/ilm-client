@@ -2156,7 +2156,9 @@ export const store = new Vuex.Store({
     updateBookMeta({state, dispatch, commit}, update) {
 
       update = {...update};
-      update.bookid = state.currentBookMeta._id;
+      if (!update.hasOwnProperty('bookid')) {
+        update.bookid = state.currentBookMeta._id;
+      }
 
       let currMeta = {...state.currentBookMeta};
       if (!currMeta.hasOwnProperty('publishLog')){
@@ -2229,11 +2231,12 @@ export const store = new Vuex.Store({
       //console.log('update', update);
       //return Promise.resolve('No data updated');
 
-      return axios.put(`${state.API_URL}meta/${state.currentBookMeta._id}`, update)
+      const BOOKID = update.bookid || state.currentBookMeta._id;
+      return axios.put(`${state.API_URL}meta/${BOOKID}`, update)
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
-            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
+            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
             if (bookMetaIdx > -1) {
               update['@version'] = response.data['@version'];
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);

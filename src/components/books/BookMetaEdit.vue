@@ -640,14 +640,14 @@ function _debounce (func, timeout = 500) {
   };
 };
 
-function _cacheDebounce (beforeHook, timeHook, timeout = 500) {
+function _cacheDebounce (beforeHook, timeHook, bookid, timeout = 500) {
   let timer, accum = [];
   return (...args) => {
     if (beforeHook.apply(this, args)) {
       clearTimeout(timer);
       accum.push(args);
       timer = setTimeout(() => {
-        timeHook.apply(this, accum);
+        timeHook.apply(this, [{bookid: bookid}, ...accum]);
         accum = []
       }, timeout);
     }
@@ -1203,7 +1203,6 @@ export default {
   },
 
   created () {
-    this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, 500);
     this.init();
   },
 
@@ -1255,6 +1254,8 @@ export default {
       if (this.$refs.descriptionLong && this.currentBook) {
         this.$refs.descriptionLong.setValue(this.currentBook.description);
       }
+
+      this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 500);
     },
     /*
     //close unknown author if clicked outside
@@ -1347,7 +1348,8 @@ export default {
     },
 
     debounceUpdate () {
-      // template function, will redefine in created() hook for debounce.
+      // template function, will redefine in init() method for debounce.
+      // this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 500);
     },
 
     beforeMetaUpdateHook (...args) {
@@ -1425,7 +1427,7 @@ export default {
       return true;
     },
 
-    updateMetaHook (...args) {
+    updateMetaHook (bookCheck, ...args) {
       let targets = [];
       const update = args.reduce((acc, arg)=>{
         let [key, value = null, _event = false, disable = false] = arg;
@@ -1459,7 +1461,8 @@ export default {
         return acc;
       }, {});
 
-      //console.log(`debounceUpdate.update: `, update);
+      //console.log(`debounceUpdate.update: `, bookCheck.bookid, this.currentBook.bookid, update);
+      update.bookid = bookCheck.bookid;
       return this.updateBookMeta(update)
       .then((response)=>{
 
