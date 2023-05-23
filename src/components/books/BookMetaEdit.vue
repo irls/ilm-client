@@ -269,7 +269,6 @@
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
-              :bookId="currentBook.bookid"
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">

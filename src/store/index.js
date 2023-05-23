@@ -2061,10 +2061,8 @@ export const store = new Vuex.Store({
       if (state.currentBookToc.bookId === params.bookId && !params.isWait) return state.currentBookToc;
       if (state.blockers.indexOf('loadBookToc') !== -1 && state.currentBookToc.bookId !== params.bookId) {
         dispatch('unfreeze', 'loadBookToc');
-        console.log('toc unfreeze');
       }
       if (state.blockers.indexOf('loadBookToc') !== -1) {
-        console.log('toc skip');
         return state.currentBookToc;
       }
       dispatch('freeze', 'loadBookToc');
@@ -2073,8 +2071,8 @@ export const store = new Vuex.Store({
         if (params.bookId === state.currentBookid) {
           state.currentBookToc.bookId = params.bookId;
           state.currentBookToc.data = response.data;
-          dispatch('unfreeze', 'loadBookToc');
         }
+        dispatch('unfreeze', 'loadBookToc');
         return response;
       })
       .catch(err => {
