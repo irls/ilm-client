@@ -416,8 +416,8 @@ export default {
                     return false;
                   }
                   this.setEditingSection(section, field);
+                  this.focusEditingField(false, cursorPosition);
                 }
-                this.focusEditingField(false, cursorPosition);
                 return resolve();
               } else {
                 if (!this.hasError(this.editingSectionId)) {
