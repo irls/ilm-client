@@ -908,6 +908,14 @@ export default {
       
       }
       return this.updateTocSectionBook([this.tocSectionBook.id, update])
+        .then(updated => {
+          //this.bookTocSections.forEach(section => {
+            //console.log(section.id, section.slug);
+          //});
+          Object.keys(this.validationErrors).forEach(typeError => {
+            this.validationErrors[typeError] = {};
+          });
+        });
     },
     fullValidate() {
       let errors = 0;
