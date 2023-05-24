@@ -348,7 +348,11 @@ export default {
               onPage: 1,//this.showEditorsCount
             }).then((answer)=>{
               if (this.startId == false) {
-                this.startId = answer.blocks[0].blockid;
+                if (answer.blocks.length) {
+                  this.startId = answer.blocks[0].blockid;
+                } else { // empty book
+                  return Promise.resolve({...meta, ...{loadType}});
+                }
               }
               return this.getAllBlocks(answer.meta.bookid, this.startId)
               .then((result)=>{

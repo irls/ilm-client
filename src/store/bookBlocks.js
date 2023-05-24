@@ -49,18 +49,20 @@ class BookBlocks {
       this.listIdsCache.rid = this.startRId;
       this.listIdsCache.list = [];
       let forwardSeqId = this.startRId;
-      let backSeqId = this.lookupList[this.startRId].in;
-      for (var i=0; i<=(beforeCount-1); i++) {
-        if (this.lookupList.hasOwnProperty(backSeqId) && backSeqId !== this.meta.rid) {
-          this.listIdsCache.list.unshift({blockRid: backSeqId, blockId: this.lookupList[backSeqId].blockid});
-          backSeqId = this.lookupList[backSeqId].in;
+      if (this.lookupList.hasOwnProperty(this.startRId)) {
+        let backSeqId = this.lookupList[this.startRId].in;
+        for (var i=0; i<=(beforeCount-1); i++) {
+          if (this.lookupList.hasOwnProperty(backSeqId) && backSeqId !== this.meta.rid) {
+            this.listIdsCache.list.unshift({blockRid: backSeqId, blockId: this.lookupList[backSeqId].blockid});
+            backSeqId = this.lookupList[backSeqId].in;
+          }
         }
-      }
-      for (var i=0; i<=(length-1); i++) {
-        if (this.lookupList.hasOwnProperty(forwardSeqId)) {
-          this.listIdsCache.list.push({blockRid: forwardSeqId, blockId: this.lookupList[forwardSeqId].blockid});
-          forwardSeqId = this.lookupList[forwardSeqId].out;
-          if (forwardSeqId == this.meta.rid) return this.listIdsCache.list;
+        for (var i=0; i<=(length-1); i++) {
+          if (this.lookupList.hasOwnProperty(forwardSeqId)) {
+            this.listIdsCache.list.push({blockRid: forwardSeqId, blockId: this.lookupList[forwardSeqId].blockid});
+            forwardSeqId = this.lookupList[forwardSeqId].out;
+            if (forwardSeqId == this.meta.rid) return this.listIdsCache.list;
+          }
         }
       }
     }
@@ -69,7 +71,7 @@ class BookBlocks {
 
   idsViewBeforeArray(beforeCount = 0) {
     let result = [];
-    if (this.startRId) {
+    if (this.startRId && this.lookupList.hasOwnProperty(this.startRId)) {
       let backSeqId = this.lookupList[this.startRId].in;
       for (var i=0; i<=(beforeCount-1); i++) {
         if (this.lookupList.hasOwnProperty(backSeqId) && backSeqId !== this.meta.rid) {
@@ -634,7 +636,10 @@ class BookBlocks {
       this.listIdsCache.rid = false;
     }
     if (block.in == this.meta.rid) {
-      return this.lookupList[block.out].blockid;
+      if (this.lookupList.hasOwnProperty(block.out)) {
+        return this.lookupList[block.out].blockid;
+      }
+      return this.startId;
     }
 //     if (block.out == this.meta.rid) {
 //       return this.lookupList[block.in].blockid;
