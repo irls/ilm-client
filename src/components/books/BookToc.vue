@@ -80,7 +80,7 @@
           <template v-for="(toc, tocIdx) in currentBookTocCombined" >
             <template v-if="toc.section && toc.section.id && sectionsMode">
               <tr class="toc-section">
-                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug', $event)" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id}]">
+                <td colspan="6" v-on:dblclick="sectionEditMode(toc.section, 'slug', $event)" v-on:click="sectionEditMode(toc.section, 'slug', $event)" :class="['hidden-container', {'-edit-mode': editingSectionId === toc.section.id, '-is-building': toc.section.isBuilding}]">
                   <div class="section-options">
                     <div class="-option -index">
                       {{toc.section.index}}
@@ -96,25 +96,27 @@
                       </template>
                       <label :title="toc.section.slug" :class="['section-slug', {'-manual': toc.section.manualSlug, 'no-section-title': !toc.section.slug}]" v-else>{{toc.section.slug ? toc.section.slug : 'Define Name'}}</label>
                     </div>
-                    <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
-                    <div class="-option -remove -hidden">
-                      <i class="fa fa-remove" disabled title="Delete section" v-if="toc.section.isBuilding || tocSectionBook.isBuilding"></i>
-                      <i class="fa fa-remove" v-on:click="removeSection(toc.section.id)" title="Delete section" v-else></i>
-                    </div>
-                    <div :class="['-option', '-build', '-hidden', {'-building': toc.section.isBuilding}]">
-                      <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
-                      <div class="section-generating" v-if="toc.section.isBuilding"></div>
-                      <template v-else>
-                        <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
-                        <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
-                      </template>
-                    </div>
-                    <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
-                      <i class="" title="Download"></i>
-                    </a>
-                    <a class="-option -download -hidden" v-else>
-                      <i class="" title="Download" disabled></i>
-                    </a>
+                    <div class="options-container">
+                      <div class="section-generating-hover -visible" v-if="toc.section.isBuilding"></div>
+                      <div class="-option -remove -hidden">
+                        <i class="fa fa-remove" disabled title="Delete section" v-if="toc.section.isBuilding || tocSectionBook.isBuilding"></i>
+                        <i class="fa fa-remove" v-on:click="removeSection(toc.section.id)" title="Delete section" v-else></i>
+                      </div>
+                      <div :class="['-option', '-build', '-hidden', {'-building': toc.section.isBuilding}]">
+                        <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
+                        <div class="section-generating" v-if="toc.section.isBuilding"></div>
+                        <template v-else>
+                          <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
+                          <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
+                        </template>
+                      </div>
+                      <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
+                        <i class="" title="Download"></i>
+                      </a>
+                      <a class="-option -download -hidden" v-else>
+                        <i class="" title="Download" disabled></i>
+                      </a>
+                      </div>
                   </div>
                     <span class="validation-error" v-if="validationErrors['slug'][toc.section.id]">
                       {{validationErrors['slug'][toc.section.id].text}}
@@ -414,8 +416,8 @@ export default {
                     return false;
                   }
                   this.setEditingSection(section, field);
+                  this.focusEditingField(false, cursorPosition);
                 }
-                this.focusEditingField(false, cursorPosition);
                 return resolve();
               } else {
                 if (!this.hasError(this.editingSectionId)) {
@@ -1060,6 +1062,8 @@ export default {
             color: #337ab7;
             font-weight: bold;
             font-size: 17px;
+            padding: 0px 5px 0px 0px;
+            margin: 0px 5px;
           }
           &.-name {
             background: linear-gradient(
@@ -1068,10 +1072,12 @@ export default {
                 rgb(93, 93, 93) 55%, 
                 transparent 55%, transparent
                 );
-            padding: 3px 5px 3px 0px;
+            /*padding: 3px 5px 3px 0px;*/
             width: 295px;
             max-width: 295px;
             color: gray;
+            padding: 0px 5px 0px 0px;
+            margin: 0px 5px;
             label {
               margin: 0px;
               background-color: white;
@@ -1154,6 +1160,10 @@ export default {
                 transparent 55%, transparent
                 );
           }
+        }
+        .options-container {
+          width: 93px;
+          height: 32px;
         }
       }
       tr.toc-section, tr.toc-section-title, tr.toc-section-title-en {
@@ -1277,14 +1287,14 @@ export default {
       }
     }
     .section-generating-hover {
-      width: 84px;
+      width: 85px;
       height: 20px;
       background-repeat: no-repeat;
       background-image: url(/static/preloader-horizontal-gray.png);
       display: inline-block;
-      vertical-align: middle;
+      /*vertical-align: middle;*/
       background-position: bottom;
-      position: absolute;
+      /*position: absolute;*/
     }
     .book-zip-time {
       margin: 5px 2px;
@@ -1327,6 +1337,34 @@ export default {
         }
         .-visible {
           visibility: hidden;
+        }
+      }
+      &.-is-building:not(:hover) {
+        .-hidden {
+          &.-option {
+            width: 0px;
+            padding: 0px;
+            height: 0px;
+            margin: 0px;
+            i, div {
+              width: 0px;
+              height: 0px;
+              margin: 0px;
+            }
+            &.-download {
+              i {
+                width: 0px;
+                height: 0px;
+                margin: 0px;
+              }
+            }
+          }
+        }
+      }
+      &.-is-building:hover {
+        .section-generating-hover {
+          width: 0px;
+          display: none;
         }
       }
     }
