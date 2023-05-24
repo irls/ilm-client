@@ -189,10 +189,18 @@ export default {
         }
         return updateRequest
           .then(response => {
-            state.pendingSectionUpdate = false;
+            //state.pendingSectionUpdate = false;
             if (response.status === 200) {
               commit('set_toc_section_book', response.data);
-              dispatch('loadBookTocSections', []);
+              return dispatch('loadBookTocSections', [])
+                .then(() => {
+                  state.pendingSectionUpdate = false;
+                  return {};
+                })
+                .catch(err => {
+                  state.pendingSectionUpdate = false;
+                  return {};
+                });
             }
           })
           .catch(err => {
