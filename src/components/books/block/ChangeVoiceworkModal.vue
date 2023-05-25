@@ -43,6 +43,7 @@
   </div>
 </template>
 <script>
+  import { mapGetters, mapActions } from 'vuex';
   export default {
     data() {
       return {
@@ -50,11 +51,21 @@
         voiceworkUpdateType: 'single',
       }
     },
-    props: ['blocksCount', 'blockType', 'voicework', 'isBatch', 'isNarratedBlockCompleteAudio', 'adminOrLibrarian', 'isSingleBlockRemoveAudio', 'updateVoicework', 'voiceworkUpdateProgress'],
+    props: ['blockType', 'voicework', 'isBatch', 'isNarratedBlockCompleteAudio', 'adminOrLibrarian', 'isSingleBlockRemoveAudio', 'updateVoicework', 'voiceworkUpdateProgress', 'voiceworkChange', 'block'],
     mounted() {
       this.voiceworkUpdating = this.voiceworkUpdateProgress;
     },
+    computed: {
+      ...mapGetters(['currentBookCounters']),
+      blocksCount: {
+        get() {
+          return this.currentBookCounters.voiceworks_for_remove;
+        },
+        cache: false
+      }
+    },
     methods: {
+      ...mapActions(['setCurrentBookCounters']),
       close() {
         this.$emit('close');
       },
@@ -67,6 +78,30 @@
           .catch(err => {
             this.$emit('close');
           });
+      },
+      countVoiceworksForRemove(blockType, voicework, isApproved = null) {
+        let filters = {
+          'voiceworks_for_remove': {
+            type: blockType,
+            voicework: voicework
+          }
+        };
+        if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
+        return this.setCurrentBookCounters([filters]);
+      },
+    },
+    watch: {
+      'voiceworkUpdateType': {
+        handler(val) {
+          this.currentBookCounters.voiceworks_for_remove = 0;
+          if (val !== 'single') {
+            //this.voiceworkUpdating = true;
+            this.countVoiceworksForRemove(this.block.type, this.voiceworkChange, (val === 'unapproved' ? false: null))
+            .then((res)=>{
+              //this.voiceworkUpdating = false;
+            })
+          }
+        }
       }
     }
   }

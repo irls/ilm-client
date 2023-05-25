@@ -4170,16 +4170,6 @@ Save text changes and realign the Block?`,
         }
         return false;
       },
-      countVoiceworksForRemove(blockType, voicework, isApproved = null) {
-        let filters = {
-          'voiceworks_for_remove': {
-            type: blockType,
-            voicework: voicework
-          }
-        };
-        if (isApproved !== null) filters['voiceworks_for_remove']['status.marked'] = isApproved;
-        return this.setCurrentBookCounters([filters]);
-      },
 
       checkAllowNarrateUnassigned() {
         return this.checkNarratorUnassignedAction('narrate');
@@ -4449,7 +4439,6 @@ Save text changes and realign the Block?`,
         this.$modal.show(ChangeVoiceworkModal, 
           {
             blockType: this.blockTypeLabel,
-            blocksCount: this.currentBookCounters.voiceworks_for_remove,
             voicework: this.blockVoiceworks[this.voiceworkChange],
             isBatch: this.isAllowBatchVoiceworkNarration,
             isNarratedBlockCompleteAudio: this.isNarratedBlockCompleteAudio,
@@ -4457,6 +4446,8 @@ Save text changes and realign the Block?`,
             isSingleBlockRemoveAudio: this.isSingleBlockRemoveAudio,
             updateVoicework: this.updateVoicework,
             voiceworkUpdateProgress: this.voiceworkUpdating,
+            voiceworkChange: this.voiceworkChange,
+            block: this.block,
           },
           {
             resizeable: false,
@@ -4769,18 +4760,6 @@ Save text changes and realign the Block?`,
         handler(val) {
           this.destroyEditor();
           this.initEditor(true);
-        }
-      },
-      'voiceworkUpdateType' : {
-        handler(val) {
-          this.currentBookCounters.voiceworks_for_remove = 0;
-          if (val !== 'single') {
-            //this.voiceworkUpdating = true;
-            this.countVoiceworksForRemove(this.block.type, this.voiceworkChange, (val === 'unapproved' ? false: null))
-            .then((res)=>{
-              //this.voiceworkUpdating = false;
-            })
-          }
         }
       },
       'block.sync_changes': {// changes from syncronization
