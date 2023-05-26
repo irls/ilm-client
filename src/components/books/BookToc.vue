@@ -612,6 +612,7 @@ export default {
         this.$forceUpdate();
         return false;
       }
+      this.$forceUpdate();
       return true;
     },
     
@@ -654,8 +655,21 @@ export default {
                     //break;
                 }
               }
+              let reCheckErrors = this.editingFieldName === 'slug';
               return this.updateSection(update)
                 .then(() => {
+                  if (reCheckErrors) {
+                    Object.keys(this.validationErrors.slug).forEach(sectionId => {
+                      if (sectionId !== section.id) {
+                        let sect = this.bookTocSections.find(s => {
+                          return s.id === sectionId;
+                        });
+                        if (sect) {
+                          this.validateSectionField(sect.slug, 'slug', sectionId);
+                        }
+                      }
+                    })
+                  }
                   return Promise.resolve();
                 })
                 .catch(err => {
