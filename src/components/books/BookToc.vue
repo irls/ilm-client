@@ -790,6 +790,9 @@ export default {
           }
         });
         if (empty.length > 0) {
+          if (empty.length > 5) {
+            empty = empty.slice(0, 3).concat(['... ' + empty.pop()]);
+          }
           this.$root.$emit('show-modal', {
             title: 'Define section name',
             text: `Book section(s) ${empty.join(', ')} Name is not defined`,
@@ -804,6 +807,9 @@ export default {
             ]
           });
         } else if (unique.length > 0) {
+          if (unique.length > 5) {
+            unique = unique.slice(0, 3).concat(['... ' + unique.pop()]);
+          }
           this.$root.$emit('show-modal', {
             title: 'Duplicate section name',
             text: `Book section(s) ${unique.join(', ')} Name is not unique`,
