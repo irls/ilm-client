@@ -172,7 +172,7 @@
                 <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
               </template>-->
               <td>
-                <template v-if="(!toc.section || !toc.section.id) && sectionsMode">
+                <template v-if="(!toc.section || !toc.section.id) && sectionsMode && displayTOC">
                   <div class="create-toc-section -hidden" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
                 </template>
               </td>
