@@ -34,7 +34,7 @@
               </button>
               <span class="btn btn-primary btn-build-book -disabled toc-export" title="Build" v-else>
               </span>
-              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" v-on:click="checkOnAction(null, $event)" title="Download">
+              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" title="Download">
               </a>
               <span class="btn btn-primary -disabled btn-download-book" title="Download" v-else>
               </span>
@@ -110,7 +110,7 @@
                           <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
                         </template>
                       </div>
-                      <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-on:click="checkOnAction(toc.section.id, $event)" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
+                      <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
                         <i class="" title="Download"></i>
                       </a>
                       <a class="-option -download -hidden" v-else>
@@ -172,7 +172,7 @@
                 <td colspan="4" class="toc-item-link" @click="goToBlock(toc._id, $event)">{{toc.content}}</td>
               </template>-->
               <td>
-                <template v-if="(!toc.section || !toc.section.id) && sectionsMode">
+                <template v-if="(!toc.section || !toc.section.id) && sectionsMode && displayTOC">
                   <div class="create-toc-section -hidden" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
                 </template>
               </td>
@@ -410,6 +410,9 @@ export default {
                 }
               }
               if (section) {
+                if (this.tocSectionBook.isBuilding || section.isBuilding) {
+                  return false;
+                }
                 if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
                   if (this.editingSectionId && this.hasError()) {
                     this.showNameError();
@@ -714,9 +717,11 @@ export default {
       if (!section) {
         return false;
       }
-      if (!this.validateSectionField(section.slug, 'slug', section.id)) {
-        this.showNameError();
-        return false;
+      if (!this.validationErrors.slug[section.id]) {
+        if (!this.validateSectionField(section.slug, 'slug', section.id)) {
+          this.showNameError();
+          return false;
+        }
       }
       if (this.checkOnAction(id, ev)) {
         section.isBuilding = true;
@@ -725,7 +730,8 @@ export default {
     },
     
     exportBook(ev) {
-      if (!this.fullValidate()) {
+      let slugErrors = Object.keys(this.validationErrors.slug).length;
+      if (slugErrors > 0 || !this.fullValidate()) {
         this.showNameError();
         return false;
       }
@@ -759,7 +765,7 @@ export default {
     },
     
     checkOnAction(sectionId = null, ev = null) {
-      if ((sectionId === null || this.editingSectionId === sectionId) && this.hasError()) {
+      if (this.hasError(sectionId)) {
         this.showNameError();
         if (ev) {
           ev.preventDefault();
