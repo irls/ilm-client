@@ -891,6 +891,9 @@ export default {
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
+          if (block.index === 0) {
+            this.loadBookTocSections([]);
+          }
           //this.refreshTmpl();
         })
         .catch(err => {
