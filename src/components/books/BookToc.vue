@@ -765,7 +765,7 @@ export default {
     },
     
     checkOnAction(sectionId = null, ev = null) {
-      if ((sectionId === null || this.editingSectionId === sectionId) && this.hasError()) {
+      if (this.hasError(sectionId)) {
         this.showNameError();
         if (ev) {
           ev.preventDefault();
