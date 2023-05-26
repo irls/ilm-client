@@ -410,6 +410,9 @@ export default {
                 }
               }
               if (section) {
+                if (this.tocSectionBook.isBuilding || section.isBuilding) {
+                  return false;
+                }
                 if (this.editingSectionId !== section.id || field !== this.editingFieldName) {
                   if (this.editingSectionId && this.hasError()) {
                     this.showNameError();
