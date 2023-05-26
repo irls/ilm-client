@@ -807,6 +807,9 @@ export default {
             ]
           });
         } else if (unique.length > 0) {
+          if (unique.length > 5) {
+            unique = unique.slice(0, 3).concat(['... ' + unique.pop()]);
+          }
           this.$root.$emit('show-modal', {
             title: 'Duplicate section name',
             text: `Book section(s) ${unique.join(', ')} Name is not unique`,
