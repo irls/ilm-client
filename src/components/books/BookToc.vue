@@ -423,7 +423,7 @@ export default {
                 }
                 return resolve();
               } else {
-                if (!this.hasError(this.editingSectionId)) {
+                if (!this.editingSectionId || !this.hasError(this.editingSectionId, this.editingFieldName)) {
                   this.setEditingSection(null);
                 }
                 return resolve();
@@ -612,6 +612,7 @@ export default {
         this.$forceUpdate();
         return false;
       }
+      this.$forceUpdate();
       return true;
     },
     
@@ -654,8 +655,21 @@ export default {
                     //break;
                 }
               }
+              let reCheckErrors = this.editingFieldName === 'slug';
               return this.updateSection(update)
                 .then(() => {
+                  if (reCheckErrors) {
+                    Object.keys(this.validationErrors.slug).forEach(sectionId => {
+                      if (sectionId !== section.id) {
+                        let sect = this.bookTocSections.find(s => {
+                          return s.id === sectionId;
+                        });
+                        if (sect) {
+                          this.validateSectionField(sect.slug, 'slug', sectionId);
+                        }
+                      }
+                    })
+                  }
                   return Promise.resolve();
                 })
                 .catch(err => {
@@ -746,14 +760,16 @@ export default {
       return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download`);
     },
     
-    hasError(section_id = null) {
+    hasError(section_id = null, field = null) {
       let hasError = false;
       Object.keys(this.validationErrors).forEach(k => {
         if (!hasError && this.validationErrors[k]) {
-          if (!section_id && Object.keys(this.validationErrors[k]).length > 0) {
-            hasError = true;
-          } else if (section_id && this.validationErrors[k][section_id]) {
-            hasError = true;
+          if (!field || k === field) {
+            if (!section_id && Object.keys(this.validationErrors[k]).length > 0) {
+              hasError = true;
+            } else if (section_id && this.validationErrors[k][section_id]) {
+              hasError = true;
+            }
           }
         }
       });
