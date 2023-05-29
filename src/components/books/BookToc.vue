@@ -1338,8 +1338,8 @@ export default {
     .toc-buttons {
       display: table-row;
       position: sticky;
-      /*top: 45px;*/
-      top: 0px;
+      top: 45px;
+      /*top: 0px;*/
       background-color: white;
       .toc-button {
         display: table-cell;
@@ -1407,8 +1407,8 @@ export default {
     .toc-display-settings {
       padding: 10px 7px 5px 7px;
       position: sticky;
-      /*top: 80px;*/
-      top: 35px;
+      top: 80px;
+      /*top: 35px;*/
       background-color: white;
       div {
         display: inline-block;
