@@ -2579,7 +2579,7 @@ export default {
                   this.$refs.blocks[0].voiceworkChange = action.payload.voicework;
                   this.$refs.blocks[0].voiceworkUpdateType = action.payload.updateType;
                   this.$refs.blocks[0].voiceworkBlockType = action.payload.blockType;
-                  this.$refs.blocks[0].showModal('voicework-change');
+                  this.$refs.blocks[0].showChangeVoiceworkModal();
                 }
               });
             }

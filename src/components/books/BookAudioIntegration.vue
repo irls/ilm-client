@@ -1162,7 +1162,8 @@
         let height = parentHeight / 100 * 70 - 5;
 
         let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-        $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
+        $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px');
+        this.checkCatalogueScroll();
 
       },
       initSplit(force = false, state) {
@@ -1228,7 +1229,8 @@
                 let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
                 //console.log(`parentHeight:${parentHeight}`);
                 //console.log(`wrapper:${wrapper}`);
-                $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
+                $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px');
+                this.checkCatalogueScroll();
                 // height = this.inViewport($('.file-catalogue-files-wrapper'));
                 // console.log(`parentHeight inViewport:${parentHeight}`);
                 //
@@ -1286,6 +1288,18 @@
       
       goToBlock(id) {
         this.$emit('goToBlock', id);
+      },
+      
+      checkCatalogueScroll() {
+        Vue.nextTick(() => {
+          if ($('.file-catalogue-files-wrapper').is(':visible')) {// check if additional scroll appears
+            let scrollHeight = parseInt($('.sidebar')[0].scrollHeight) - parseInt($('.sidebar').height());
+            if (scrollHeight > 0) {
+              let heightDifference = parseInt($('.file-catalogue-files-wrapper').height() - (scrollHeight + 2));
+              $('.file-catalogue-files-wrapper').css('max-height', `${heightDifference}px`);
+            }
+          }
+        });
       },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
@@ -1472,6 +1486,7 @@
       'isActive': {
         handler(val) {
           this.initSplit();
+          this.checkCatalogueScroll();
         }
       },
       'activeTabIndex': {

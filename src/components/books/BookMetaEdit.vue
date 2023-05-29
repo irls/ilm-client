@@ -2424,10 +2424,10 @@ select.text-danger#categorySelection, input.text-danger{
   background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
-  /*position: sticky;*/
-  top: 44px;
+  position: sticky;
+  top: 43px;
   background-color:white;
-  z-index: 19;
+  z-index: 1;
 }
 
 #p-styles-switcher.tab-container {
@@ -2436,9 +2436,10 @@ select.text-danger#categorySelection, input.text-danger{
 
 .meta-edit-tabs > .nav-tabs-navigation{
   border: 1px solid white;
-  /*position: sticky;*/
-  top: 0px;
-  z-index: 20;
+  position: sticky;
+  top: -1px;
+  background-color: white;
+  z-index: 1;
 }
 
 /*.meta-edit-tabs .nav-tabs-navigation .nav > li {
