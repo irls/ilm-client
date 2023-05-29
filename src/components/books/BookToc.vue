@@ -423,7 +423,7 @@ export default {
                 }
                 return resolve();
               } else {
-                if (!this.hasError(this.editingSectionId)) {
+                if (!this.editingSectionId || !this.hasError(this.editingSectionId, this.editingFieldName)) {
                   this.setEditingSection(null);
                 }
                 return resolve();
@@ -760,14 +760,16 @@ export default {
       return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download`);
     },
     
-    hasError(section_id = null) {
+    hasError(section_id = null, field = null) {
       let hasError = false;
       Object.keys(this.validationErrors).forEach(k => {
         if (!hasError && this.validationErrors[k]) {
-          if (!section_id && Object.keys(this.validationErrors[k]).length > 0) {
-            hasError = true;
-          } else if (section_id && this.validationErrors[k][section_id]) {
-            hasError = true;
+          if (!field || k === field) {
+            if (!section_id && Object.keys(this.validationErrors[k]).length > 0) {
+              hasError = true;
+            } else if (section_id && this.validationErrors[k][section_id]) {
+              hasError = true;
+            }
           }
         }
       });
