@@ -2814,7 +2814,7 @@ export const store = new Vuex.Store({
       })
     },
 
-    putNumBlockO({commit, state}, params) {
+    putNumBlockO({commit, state, dispatch}, params) {
       let rid = encodeURIComponent(params.rid);
       let bookId = encodeURIComponent(params.bookId);
       let req = state.API_URL + `books/blocks/num/${bookId}/${rid}`;
@@ -2822,6 +2822,7 @@ export const store = new Vuex.Store({
       return axios.put(req, params)
       .then((response) => {
         state.updatingNumeration = false;
+        dispatch('tocSections/loadBookTocSections', []);
         if (response.data.updated && response.data.updated > 0) {
           let block = state.storeListO.getBlockByRid(params.rid);
           if (block) {
