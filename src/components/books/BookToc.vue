@@ -173,7 +173,7 @@
               </template>-->
               <td>
                 <template v-if="(!toc.section || !toc.section.id) && sectionsMode && displayTOC">
-                  <div class="create-toc-section -hidden" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
+                  <div :class="['create-toc-section -hidden', {'-disabled': tocSectionBook.isBuilding}]" v-on:click="createSectionFromItem(toc.blockid)" title="Add section"></div>
                 </template>
               </td>
               <template v-if="toc.level == 'toc1'">
@@ -721,6 +721,9 @@ export default {
     },
     
     createSectionFromItem(blockid) {
+      if (this.tocSectionBook.isBuilding) {
+        return false;
+      }
       return this.createBookTocSection({startBlockid: blockid, bookid: this.currentBookToc.bookId});
     },
     
@@ -1214,6 +1217,9 @@ export default {
         -webkit-mask-image: url(/static/split-blocks.svg);
         mask-image: url(/static/split-blocks.svg);
         cursor: pointer;
+        &.-disabled {
+          background-color: #bbbbbb;
+        }
       }
       .section-slug, .section-title {
         &.-manual {
