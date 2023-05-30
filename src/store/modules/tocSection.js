@@ -18,10 +18,10 @@ export default {
     },
     currentBookTocCombined: (state, getters, rootState) => {
       let currentBookTocCombined = [];
-      if (!rootState.adminOrLibrarian) {
-        return rootState.currentBookToc.data;
-      }
-      if (!state.bookTocSections || state.bookTocSections.length === 0) {
+      if (!rootState.adminOrLibrarian || !state.bookTocSections || state.bookTocSections.length === 0) {
+        rootState.currentBookToc.data.forEach(toc => {
+          toc.section = {};
+        });
         return rootState.currentBookToc.data;
       }
       rootState.currentBookToc.data.forEach(toc => {
