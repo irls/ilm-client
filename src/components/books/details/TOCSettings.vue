@@ -1,5 +1,5 @@
 <template>
-  <div class="toc-settings-modal">
+  <div :class="['toc-settings-modal', {'-is-loading': isLoading}]">
     <div class="modal-header">
       <h4>Name and Title generation pattern</h4>
       <button class="close" v-on:click="closeModal">
@@ -98,6 +98,7 @@
     components: {
       ResizableTextarea
     },
+    props: ['isLoading'],
     computed: {
       ...mapGetters('tocSections', ['tocSectionBook'])
     },
@@ -173,6 +174,9 @@
     left: 100%;
     margin-left: -440px;
     z-index: 999;
+    &.-is-loading {
+      display: none;
+    }
     .modal-header {
       padding: 10px 15px;
       border-bottom: none;

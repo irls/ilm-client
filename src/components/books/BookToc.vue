@@ -1,14 +1,15 @@
 <template>
   <fieldset class="toc-items-list">
+    <TOCSettingsModal v-if="tocSettingsModalActive"
+      :isLoading="isBlocked && blockers.indexOf('loadBookToc') >-1"
+      @close="closeSettings"
+      @save="saveSettings" />
     <legend>Table of contents</legend>
     <template v-if="isBlocked && blockers.indexOf('loadBookToc') >-1">
       <div class="preloader-spinner"></div>
     </template>
     <template v-else>
       <div v-if="pendingSectionUpdate" class="pending-section-update"></div>
-      <TOCSettingsModal v-if="tocSettingsModalActive"
-        @close="closeSettings"
-        @save="saveSettings" />
       <div class="toc-buttons">
         <div class="toc-button">
           <template v-if="adminOrLibrarian">
