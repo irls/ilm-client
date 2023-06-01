@@ -565,17 +565,17 @@ export default {
             if (currentField) {
               currentField.dispatchEvent(new Event('change'));
             }
-            this.sectionEditMode(null);
-            Vue.nextTick(() => {
-              this.sectionEditMode(targetSection, targetField)
-                .then(() => {
-                  Vue.nextTick(() => {
-                    let editingField = document.querySelector('[class^=edit-section-]');
-                    if (editingField) {
-                      editingField.select();
-                    }
+            return this.sectionEditMode(null)
+              .then(() => {
+                this.sectionEditMode(targetSection, targetField)
+                  .then(() => {
+                    Vue.nextTick(() => {
+                      let editingField = document.querySelector('[class^=edit-section-]');
+                      if (editingField) {
+                        editingField.select();
+                      }
+                    });
                   });
-                });
             });
           }
         }
@@ -623,15 +623,19 @@ export default {
         return this.updateBookTocSection([updateSectionId, update])
           .then(response => {
             if (updateSectionId === this.editingSectionId && editingFieldName === this.editingFieldName) {
-              this.sectionEditMode(null);
+              return this.sectionEditMode(null)
+                .then(() => {
+                  return Promise.resolve(response);
+                });
             }
-            return Promise.resolve();
+            return Promise.resolve(response);
           });
       }
     },
     
     updateSectionField(value) {
       value = value.trim();
+      let updateField = this.editingFieldName;
       if (this.editingSectionId) {
         let section = this.bookTocSections.find(sect => {
           return sect.id === this.editingSectionId;
@@ -657,7 +661,20 @@ export default {
               }
               let reCheckErrors = this.editingFieldName === 'slug';
               return this.updateSection(update)
-                .then(() => {
+                .then((response) => {
+                  if (response.data && response.data.status === "error") {
+                    switch (response.data.error) {
+                      case "slug_not_unique":
+                        section.slug = response.data.slug;
+                        return this.sectionEditMode(section, updateField)
+                          .then(() => {
+                            this.editingFieldValue = response.data.slug;
+                            this.validationErrors.slug[section.id] = {text: this.validationErrorsText.unique.slug};
+                            this.$forceUpdate();
+                          });
+                        break;
+                    }
+                  }
                   if (reCheckErrors) {
                     Object.keys(this.validationErrors.slug).forEach(sectionId => {
                       if (sectionId !== section.id) {

@@ -107,7 +107,10 @@ export default {
         return state.bookTocSectionsXHR.then(updated => {
             state.bookTocSectionsXHR = null;
             state.pendingSectionUpdate = false;
-            return dispatch('loadBookTocSections', []);
+            return dispatch('loadBookTocSections', [])
+              .then(() => {
+                return updated;
+              });
           })
           .catch(err => {
             state.bookTocSectionsXHR = null;
