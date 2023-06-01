@@ -110,15 +110,15 @@
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]' v-on:change="debounceUpdate('author', $event.target.value, $event);" :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
+                    <input v-model='currentBook.author[0]' v-on:change="debounceUpdate('author', [...currentBook.author], $event);" :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                     <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
                       <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
-                      <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', currentBook.author);" >Unknown</div>
+                      <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
                     </div>
-                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="debounceUpdate('author', $event.target.value, $event);" :disabled="!allowMetadataEdit">
+                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:change="debounceUpdate('author', [...currentBook.author], $event);" :disabled="!allowMetadataEdit">
                       <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
                         <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                        <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', currentBook.author);" >Unknown</div>
+                        <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
                       </div>
                       <button v-if="i !== 0 && allowMetadataEdit" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
                       <br/>
@@ -1431,7 +1431,7 @@ export default {
       let targets = [];
       const update = args.reduce((acc, arg)=>{
         let [key, value = null, _event = false, disable = false] = arg;
-
+        //console.log(`updateMetaHook.key.value._event: `, key,value,_event);
         if (_event && _event.target) {
           if (value === null) {
             value = _event.target.value;
@@ -1448,8 +1448,6 @@ export default {
           prevVal[keys[1]] = value;
           value = prevVal;
         }
-
-        if (key == 'author') value = this.currentBook.author;
 
         acc[key] = value;
 
@@ -1641,13 +1639,13 @@ export default {
     },
     addAuthor() {
       this.currentBook.author.push('');
-      this.debounceUpdate('author', false, this.currentBook.author);
+      this.debounceUpdate('author', [...this.currentBook.author], false);
       //this.liveUpdate('author', this.currentBook.author);
     },
     removeAuthor(i) {
       if (i > 0 || this.currentBook.author.length > 1) {
         this.currentBook.author.splice(i, 1);
-        this.debounceUpdate('author', false, this.currentBook.author);
+        this.debounceUpdate('author', [...this.currentBook.author], false);
         //this.liveUpdate('author', this.currentBook.author);
       }
     },
