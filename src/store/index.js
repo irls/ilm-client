@@ -2206,6 +2206,7 @@ export const store = new Vuex.Store({
 
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
+          dispatch('tocSections/loadBookTocSections', []);
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
