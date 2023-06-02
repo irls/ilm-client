@@ -825,6 +825,8 @@ export const store = new Vuex.Store({
         }
         if (meta.hasOwnProperty('coverimgURL')) {
           this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: meta.coverimgURL});
+        } else {
+          this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
         }
       } else {
         state.currentBookMeta = {};
