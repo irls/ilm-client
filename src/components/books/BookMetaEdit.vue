@@ -221,12 +221,9 @@
                 <tr class='weight'>
                   <td>Weight</td>
                   <td>
-                    <input v-model='currentBook.weight' v-on:change="updateWeigth($event, 100)" :disabled="!allowMetadataEdit"
-                           :class="[{'has-error': this.validationErrorWeight }]"/>
-<!--                    <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0">-->
-<!--                      <span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span>-->
-                      <span class="validation-error" >{{validationErrorWeight}}</span>
-<!--                    </div>-->
+                    <input v-model='currentBook.weight' v-on:change="debounceUpdate('weight', $event.target.value, $event, true)"
+                           :disabled="!allowMetadataEdit" :class="[{'has-error': this.validationErrorWeight }]"/>
+                    <span class="validation-error" >{{validationErrorWeight}}</span>
                   </td>
                 </tr>
               </table>
@@ -1393,9 +1390,39 @@ export default {
           validationErrors = 'Allowed range 1 - 14.99';
         }
 
-        if(validationErrors !=this.validationErrors['difficulty'] ){
+        if(validationErrors != this.validationErrors['difficulty'] ){
           this.validationErrorDifficulty = validationErrors;
         }
+        if(validationErrors && _event && disable){
+          _event.target.toggleAttribute('disable');
+          return false;
+        }
+
+      }
+
+      if (key == 'weight') {
+        let validationErrors = '';
+        const maxValue = 10.99;
+        const minValue = 1.00;
+        const value = _event.target.value.replace(/ /g, '');
+        const failFormat = !/^\d{1,2}(\.\d{1,2})?$/.test(value);
+
+        if (Number(value) == value && value % 1 !== 0) {
+          if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2 || failFormat) {
+            //ILM-3622:
+            validationErrors = 'Allowed range ' + minValue + ' - ' + maxValue ;
+          }
+        } else {
+          if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue) || failFormat)) {
+            //ILM-3622:
+            validationErrors = 'Allowed range ' + minValue + ' - ' + maxValue ;
+          }
+        }
+
+        if(validationErrors != this.validationErrors['difficulty'] ){
+          this.validationErrorWeight = validationErrors;
+        }
+
         if(validationErrors && _event && disable){
           _event.target.toggleAttribute('disable');
           return false;
@@ -2276,52 +2303,8 @@ export default {
 
     updateHashTags (event) {
       let array = event.target.value.split(', ');
-      console.log(array);
       this.currentBook.hashTags = array;
       this.debounceUpdate('hashTags', this.currentBook.hashTags)
-    },
-
-    updateWeigth (event,debounceTime) {
-      const value = event.target.value.replace(/ /g, '');
-      const key = 'weight';
-      const maxValue = 10.99;
-      const minValue = 1.00;
-      let error = '';
-      let failFormat = !/^\d{1,2}(\.\d{1,2})?$/.test(value);
-      if (Number(value) == value && value % 1 !== 0) {
-        if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2 || failFormat) {
-          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
-          //ILM-3622:
-          error = 'Allowed range ' + minValue + ' - ' + maxValue ;
-        }
-      } else {
-        if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue) || failFormat)) {
-          //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
-          //ILM-3622:
-          error = 'Allowed range ' + minValue + ' - ' + maxValue ;
-        }
-      }
-
-
-      // if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
-      // this.validationErrors[this.currentBook.bookid][key] = error;
-      this.validationErrorWeight = error;
-      if (!error) {
-
-        event.target.disabled  = true ;
-
-        let debouncedFunction = _.debounce((key,event)=>{
-          let val = typeof event === 'string' ? event : event.target.value;
-          val = val ? this.parseFloatToFixed(val, 2) : null;
-          this.debounceUpdate(key, val, event)
-
-        },  debounceTime, {
-          'leading': false,
-          'trailing': true
-        });
-        debouncedFunction(key,event);
-      }
-
     },
 
     getTaskType(typeId) {
