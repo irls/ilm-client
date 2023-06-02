@@ -2081,6 +2081,12 @@ export const store = new Vuex.Store({
         .then(doc => {
           dispatch('updateBookVersion', {minor: true})
           .then(()=>{
+            const index = state.books_meta.findIndex(meta => {
+              return meta.bookid === state.currentBookMeta.bookid;
+            });
+            if (typeof index !== 'undefined' && state.books_meta[index].coverimgURL) {
+              delete state.books_meta[index].coverimgURL;
+            }
             commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
             return Promise.resolve();
           })
