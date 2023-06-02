@@ -1583,6 +1583,11 @@ export default {
       .then((metaResp)=>{
         this.initEditorPosition();
         this.processOpenedBook();
+        Vue.nextTick(()=>{
+          for (const block of this.$refs.blocks) {
+            block.reInitEditor()
+          }
+        })
       })
     },
 
