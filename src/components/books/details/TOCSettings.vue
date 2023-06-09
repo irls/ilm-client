@@ -127,6 +127,10 @@
           let text = this.patternCustomTypes[field][type] ? this.patternCustomTypes[field][type].value : '';
           if (this.lastCursorPosition[field] === null) {
             fieldRef.$el.value+= text;
+            fieldRef.$el.focus();
+            fieldRef.$el.selectionStart = fieldRef.$el.value.length;
+            fieldRef.$el.selectionEnd = fieldRef.$el.selectionStart;
+            //this.lastCursorPosition[field]
           } else {
             let currentValue = fieldRef.$el.value;
             fieldRef.$el.value = currentValue.substring(0, this.lastCursorPosition[field]) + text + currentValue.substring(this.lastCursorPosition[field]);
