@@ -1490,6 +1490,9 @@
       'activeTabIndex': {
         handler(val) {
           this.initSplit();
+          setTimeout(() => {
+            this.checkCatalogueScroll();
+          }, 500);// tab activation time 50ms
         }
       },
       'renaming': {
