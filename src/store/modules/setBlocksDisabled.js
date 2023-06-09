@@ -51,7 +51,7 @@ export default {
           }
           dispatch('getDisabledBlocks');
           dispatch('loadBookToc', {bookId: rootState.currentBookid, isWait: true}, {root: true});
-          dispatch('loadBookTocSections', [], {root: true});
+          dispatch('tocSections/loadBookTocSections', [], {root: true});
           if (rootState.currentJobInfo && rootState.currentJobInfo.published) {
             dispatch('updateBookVersion', {major: true}, {root: true});
           }
