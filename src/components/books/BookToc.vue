@@ -1338,7 +1338,7 @@ export default {
     .toc-buttons {
       display: table-row;
       position: sticky;
-      top: 45px;
+      top: 44px;
       /*top: 0px;*/
       background-color: white;
       .toc-button {
@@ -1407,7 +1407,7 @@ export default {
     .toc-display-settings {
       padding: 10px 7px 5px 7px;
       position: sticky;
-      top: 80px;
+      top: 78px;
       /*top: 35px;*/
       background-color: white;
       div {
