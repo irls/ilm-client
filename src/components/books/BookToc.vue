@@ -5,10 +5,9 @@
       @close="closeSettings"
       @save="saveSettings" />
     <legend>Table of contents</legend>
-    <template v-if="isBlocked && blockers.indexOf('loadBookToc') >-1">
+    <template v-if="updatingToc">
       <div class="preloader-spinner"></div>
     </template>
-    <template v-else>
       <div v-if="pendingSectionUpdate" class="pending-section-update"></div>
       <div class="toc-buttons">
         <div class="toc-button">
@@ -235,7 +234,6 @@
       <div v-else class="empty-tocs">
         No Table of contents
       </div>
-    </template>
   </fieldset>
 </template>
 <script>
@@ -277,7 +275,8 @@ export default {
         empty: {
           slug: 'Define section Name'
         }
-      }
+      },
+      listScrollPosition: 0
     }
   },
 
@@ -322,6 +321,12 @@ export default {
     displayTitleEn: {
       get() {
         return this.sectionsMode ? this.displaySettings.titleEn : false;
+      },
+      cache: false
+    },
+    updatingToc: {
+      get() {
+        return this.isBlocked && this.blockers.indexOf('loadBookToc') >-1;
       },
       cache: false
     }
@@ -980,6 +985,22 @@ export default {
     displayTitleEnSection(section) {
       return this.displayTitleEn && section && section.id && section.firstSectionBlock.language !== 'en';
       
+    },
+    
+    saveScrollPosition() {
+      let list = document.querySelector('fieldset.toc-items-list');
+      if (list) {
+        this.listScrollPosition = list.scrollTop;
+      }
+    },
+    
+    restoreScrollPosition() {
+      if (this.listScrollPosition) {
+        let list = document.querySelector('fieldset.toc-items-list');
+        if (list) {
+          list.scrollTo(0, this.listScrollPosition);
+        }
+      }
     }
   },
 
@@ -987,7 +1008,14 @@ export default {
     //console.log('mounted TOC', this.currBookId);
     this.loadBookTocProxy(true);
     //this.loadBookTocSections([]);
-    this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy)
+    this.$root.$on('from-book-meta:upd-toc', this.loadBookTocProxy);
+    let list = document.querySelector('fieldset.toc-items-list');
+    if (list) {
+      list.onscroll = (ev) => {
+        //console.log(ev, list.scrollTop);
+        this.saveScrollPosition();
+      }
+    }
   },
 
   watch: {
@@ -1025,8 +1053,40 @@ export default {
     'isActive': {
       handler(val) {
         if (val) {
-          $('fieldset.toc-items-list').css('height', 'calc(100vh - 105px)');
+          $('fieldset.toc-items-list').css('height', 'calc(100vh - 110px)');
         }
+      }
+    },
+    
+    'pendingSectionUpdate': {
+      handler(val) {
+        if (!val) {
+          this.restoreScrollPosition();
+        }
+      }
+    },
+    
+    'displayTOC': {
+      handler() {
+        this.saveScrollPosition();
+      }
+    },
+    
+    'displayTitle': {
+      handler() {
+        this.saveScrollPosition();
+      }
+    },
+    
+    'displayTitleEn' : {
+      handler() {
+        this.saveScrollPosition();
+      }
+    },
+    
+    'updatingToc': {
+      handler() {
+        this.listScrollPosition = 0;
       }
     }
   },
@@ -1055,13 +1115,16 @@ export default {
       margin-bottom: 0;
     }
     .preloader-spinner {
-      width: 100%;
-      height: 100px;
+      width: 445px;
+      height: 100vh;
       background: url(/static/preloader-snake-small.gif);
 
       background-repeat: no-repeat;
       text-align: center;
-      background-position: center center;
+      background-position: top center;
+      position: absolute;
+      z-index: 999;
+      background-color: white;
       /*background-size: 83%;*/
     }
     .empty-tocs {
