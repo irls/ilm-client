@@ -1053,7 +1053,7 @@ export default {
     'isActive': {
       handler(val) {
         if (val) {
-          $('fieldset.toc-items-list').css('height', 'calc(100vh - 110px)');
+          $('fieldset.toc-items-list').css('height', 'calc(100vh - 115px)');
         }
       }
     },
@@ -1206,8 +1206,8 @@ export default {
                 transparent 55%, transparent
                 );
             /*padding: 3px 5px 3px 0px;*/
-            width: 295px;
-            max-width: 295px;
+            width: 291px;
+            max-width: 291px;
             color: gray;
             padding: 0px 5px 0px 0px;
             margin: 0px 5px;
