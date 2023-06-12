@@ -1206,8 +1206,8 @@ export default {
                 transparent 55%, transparent
                 );
             /*padding: 3px 5px 3px 0px;*/
-            width: 291px;
-            max-width: 291px;
+            width: 288px;
+            max-width: 288px;
             color: gray;
             padding: 0px 5px 0px 0px;
             margin: 0px 5px;
