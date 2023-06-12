@@ -283,6 +283,7 @@ export default {
 
   props: [
     /*'bookId',*/
+    'isActive'
   ],
   
   components: {
@@ -1019,6 +1020,14 @@ export default {
           this.loadBookTocSections([]);
         }
       }
+    },
+    
+    'isActive': {
+      handler(val) {
+        if (val) {
+          $('fieldset.toc-items-list').css('height', 'calc(100vh - 105px)');
+        }
+      }
     }
   },
 
@@ -1031,6 +1040,10 @@ export default {
  fieldset.toc-items-list {
     padding-left: 5px;
     position: static;
+    border: none;
+    /*height: calc(100vh - 85px);*/
+    overflow-x: hidden;
+    overflow-y: scroll;
     .table-striped>tr:nth-of-type(odd) {
       background-color: #f9f9f9;
     }
@@ -1374,7 +1387,7 @@ export default {
           width: 160px;
         }
         &.-refresh-toc {
-          width: 115px;
+          width: 143px;
           text-align: right;
         }
       }
