@@ -1387,7 +1387,7 @@ export default {
           width: 160px;
         }
         &.-refresh-toc {
-          width: 143px;
+          width: 135px;
           text-align: right;
         }
       }
