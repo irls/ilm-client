@@ -178,6 +178,7 @@
     left: 100%;
     margin-left: -440px;
     z-index: 999;
+    top: 88px;
     &.-is-loading {
       display: none;
     }

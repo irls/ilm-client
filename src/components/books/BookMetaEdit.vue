@@ -269,6 +269,7 @@
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
+              :isActive="activeTabIndex === TAB_TOC_INDEX"
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
