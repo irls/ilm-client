@@ -1,5 +1,5 @@
 <template>
-  <div class="vue-js-modal" @before-close="voicework_change_close($event)">
+  <div class="vue-js-modal voicework-update-modal" @before-close="voicework_change_close($event)">
     <!-- custom header -->
     <div class="modal-header">
       <h4 class="modal-title"><!--text-center-->
