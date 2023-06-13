@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion">
+    <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
           <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
@@ -1301,6 +1301,28 @@
           }
         });
       },
+      
+      checkTabOpen(ev) {// on tab open event component start slowly open, need to wait until full open
+        if (ev.index === 0) {
+          let tab = document.querySelector(`.audio-integration-accordion .p-accordion-tab:nth-child(${ev.index + 1}) .p-toggleable-content`);
+          if (tab) {
+            let checks = 0;
+            let prevHeight = null;
+            let checkInterval = setInterval(() => {
+              if (prevHeight !== null && prevHeight === tab.offsetHeight) {
+                clearInterval(checkInterval);
+                this.checkCatalogueScroll();
+              } else {
+                prevHeight = tab.offsetHeight;
+              }
+              ++checks;
+              if (checks >= 20) {
+                clearInterval(checkInterval);
+              }
+            }, 50);
+          }
+        }
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS'])
@@ -1494,7 +1516,7 @@
           this.initSplit();
           setTimeout(() => {
             this.checkCatalogueScroll();
-          }, 500);// tab activation time 50ms
+          }, 600);// tab activation time 50ms
         }
       },
       'renaming': {
