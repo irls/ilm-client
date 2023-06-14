@@ -16,18 +16,12 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-      <AudioImport v-if="showModal_audio"
-        @close="showModal_audio = false"
-        @closeOk="checkAfterAudioImport"
-        :book="currentBook"
-        :importTask="importTask"
-        :allowDownload="false" />
 
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              @showModal_audio="showModal_audio = true"
+              @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
@@ -56,7 +50,6 @@
                   <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
                   <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
                   <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
-                  <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
                 </template>
                 <hr>
                 <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
@@ -273,17 +266,11 @@
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
-              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
-              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
-              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
-            </div>
-            <div v-else class="t-box red-message">Define block range</div>
             <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
-                @uploadAudio="showModal_audio = true"
+                @goToBlock="goToBlock"
               ></BookAudioIntegration>
           </vue-tab>
 
@@ -594,7 +581,6 @@ import superlogin           from 'superlogin-client'
 import BookDownload         from './BookDownload'
 import BookEditCoverModal   from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
-import AudioImport          from '../audio/AudioImport'
 import BookToc              from './BookToc'
 import _                    from 'lodash'
 import axios                from 'axios'
@@ -629,7 +615,6 @@ export default {
   components: {
     BookDownload,
     BookEditCoverModal,
-    AudioImport,
     BookToc,
     BookAudioIntegration,
     'vue-tabs': VueTabs,
@@ -2174,7 +2159,6 @@ export default {
     },
 
     checkAfterAudioImport() {
-      this.showModal_audio = false
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
         this.activeTabIndex = this.TAB_AUDIO_INDEX;
         this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);

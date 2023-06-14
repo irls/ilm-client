@@ -17,6 +17,7 @@ import setBlocksDisabled from './modules/setBlocksDisabled';
 import userActions from './modules/user';
 import alignActions from './modules/align';
 import tasks from './modules/tasks';
+import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
 // const ilm_content = new PouchDB('ilm_content')
@@ -81,6 +82,7 @@ export const store = new Vuex.Store({
     alignActions,
     tasks,
     gridFilters,
+    audioExport,
     tocSections
   },
   state: {
