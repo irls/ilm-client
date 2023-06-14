@@ -1001,6 +1001,30 @@ export default {
           list.scrollTo(0, this.listScrollPosition);
         }
       }
+    },
+    
+    resizeToc() {
+      // when section is activated or audio editor opened resize section to keep internal scroll and not display sidebar scroll
+      let audioEditor = document.querySelector('.waveform-playlist');
+      let elementsHeight = 15;
+      let topMenu = document.querySelector('.top-menu-wrapper');
+      let navTabs = document.querySelector('.nav-tabs-navigation');
+      if (topMenu) {
+        elementsHeight+= topMenu.offsetHeight;
+      }
+      if (navTabs) {
+        elementsHeight+= navTabs.offsetHeight;
+      }
+      Vue.nextTick(() => {
+        if (audioEditor) {
+          //console.log(audioEditor.offsetHeight);
+          if (audioEditor.offsetHeight) {
+            elementsHeight+= audioEditor.offsetHeight;
+          }
+        }
+        //audioEditorHeight+= 115;
+        $('fieldset.toc-items-list').css('height', `calc(100vh - ${elementsHeight}px)`);
+      });
     }
   },
 
@@ -1016,6 +1040,10 @@ export default {
         this.saveScrollPosition();
       }
     }
+    this.$root.$on('for-audioeditor:load', this.resizeToc);
+    this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
+    this.$root.$on('from-audioeditor:close', this.resizeToc);
+    this.$root.$on('from-audioeditor:content-loaded', this.resizeToc);
   },
 
   watch: {
@@ -1053,7 +1081,7 @@ export default {
     'isActive': {
       handler(val) {
         if (val) {
-          $('fieldset.toc-items-list').css('height', 'calc(100vh - 115px)');
+          this.resizeToc();
         }
       }
     },
@@ -1092,7 +1120,11 @@ export default {
   },
 
   destroyed: function () {
-    this.$root.$off('from-book-meta:upd-toc', this.loadBookTocProxy)
+    this.$root.$off('from-book-meta:upd-toc', this.loadBookTocProxy);
+    this.$root.$off('for-audioeditor:load', this.resizeToc);
+    this.$root.$off('for-audioeditor:load-and-play', this.resizeToc);
+    this.$root.$off('from-audioeditor:close', this.resizeToc);
+    this.$root.$off('from-audioeditor:content-loaded', this.resizeToc);
   }
 }
 </script>
