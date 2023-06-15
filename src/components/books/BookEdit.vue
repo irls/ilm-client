@@ -231,6 +231,11 @@ export default {
           },
           'ctrl+up': (ev)=>{
             //console.log('ctrl+up arrow');
+            if (ev && ev.target) {
+              if (ev.target.className.indexOf('edit-section-') === 0) {
+                return;
+              }
+            }
             const idsArray = this.parlistO.idsArray();
             const jumpStep = Math.floor(idsArray.length * 0.1);
             const currIdx = this.hotkeyScrollTo;
@@ -242,6 +247,11 @@ export default {
           },
           'ctrl+down': (ev)=>{
             //console.log('ctrl+down arrow');
+            if (ev && ev.target) {
+              if (ev.target.className.indexOf('edit-section-') === 0) {
+                return;
+              }
+            }
             const idsArray = this.parlistO.idsArray();
             const jumpStep = Math.floor(idsArray.length * 0.1);
             const currIdx = this.hotkeyScrollTo;
@@ -305,8 +315,9 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections', 'findNextAudioblock']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'findNextAudioblock']),
     ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
+    ...mapActions('tocSections', ['loadBookTocSections']),
 
     test(ev) {
         console.log('test', ev);
@@ -869,6 +880,9 @@ export default {
           this.getCurrentJobInfo();
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
+          if (block.index === 0) {
+            this.loadBookTocSections([]);
           }
           //this.refreshTmpl();
         })
@@ -2249,7 +2263,7 @@ export default {
           this.checkMode();
           this.$store.commit('set_taskBlockMap');
           this.$store.dispatch('loadBookToc', {bookId: this.meta._id, isWait: true});
-          return this.$store.dispatch('loadBookTocSections', []);
+          return this.loadBookTocSections([]);
         })
       },
 
