@@ -283,6 +283,7 @@
               :checkVisible="checkVisible"
               :checkFullyVisible="checkFullyVisible"
               :editingLockedReason="editingLockedReason"
+              :showStopConfirmations="showStopConfirmations"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -540,6 +541,7 @@ import BookBlockPartView from './BookBlockPartView';
 import LockedBlockActions from './block/LockedBlockActions';
 import FlagComment        from './block/FlagComment';
 import EditHTMLModal      from './block/EditHTML';
+import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 import DeleteBlockModal   from './block/DeleteBlockModal';
 import ChangeVoiceworkModal from './block/ChangeVoiceworkModal';
 //import { tabs, tab } from 'vue-strap';
@@ -547,10 +549,12 @@ import ChangeVoiceworkModal from './block/ChangeVoiceworkModal';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
 //import hljs from 'highlight.js';
 //import VueHighlightJS from 'vue-highlightjs';
-var BPromise = require('bluebird');
+const BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
 //Vue.use(hljs.vuePlugin);
 //Vue.use(VueHighlightJS);
+
+import Deferred from "@src/mixins/deferred.js";
 
 export default {
   data () {
@@ -619,10 +623,10 @@ export default {
       //isSaving: false
       editingLocked: false,
       editingLockedReason: ''
-
     }
   },
   components: {
+      CoupletWarningPopup,
       'block-menu': BlockMenu,
       'block-cntx-menu': BlockContextMenu,
       'block-flag-popup': BlockFlagPopup,
@@ -1838,219 +1842,268 @@ Save or discard your changes to continue editing`,
             return Promise.reject(err);
           });
       },
-
-      assembleBlockProxy: function (check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
-        if (!this.block.audiosrc) {
-          realign = false;
+      cancelCoupletUpdate(isDontShowAgain) {
+        this.saveUserChoiceToCookie(isDontShowAgain);
+      },
+      saveCoupletChanges(isDontShowAgain) {
+        this.saveUserChoiceToCookie(isDontShowAgain);
+      },
+      saveUserChoiceToCookie(isDontShowAgain) {
+        if (isDontShowAgain &&
+          !document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+          document.cookie = 'dontShowAgainCoupletWarning=true';
         }
-        if (this.isSplittedBlock && this.$refs.blocks) {
-          this.block.parts.forEach((blk, blkIdx) => {
-            let ref = this.$refs.blocks.find(rb => {
-              return rb.blockPartIdx === blkIdx;
-            });
-            if (ref) {
-              this.block.setPartContent(blkIdx, ref.clearBlockContent().replace(/<i class="pin"><\/i>/mg, ''));
-            }
-          });
-          this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
-        }
-        if (this.hasChange('flags')) {
-          this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
-        }
-        if (this.hasChange('split_point')) {
-          this.$root.$emit('for-audioeditor:force-close');
-        }
-        if (this.mode === 'proofread') {
-          return this.assembleBlockProofread();
-        } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate(true, realign, update_fields);
-        }
-        if (check_realign === true && this.needsRealignment) {
-          realign = true;
-        }
-        switch (this.block.type) {
-          case 'illustration':
-            if (!this.$refs.blocks || !this.$refs.blocks[0]) {
-              return Promise.reject();
-            }
-            this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
-            this.block.voicework = 'no_audio';
-            this.block.content = '';
-            break;
-          case 'hr':
-            this.block.content = '';
-            this.block.voicework = 'no_audio';
-            break;
-          default:
-            this.block.content = this.clearBlockContent();
-            if (this.mode !== 'narrate') {
-              if (this.block.footnotes && this.block.footnotes.length && this.$refs.blocks) {
-                let footnotesInText = [];
-                this.$refs.blocks.forEach((blk, blkIdx) => {
-                  let blkFootnotes = document.getElementById(`${this.block.blockid}-${blkIdx}`).querySelectorAll(`sup[data-idx]`);
-                  if (blkFootnotes) {
-                    blkFootnotes.forEach(bf => {
-                      footnotesInText.push(bf.getAttribute('data-idx'));
-                    })
+      },
+      showStopConfirmations() {
+        return new Promise((resolve, reject) => {
+          if (this.block.hasClass('whitespace', 'couplet') && this.mode === 'edit') {
+            if (!document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+              let coupletInfo = {};
+              this.$modal.show(CoupletWarningPopup, {
+                coupletInfo: coupletInfo
+              }, 
+              {
+                height: 'auto',
+                width: '440px',
+                clickToClose: false
+              }, 
+              {
+                'closed': (e) => {
+                  if (coupletInfo && coupletInfo.success) {
+                    this.saveCoupletChanges(coupletInfo.isDontShowAgain);
+                    return resolve(true);
+                  } else {
+                    this.cancelCoupletUpdate(coupletInfo && coupletInfo.isDontShowAgain);
+                    return resolve(false);
                   }
-                });
-                let delCount = this.block.footnotes.length - footnotesInText.length;
-                if (delCount > 0) {
-                  let delIdxList = [];
-                  this.block.footnotes.forEach((ftn, ftnIdx) => {
-                    let footnote = footnotesInText.find(fin => {
-                      return fin == ftnIdx + 1
-                    });
-                    if (!footnote) {
-                      delIdxList.push(ftnIdx);
-                    }
-                  });
-                  this.delFootnote(delIdxList, false);
-                  this.block.content = this.clearBlockContent();
-                }
-                if (!delCount) {
-                  this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                    this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
-                  });
-                }
-              }
-            }
-            break;
-        }
-
-        if (this.block.type == 'illustration') {
-          if (this.isIllustrationChanged) {
-            return this.uploadIllustration();
-          } else if (this.isChanged) {
-            const updBlock = {
-              description: this.block.description,
-              voicework: this.block.voicework,
-              content: this.block.content,
-              blockid: this.block.blockid,
-              type: this.block.type,
-              flags: this.block.flags || [],
-              bookid: this.block.bookid
-            }
-            if (this.changes && Array.isArray(this.changes)) {
-              this.changes.forEach(c => {
-                switch(c) {
-                  case 'language': {
-                    updBlock.language = this.block.language || null
-                  }
-                }
-              })
-            }
-            return this.assembleBlock(updBlock);
-          }
-        } else {
-          if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
-          else if (this.isChanged || update_fields.length > 0) {
-            let fullUpdate = false;
-            this.block.clean();
-            let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
-            if (this.isSplittedBlock) {
-              partUpdate.parts = this.block.parts;
-            }
-            this.changes = this.changes.concat(update_fields);
-            if (this.changes && Array.isArray(this.changes)) {
-              this.changes.forEach(c => {
-                switch(c) {
-                  case 'content':
-                    fullUpdate = true;
-                    partUpdate.content = this.block.content;
-                    partUpdate.manual_boundaries = this.block.manual_boundaries || [];
-                    if (this.block.hasClass('whitespace', 'couplet')) {
-                      partUpdate.classes = this.block.classes;
-                    }
-                    break;
-                  case 'footnotes':
-                    fullUpdate = true;
-                    partUpdate.footnotes = this.block.footnotes;
-                    partUpdate.content = this.block.content;
-                    if (this.block.getIsSplittedBlock()) {
-                      this.block.parts.forEach(p => {
-                        if (p.footnote_added) {
-                          delete p.footnote_added;
-                          p.content_changed = true;
-                        }
-                      });
-                    }
-                    break;
-                  case 'footnotes_language':
-                    fullUpdate = true;
-                    partUpdate.footnotes = this.block.footnotes;
-                    break;
-                  case 'type':
-                    fullUpdate = true;
-                    partUpdate.type = this.block.type;
-                    break;
-                  case 'classes':
-                    fullUpdate = true;
-                    partUpdate.classes = this.block.classes;
-                    break;
-                  case 'language':
-                    fullUpdate = true;
-                    partUpdate.language = this.block.language;
-                    break;
-                  case 'suggestion':
-                    partUpdate['content'] = this.block.content;
-                    if (this.block.audiosrc) {
-                      fullUpdate = true;
-                    }
-                    break;
-                  case 'footnotes_voicework':
-                  case 'footnotes_suggestion':
-                    partUpdate['footnotes'] = this.block.footnotes;
-                    break;
-                  case 'flags':
-                    this.checkBlockContentFlags();
-                    this.updateFlagStatus(this.block._id);
-                    partUpdate['flags'] = this.block.flags;
-                    if (!this.isSplittedBlock) {
-                      partUpdate['content'] = this.block.content;// updating content only for not splitted block, ILM-3287
-                    }
-                    partUpdate['parts'] = this.block.parts;
-                    break;
-                  case 'manual_boundaries':
-                    partUpdate['content'] = this.block.content;
-                    break;
-                  case 'split_point':
-                    partUpdate['content'] = this.block.content;
-                    partUpdate['manual_boundaries'] = this.block.manual_boundaries ? this.block.manual_boundaries : [];
-                    if (this.block.hasClass('whitespace', 'couplet')) {
-                      partUpdate['classes'] = this.block.classes;
-                    }
-                    break;
-                  default:
-                    partUpdate[c] = this.block[c];
-                    break;
                 }
               });
+            } else {
+              return resolve(true);
             }
-            if (this.block.status.marked) {
-              partUpdate['status'] = partUpdate['status'] || {};
-              partUpdate.status.marked = false;
+          } else {
+            return resolve(true);
+          }
+        });
+      },
+      assembleBlockProxy(check_realign = true, realign = true, update_fields = [], check_audio_changes = true) {
+        return this.showStopConfirmations(this.block)
+          .then((canSave) => {
+            if (!canSave) {
+              return Promise.resolve();
             }
-            let updateTask = null;
-            if (this.isSplittedBlock) {
+            if (!this.block.audiosrc) {
               realign = false;
             }
-            if (fullUpdate) {
-              updateTask = this.assembleBlock(partUpdate, realign);
-            } else {
-              updateTask = this.assembleBlockPart(partUpdate, realign);
-            }
-            let reloadParent = this.hasChange('split_point');
-            return updateTask
-              .then(() => {
-                if (reloadParent) {
-                  this.$parent.refreshTmpl();
+            if (this.isSplittedBlock && this.$refs.blocks) {
+              this.block.parts.forEach((blk, blkIdx) => {
+                let ref = this.$refs.blocks.find(rb => {
+                  return rb.blockPartIdx === blkIdx;
+                });
+                if (ref) {
+                  this.block.setPartContent(blkIdx, ref.clearBlockContent().replace(/<i class="pin"><\/i>/mg, ''));
                 }
-                return Promise.resolve();
               });
-          }
-        }
-        return BPromise.resolve();
+              this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
+            }
+            if (this.hasChange('flags')) {
+              this.block.flags = this.storeListById(this.block.blockid).flags;// force re read flags, set in parts
+            }
+            if (this.hasChange('split_point')) {
+              this.$root.$emit('for-audioeditor:force-close');
+            }
+            if (this.mode === 'proofread') {
+              return this.assembleBlockProofread();
+            } else if (this.mode === 'narrate') {
+              return this.assembleBlockNarrate(true, realign, update_fields);
+            }
+            if (check_realign === true && this.needsRealignment) {
+              realign = true;
+            }
+            switch (this.block.type) {
+              case 'illustration':
+                if (!this.$refs.blocks || !this.$refs.blocks[0]) {
+                  return Promise.reject();
+                }
+                this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
+                this.block.voicework = 'no_audio';
+                this.block.content = '';
+                break;
+              case 'hr':
+                this.block.content = '';
+                this.block.voicework = 'no_audio';
+                break;
+              default:
+                this.block.content = this.clearBlockContent();
+                if (this.mode !== 'narrate') {
+                  if (this.block.footnotes && this.block.footnotes.length && this.$refs.blocks) {
+                    let footnotesInText = [];
+                    this.$refs.blocks.forEach((blk, blkIdx) => {
+                      let blkFootnotes = document.getElementById(`${this.block.blockid}-${blkIdx}`).querySelectorAll(`sup[data-idx]`);
+                      if (blkFootnotes) {
+                        blkFootnotes.forEach(bf => {
+                          footnotesInText.push(bf.getAttribute('data-idx'));
+                        })
+                      }
+                    });
+                    let delCount = this.block.footnotes.length - footnotesInText.length;
+                    if (delCount > 0) {
+                      let delIdxList = [];
+                      this.block.footnotes.forEach((ftn, ftnIdx) => {
+                        let footnote = footnotesInText.find(fin => {
+                          return fin == ftnIdx + 1
+                        });
+                        if (!footnote) {
+                          delIdxList.push(ftnIdx);
+                        }
+                      });
+                      this.delFootnote(delIdxList, false);
+                      this.block.content = this.clearBlockContent();
+                    }
+                    if (!delCount) {
+                      this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+                        this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
+                      });
+                    }
+                  }
+                }
+                break;
+            }
+
+            if (this.block.type == 'illustration') {
+              if (this.isIllustrationChanged) {
+                return this.uploadIllustration();
+              } else if (this.isChanged) {
+                const updBlock = {
+                  description: this.block.description,
+                  voicework: this.block.voicework,
+                  content: this.block.content,
+                  blockid: this.block.blockid,
+                  type: this.block.type,
+                  flags: this.block.flags || [],
+                  bookid: this.block.bookid
+                }
+                if (this.changes && Array.isArray(this.changes)) {
+                  this.changes.forEach(c => {
+                    switch(c) {
+                      case 'language': {
+                        updBlock.language = this.block.language || null
+                      }
+                    }
+                  })
+                }
+                return this.assembleBlock(updBlock);
+              }
+            } else {
+              if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
+              else if (this.isChanged || update_fields.length > 0) {
+                let fullUpdate = false;
+                this.block.clean();
+                let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
+                if (this.isSplittedBlock) {
+                  partUpdate.parts = this.block.parts;
+                }
+                this.changes = this.changes.concat(update_fields);
+                if (this.changes && Array.isArray(this.changes)) {
+                  this.changes.forEach(c => {
+                    switch(c) {
+                      case 'content':
+                        fullUpdate = true;
+                        partUpdate.content = this.block.content;
+                        partUpdate.manual_boundaries = this.block.manual_boundaries || [];
+                        if (this.block.hasClass('whitespace', 'couplet')) {
+                          partUpdate.classes = this.block.classes;
+                        }
+                        break;
+                      case 'footnotes':
+                        fullUpdate = true;
+                        partUpdate.footnotes = this.block.footnotes;
+                        partUpdate.content = this.block.content;
+                        if (this.block.getIsSplittedBlock()) {
+                          this.block.parts.forEach(p => {
+                            if (p.footnote_added) {
+                              delete p.footnote_added;
+                              p.content_changed = true;
+                            }
+                          });
+                        }
+                        break;
+                      case 'footnotes_language':
+                        fullUpdate = true;
+                        partUpdate.footnotes = this.block.footnotes;
+                        break;
+                      case 'type':
+                        fullUpdate = true;
+                        partUpdate.type = this.block.type;
+                        break;
+                      case 'classes':
+                        fullUpdate = true;
+                        partUpdate.classes = this.block.classes;
+                        break;
+                      case 'language':
+                        fullUpdate = true;
+                        partUpdate.language = this.block.language;
+                        break;
+                      case 'suggestion':
+                        partUpdate['content'] = this.block.content;
+                        if (this.block.audiosrc) {
+                          fullUpdate = true;
+                        }
+                        break;
+                      case 'footnotes_voicework':
+                      case 'footnotes_suggestion':
+                        partUpdate['footnotes'] = this.block.footnotes;
+                        break;
+                      case 'flags':
+                        this.checkBlockContentFlags();
+                        this.updateFlagStatus(this.block._id);
+                        partUpdate['flags'] = this.block.flags;
+                        if (!this.isSplittedBlock) {
+                          partUpdate['content'] = this.block.content;// updating content only for not splitted block, ILM-3287
+                        }
+                        partUpdate['parts'] = this.block.parts;
+                        break;
+                      case 'manual_boundaries':
+                        partUpdate['content'] = this.block.content;
+                        break;
+                      case 'split_point':
+                        partUpdate['content'] = this.block.content;
+                        partUpdate['manual_boundaries'] = this.block.manual_boundaries ? this.block.manual_boundaries : [];
+                        if (this.block.hasClass('whitespace', 'couplet')) {
+                          partUpdate['classes'] = this.block.classes;
+                        }
+                        break;
+                      default:
+                        partUpdate[c] = this.block[c];
+                        break;
+                    }
+                  });
+                }
+                if (this.block.status.marked) {
+                  partUpdate['status'] = partUpdate['status'] || {};
+                  partUpdate.status.marked = false;
+                }
+                let updateTask = null;
+                if (this.isSplittedBlock) {
+                  realign = false;
+                }
+                if (fullUpdate) {
+                  updateTask = this.assembleBlock(partUpdate, realign);
+                } else {
+                  updateTask = this.assembleBlockPart(partUpdate, realign);
+                }
+                let reloadParent = this.hasChange('split_point');
+                return updateTask
+                  .then(() => {
+                    if (reloadParent) {
+                      this.$parent.refreshTmpl();
+                    }
+                    return Promise.resolve();
+                  });
+              }
+            }
+            return BPromise.resolve();
+        });
       },
       getBlockTypeValue: function () {
         return '';
