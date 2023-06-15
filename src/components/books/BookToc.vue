@@ -145,6 +145,7 @@
               <td colspan="6" v-on:click="sectionEditMode(toc.section, 'titleEn', $event)" v-on:dblclick="sectionEditMode(toc.section, 'titleEn', $event)">
                 <template v-if="editingSectionId === toc.section.id && editingFieldName === 'titleEn'">
                   <input type="text" :class="['edit-section-titleEn', {'-has-error': validationErrors['titleEn'][toc.section.id]}]"
+                    maxlength="100"
                     v-model="editingFieldValue"
                     v-on:keyup.enter="blurEditingField(null)"
                     v-on:change="updateSectionField(editingFieldValue)"
