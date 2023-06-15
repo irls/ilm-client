@@ -3,10 +3,6 @@
 
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" ><!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
-  <selection-modal
-    :show="selectionModalActive"
-  >
-  </selection-modal>
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
@@ -2559,7 +2555,7 @@ export default {
                   this.$refs.blocks[0].voiceworkChange = action.payload.voicework;
                   this.$refs.blocks[0].voiceworkUpdateType = action.payload.updateType;
                   this.$refs.blocks[0].voiceworkBlockType = action.payload.blockType;
-                  this.$refs.blocks[0].showModal('voicework-change');
+                  this.$refs.blocks[0].showChangeVoiceworkModal();
                 }
               });
             }
@@ -2771,6 +2767,20 @@ export default {
         }, 400);
       },
       //deep: true
+    },
+    'selectionModalActive': {
+      handler(val) {
+        if (val) {
+          this.$modal.show(SelectionModal, {
+            
+          }, 
+          {
+            width: '500px',
+            height: '100px',
+            clickToClose: false
+          });
+        }
+      }
     }
   }
 }
