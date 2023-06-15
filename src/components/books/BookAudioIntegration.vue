@@ -1134,35 +1134,10 @@
         return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
       },
       splitRecalc(force = false, state) {
-        //console.log('splitRecalc')
-
-        let parentHeight;
-        let parentBottomPadding;
-
-        parentHeight = parseInt($(document).height());
-        //console.log(`parentHeight:${parentHeight}`);
-        if(state || $('.waveform-playlist:visible').length ){
-          if( $('.annotations-boxes').length ){
-            parentBottomPadding = 435;
-          }else{
-            parentBottomPadding = 410;
-          }
-          parentHeight -=20;
-        }else{
-          parentBottomPadding = 240;
+        let height = this.getFileCatalogueContainerHeight();
+        if (height) {
+          $('.file-catalogue-files-wrapper').css('max-height', height + 'px');
         }
-
-        parentHeight -=parentBottomPadding
-        //console.log(`parentHeight:${parentHeight}`);
-
-        // The additional scroll is appear
-        parentHeight -=45;
-
-        //console.log(`parentHeight:${parentHeight}`);
-        let height = parentHeight / 100 * 70 - 5;
-
-        let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-        $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px');
         this.checkCatalogueScroll();
 
       },
@@ -1226,10 +1201,10 @@
 
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
               if (resizeWrapper || force) {
-                let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-                //console.log(`parentHeight:${parentHeight}`);
-                //console.log(`wrapper:${wrapper}`);
-                $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px');
+                let containerHeight = this.getFileCatalogueContainerHeight();
+                if (containerHeight) {
+                  $('.file-catalogue-files-wrapper').css('max-height', containerHeight + 'px');
+                }
                 this.checkCatalogueScroll();
                 // height = this.inViewport($('.file-catalogue-files-wrapper'));
                 // console.log(`parentHeight inViewport:${parentHeight}`);
@@ -1304,7 +1279,11 @@
       
       checkTabOpen(ev) {// on tab open event component start slowly open, need to wait until full open
         if (ev.index === 0) {
-          let tab = document.querySelector(`.audio-integration-accordion .p-accordion-tab:nth-child(${ev.index + 1}) .p-toggleable-content`);
+          let containerHeight = this.getFileCatalogueContainerHeight();
+          if (containerHeight) {
+            $('.file-catalogue-files-wrapper').css('max-height', `${containerHeight}px`);
+          }
+          /*let tab = document.querySelector(`.audio-integration-accordion .p-accordion-tab:nth-child(${ev.index + 1}) .p-toggleable-content`);
           if (tab) {
             let checks = 0;
             let prevHeight = null;
@@ -1320,8 +1299,26 @@
                 clearInterval(checkInterval);
               }
             }, 50);
-          }
+          }*/
         }
+      },
+      
+      getFileCatalogueContainerHeight() {
+        let containerHeight = 0;
+        let container = document.querySelector('.sidebar');// main container for all section
+        if (container) {
+          containerHeight = container.offsetHeight;
+          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          if (tabs) {
+            containerHeight-= tabs.offsetHeight;
+          }
+          let header = document.querySelector('.audio-integration-accordion .p-accordion-header');// headers in accordion
+          if (header) {
+            containerHeight-= header.offsetHeight * 3;
+          }
+          containerHeight-= 135;// height for file catalogue buttons
+        }
+        return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
@@ -1513,7 +1510,7 @@
       },
       'activeTabIndex': {
         handler(val) {
-          this.initSplit();
+          //this.initSplit();
           setTimeout(() => {
             this.checkCatalogueScroll();
           }, 600);// tab activation time 50ms
