@@ -9,31 +9,38 @@
 
     <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
-      <BookEditToolbar v-if="isEditMode()"
-      :toggleMetaVisible="toggleMetaVisible"
-      :hasBookSelected="hasBookSelected"
-      :metaVisible="metaVisible"/>
+      <AllListsToolbar
+        v-if="!isBookEditRoute"
+        :hasBookSelected="hasBookSelected"
+        :toggleMetaVisible="toggleMetaVisible"
+      />
 
-      <BooksToolbar v-else-if="listing=='books'"
-      @import_finished="bookImportFinished"
-      :toggleMetaVisible="toggleMetaVisible"
-      :hasBookSelected="hasBookSelected"
-      :metaVisible="metaVisible"/>
+      <BookEditToolbar v-if="isBookEditRoute && isEditMode"
+        :toggleMetaVisible="toggleMetaVisible"
+        :hasBookSelected="hasBookSelected"
+        :metaVisible="metaVisible"/>
+        <!--@import_finished="bookImportFinished"-->
 
       <BookReimport v-if="showBookReimport"
         :multiple="false"
         @close_modal="reimportBookClose"
-        :bookId="getBookid()" />
+        :bookId="getBookid" />
 
 
-      <div class="scroll-wrapper" v-bind:class="'-lang-' + currentBookMeta.language">
+      <div class="scroll-wrapper" :class="[currentBookMeta.language ? '-lang-' + currentBookMeta.language : '']">
         <router-view></router-view>
       </div>
 
     </div>
 
-    <div class='metaedit' v-if='metaVisible'>
-      <book-meta-edit v-if='metaVisible'></book-meta-edit>
+    <div class='metaedit' v-if="isCollectionRoute">
+      <CollectionTabs v-if="hasCollectionSelected" @collectionRemoved="collectionRemoved"></CollectionTabs>
+      <NoCollectionSelected v-else />
+    </div>
+
+    <div class='metaedit' v-else-if="metaVisible" >
+      <BookMetaEdit v-if='hasBookSelected'></BookMetaEdit>
+      <NoBookSelected v-else />
     </div>
 
     <v-dialog :clickToClose="false"/>
@@ -53,9 +60,12 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import Clipboard from 'v-clipboard'
-import BooksToolbar from './books/BooksToolbar'
-import BookEditToolbar from './books/BookEditToolbar'
+import AllListsToolbar from '@src/components/toolbar/AllListsToolbar'
+import BookEditToolbar from '@src/components/toolbar/BookEditToolbar'
 import BookMetaEdit from './books/BookMetaEdit'
+import NoBookSelected from './books/NoBookSelected'
+import CollectionTabs from './collections/CollectionTabs'
+import NoCollectionSelected from './collections/NoCollectionSelected'
 import BookEditHtml from './books/BookEdit_HTML'
 import BookEditJson from './books/BookEdit_JSON'
 import axios from 'axios'
@@ -78,9 +88,7 @@ export default {
 
   data () {
     return {
-      metaVisible: false,
-      metaAvailable: false,
-      //colCount: 1,
+      metaVisible: true,
       currentBookid: this.$store.state.currentBookid,
       showBookReimport: false,
       hasErrorAlert: false,
@@ -91,8 +99,11 @@ export default {
   },
 
   components: {
-    BooksToolbar,
+    AllListsToolbar,
     BookMetaEdit,
+    NoBookSelected,
+    CollectionTabs,
+    NoCollectionSelected,
     BookEditToolbar,
     axios,
     superlogin,
@@ -102,6 +113,42 @@ export default {
 
   computed: {
     ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian', 'hashTagsSuggestions']),
+
+    getBookid() {
+      return this.$store.state.currentBookid
+    },
+
+    isEditMode () {
+      return this.$route.matched.some(record => {
+        return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
+      })
+    },
+
+    hasBookSelected () {
+      //console.log(`hasBookSelected.this.currentBookMeta: `, this.currentBookMeta);
+      return this.currentBookMeta && this.currentBookMeta.bookid;
+    },
+
+    hasCollectionSelected () {
+      return ['Collection', 'CollectionBooks'].indexOf(this.$route.name) >= 0;
+    },
+
+    isCollectionRoute () {
+      return ['Collections', 'Collection', 'CollectionBooks'].indexOf(this.$route.name) >= 0;
+    },
+
+    isBookRoute () {
+      return ['Books', 'BooksGrid', 'CollectionBooks', 'CollectionBook'].indexOf(this.$route.name) >= 0;
+    },
+
+    isBookEditRoute () {
+      return [
+        'BookEdit', 'BookEditDisplay',
+        'BookNarrate', 'BookProofread',
+        'CollectionBookEdit', 'CollectionBookEditDisplay',
+        'CollectionBookNarrate', 'CollectionBookProofread'
+      ].indexOf(this.$route.name) >= 0;
+    }
   },
 
   watch: {
@@ -109,38 +156,10 @@ export default {
 //       // react to route changes...
 //       // this.recountRows()
 //     }
-    'currentBookMeta': {
-      handler(val, old_val) {
-        if (this.$route.path.indexOf('/collections') !== 0 && !old_val._id && this.currentBookMeta && this.currentBookMeta.collection_id) {
-          if (this.$route) {
-            let params = this.$route.params ? this.$route.params : {};
-            let meta = this.$route.meta ? this.$route.meta : {};
-            let name = 'CollectionBook';
-            switch (this.$route.name) {
-              case 'BookNarrate':
-                name = 'CollectionBookNarrate';
-                break;
-              case 'BookEdit':
-                name = 'CollectionBookEdit';
-                break;
-              case 'BookEditDisplay':
-                name = 'CollectionBookEditDisplay';
-                break;
-              case 'BookProofread':
-                name = 'CollectionBookProofread';
-                break;
-            }
-            params.collectionid = this.currentBookMeta.collection_id;
-            this.$router.replace({name: name, params: params, meta: meta});
-          } else {
-            this.$router.replace({ path: '/collections/' + this.currentBookMeta.collection_id + '/' + this.currentBookMeta.bookid });
-          }
-        } else if (this.metaVisible && !this.currentBookMeta._id) {
-          this.metaVisible = false;
-          this.metaAvailable = false;
-        }
-      }
-    },
+//     'currentBookMeta': {
+//       handler(val, old_val) {
+//       }
+//    },
     'jobStatusError': {
       handler(val) {
         if (val) {
@@ -239,26 +258,19 @@ export default {
 
   methods: {
 
-    toggleMetaVisible () {
-      let id = this.$store.state.currentBookid
-      this.metaAvailable = id
-      this.metaVisible = !this.metaVisible
-      if (!this.metaAvailable) this.metaVisible = false;
+    toggleMetaVisible ($event = {}) {
+      //console.log(`toggleMetaVisible: `, $event.force, $event.hasOwnProperty('force'));
+      if ($event.hasOwnProperty('force')) {
+        this.metaVisible = $event.force;
+      } else {
+        this.metaVisible = !this.metaVisible;
+      }
 
       Vue.nextTick(()=>{
         this.$root.$emit('from-toolbar:toggle-meta');
       })
 
     },
-    hasBookSelected () {
-      return !!this.currentBookMeta.bookid
-    },
-    isEditMode () {
-      return this.$route.matched.some(record => {
-        return ['edit', 'narrate', 'proofread'].indexOf(record.meta.mode) !== -1;
-      })
-    },
-
     showModal(params) {
       this.$modal.show('dialog', params);
     },
@@ -275,9 +287,6 @@ export default {
         this.showBookReimport = true;
       }
     },
-    getBookid() {
-      return this.$store.state.currentBookid
-    },
     setErrorAlert(message) {
       this.errorAlert = message;
     },
@@ -290,6 +299,9 @@ export default {
       }
       let params = {params: {bookid: this.currentBookMeta.bookid, block: blockid}, name: 'BookEdit'};
       this.$router.push(params);
+    },
+    collectionRemoved() {
+
     },
 
     ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
@@ -350,20 +362,18 @@ export default {
     }
 
     .toolbar {
-      min-height: 36px;
-      display: flex;
-      flex-direction: row;
       justify-content: space-between;
-      flex-shrink: 0;
-      align-items: center;
+      display: flex;
+      /*flex-direction: column;*/
       box-shadow: 0px 2px 3px 0px rgba(178, 191, 224, 0.53);
       padding-left: 4px;
       margin-bottom: 3px;
 
       .pull-right {
-        min-width: 460px;
+        min-width: 505px;
         text-align: right;
       }
+
       .title {
         white-space: nowrap;
         overflow: hidden;
@@ -375,11 +385,15 @@ export default {
       flex-grow: 2;
       display: flex;
       flex-direction: row;
-      overflow-y: hidden;
+      overflow: auto;
 
       .container-fluid {
         width: 100%;
         overflow-x: hidden;
+      }
+
+      .router-view-wrapper {
+        width: 100%;
       }
     }
   }
@@ -562,6 +576,39 @@ export default {
   }
   &.preloader-audio-positioning {
     background-image: url(/static/preloader-audio-positioning.gif);
+  }
+}
+
+i.ico {
+  &.ico-collection {
+    margin-right: -2px;
+    margin-top: -6px;
+    display: inline-block;
+    &:before {
+      content: url('/static/books_list/books-24.ico');
+      margin-left: -5px;
+      position: relative;
+      top: 5px;
+      right: -2px;
+      opacity: 0.8;
+    }
+    &:hover {
+      &:before {
+        opacity: 1.0;
+      }
+    }
+  }
+
+  &.ico-clear-filter {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    &:before {
+      content: url('/static/books_list/clear-filter-button.png');
+      position: relative;
+      left: 6px;
+    }
   }
 }
 

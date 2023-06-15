@@ -165,7 +165,10 @@ export default {
   },
 
   destroyed: function () {
-    $(this.$el).find('.js-select2').off().select2('destroy');
+    const el = $(this.$el).find('.js-select2');
+    if (el && el.select2) {
+      el.off().select2('destroy');
+    }
     this.$root.$off('from-bookedit:set-voice-test');
     //console.log('destroyed');
   }

@@ -16,18 +16,12 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-      <AudioImport v-if="showModal_audio"
-        @close="showModal_audio = false"
-        @closeOk="checkAfterAudioImport"
-        :book="currentBook"
-        :importTask="importTask"
-        :allowDownload="false" />
 
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
           <vue-tab title="Assignments" id="assignments">
             <BookAssignments
-              @showModal_audio="showModal_audio = true"
+              @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
           <fieldset class='description brief'>
             <legend>Description </legend>
@@ -56,7 +50,6 @@
                   <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
                   <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
                   <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
-                  <button style="margin-bottom: 5px;" v-if="currentBook.demo_zip_narration_size < 23" class="btn btn-primary" :disabled="true">Narration is empty</button>
                 </template>
                 <hr>
                 <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
@@ -269,21 +262,15 @@
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
-              :bookId="currentBook.bookid"
+              :isActive="activeTabIndex === TAB_TOC_INDEX"
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div v-if="blockSelection.start._id && blockSelection.end._id" class="t-box block-selection">
-              {{alignCounter.countAudio}} audio, {{alignCounter.countTTS}} TTS block in range
-              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
-              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
-            </div>
-            <div v-else class="t-box red-message">Define block range</div>
             <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
-                @uploadAudio="showModal_audio = true"
+                @goToBlock="goToBlock"
               ></BookAudioIntegration>
           </vue-tab>
 
@@ -349,22 +336,18 @@
                   </fieldset>
                   <fieldset class="block-style-fieldset trim-silence-config">
                     <legend>Trim silence</legend>
-                    <div>
-                      <label class="style-label"
-                        @click="setTrimSilenceConfig('audio_tts_narration')">
-                        <i v-if="trimSilenceConfigCalculated === 'audio_tts_narration'" class="fa fa-check-circle-o"></i>
-                        <i v-else class="fa fa-circle-o"></i>
-                        Audio file, Narration, TTS
-                      </label>
-                    </div>
-                    <div>
-                      <label class="style-label"
-                        @click="setTrimSilenceConfig('tts_narration')">
-                        <i v-if="trimSilenceConfigCalculated === 'tts_narration'" class="fa fa-check-circle-o"></i>
-                        <i v-else class="fa fa-circle-o"></i>
-                        Narration, TTS
-                      </label>
-                    </div>
+                    <label class="block-style-label"
+                       v-on="trimSilenceConfigCalculated === 'audio_tts_narration' ?
+                      {click: () => setTrimSilenceConfig('tts_narration')} :
+                      {click: () => setTrimSilenceConfig('audio_tts_narration')}">
+                      <template>
+                        <i
+                          v-bind:class="{'fa fa-square-o': trimSilenceConfigCalculated === 'audio_tts_narration',
+                          'fa fa-check-square-o -checked': trimSilenceConfigCalculated === 'tts_narration'}"
+                        ></i>
+                      </template>
+                      Don’t trim file import blocks
+                    </label>
                   </fieldset>
 
                 </vue-tab>
@@ -596,7 +579,6 @@ import superlogin           from 'superlogin-client'
 import BookDownload         from './BookDownload'
 import BookEditCoverModal   from './BookEditCoverModal'
 import BookAudioIntegration from './BookAudioIntegration'
-import AudioImport          from '../audio/AudioImport'
 import BookToc              from './BookToc'
 import _                    from 'lodash'
 import axios                from 'axios'
@@ -635,7 +617,6 @@ export default {
   components: {
     BookDownload,
     BookEditCoverModal,
-    AudioImport,
     BookToc,
     BookAudioIntegration,
     'vue-tabs': VueTabs,
@@ -676,7 +657,7 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      currentBook: {},
+      currentBook: { author: [] },
       masteringTask: {},
       importTask: {},
       linkTaskError: '',
@@ -1181,15 +1162,6 @@ export default {
   methods: {
 
     init () {
-      // if( !this.validationErrors[this.currentBook.bookid])
-      //   this.validationErrors[this.currentBook.bookid] = {};
-      // if( !this.validationErrors[this.currentBook.bookid]['difficulty'])
-      //   this.validationErrors[this.currentBook.bookid]['difficulty'] = '';
-      // if( !this.validationErrors[this.currentBook.bookid]['weight'])
-      //   this.validationErrors[this.currentBook.bookid]['weight'] = '';
-      //
-      // this.validationErrorDifficulty = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['difficulty']) ? this.validationErrors[this.currentBook.bookid]['difficulty'] : '';
-      // this.validationErrorWeight = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['weight']) ? this.validationErrors[this.currentBook.bookid]['weight'] : '';
       this.validationErrorDifficulty ='';
       this.validationErrorWeight = '';
 
@@ -1269,16 +1241,37 @@ export default {
       if (event && !collectionId) {
         this.unlinkCollectionWarning = true;
       } else {
+        this.unlinkCollectionWarning = false;
         return this.updateBookCollection(collectionId)
           .then(response => {
-            this.unlinkCollectionWarning = false;
             if (response.status === 200) {
+              //console.log(`this.$route.name: `, this.$route.name, ' collectionId:', this.$route.params.collectionid);
               if (collectionId) {
-                this.$router.replace({path: '/collections/' + collectionId + '/' + this.currentBook.bookid});
+                if (this.$route.name == 'BooksGrid') {
+                  this.$store.dispatch('loadCollection', collectionId);
+                }
+                if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
+                  if (this.$route.params.collectionid !== collectionId) {
+                    //this.$router.replace({
+                    //  name: 'CollectionBook',
+                    //  params: {collectionid: collectionId, bookid: this.currentBook.bookid}
+                    //});
+                    this.$router.replace({
+                      name: 'CollectionBooks',
+                      params: {collectionid: this.$route.params.collectionid}
+                    });
+                  }
+                }
               } else {
-                Vue.nextTick(() => {
-                  this.$router.replace({path: '/books'});
-                });
+                if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
+                  this.updateBooksList();
+                  this.$router.replace({
+                    name: 'CollectionBooks',
+                    params: {collectionid: this.$route.params.collectionid}
+                  });
+                } else {
+                  this.$store.dispatch('loadCollection', false);
+                }
               }
             }
           })
@@ -2217,7 +2210,6 @@ export default {
     },
 
     checkAfterAudioImport() {
-      this.showModal_audio = false
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
         this.activeTabIndex = this.TAB_AUDIO_INDEX;
         this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
@@ -2255,7 +2247,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
 }
 
@@ -2304,10 +2296,10 @@ select.text-danger#categorySelection, input.text-danger{
   background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
-  /*position: sticky;*/
-  top: 44px;
+  position: sticky;
+  top: 43px;
   background-color:white;
-  z-index: 19;
+  z-index: 1;
 }
 
 #p-styles-switcher.tab-container {
@@ -2316,9 +2308,10 @@ select.text-danger#categorySelection, input.text-danger{
 
 .meta-edit-tabs > .nav-tabs-navigation{
   border: 1px solid white;
-  /*position: sticky;*/
-  top: 0px;
-  z-index: 20;
+  position: sticky;
+  top: -1px;
+  background-color: white;
+  z-index: 1;
 }
 
 /*.meta-edit-tabs .nav-tabs-navigation .nav > li {

@@ -1292,7 +1292,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist',
+                  'superscript', 'subscript',//'orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1478,7 +1478,7 @@ export default {
         this.$refs.blockCntx.open(e, container, offsetX);
         this.$nextTick(() => {
           //hide medium editor if context menu is active
-          $('.medium-editor-toolbar-active').css('visibility', 'hidden');
+          $('.medium-editor-toolbar-active').removeClass('medium-editor-toolbar-active');
         })
       },
 
@@ -3823,20 +3823,25 @@ Please save or discard your changes before joining.`,
         }
         if (this.setSplitPoint()) {
           this.closeAudioEditor();
-          let update = {
-            content: this.$refs.blockContent.innerHTML
-          };
-          if (this.block.getIsSplittedBlock()) {
-            update.partIdx = this.blockPartIdx;
-          }
-          this.block.isSaving = true;
-          this.$parent.isSaving = true;
-          this.$parent.$forceUpdate();
-          return this.splitBlockToBlocks([this.block.blockid, update])
-            .then(() => {
-              this.$parent.highlightSuspiciousWords();
-              return Promise.resolve();
-            });
+          return this.checkSplit()
+            .then((isLocked) => {
+              let update = {
+                content: this.$refs.blockContent.innerHTML
+              };
+              if (this.block.getIsSplittedBlock()) {
+                update.partIdx = this.blockPartIdx;
+              }
+              if (isLocked) {
+                this.block.isSaving = true;
+                this.$parent.isSaving = true;
+                this.$parent.$forceUpdate();
+              }
+              return this.splitBlockToBlocks([this.block.blockid, update])
+                .then(() => {
+                  this.$parent.highlightSuspiciousWords();
+                  return Promise.resolve();
+                });
+            })
         }
       },
 
@@ -3846,19 +3851,24 @@ Please save or discard your changes before joining.`,
         }
         if (this.setSplitPoint()) {
           this.closeAudioEditor();
-          let update = {
-            content: this.$refs.blockContent.innerHTML
-          };
-          if (this.block.getIsSplittedBlock()) {
-            update.partIdx = this.blockPartIdx;
-          }
-          this.block.isSaving = true;
-          this.$parent.isSaving = true;
-          this.$parent.$forceUpdate();
-          return this.splitBlockToSubblocks([this.block.blockid, update])
-            .then(() => {
-              this.$parent.highlightSuspiciousWords();
-              return Promise.resolve();
+          return this.checkSplit()
+            .then((inSplit) => {
+              let update = {
+                content: this.$refs.blockContent.innerHTML
+              };
+              if (this.block.getIsSplittedBlock()) {
+                update.partIdx = this.blockPartIdx;
+              }
+              if (inSplit) {
+                this.block.isSaving = true;
+                this.$parent.isSaving = true;
+                this.$parent.$forceUpdate();
+              }
+              return this.splitBlockToSubblocks([this.block.blockid, update])
+                .then(() => {
+                  this.$parent.highlightSuspiciousWords();
+                  return Promise.resolve();
+                });
             });
         }
       },
@@ -3943,6 +3953,40 @@ Please save or discard your changes before joining.`,
             this.$parent.$parent.refreshTmpl();
             return Promise.resolve();
           });
+      },
+      
+      checkSplit(setLock = true, max = 240) {// 2 minutes
+        let num = 0;
+        let isLocked = false;
+        return new Promise((resolve, reject) => {
+          if (this.isBlockOrPartLocked(this.block.blockid)) {
+            if (setLock && !isLocked) {
+              this.block.isSaving = true;
+              this.$parent.isSaving = true;
+              this.$parent.$forceUpdate();
+              isLocked = true;
+            }
+            let checkAlign = setInterval(() => {
+              ++num;
+              if (!this.isBlockOrPartLocked(this.block.blockid)) {
+                clearInterval(checkAlign);
+                return resolve(true);
+              }
+              if (num >= max) {
+                clearInterval(checkAlign);
+                return reject(new Error('timeout checkSplit'));
+              }
+            }, 500);
+          } else {
+            if (setLock && !isLocked) {
+              this.block.isSaving = true;
+              this.$parent.isSaving = true;
+              this.$parent.$forceUpdate();
+              isLocked = true;
+            }
+            return resolve();
+          }
+        });
       },
 
       splitUnsavedCheck() {
