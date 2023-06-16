@@ -277,7 +277,6 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
-    pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
   },
 
@@ -659,9 +658,6 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
-    },
-    pauseAfterBlockUpdate: state => {
-      return state.pauseAfterBlockXhr !== null;
     }
   },
 
@@ -1330,108 +1326,6 @@ export const store = new Vuex.Store({
       state.allowAlignBlocksLimit = state.alignBlocksLimit ? state.alignCounter.countAudio <= state.alignBlocksLimit : true;
     },
 
-    set_liveDB_block_update(state, data) {
-      //console.log(`set_liveDB_block_update.data: `, data);
-      if (state.bookMode === 'edit') {
-        state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
-      }
-      let blockStore = state.storeList.get(data.block.blockid);
-      if (blockStore && data.block) {
-        if (blockStore.updated > data.block.updated) {
-          ['pause_after'].forEach(field => {// do not update these fields, maybe just return from update
-            data.block[field] = blockStore[field];
-          });
-        }
-      }
-      if (data.block.blockid
-        && state.audioTasksQueue.block.blockId
-        && state.audioTasksQueue.block.blockId === data.block.blockid
-        && state.audioTasksQueue.block.partIdx !== null) {
-
-        if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
-          blockStore.parts.forEach((p, i) => {
-            if (p.isAudioChanged) {
-              data.block.parts[i] = p;
-            }
-          });
-          let hasChanges = blockStore.parts.find(p => {
-            return p.isChanged;
-          });
-          if (hasChanges) {
-            if (Array.isArray(blockStore.flags)) {
-              data.block.flags = blockStore.flags;// do not update flags for edited block
-            }
-          }
-        }
-      }
-      if (data.action === 'create' && data.block) {
-        if (!state.storeListO.get(data.block.id)) {
-          state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
-        }
-      } else if (data.action === 'change' && data.block) {
-        if (blockStore) {
-          let paused = state.pauseLiveDBBlocks.find(blk => {
-            return blk.blockid === blockStore.blockid;
-          });
-          if (paused) {
-            return;
-          }
-          if (blockStore.audiosrc_config) {// stored only locally
-            data.block.audiosrc_config = blockStore.audiosrc_config;
-          }
-          /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
-            return p.isChanged;
-          }) : false;*/
-          if (blockStore.isSaving || blockStore.getIsChanged() || blockStore.getIsAudioChanged()) {
-            //console.log('isSaving hasChangedPart');
-            return;
-          }
-          let changes = [];// collect changes
-          ['classes', 'pause_after']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
-            if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
-              changes.push(k);
-            }
-          });
-          data.block.sync_changes = changes;
-          if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
-            state.storeListO.updBlockByRid(data.block.id, data.block);
-            //state.storeListUpdateCounter +=1;
-          }
-        }
-      } else if (data.action === 'delete') {
-        state.storeListO.delExistsBlock(data.block['@rid'])
-      }
-
-      if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
-        if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
-          let block = state.storeList.get(data.block.blockid);
-          if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
-            block.parts.forEach((p, i) => {
-              if (p.inid) {
-                data.block.parts[i].inid = p.inid;
-              }
-            });
-          }
-          if (block.isChanged) {
-            if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
-                if (block.voicework != data.block.voicework) {
-                  block.voicework = data.block.voicework;
-                  block.audiosrc = data.block.audiosrc;
-                  block.audiosrc_ver = data.block.audiosrc_ver;
-                  this.commit('set_storeList', new BookBlock(block));
-                }
-              } else {
-                this.commit('set_storeList', new BookBlock(data.block));
-              }
-          } else {
-            this.commit('set_storeList', new BookBlock(data.block));
-          }
-        }
-      } else if (data.block && data.block.blockid) {
-        this.commit('set_storeList', new BookBlock(data.block));
-      }
-    },
-
     set_user(state, user) {
       state.user = user;
     },
@@ -1563,7 +1457,7 @@ export const store = new Vuex.Store({
       width = (34*1)+34*(width/100);
 
       dispatch('setSelectionModalProgressWidth',width)
-      console.log(`set_selected_blocksAsyncIteration ${idx}`)
+      //console.log(`set_selected_blocksAsyncIteration ${idx}`)
 
       if(idx<=size && status == 'ok'){
         setTimeout( function() {
@@ -1882,17 +1776,25 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid + '-blockV', 'blockV', {bookid: bookid}, (data) => {
-          //console.log('DATA', bookid + '-blockV', data);
-          if (data){
+          //console.log('DATA', bookid + '-blockV', data, Array.isArray(data));
+          if (data) {
+            let needRefresh = [];
             if (Array.isArray(data)) {
               data.forEach((d)=>{
-                commit('set_liveDB_block_update', d);
+                needRefresh.push(dispatch('set_liveDB_block_update', d));
               })
             } else if (data.block) {
-              commit('set_liveDB_block_update', data);
+              needRefresh.push(dispatch('set_liveDB_block_update', data));
             }
-            state.storeListO.refresh();
-            state.blockSelection.refresh = !state.blockSelection.refresh;
+            Promise.all(needRefresh)
+            .then((results)=>{
+              if (results.some((res)=>res===true)) {
+                state.storeListO.refresh();
+                state.blockSelection.refresh = !state.blockSelection.refresh;
+              }
+              //console.log(`Promise.all(needRefresh).results: `, results, results.some((res)=>res===true));
+            })
+            //state.blockSelection.refresh = !state.blockSelection.refresh;
             //dispatch('tc_loadBookTask', state.currentBookid);
           }
         });
@@ -2111,7 +2013,6 @@ export const store = new Vuex.Store({
 
       if (currMeta.bookid) {
         if (currMeta.published === true) {
-          //console.log('updateBookVersion published', update);
           return dispatch('updateBookMeta', update)
         } else if (update.major && update.major == true) {
           if (typeof currMeta.version !== 'undefined' && currMeta.publishedVersion) {
@@ -2121,15 +2022,18 @@ export const store = new Vuex.Store({
             if (parseInt(cVers[0]) === parseInt(pVers[0])) {
               delete update['major'];
               update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-              //console.log('updateBookVersion unpublished', update);
             }
+          }
+          if (update['version'] && update['version'] !== currMeta['version']) {
+            return dispatch('updateBookMeta', update);
           }
         }
       }
-      return dispatch('updateBookMeta', update);
+      return Promise.resolve();
     },
 
     updateBookMeta({state, dispatch, commit}, update) {
+      //console.log(`updateBookMeta.update: `, update);
 
       update.bookid = state.currentBookMeta._id;
 
@@ -2181,7 +2085,6 @@ export const store = new Vuex.Store({
             if (parseInt(cVers[0]) === parseInt(pVers[0])) {
               delete update['major'];
               update['version'] = (parseInt(cVers[0]) + 1) + '.0';
-              console.log('updateBookMeta unpublished', update);
             }
           }
         }
@@ -4800,38 +4703,31 @@ export const store = new Vuex.Store({
     },
     setPauseAfter({state}, [blockType, value]) {
       if (state.blockSelection.start._id && state.blockSelection.end._id) {
-        let xhrId = `${Date.now()}-${value}`;
-        state.pauseAfterBlockXhr = xhrId;
         return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/pause_after`, {
-          range: {start_id: state.blockSelection.start._id,
-          end_id: state.blockSelection.end._id},
+          range: {
+            start_id: state.blockSelection.start._id,
+            end_id: state.blockSelection.end._id
+          },
           block_type: blockType,
           value: value === 'none' ? null : value,
           mode: state.bookMode
         })
-          .then((response) => {
-            if (state.pauseAfterBlockXhr !== xhrId) {
-              return Promise.resolve(false);
-            }
-            if (Array.isArray(response.data)) {
-              response.data.forEach(b => {
-                let block = state.storeList.get(b.blockid);
-                if (block && block.updated < b.updated) {
-                  block.setUpdated(b.updated);
-                  block.setPauseAfter(b.pause_after);
-                  block.status.marked = b.status.marked;
-                }
-              });
-            }
-            state.pauseAfterBlockXhr = null;
-            return Promise.resolve(true);
-          })
-          .catch(err => {
-            if (state.pauseAfterBlockXhr === xhrId) {
-              state.pauseAfterBlockXhr = null;
-            }
-            return Promise.reject(err);
-          });
+        .then((response) => {
+          if (Array.isArray(response.data)) {
+            response.data.forEach(b => {
+              let block = state.storeList.get(b.blockid);
+              if (block) {
+                block.setUpdated(b.updated);
+                block.setPauseAfter(b.pause_after);
+                block.status.marked = b.status.marked;
+              }
+            });
+          }
+          return Promise.resolve(true);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
       }
     },
     updateAudiobook({state, commit, dispatch}, [id, data, bookid = null]) {
@@ -5134,7 +5030,7 @@ export const store = new Vuex.Store({
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
-              
+
               state.storeListO.updBlockByRid(response.data.id, {out: response.data.out, updated: response.data.updated});
               if (!numUpdated) {
                 dispatch('putNumBlockOBatch', {bookId: state.currentBookid});
@@ -5296,6 +5192,115 @@ export const store = new Vuex.Store({
         .catch(err => {
           return Promise.reject(err);
         });
-    }
+    },
+
+    set_liveDB_block_update({commit, state, dispatch}, data) {
+      //console.log(`set_liveDB_block_update.data: `, data);
+      if (state.bookMode === 'edit') {
+        state.suspiciousWordsHighlight.setSuspiciousHighlight(data.block);
+      }
+      const blockStore = state.storeList.get(data.block.blockid);
+      /*if (blockStore && data.block) {
+        if (Date.parse(blockStore.updated) > Date.parse(blockStore.updated)) {
+          ['pause_after'].forEach(field => {// do not update these fields, maybe just return from update
+            data.block[field] = blockStore[field];
+          });
+        }
+      }*/
+      if (data.block.blockid
+        && state.audioTasksQueue.block.blockId
+        && state.audioTasksQueue.block.blockId === data.block.blockid
+        && state.audioTasksQueue.block.partIdx !== null) {
+
+        if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+          blockStore.parts.forEach((p, i) => {
+            if (p.isAudioChanged) {
+              data.block.parts[i] = p;
+            }
+          });
+          let hasChanges = blockStore.parts.find(p => {
+            return p.isChanged;
+          });
+          if (hasChanges) {
+            if (Array.isArray(blockStore.flags)) {
+              data.block.flags = blockStore.flags;// do not update flags for edited block
+            }
+          }
+        }
+      }
+      if (data.action === 'create' && data.block) {
+        if (!state.storeListO.get(data.block.id)) {
+          state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
+        }
+      } else if (data.action === 'change' && data.block) {
+        if (blockStore) {
+          let paused = state.pauseLiveDBBlocks.find(blk => {
+            return blk.blockid === blockStore.blockid;
+          });
+          if (paused) {
+            return;
+          }
+          if (blockStore.audiosrc_config) {// stored only locally
+            data.block.audiosrc_config = blockStore.audiosrc_config;
+          }
+          /*let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+            return p.isChanged;
+          }) : false;*/
+          if (blockStore.isSaving || blockStore.getIsChanged() || blockStore.getIsAudioChanged()) {
+            //console.log('isSaving hasChangedPart');
+            return;
+          }
+          let changes = [];// collect changes
+          ['classes', 'pause_after']/*Object.keys(data.block)*/.forEach(k => {// fields check can be removed, added now added to avoid unnecessary checks
+            if (blockStore.hasOwnProperty(k) && !_.isEqual(blockStore[k], data.block[k])) {
+              changes.push(k);
+            }
+          });
+          data.block.sync_changes = changes;
+          if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
+            state.storeListO.updBlockByRid(data.block.id, data.block);
+            //state.storeListUpdateCounter +=1;
+          }
+        }
+      } else if (data.action === 'delete') {
+        state.storeListO.delExistsBlock(data.block['@rid'])
+      }
+
+      if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {
+        //console.log(`data.block.updated: `, Date.parse(data.block.updated),`blockStore.updated: `, Date.parse(blockStore.updated));
+        if (Date.parse(data.block.updated) > Date.parse(blockStore.updated)) {
+          let block = state.storeList.get(data.block.blockid);
+          if (Array.isArray(block.parts) && Array.isArray(data.block.parts) && block.parts.length === data.block.parts.length) {
+            block.parts.forEach((p, i) => {
+              if (p.inid) {
+                data.block.parts[i].inid = p.inid;
+              }
+            });
+          }
+          if (block.isChanged) {
+            if (block.status && data.block.status && block.status.assignee === data.block.status.assignee) {
+                if (block.voicework != data.block.voicework) {
+                  block.voicework = data.block.voicework;
+                  block.audiosrc = data.block.audiosrc;
+                  block.audiosrc_ver = data.block.audiosrc_ver;
+                  commit('set_storeList', new BookBlock(block));
+                  return true;
+                }
+              } else {
+                commit('set_storeList', new BookBlock(data.block));
+                return true;
+              }
+          } else {
+            commit('set_storeList', new BookBlock(data.block));
+            return true;
+          }
+        }
+      } else if (data.block && data.block.blockid) {
+        commit('set_storeList', new BookBlock(data.block));
+        return true;
+      }
+      return false;
+    },
+
   }
 })

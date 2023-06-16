@@ -448,7 +448,7 @@ class BookBlocks {
       let width = Math.ceil(i/(max/100));
       width = 0+25*(width/100);
       $store.dispatch('setSelectionModalProgressWidth',width)
-      console.log(`setCheckedAsyncIterator ${i}`)
+      //console.log(`setCheckedAsyncIterator ${i}`)
       let this_ = this;
       setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,resolveCb,$store) },50);
     }else{
