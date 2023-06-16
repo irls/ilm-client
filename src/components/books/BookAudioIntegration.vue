@@ -298,22 +298,14 @@
       })
       var self = this;
 
-      this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
-        if (audiofileId && self.playing === audiofileId) {
-          self.playing = false;
-          // this.audioEditorIsOpeed = false;
-          // self.initSplit(true,false);
-        }else{
-          // this.audioEditorIsOpeed = true;
-          // self.initSplit(true, true);
+      this.$root.$on('from-audioeditor:close', (blockId, audiofileId) => {
+        if (audiofileId && this.playing === audiofileId) {
+          this.playing = false;
         }
 
-
-        var initSplitDebounce = _.debounce(function () {
-          self.splitRecalc(true)
-        }, 1000);
-        // initSplitDebounce
-        initSplitDebounce();
+        Vue.nextTick(() => {
+          this.splitRecalc(true)
+        });
 
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
@@ -358,10 +350,7 @@
         }
       });
       this.$root.$on('from-audioeditor:content-loaded', (id) => {
-        var initSplitDebounce = _.debounce(function () {
-          self.splitRecalc(true,false)
-        }, 500);
-        initSplitDebounce();
+        this.splitRecalc(true,false)
       });
 
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
@@ -417,7 +406,12 @@
       })
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
-      })
+      });
+      
+      /*this.$root.$on('for-audioeditor:load', this.resizeToc);
+      this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
+      this.$root.$on('from-audioeditor:close', this.resizeToc);
+      this.$root.$on('from-audioeditor:content-loaded', this.resizeToc);*/
     },
     methods: {
       uploadAudio() {
