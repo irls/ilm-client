@@ -1548,8 +1548,7 @@ Save or discard your changes to continue editing`,
       },
 
       initEditor(force) {
-        this.initFtnEditor(force)
-
+        this.initFtnEditor(force);
         //$('.medium-editor-toolbar.medium-editor-stalker-toolbar').css('display', '');
       },
       initFtnEditor(force) {
@@ -1640,6 +1639,13 @@ Save or discard your changes to continue editing`,
           if (this.editorFootnRtl) {
             this.editorFootnRtl.setup();
           }
+        }
+      },
+      reInitEditor() {
+        this.destroyEditor();
+        this.initEditor(true);
+        for (const block of this.$refs.blocks) {
+          block.reInitEditor();
         }
       },
       onQuoteSave: function() {

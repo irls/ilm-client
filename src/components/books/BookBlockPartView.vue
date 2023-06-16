@@ -1272,7 +1272,6 @@ export default {
           this.editorFootn.destroy();
         }
       },
-
       initEditor(force) {
         force = force || false;
         if (this.editingLocked) {
@@ -1393,6 +1392,10 @@ export default {
       },
       initFtnEditor(force) {
         return false;
+      },
+      reInitEditor() {
+        this.destroyEditor();
+        this.initEditor(true);
       },
       onQuoteSave: function() {
         this.putMetaAuthors(this.authors).then(()=>{
@@ -3954,7 +3957,7 @@ Please save or discard your changes before joining.`,
             return Promise.resolve();
           });
       },
-      
+
       checkSplit(setLock = true, max = 240) {// 2 minutes
         let num = 0;
         let isLocked = false;
