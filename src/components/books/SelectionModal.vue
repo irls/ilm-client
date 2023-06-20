@@ -1,9 +1,5 @@
 <template>
-  <modal
-    id="SelectionModal"
-    :show="show"
-    :backdrop="false"
-  >
+  <div id="SelectionModal">
     <div slot="modal-header" class="modal-header">
     </div>
 
@@ -19,8 +15,7 @@
 
     <div slot="modal-footer" class="modal-footer">
     </div>
-
-  </modal>
+  </div>
 </template>
 <script>
 import { modal, alert } from 'vue-strap'
@@ -61,10 +56,17 @@ export default {
   computed: {
     ...mapGetters({
       SelectionModalProgress: 'getSelectionModalProgress',
+      selectionModalActive: 'selectionModalActive'
     })
   },
   watch: {
-
+    'selectionModalActive': {
+      handler(val) {
+        if (!val) {
+          this.$emit('close');
+        }
+      }
+    }
   }
 
 }

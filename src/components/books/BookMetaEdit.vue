@@ -262,11 +262,10 @@
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
-              :bookId="currentBook.bookid"
+              :isActive="activeTabIndex === TAB_TOC_INDEX"
             ></BookToc>
           </vue-tab>
           <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
-            <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit"></div>
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
@@ -398,7 +397,7 @@
                           :styleKey="'level'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -413,7 +412,7 @@
                           :styleKey="'style'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -429,7 +428,7 @@
                           :styleKey="'table of contents'+'.'+styleKey"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -444,7 +443,7 @@
                           :styleKey="'table of contents.isInToc'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -459,7 +458,7 @@
                           :styleKey="'table of contents.tocLevel'"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
                       </li>
                     </ul>
@@ -525,14 +524,13 @@
                           :styleKey="styleKey"
                           :styleTabs="styleTabs"
                           :styleValue="styleValue"
-                          @selectStyleEv="selectStyle"
+                          @selectStyleEv="dummySelectStyle"
                         ></block-style-labels>
 
 
                       </fieldset>
 
                   </template>
-
                 </vue-tab>
 
               </vue-tabs>
@@ -566,7 +564,6 @@
         <a v-if="currentBook.mergedAudiofile" v-on:click="generatingAudiofile = false" class="btn btn-default">Cancel</a>
       </div>
     </modal>
-
     <div v-if="showUnknownAuthor == 1" class="outside" v-on:click="showUnknownAuthor = -1"></div>
     <div v-if="showUnknownAuthorEn == 1" class="outside" v-on:click="showUnknownAuthorEn = -1"></div>
   </div>
@@ -593,6 +590,7 @@ import time_methods         from '../../mixins/time_methods.js';
 import number_methods       from "../../mixins/number_methods.js"
 import toc_methods          from '../../mixins/toc_methods.js';
 import { VueTabs, VTab }    from 'vue-nav-tabs'
+import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments      from './details/BookAssignments';
 import BookWorkflow         from './details/BookWorkflow';
@@ -603,6 +601,9 @@ import CompleteAudioExport  from './details/CompleteAudioExport';
 import PauseAfterBlock      from './details/PauseAfterBlock';
 import VTagSuggestion       from './details/HashTag';
 import ResizableTextarea    from '../generic/ResizableTextarea';
+import v_modal              from 'vue-js-modal';
+
+Vue.use(v_modal, {dialog: true});
 
 var BPromise = require('bluebird');
 
@@ -630,8 +631,8 @@ export default {
     CompleteAudioExport,
     PauseAfterBlock,
     VTagSuggestion,
-    'resizable-textarea': ResizableTextarea
-
+    'resizable-textarea': ResizableTextarea,
+    CoupletWarningPopup
   },
 
   data () {
@@ -725,7 +726,10 @@ export default {
         5: 'hr'
       },
       activeStyleTab: '',
-      jobDescription: ''
+      jobDescription: '',
+      blockType: '',
+      styleKey: '',
+      styleVal: '',
     }
   },
 
@@ -765,7 +769,6 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks',
       currentBookCollection: 'currentBookCollection',
-      alignBlocksLimitMessage: 'alignBlocksLimitMessage',
       hashTagsSuggestions: 'hashTagsSuggestions',
       playingBlock: 'playingBlock'
     }),
@@ -1905,8 +1908,54 @@ export default {
           })
       }
     },
+    dummySelectStyle(blockType, styleKey, styleVal) {
+      if(styleVal !== "couplet" ||
+        document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+        this.selectStyle(blockType, styleKey, styleVal);
+      } else {
+        let coupletInfo = {};
+        this.$modal.show(CoupletWarningPopup, {
+          coupletInfo: coupletInfo
+        }, 
+        {
+          height: 'auto',
+          width: '440px',
+          clickToClose: false
+        }, 
+        {
+          'closed': (e) => {
+            if (coupletInfo && coupletInfo.success) {
+              this.saveCoupletChanges(coupletInfo.isDontShowAgain);
+            } else {
+              this.cancelCoupletUpdate(coupletInfo && coupletInfo.isDontShowAgain);
+            }
+          }
+        });
+        this.blockType = blockType;
+        this.styleKey = styleKey;
+        this.styleVal = styleVal;
+      }
+    },
+    saveCoupletChanges(isDontShowAgain) {
+      this.closeCoupletWarningPopup();
+      this.saveUserChoiceToCookie(isDontShowAgain);
+      this.selectStyle(this.blockType, this.styleKey, this.styleVal);
+    },
+    saveUserChoiceToCookie(isDontShowAgain) {
+      if (isDontShowAgain &&
+        !document.cookie.includes('dontShowAgainCoupletWarning=true')) {
+        document.cookie = 'dontShowAgainCoupletWarning=true';
+      }
+    },
+    closeCoupletWarningPopup() {
+      this.isCoupletWarningPopupActive = false;
+    },
+    cancelCoupletUpdate(isDontShowAgain) {
+      this.saveUserChoiceToCookie(isDontShowAgain);
+      this.closeCoupletWarningPopup();
+    },
     selectPauseAfter(blockType, styleVal) {
-      //console.log(blockType, styleKey, styleVal);
+      //console.log('selectPauseAfter', blockType, styleVal);
       if (this.proofreadModeReadOnly) {
         return;
       }
@@ -1927,9 +1976,9 @@ export default {
             if (update) {
               this.tc_loadBookTask(this.currentBookMeta._id);
               this.getCurrentJobInfo();
-              this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
               Vue.nextTick(() => {
-                this.$refs.pauseAfterControl[0].recalcPauseAfterRange(true);
+                this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id, false);
+                //this.$refs.pauseAfterControl[0].recalcPauseAfterRange(true);
               });
             }
           });
@@ -2245,10 +2294,10 @@ select.text-danger#categorySelection, input.text-danger{
   background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
-  /*position: sticky;*/
-  top: 44px;
+  position: sticky;
+  top: 43px;
   background-color:white;
-  z-index: 19;
+  z-index: 1;
 }
 
 #p-styles-switcher.tab-container {
@@ -2257,9 +2306,10 @@ select.text-danger#categorySelection, input.text-danger{
 
 .meta-edit-tabs > .nav-tabs-navigation{
   border: 1px solid white;
-  /*position: sticky;*/
-  top: 0px;
-  z-index: 20;
+  position: sticky;
+  top: -1px;
+  background-color: white;
+  z-index: 1;
 }
 
 /*.meta-edit-tabs .nav-tabs-navigation .nav > li {
@@ -2758,10 +2808,6 @@ ul.no-bullets {
   list-style-type: none;
   padding: 0;
   margin: 0;
-}
-.align-blocks-limit {
-  padding-left: 20px;
-  padding-bottom: 10px;
 }
 
 </style>

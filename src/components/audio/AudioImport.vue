@@ -499,7 +499,8 @@ export default {
       //console.log(arguments)
       let total = 0;
       //console.log('get uploading files', this.$refs.uploadDropzone.getUploadingFiles());
-      this.$refs.uploadDropzone.getUploadingFiles().forEach(f => {
+      let uploadingFiles = this.$refs.uploadDropzone.getUploadingFiles();// files still uploading
+      uploadingFiles.forEach(f => {
         let processed = 0;
         f.upload.chunks.forEach(c => {
           if (c.status === 'success') {
@@ -521,12 +522,18 @@ export default {
           
         }
       });
-      this.audioFiles.forEach(af => {
-        if (af.progress === 100) {
-          total+=100;
-        }
-      });
-      this.uploadProgress = Math.round(total / this.audioFiles.length) + '%';
+      if (uploadingFiles.length > 0) {// add 100% for each uploaded file
+        this.audioFiles.forEach(af => {
+          if (af.progress === 100) {
+            total+=100;
+          }
+        });
+      }
+      let allProgress = Math.round(total / this.audioFiles.length);
+      if (allProgress > 100) {// more than 100 means justn now uploaded in uploadingFiles
+        allProgress = 100;
+      }
+      this.uploadProgress = allProgress + '%';
     },
     onUploadFinished() {
       //console.log(arguments)
@@ -550,6 +557,10 @@ export default {
       if (toUpload.files.length === 0 && !toUpload.url) {
         return Promise.resolve();
       }
+      this.uploadProgress = '100%';// force set all to ready
+      this.audioFiles.forEach(af => {
+        af.progress = '100';
+      });
       
       if (this.type === 'parse_replace') {
         uploadPromise = this.parseReplaceAudio([toUpload]);
@@ -562,13 +573,13 @@ export default {
         .then(response => {
           if (response.status===200) {
             this.uploadFinished = true
-            this.uploadProgress = ''
             this.uploadErrors = [];
             if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
               this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
             }
             if (response.data.errors) {
               if (Array.isArray(response.data.errors)) {
+                this.uploadProgress = '';
                 this.uploadErrors = response.data.errors;
               }
             }

@@ -55,3 +55,10 @@
   white-space: nowrap;
   word-break: break-word;
 }
+
+.ilm-tooltip.white-tooltip {
+  max-width: none;
+}
+.ilm-tooltip.white-tooltip .ilm-tooltip-text {
+  white-space: nowrap;
+}

@@ -3,10 +3,6 @@
 
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" ><!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
-  <selection-modal
-    :show="selectionModalActive"
-  >
-  </selection-modal>
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
@@ -235,6 +231,11 @@ export default {
           },
           'ctrl+up': (ev)=>{
             //console.log('ctrl+up arrow');
+            if (ev && ev.target) {
+              if (ev.target.className.indexOf('edit-section-') === 0) {
+                return;
+              }
+            }
             const idsArray = this.parlistO.idsArray();
             const jumpStep = Math.floor(idsArray.length * 0.1);
             const currIdx = this.hotkeyScrollTo;
@@ -246,6 +247,11 @@ export default {
           },
           'ctrl+down': (ev)=>{
             //console.log('ctrl+down arrow');
+            if (ev && ev.target) {
+              if (ev.target.className.indexOf('edit-section-') === 0) {
+                return;
+              }
+            }
             const idsArray = this.parlistO.idsArray();
             const jumpStep = Math.floor(idsArray.length * 0.1);
             const currIdx = this.hotkeyScrollTo;
@@ -309,8 +315,9 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'loadBookTocSections', 'findNextAudioblock']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'findNextAudioblock']),
     ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
+    ...mapActions('tocSections', ['loadBookTocSections']),
 
     test(ev) {
         console.log('test', ev);
@@ -348,7 +355,11 @@ export default {
               onPage: 1,//this.showEditorsCount
             }).then((answer)=>{
               if (this.startId == false) {
-                this.startId = answer.blocks[0].blockid;
+                if (answer.blocks.length) {
+                  this.startId = answer.blocks[0].blockid;
+                } else { // empty book
+                  return Promise.resolve({...meta, ...{loadType}});
+                }
               }
               return this.getAllBlocks(answer.meta.bookid, this.startId)
               .then((result)=>{
@@ -722,7 +733,9 @@ export default {
 
       },
     eventKeyDown: function(key) {
+      if (this.$events) {
         if (key.code==='Escape' || key.keyCode===27) this.$events.emit('currentEditingBlock_id', key);
+      }
     },
     onMediaSuccess_msr(stream) {
       if (!this.recorder || (this.recorderStream && !this.recorderStream.active && this.recorderStream.id !== stream.id && stream.active)) {
@@ -873,6 +886,9 @@ export default {
           this.getCurrentJobInfo();
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
+          }
+          if (block.index === 0) {
+            this.loadBookTocSections([]);
           }
           //this.refreshTmpl();
         })
@@ -1583,6 +1599,11 @@ export default {
       .then((metaResp)=>{
         this.initEditorPosition();
         this.processOpenedBook();
+        Vue.nextTick(()=>{
+          for (const block of this.$refs.blocks) {
+            block.reInitEditor()
+          }
+        })
       })
     },
 
@@ -2253,7 +2274,7 @@ export default {
           this.checkMode();
           this.$store.commit('set_taskBlockMap');
           this.$store.dispatch('loadBookToc', {bookId: this.meta._id, isWait: true});
-          return this.$store.dispatch('loadBookTocSections', []);
+          return this.loadBookTocSections([]);
         })
       },
 
@@ -2559,7 +2580,7 @@ export default {
                   this.$refs.blocks[0].voiceworkChange = action.payload.voicework;
                   this.$refs.blocks[0].voiceworkUpdateType = action.payload.updateType;
                   this.$refs.blocks[0].voiceworkBlockType = action.payload.blockType;
-                  this.$refs.blocks[0].showModal('voicework-change');
+                  this.$refs.blocks[0].showChangeVoiceworkModal();
                 }
               });
             }
@@ -2771,6 +2792,20 @@ export default {
         }, 400);
       },
       //deep: true
+    },
+    'selectionModalActive': {
+      handler(val) {
+        if (val) {
+          this.$modal.show(SelectionModal, {
+            
+          }, 
+          {
+            width: '500px',
+            height: '100px',
+            clickToClose: false
+          });
+        }
+      }
     }
   }
 }
