@@ -1357,7 +1357,7 @@ export const store = new Vuex.Store({
         this.dispatch('setBlockSelection', {start: {}, end: {}});
       }
     },
-    pause_liveDBBlock(state, blockId, blockRid) {
+    pause_liveDBBlock(state, [blockId, blockRid]) {
       let index = state.pauseLiveDBBlocks.findIndex(record => {
         return record.blockid === blockId;
       });
@@ -5070,7 +5070,7 @@ export const store = new Vuex.Store({
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       update.mode = state.bookMode;
-      commit('pause_liveDBBlock', blockid, storeBlock._id);
+      commit('pause_liveDBBlock', [blockid, currentBlockO.id]);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
@@ -5275,6 +5275,18 @@ export const store = new Vuex.Store({
       }
       if (data.action === 'create' && data.block) {
         if (!state.storeListO.get(data.block.id)) {
+          let inId = data.block.in;
+          if (Array.isArray(inId)) {
+            inId = inId[0];
+          }
+          if (inId) {
+            let paused = state.pauseLiveDBBlocks.find(blk => {
+              return blk.rid = inId;
+            });
+            if (paused) {
+              data.block.isSaving = true;
+            }
+          }
           state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
         }
       } else if (data.action === 'change' && data.block) {
