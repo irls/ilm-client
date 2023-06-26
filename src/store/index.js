@@ -153,6 +153,9 @@ export const store = new Vuex.Store({
     ttsVoices : [],
 
     blockers: [],
+    reqSignals: {
+      metaUpdate: new AbortController()
+    },
 
     lockedBlocks: [],
     aligningBlocks: [],
@@ -2140,7 +2143,7 @@ export const store = new Vuex.Store({
       //return Promise.resolve('No data updated');
 
       const BOOKID = update.bookid || state.currentBookMeta._id;
-      return axios.put(`${state.API_URL}meta/${BOOKID}`, update)
+      return axios.put(`${state.API_URL}meta/${BOOKID}`, update, { signal: state.reqSignals.metaUpdate.signal })
         .then(response => {
           dispatch('tocSections/loadBookTocSections', []);
           if (response.data["@class"] && response.status == 200) {
@@ -2177,6 +2180,13 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
+          if (err.message && err.message === 'canceled') {
+            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
+              if (bookMetaIdx > -1) {
+                state.books_meta[bookMetaIdx]['@version'] += 1;
+                state.currentBookMeta['@version'] += 1;
+              }
+            }
           return dispatch('checkError', err);
         })
     },
@@ -5358,6 +5368,13 @@ export const store = new Vuex.Store({
       }
       return false;
     },
+
+    abortRequest({state}, signalName) {
+      if (state.reqSignals[signalName] && state.reqSignals[signalName].abort) {
+        state.reqSignals[signalName].abort();
+      }
+      state.reqSignals[signalName] = new AbortController();
+    }
 
   }
 })
