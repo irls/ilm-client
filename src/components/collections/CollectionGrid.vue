@@ -21,7 +21,7 @@
           :idField="'bookid'"
           :filter-key="''"
           :draggable="allowCollectionsEdit"
-          :sortable="false"
+          :sortable="true"
           :ref="'grid-' + collection._id"
           :class="['collection-books-grid']"
           :scrollTopOnPageClick="true"
