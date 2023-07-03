@@ -2228,7 +2228,7 @@ export const store = new Vuex.Store({
             publishTime : false,
             updateTime : Date()
           };
-          if (currMeta.hasOwnProperty('publishLog') && currMeta.publishLog.publishTime){
+          if (currMeta.publishLog && currMeta.publishLog.publishTime) {
             publishLogAction.publishTime = currMeta.publishLog.publishTime;
           }
           update.publishLog = publishLogAction;
