@@ -143,7 +143,7 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" v-model='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
+                    <select class="form-control" :value='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
                       <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
                       <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
                     </select>
@@ -1252,7 +1252,7 @@ export default {
         this.$refs.descriptionLong.setValue(this.currentBook.description);
       }
 
-      this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 500);
+      this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 800);
     },
     /*
     //close unknown author if clicked outside
