@@ -412,7 +412,8 @@
                         <label>
                           <span class="hidden">{{footnote.voicework}}</span>
                           <i class="fa fa-volume-off"></i>
-                          <select  :disabled="(!allowEditing && proofreadModeReadOnly) || editingLocked ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <!-- :disabled="(!allowEditing && proofreadModeReadOnly) || editingLocked ? 'disabled' : false" -->
+                          <select  disabled v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
                             <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                           </select>
                         </label>

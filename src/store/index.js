@@ -799,7 +799,7 @@ export const store = new Vuex.Store({
         if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
-        this.commit('ttsModule/set_book_defaults');
+        //this.commit('ttsModule/set_book_defaults');
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
