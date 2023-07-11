@@ -2860,6 +2860,16 @@ export const store = new Vuex.Store({
             //}
             //dispatch('getCurrentJobInfo');
             dispatch('getCurrentJobInfo');
+            if (task.blockid) {
+              let block = state.storeList.get(task.blockid);
+              if (block) {
+                block.setPauseAfter(response.data.pause_after);
+              }
+              let blockO = state.storeListO.get(task.blockid);
+              if (blockO.checked) {
+                state.blockSelection.refresh = Date.now();// to update pause after
+              }
+            }
             return Promise.resolve(list);
           })
       })
