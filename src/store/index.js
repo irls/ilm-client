@@ -20,6 +20,7 @@ import tasks from './modules/tasks';
 import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
+import ttsModule from './modules/tts';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -83,7 +84,8 @@ export const store = new Vuex.Store({
     tasks,
     gridFilters,
     audioExport,
-    tocSections
+    tocSections,
+    ttsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -797,6 +799,7 @@ export const store = new Vuex.Store({
         if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
+        this.commit('ttsModule/set_book_defaults');
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
@@ -1161,7 +1164,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false, voicework: b.voicework});
       });
     },
     add_aligning_block(state, block) {
