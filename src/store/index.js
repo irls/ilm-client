@@ -723,13 +723,12 @@ export const store = new Vuex.Store({
             }
           });
         }
-        if (!meta.voices || (meta.voices && Object.keys(meta.voices).length === 0)) {
-          meta.voices = {
-            'title': false,
-            'header': false,
-            'paragraph': false,
-            'footnote': false
-          };
+        let checkVoiceDefaults = false;
+        if (state.currentBookMeta && meta && state.currentBookMeta.bookid === meta.bookid) {
+          checkVoiceDefaults = true;
+          if (state.currentBookMeta.voices && !meta.voices) {
+            meta.voices = state.currentBookMeta.voices;
+          }
         }
         if (meta.styles instanceof Object) {
           Object.keys(meta.styles).forEach(k => {
@@ -771,7 +770,9 @@ export const store = new Vuex.Store({
         if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
-        //this.commit('ttsModule/set_book_defaults');
+        if (checkVoiceDefaults) {
+          this.commit('ttsModule/set_book_defaults');
+        }
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
