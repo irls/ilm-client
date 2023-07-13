@@ -27,13 +27,12 @@ export default {
         let defaultVoice = state.tts_voices.find(voice => {
           return voice.default === true;
         });
-        if (!this.getters.currentBookMeta.voices) {
-          this.currentBookMeta.voices = {
-            paragraph: '',
-            title: '',
-            header: ''
+        this.getters.currentBookMeta.voices = this.getters.currentBookMeta.voices || {};
+        ['paragraph', 'title', 'header'].forEach(field => {
+          if (!this.getters.currentBookMeta.voices[field]) {
+            this.getters.currentBookMeta.voices[field] = '';
           }
-        }
+        });
         if (defaultVoice) {
           //console.log(defaultVoice);
           Object.keys(this.getters.currentBookMeta.voices).forEach(type => {
