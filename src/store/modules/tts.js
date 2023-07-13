@@ -136,6 +136,16 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    generateExample({rootState}, id) {
+      return axios.post(`${rootState.API_URL}tts/eleven_labs/generate_example/${encodeURIComponent(id)}`)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 }

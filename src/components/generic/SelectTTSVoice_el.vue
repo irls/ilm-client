@@ -1,6 +1,7 @@
 <template>
 <div class="voice-select-el">
-  <button class="test-tts-voice" v-on:click="playAudio"></button>
+  <span class="preloader -generating-example" v-if="generating_example === value"></span>
+  <button class="test-tts-voice" v-on:click="playAudio" v-else></button>
   <select class="select-voice" v-model="value" v-on:change="onInput">
     <option v-for="voice in voices" :value="voice.voice_id">{{voice.name}}</option>
   </select>
@@ -21,7 +22,7 @@
     },
 
     props: [
-      'voices', 'pre_selected', 'block_type'
+      'voices', 'pre_selected', 'block_type', 'generating_example'
     ],
 
     computed: {

@@ -18,6 +18,7 @@
                 :pre_selected="defaultVoice('title')"
                 :voices="all_voices"
                 :block_type="'title'"
+                :generating_example="generating_example"
                 @onSelect="onVoiceChange"
                 @play="playVoiceExample"
               ></select-tts-voice>
@@ -30,6 +31,7 @@
                 :pre_selected="defaultVoice('header')"
                 :voices="all_voices"
                 :block_type="'header'"
+                :generating_example="generating_example"
                 @onSelect="onVoiceChange"
                 @play="playVoiceExample"
               ></select-tts-voice>
@@ -42,6 +44,7 @@
                 :pre_selected="defaultVoice('paragraph')"
                 :voices="all_voices"
                 :block_type="'paragraph'"
+                :generating_example="generating_example"
                 @onSelect="onVoiceChange"
                 @play="playVoiceExample"
               ></select-tts-voice>
@@ -128,7 +131,8 @@
       <div class="book-voices">
         <div class="book-voice" v-for="voice in book_voices">
           <div class="book-voice-option -play">
-            <button class="play-voice" v-on:click="playVoiceExample(voice.voice_id)"></button>
+            <span class="preloader -generating-example" v-if="generating_example === voice.voice_id"></span>
+            <button class="play-voice" v-on:click="playVoiceExample(voice.voice_id)" v-else></button>
           </div>
           <div class="book-voice-option -name" v-on:dblclick="setEditingVoice(voice)">
             <input v-model="editing_voice_name" v-if="editing_voice_id === voice.id" class="editing-voice-name"
@@ -174,13 +178,15 @@
         editing_voice_id: null,
         editing_voice_name: '',
         creating_voice: false,
-        audio_playing: false
+        audio_playing: false,
+        generating_example: null
       }
     },
     components: {
       'select-tts-voice': SelectTTSVoice,
       'Slider': Slider
     },
+    props: ['is_active'],
     computed: {
       ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid']),
       ...mapGetters('ttsModule', ['new_voice_settings', 'tts_voices']),
@@ -216,6 +222,7 @@
             this.new_voice.accent_strength = this.new_voice_settings.accent_strength.min;
           }
         });
+      window.addEventListener('resize', this.setMaxContainerHeight);
     },
     methods: {
       defaultVoice(type) {
@@ -233,7 +240,7 @@
       },
       loadBookVoices() {
         this.all_voices = [];
-        this.getTTSVoices()
+        return this.getTTSVoices()
           .then(()=>{
             let allVoices = this.tts_voices;
             this.book_voices = [];
@@ -248,6 +255,7 @@
               }
             });
             this.all_voices = allVoices;
+            return {};
           });
       },
       startGenerateVoice() {
@@ -371,7 +379,10 @@
             })
         }
       },
-      playVoiceExample(voice_id) {
+      playVoiceExample(voice_id, attempt = 0) {
+        if (attempt >= 2) {
+          return;
+        }
         if (this.audio_playing) {
           return;
         }
@@ -383,10 +394,47 @@
           this.audio_element.src = process.env.ILM_API + voice.voice_example;
           this.audio_playing = true;
           this.audio_element.play();
+          return;
+        }
+        if (voice && !voice.example) {
+          this.generating_example = voice.voice_id;
+          return this.generateExample(voice.id)
+            .then(response => {
+              this.generating_example = null;
+              return this.loadBookVoices();
+            })
+            .then(() => {
+              return this.playVoiceExample(voice_id, ++attempt)
+            })
+            .catch(err => {
+              this.generating_example = null;
+              console.log(err);
+            });
         }
       },
+      setMaxContainerHeight() {
+        // on open and resize set height to have scroll
+        let containerHeight = 0;
+        let container = document.querySelector('.sidebar');// main container for all section
+        let element = document.querySelector('.eleven-labs-tts');
+        if (container && element) {
+          containerHeight = container.offsetHeight;
+          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          if (tabs) {
+            containerHeight-= tabs.offsetHeight;
+          }
+          let header = document.querySelector('.audio-integration-accordion .p-accordion-header');// headers in accordion
+          if (header) {
+            containerHeight-= header.offsetHeight * 3;
+          }
+          containerHeight-= 50;// margins and paddings
+        }
+        if (containerHeight && containerHeight > 0) {
+          element.style['max-height'] = `${containerHeight}px`;
+        };
+      },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice'])
+      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
     },
     
     watch: {
@@ -420,12 +468,34 @@
           this.generated_voice_url = '';
         },
         deep: true
+      },
+      'is_active': {
+        handler(val) {
+          if (val) {
+            this.setMaxContainerHeight();
+          }
+        }
       }
     }
   }
 </script>
 <style lang="less">
   .eleven-labs-tts {
+    overflow-y: scroll;
+    &::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+      border-radius: 10px;
+      background-color: #F5F5F5;
+    }
+    &::-webkit-scrollbar {
+      width: 12px;
+      background-color: #F5F5F5;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+      background-color: #555;
+    }
     fieldset {
       border: 1px solid #b9b6b6;
       legend {
@@ -529,22 +599,6 @@
         border: none;
         margin: 0px 5px;
       }
-      .preloader {
-        background: url(/static/preloader-snake-small.gif);
-        width: 34px;
-        height: 34px;
-        display: inline-block;
-        background-repeat: no-repeat;
-        background-position: center;
-        vertical-align: middle;
-        margin: 0px 5px;
-        /*&.-generating-voice {
-          margin: 0px 5px;
-        }
-        &.-creating-voice {
-          
-        }*/
-      }
       .save-voice {
         background: url(/static/tts-catalog/save-voice.png);
         width: 41px;
@@ -616,6 +670,29 @@
             }
           }
         }
+      }
+    }
+    .preloader {
+      background: url(/static/preloader-snake-small.gif);
+      width: 34px;
+      height: 34px;
+      display: inline-block;
+      background-repeat: no-repeat;
+      background-position: center;
+      vertical-align: middle;
+      margin: 0px 5px;
+      /*&.-generating-voice {
+        margin: 0px 5px;
+      }
+      &.-creating-voice {
+
+      }*/
+      &.-generating-example {
+        background: url(/static/preloader-snake-transparent-tiny.gif);
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 24px;
+        margin: 0px 10px 0px 0px;
       }
     }
   }

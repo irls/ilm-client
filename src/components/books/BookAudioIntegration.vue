@@ -121,6 +121,7 @@
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
         <ElevenLabsTTS
+          :is_active="activeTabIndex === 1"
           @alignTts="alignTts"
           @cancelAlign="cancelAlign" />
         <!-- <div class="block-selection-info">
@@ -1301,7 +1302,7 @@
         return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
+      ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS'])
     },
     beforeDestroy() {
@@ -1358,7 +1359,6 @@
       },
       ...mapGetters({
         currentBookCounters: 'currentBookCounters',
-        ttsVoices: 'ttsVoices',
         currentBookid: 'currentBookid',
         currentBookMeta: 'currentBookMeta',
         blockSelection: 'blockSelection',
@@ -1460,9 +1460,6 @@
           }
 
         }
-      },
-      'ttsVoices': function (val) {
-        this.pre_options = val;
       },
       'aligningBlocks': function() {
         /*if (this.aligningBlocks.length > 0) {
