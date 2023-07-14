@@ -965,7 +965,7 @@ export default {
     deleteBlock(block, block_Idx) {
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
-      this.removeBlock(block._id)
+      this.removeBlock(block)
       .then((response)=>{
         //this.setBlockSelection({start: {}, end: {}});
         this.getDisabledBlocks();
@@ -1142,8 +1142,8 @@ export default {
         this.scrollToBlock(blockBefore.blockid);
       }
       return this.blocksJoin({
-        resultBlock_id: blockBefore.blockid,
-        donorBlock_id: block.blockid
+        resultBlock_id: blockBefore._rid,
+        donorBlock_id: block._rid
       })
         .then((response)=>{
           this.clearBlockLock({block: blockBefore, force: true});
@@ -1199,8 +1199,8 @@ export default {
       }
       //elNext.evFromAudioeditorClosed(blockAfter.blockid);
       return this.blocksJoin({
-        resultBlock_id: block.blockid,
-        donorBlock_id: blockAfter.blockid
+        resultBlock_id: block._rid,
+        donorBlock_id: blockAfter._rid
       })
         .then((response)=>{
           this.clearBlockLock({block: block, force: true});
