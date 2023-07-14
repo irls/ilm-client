@@ -1987,7 +1987,7 @@ export const store = new Vuex.Store({
 
     updateBlockToc({state, dispatch}, params) {
       dispatch('freeze', 'loadBookToc');
-      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
+      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${encodeURIComponent(params.rid)}`)
       .then((response) => {
         //state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
@@ -2273,14 +2273,15 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-        return axios.get(state.API_URL + 'book/block/' + block_id)
-          .then(response => {
-            return Promise.resolve(response.data);
-          })
-          .catch(err => {
-            console.log(err);
-            return Promise.reject(err);
-          });
+      let block = state.storeList.get(block_id);
+      return axios.get(state.API_URL + 'book/block/' + encodeURIComponent(block._rid))
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          console.log(err);
+          return Promise.reject(err);
+        });
     },
 
     getBlocks ({commit, state, dispatch}, blocksIds) {
@@ -2504,7 +2505,7 @@ export const store = new Vuex.Store({
         update.block.content = block.content;
       }
       let storeBlock = state.storeList.get(block.blockid);
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
+      return axios.put(state.API_URL + 'book/block/' + encodeURIComponent(storeBlock._rid) + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
@@ -2522,7 +2523,9 @@ export const store = new Vuex.Store({
     },
     putBlockNarrate({state, dispatch, commit}, [block, realign, partIdx]) {
       commit('set_blocker', 'putBlock');
-      let url = `${state.API_URL}book/block/${block.blockid}/narrate`;
+
+      let storeBlock = state.storeList.get(block.blockid);
+      let url = `${state.API_URL}book/block/${encodeURIComponent(storeBlock._rid)}/narrate`;
       if (realign) {
         url+= '?realign=true';
       }
@@ -2556,8 +2559,6 @@ export const store = new Vuex.Store({
       isSplitting = isSplitting ? isSplitting.length : 0;
       return axios.put(url, update)
         .then((response) => {
-
-          let storeBlock = state.storeList.get(response.data.blockid);
           if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
             response.data.audiosrc_config = storeBlock.audiosrc_config;
           }
@@ -2814,16 +2815,21 @@ export const store = new Vuex.Store({
         })
     },
     tc_approveBookTask({state, commit, dispatch}, task) {
-      if (task.blockid) {
-        state.approveBlocksList.push(task.blockid);
-      }
-      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
-      {
+      let request = {
         'bookId': task.bookid || false,
         'taskId': task.id || false,
         'taskStep': task.nextStep || 'narrate-block',
         'taskType': task.type || false
-      })
+      };
+      if (task.blockid) {
+        state.approveBlocksList.push(task.blockid);
+        let block = state.storeList.get(task.blockid);
+        if (block) {
+          request.blockRid = block._rid;
+        }
+      }
+      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
+      request)
       .then((response) => {
         return dispatch('checkResponse', response)
           .then(list => {
@@ -3999,25 +4005,25 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         })
     },
-    removeBlock({state, commit, dispatch}, blockid) {
-      return axios.delete(state.API_URL + 'book/block/' + blockid)
+    removeBlock({state, commit, dispatch}, block) {
+      return axios.delete(state.API_URL + 'book/block/' + encodeURIComponent(block._rid))
         .then(response => {
-          if (state.blockSelection.start && blockid === state.blockSelection.start._id) {
+          if (state.blockSelection.start && block.blockid === state.blockSelection.start._id) {
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               dispatch('set_block_selection', {start: {}, end: {}});
             } else {
-              let outId = state.storeListO.getOutId(blockid);
+              let outId = state.storeListO.getOutId(block.blockid);
               if (outId) {
                 dispatch('set_block_selection', Object.assign(state.blockSelection, {
                   start: {_id: outId}
                 }));
               }
             }
-          } else if (state.blockSelection.end && blockid === state.blockSelection.end._id) {
+          } else if (state.blockSelection.end && block.blockid === state.blockSelection.end._id) {
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               dispatch('set_block_selection', {start: {}, end: {}});
             } else {
-              let inId = state.storeListO.getInId(blockid);
+              let inId = state.storeListO.getInId(block.blockid);
               if (inId) {
                 dispatch('set_block_selection', Object.assign(state.blockSelection, {
                   end: {_id: inId}
@@ -4470,7 +4476,7 @@ export const store = new Vuex.Store({
         }
       })
       state.audioTasksQueue.running = Object.assign({}, queue[queue.length - 1]);
-      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
+      return axios.post(`${state.API_URL}book/block/${encodeURIComponent(block._rid)}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
         queue: queue,
         block: {
           content: content,
@@ -4534,12 +4540,12 @@ export const store = new Vuex.Store({
     saveBlockAudio({state, dispatch}, [realign, preparedData]) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let alignBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
       let data = {
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
-        mode: state.bookMode
+        mode: state.bookMode,
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
@@ -4652,7 +4658,7 @@ export const store = new Vuex.Store({
     discardAudioChanges({state}) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let queueBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit`;
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit`;
       if (queueBlock.partIdx !== null) {
         api_url+= '/part/' + queueBlock.partIdx;
       }
@@ -4677,8 +4683,8 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo]) {
-      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo, blockRid]) {
+      return axios.post(`${state.API_URL}books/blocks/${encodeURIComponent(blockRid)}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
         .then((response) => {
           let storeBlock = state.storeList.get(blockid);
           if (storeBlock && Array.isArray(storeBlock.parts) && storeBlock.parts.length > 2) {
@@ -5047,7 +5053,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
+    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
@@ -5055,7 +5061,7 @@ export const store = new Vuex.Store({
       let currentBlockO = state.storeListO.get(blockid);
       let currentOut = currentBlockO.out;
 
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/split_to_subblocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
           let storeBlock = state.storeList.get(blockid);
@@ -5089,7 +5095,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
+    splitBySubblock({state, dispatch, commit}, [blockid, partIdx, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
@@ -5098,7 +5104,7 @@ export const store = new Vuex.Store({
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       commit('pause_liveDBBlock', blockid, storeBlock._id);
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/split_by_subblock`, {
         partIdx: partIdx,
         mode: state.bookMode
       })
@@ -5123,11 +5129,11 @@ export const store = new Vuex.Store({
         });
     },
 
-    mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
+    mergeAllBlockParts({state, commit, dispatch}, [blockid, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/parts/merge_all`, {mode: state.bookMode})
         .then((response) => {
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');

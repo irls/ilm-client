@@ -1987,7 +1987,8 @@ Save or discard your changes to continue editing`,
                   blockid: this.block.blockid,
                   type: this.block.type,
                   flags: this.block.flags || [],
-                  bookid: this.block.bookid
+                  bookid: this.block.bookid,
+                  rid: this.block._rid
                 }
                 if (this.changes && Array.isArray(this.changes)) {
                   this.changes.forEach(c => {
@@ -2005,7 +2006,7 @@ Save or discard your changes to continue editing`,
               else if (this.isChanged || update_fields.length > 0) {
                 let fullUpdate = false;
                 this.block.clean();
-                let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
+                let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid, rid: this.block._rid};
                 if (this.isSplittedBlock) {
                   partUpdate.parts = this.block.parts;
                 }
@@ -2164,7 +2165,7 @@ Save or discard your changes to continue editing`,
           //this.$refs.blockContent.dataset.has_suggestion = false;
           if (is_content_changed) {
             if (['title', 'header'].indexOf(this.block.type) !== -1) {
-              this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
+              this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid, rid: this.block._rid});
             }
           } else if (is_type_changed || is_level_changed) {
             this.loadBookToc({bookId: this.block.bookid, isWait: true});
@@ -3243,7 +3244,8 @@ Save text changes and realign the Block?`,
                 'position': reRecordPosition,
                 'isTemp': false,
                 'blockid': this.block.blockid,
-                'partIdx': partIdx
+                'partIdx': partIdx,
+                rid: this.block._rid
               })
                 .then(response => {
                   this.isUpdating = false;
@@ -3806,7 +3808,8 @@ Save text changes and realign the Block?`,
         formData.append('block', JSON.stringify({
           description: this.$refs.blocks[0].$refs.blockDescription.innerHTML,
           flags: this.block.flags || [],
-          language: this.block.language || null
+          language: this.block.language || null,
+          rid: this.block._rid
         }));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
