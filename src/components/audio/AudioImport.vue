@@ -572,7 +572,9 @@ export default {
       return uploadPromise
         .then(response => {
           if (response.status===200) {
-            this.uploadFinished = true
+            if (this.type !== 'parse_replace') {
+              this.uploadFinished = true
+            }
             this.uploadErrors = [];
             if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
               this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
@@ -744,6 +746,14 @@ export default {
                 }
               });
           }
+        }
+      }
+    },
+    'audiobook.updatedAt': {
+      handler(val) {
+        //console.log('updatedAt', this.audiobook.report)
+        if (this.type === 'parse_replace' && this.audiobook.report && this.audiobook.report.length) {
+          this.uploadFinished = true;
         }
       }
     }
