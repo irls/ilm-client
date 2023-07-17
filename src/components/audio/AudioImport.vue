@@ -1,119 +1,117 @@
 <template>
-  <div>
-  <modal name="import-audio" :resizeable="false" :clickToClose="false" height="auto" width="700px">
-    
-          <div class="modal-header">
-
-            <slot name="header">
-              <div class="header-title">
-                <h4 class="header-h">{{importTitle}}</h4>
-              </div>
-
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading || uploadErrors.length || audiobookReport">
-                <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-                </button>
-
-            </slot>
-          </div>
-          <div class="modal-body">
-
-          <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
-
-          <div class="modal-body clearfix">
-
-
-
-            <slot name="body">
-              <div class="col-sm-12">
-                <h5>Browse for audio files or type a playlist URL</h5>
-              </div>
-              <div class="col-sm-12 upload-files">
-                <div class="col-sm-9">
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
-                    <input type="text" class="form-control" placeholder="Playlist URL" v-model="audioURL" />
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                  <dropzone id="audio-dropzone" ref="uploadDropzone" 
-                    :options="dropzoneOptions" 
-                    @vdropzone-file-added="onAudioFileChange"
-                    @vdropzone-total-upload-progress="onUploadProgress"
-                    @vdropzone-success="onUploadSuccess"
-                    @vdropzone-complete="onUploadComplete"
-                    @vdropzone-error="onUploadError"
-                    @vdropzone-queue-complete="onUploadFinished">
-                    Browse
-                </dropzone>
-                </div>
-                <span v-if="$refs.upload">
-                {{$refs.upload.uploaded}}
-                </span>
-                <!-- <span><input type="checkbox" id="checkbox" v-model="autoAlign"> Align automatically </span> -->
-              </div>
-              <div class="col-sm-12">
-                <ul class="audiofiles-list">
-                  <li v-for="file in audioFiles">
-                    {{ file.name }} - {{ humanFileSize(file.size, true) }}
-                  </li>
-               </ul>
-              </div>
-              <div class="col-sm-12 audio-import-options">
-                <div class="col-sm-7">
-                  <fieldset class="audio-import-options-fieldset">
-                    <legend>Import type</legend>
-                    <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="copy" />Copy to the catalog</label>
-                    <label><input type="radio" name="import-audio-type" v-model="audioImportType" value="replace" />Replace block audio</label>
-                  </fieldset>
-                </div>
-                <div class="col-sm-5">
-                  <fieldset class="audio-import-options-fieldset">
-                    <legend>Audio quality</legend>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" /><div><img src="/static/audio_quality/raw-16.png" /></div>Raw</label>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" /><div><img src="/static/audio_quality/improved-16.png" /></div>Improved</label>
-                    <label><input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" /><div><img src="/static/audio_quality/mastered-16.png" /></div>Mastered</label>
-                  </fieldset>
-                </div>
-              </div>
-              <div class="col-sm-12">
-              </div>
-            </slot>
-
-          </div>
-
-          </form>
-          <div id='uploadingMsg' v-show='isUploading'>
-            <template v-if="!audiobookReport && !uploadErrors.length">
-             <h2>{{uploadProgress}}&nbsp;<i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
-             <ul class="audiofiles-list">
-                <li v-for="file in audioFiles">
-                  {{ file.name }} - {{ file.progress ? file.progress : 0 }}%
-                </li>
-             </ul>
-            </template>
-            <template v-else>
-              <div v-html="audiobookReport"></div>
-              <template v-if="uploadFinished">
-                <div class="copy-report" v-if="allowCopyReport">
-                  <textarea class="copy-report-content" ref="copy-report-content" ></textarea>
-                  <button class="btn btn-primary" v-if="allowCopyReport" v-on:click="copyReport">Copy Report</button>
-                </div>
-                <div v-html="reportFooter" class="copy-report" v-if="reportFooter.length"></div>
+  <div class="audio-import-modal">
+    <div class="modal-header">
+      <div>
+        <h4 class="modal-title">{{importTitle}}</h4>
+      </div>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close')" v-if="!isUploading || uploadErrors.length || audiobookReport">
+      <i class="close-modal" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="audio_select" v-show="!isUploading" enctype="multipart/form-data" @submit.prevent>
+        <div class="clearfix">
+          <div class="col-sm-12">
+            <h5>
+              <template v-if="type === 'import'">
+                Browse for audio files or type a playlist URL
               </template>
+              <template v-if="type === 'replace'">
+                Browse for FLAC audiofiles
+              </template>
+              <template v-if="type === 'parse_replace'">
+                Browse for a ZIP with WAV file and JSON audio map
+              </template>
+            </h5>
+          </div>
+          <div class="col-sm-12 upload-files">
+            <div class="col-sm-3">
+              <dropzone id="audio-dropzone" ref="uploadDropzone" 
+                :options="dropzoneOptions" 
+                @vdropzone-file-added="onAudioFileChange"
+                @vdropzone-total-upload-progress="onUploadProgress"
+                @vdropzone-success="onUploadSuccess"
+                @vdropzone-complete="onUploadComplete"
+                @vdropzone-error="onUploadError"
+                @vdropzone-queue-complete="onUploadFinished">
+                Browse
+              </dropzone>
+            </div>
+            <template v-if="type === 'import'">
+              <div class="col-sm-9">
+                <div class="input-group">
+                  <input type="text" class="form-control playlist-url" placeholder="Playlist URL" v-model="audioURL" />
+                </div>
+              </div>
             </template>
-            <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
+            <span v-if="$refs.upload">
+            {{$refs.upload.uploaded}}
+            </span>
           </div>
+          <div class="col-sm-12">
+            <ul class="audiofiles-list">
+              <li v-for="file in audioFiles">
+                {{ file.name }} - {{ humanFileSize(file.size, true) }}
+              </li>
+           </ul>
           </div>
+          <div class="audio-import-quality">
+            <div class="audio-import-quality-item">
+              Audio quality
+            </div>
+            <div class="audio-import-quality-item">
+              <label>
+                <input type="radio" name="audio-quality" v-model="audioImportQuality" value="raw" />
+                <div class="audio-quality -raw">Raw</div>
+              </label>
+            </div>
+            <div class="audio-import-quality-item">
+              <label>
+                <input type="radio" name="audio-quality" v-model="audioImportQuality" value="improved" />
+                <div class="audio-quality -improved">Improved</div>
+              </label>
+            </div>
+            <div class="audio-import-quality-item">
+              <label>
+                <input type="radio" name="audio-quality" v-model="audioImportQuality" value="mastered" />
+                <div class="audio-quality -mastered">Mastered</div></label>
+            </div>
+          </div>
+          <div class="col-sm-12">
+          </div>
+        </div>
+      </form>
+      <div id='uploadingMsg' v-show='isUploading'>
+        <template v-if="!audiobookReport && !uploadErrors.length">
+         <h2>{{uploadProgress}}&nbsp;<i class="fa fa-refresh fa-spin fa-3x fa-fw" aria-hidden="true"></i></h2>
+         <ul class="audiofiles-list">
+            <li v-for="file in audioFiles">
+              {{ file.name }} - {{ file.progress ? file.progress : 0 }}%
+            </li>
+         </ul>
+        </template>
+        <template v-else>
+          <div v-html="audiobookReport"></div>
+          <template v-if="uploadFinished">
+            <div class="copy-report" v-if="allowCopyReport">
+              <textarea class="copy-report-content" ref="copy-report-content" ></textarea>
+              <button class="btn btn-primary" v-if="allowCopyReport" v-on:click="copyReport">Copy Report</button>
+            </div>
+            <div v-html="reportFooter" class="copy-report" v-if="reportFooter.length"></div>
+          </template>
+        </template>
+        <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
+      </div>
+    </div>
     <div class="modal-footer">
       <template v-if="(audiobookReport && uploadFinished) || uploadErrors.length">
-        <button class="btn btn-default" v-on:click="$emit('closeOk')">Ok, got it</button>
+        <button class="btn btn-default" v-on:click="uploadOk()">Ok, got it</button>
       </template>
       <template v-else-if="!isUploading">
         <button class="btn btn-primary modal-default-button" @click="onFormSubmit" :class="{disabled : saveDisabled}">Import</button>
         <button class="btn btn-default modal-default-button" @click="$emit('close')">Cancel</button>
       </template>
     </div>
-  </modal>
     <modal name="duplicate-files-warning" :resizeable="false" :clickToClose="false" height="auto">
         <div class="modal-header"></div>
         <div class="modal-body">
@@ -126,7 +124,7 @@
           <button type="button" class="btn btn-default" @click="cancelDuplicateAudio()">Cancel</button>
           <button type="button" class="btn btn-confirm" @click="replaceDuplicateAudio()">Replace</button>
         </div>
-      </modal>
+    </modal>
   </div>
 
 </template>
@@ -164,7 +162,7 @@ export default {
       uploadFilesDuplicates: [],
       confirmedDuplicates: [],
       uploadErrors: [],
-      dropzoneOptions: {
+      dropzoneOptionsCommon: {
         url: this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk', 
         chunking: true, 
         chunkSize: 1024 * 1024, 
@@ -177,13 +175,31 @@ export default {
       },
       choosingFile: false,
       audioImportType: "copy",
-      audioImportQuality: "raw"
+      audioImportQuality: "raw",
+      uploadUrl: '',
+      acceptFiles: null,
+    }
+  },
+  beforeMount: function() {
+    this.uploadUrl = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk';
+    switch (this.type) {
+      case 'import':
+        this.acceptFiles = 'audio/*';
+        break;
+      case 'replace':
+        this.audioImportType = 'replace';
+        this.acceptFiles = 'audio/flac';
+        break;
+      case 'parse_replace':
+        this.audioImportType = 'parse_replace';
+        this.acceptFiles = 'zip,application/octet-stream,application/zip,application/x-zip,application/x-zip-compressed';
+        break;
     }
   },
   mounted: function () {
-    this.dropzoneOptions.url = this.API_URL + 'books/' + this.book.bookid + '/audiobooks/chunk';
-    this.dropzoneOptions.headers = {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password};
-    this.showModal('import-audio');
+    this.dropzoneOptionsCommon.url = this.uploadUrl;
+    this.dropzoneOptionsCommon.headers = {'Authorization': 'Bearer ' + this.$store.getters.auth.getSession().token + ':' + this.$store.getters.auth.getSession().password};
+    this.checkMultipleFileInput();
   },
   components: {
     Vue, dropzone
@@ -198,13 +214,17 @@ export default {
       type: Boolean,
       default: true
     },
-    'importTask': {
-      type: Object,
-      default: () => {return {}}
-    },
     'allowDownload': {
       type: Boolean,
       default: true
+    },
+    'type': {
+      type: String,
+      default: 'import'
+    },
+    'uploadInfo': {
+      type: Object,
+      default: {}
     }
   },
   computed: {
@@ -245,7 +265,36 @@ export default {
                 });
                 reportHtml+= `</ul></li>`;
               }
+              if (report.copied) {
+                reportHtml+= `<li>${report.copied} audio file(s) copied to the catalog and will be available shortly after processing</li>`;
+              }
+              let hasDuplicates = report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0;
+              let hasSkipped = report.skipped && Array.isArray(report.skipped.files) && report.skipped.files.length > 0;
+              if (hasDuplicates) {
+                reportHtml+= `<li>${report.duplicates.files.length} duplicate audio file(s) replaced with:<ul class="audiofiles-list">`;
+                report.duplicates.files.forEach(filename => {
+                  reportHtml+= `<li>${filename}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
+              if (hasSkipped) {
+                reportHtml+= `<li>${report.skipped.files.length} duplicate audio file(s) rejected<ul class="audiofiles-list">`;
+                report.skipped.files.forEach(af => {
+                  reportHtml+= `<li>${af}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
+              if (Array.isArray(report.errors_parse_replace) && report.errors_parse_replace.length > 0) {
+                reportHtml+= `<li>Audio can’t be parsed. WAV audio file, specified in the JSON audio map is not found in:<ul class="audiofiles-list">`;
+                report.errors_parse_replace.forEach(err => {
+                  reportHtml+= `<li>${err.dir}</li>`;
+                });
+                reportHtml+= `</ul></li>`;
+              }
               reportHtml+='</ul>';
+              if (report.copied && !hasDuplicates && !hasSkipped) {
+                reportHtml = reportHtml.replace(/<\/?(ul|li)[^>]*>/img, '');
+              }
               return reportHtml;
             }
           } else {
@@ -261,7 +310,17 @@ export default {
         if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
           let report = this.getParsedReport();
           if (report instanceof Object) {
-            return (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) || (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0);
+            let hasReport = false;
+            let checkReport = ['aligned', 'not_replaced', 'not_matched', 'duplicates', 'skipped'];
+            checkReport.forEach(key => {
+              if (!hasReport && report[key] && Array.isArray(report[key].files) && report[key].files.length > 0) {
+                hasReport = true;
+              }
+            });
+            if (Array.isArray(report.errors_parse_replace) && report.errors_parse_replace.length > 0) {
+              hasReport = true;
+            }
+            return hasReport;
           }
           return false;
         }
@@ -271,23 +330,52 @@ export default {
     },
     reportFooter: {
       get() {
-        if (this.audiobook.report && this.uploadFinished && this.audiobook.report.length > 0) {
-          let report = this.getParsedReport();
-          if (report instanceof Object) {
-            if  ((report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) || (report.not_replaced && Array.isArray(report.not_replaced.files) && report.not_replaced.files.length > 0) || (report.not_matched && Array.isArray(report.not_matched.files) && report.not_matched.files.length > 0)) {
-              return "The above listed audio file(s) copied to the catalog and will be available shortly after processing";
-            }
-          }
-        }
         return "";
       },
       cache: false
     },
     importTitle: {
       get() {
-        return this.audiobookReport ? 'Import Audio Report' : 'Import Audio';
+        if (this.audiobookReport) {
+          return 'Import Audio Report';
+        }
+        switch (this.type) {
+          case 'import':
+            return 'Import audio';
+            break;
+          case 'replace':
+            return 'Replace audio';
+            break;
+          case 'parse_replace':
+            return 'Parse & Replace audio';
+            break;
+        }
+        return '';
       },
       cache: false
+    },
+    dropzoneOptions: {
+      get() {
+        let options = {
+          url: this.uploadUrl, 
+          acceptedFiles: this.acceptFiles,
+        };
+        let browseButtonLabel = '';
+        switch (this.type) {
+          case 'import':
+            browseButtonLabel = `Browse audio`;
+            break;
+          case 'replace':
+            browseButtonLabel = `Browse FLAC`;
+            break;
+          case 'parse_replace':
+            browseButtonLabel = `Browse ZIP`;
+            //options.maxFiles = 1;
+            break;
+        }
+        options.dictDefaultMessage = `<button class="btn btn-default browse-audio">${browseButtonLabel}</button>`;
+        return Object.assign(this.dropzoneOptionsCommon, options);
+      }
     },
     ...mapGetters({
       audiobook: 'currentAudiobook',
@@ -309,39 +397,45 @@ export default {
       //return;
       //let fieldName = e.target.name
       let fileList = [file];//e.target.files || e.dataTransfer.files//e.file
-      if (!this.multiple) {
-        this.audioFiles = [];
-        this.formData = new FormData();
-      }
       for(let file of fileList) {
-          let exist = false;
-          if (this.audiobook._id && this.audiobook.importFiles) {
-            exist = this.audiobook.importFiles.find(_f => {
-              return _f.origName == file.name || _f.group_id === file.name;
-            });
+        let allow = true;
+        if (!file.type) {
+          allow = false;
+        }
+        if (this.type === 'parse_replace') {
+          allow = file.type.toLowerCase().indexOf('zip') !== -1;
+        } else {
+          switch (this.acceptFiles) {
+            case 'audio/*':
+              if (!/^audio\/.*$/.test(file.type.toLowerCase())) {
+                allow = false;
+              }
+              break;
+            case 'audio/flac':
+              if (file.type.toLowerCase() !== this.acceptFiles) {
+                allow = false;
+              }
+              break;
+            case 'application/zip':
+              break;
           }
-          this.addFileToUpload(file);
-          /*
-          if (exist) {
-            //this.uploadFilesDuplicates.push(file);
-          } else {
-            let existInCurrent = this.audioFiles.find(_f => {
-              return _f.name == file.name;
-            })
-            if (!existInCurrent) {
-              this.addFileToUpload(file);
+        }
+        if (allow && !this.multiple) {
+          let addedFiles = this.$refs.uploadDropzone.getAddedFiles();
+          if (addedFiles && addedFiles.length > 1) {
+            for (let i = 0; i < addedFiles.length - 2; ++i) {
+              this.$refs.uploadDropzone.removeFile(addedFiles[i]);
             }
           }
-          */
+          this.audioFiles = [];
+          this.formData = new FormData();
+          this.uploadFiles = 0;
+        }
+        if (allow) {
+          this.addFileToUpload(file);
+          this.checkMultipleFileInput();
+        }
       }
-      
-      /*Array
-        .from(Array(fileList.length).keys())
-        .map(x => {
-          this.formData.append(fieldName, fileList[x], fileList[x].name);
-          //console.log('Field name: ', fieldName)
-          this.uploadFiles++
-        });*/
     },
     addFileToUpload(file) {
       this.audioFiles.push({name: file.name, size: file.size, uuid:file.upload.uuid});
@@ -405,7 +499,8 @@ export default {
       //console.log(arguments)
       let total = 0;
       //console.log('get uploading files', this.$refs.uploadDropzone.getUploadingFiles());
-      this.$refs.uploadDropzone.getUploadingFiles().forEach(f => {
+      let uploadingFiles = this.$refs.uploadDropzone.getUploadingFiles();// files still uploading
+      uploadingFiles.forEach(f => {
         let processed = 0;
         f.upload.chunks.forEach(c => {
           if (c.status === 'success') {
@@ -427,12 +522,18 @@ export default {
           
         }
       });
-      this.audioFiles.forEach(af => {
-        if (af.progress === 100) {
-          total+=100;
-        }
-      });
-      this.uploadProgress = Math.round(total / this.audioFiles.length) + '%';
+      if (uploadingFiles.length > 0) {// add 100% for each uploaded file
+        this.audioFiles.forEach(af => {
+          if (af.progress === 100) {
+            total+=100;
+          }
+        });
+      }
+      let allProgress = Math.round(total / this.audioFiles.length);
+      if (allProgress > 100) {// more than 100 means justn now uploaded in uploadingFiles
+        allProgress = 100;
+      }
+      this.uploadProgress = allProgress + '%';
     },
     onUploadFinished() {
       //console.log(arguments)
@@ -450,19 +551,35 @@ export default {
       if (this.audioURL.length) toUpload.url = this.audioURL;
       toUpload.audioImportType = this.audioImportType;
       toUpload.audioImportQuality = this.audioImportQuality;
+      
+      let uploadPromise;
+      
+      if (toUpload.files.length === 0 && !toUpload.url) {
+        return Promise.resolve();
+      }
+      this.uploadProgress = '100%';// force set all to ready
+      this.audioFiles.forEach(af => {
+        af.progress = '100';
+      });
+      
+      if (this.type === 'parse_replace') {
+        uploadPromise = this.parseReplaceAudio([toUpload]);
+      } else {
+        uploadPromise = this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload, this.book ? this.book.bookid : null]);
+      }
 
       //this.isUploading = true
-      return this.updateAudiobook([this.audiobook.id ? this.audiobook.id : null, toUpload, this.book ? this.book.bookid : null])
+      return uploadPromise
         .then(response => {
           if (response.status===200) {
             this.uploadFinished = true
-            this.uploadProgress = ''
             this.uploadErrors = [];
             if (response.data.audio && typeof response.data.audio._id !== 'undefined') {
               this.uploadProgress = response.data.newFilesCount + " Audiofiles processing"
             }
             if (response.data.errors) {
               if (Array.isArray(response.data.errors)) {
+                this.uploadProgress = '';
                 this.uploadErrors = response.data.errors;
               }
             }
@@ -486,8 +603,13 @@ export default {
         f.progress = 100;
       }
     },
-    onUploadError() {
+    onUploadError(file, error, xhr) {
+      console.log('upload error');
       console.log(arguments);
+      //file.status = 'added';
+      //this.$refs.uploadDropzone.removeAllFiles(true);
+      //this.$refs.uploadDropzone.manuallyAddFile(file, '');
+      this.checkMultipleFileInput();
     },
     copyReport() {
       let content = 'Import Audio Report\n\n' + this.convertTime(new Date(), true) + '\n\n';
@@ -519,7 +641,32 @@ export default {
           });
           reportHtml+= `\n`;
         }
-        reportHtml+='';
+        if (report.copied) {
+          reportHtml+= `${report.copied} audio file(s) copied to the catalog and will be available shortly after processing\n\n`;
+        }
+        let hasDuplicates = report.duplicates && Array.isArray(report.duplicates.files) && report.duplicates.files.length > 0;
+        if (hasDuplicates) {
+          reportHtml+= `${report.duplicates.files.length} duplicate audio file(s) replaced with:\n`;
+          report.duplicates.files.forEach(filename => {
+            reportHtml+= ` - ${filename}\n`;
+          });
+          reportHtml+= `\n`;
+        }
+        let hasSkipped = report.skipped && Array.isArray(report.skipped.files) && report.skipped.files.length > 0;
+        if (hasSkipped) {
+          reportHtml+= `${report.skipped.files.length} duplicate audio file(s) rejected\n`;
+          report.skipped.files.forEach(af => {
+            reportHtml+= ` - ${af}\n`;
+          });
+          reportHtml+= `\n`;
+        }
+        if (Array.isArray(report.errors_parse_replace) && report.errors_parse_replace.length > 0) {
+          reportHtml+= `Audio can’t be parsed. WAV audio file, specified in the JSON audio map is not found in:\n`;
+          report.errors_parse_replace.forEach(err => {
+            reportHtml+= ` - ${err.dir}\n`;
+          });
+          reportHtml+= `\n`;
+        }
         content+= reportHtml;
         el.innerHTML = content;
         el.select();
@@ -539,7 +686,22 @@ export default {
       }
       return "";
     },
-    ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign'])
+    uploadOk() {
+      this.uploadInfo.success = true;
+      this.$emit('close');
+    },
+    checkMultipleFileInput() {
+      if (!this.multiple) {
+        Vue.nextTick(() => {
+          let fileInput = document.querySelector('input[type="file"].dz-hidden-input');
+          if (fileInput) {
+            fileInput.multiple = false;
+          }
+        });
+      }
+    },
+    ...mapActions(['updateAudiobook', 'tc_loadBookTask', 'getBlocks', 'getBookAlign']),
+    ...mapActions('audioExport', ['parseReplaceAudio'])
 
   },
   watch: {
@@ -723,7 +885,6 @@ div.coverimg {
   color: inherit;
 }
 
-button.close i.fa {font-size: 18pt; padding-right: .5em;}
 .booktitle {font-family: times; padding-top:0; margin-top:0;}
 .bookauthor {font-family: times; color: gray; text-indent: 2.5em}
 .bookcover {float: right; max-width: 100px; max-height: 140px;
@@ -832,5 +993,88 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
 .copy-report {
   text-align: left;
   padding: 5px;
+}
+.audio-import-modal {
+  [class^="col-sm-"] {
+    padding: 4px 4px 4px 0px;
+  }
+  .modal-header {
+    padding: 10px 10px 10px 28px;
+    button.close {
+      margin-top: -25px;
+    }
+    button.close i.close-modal {
+      font-size: 18px;
+      padding-right: .5em;
+      &:before {
+        content: "\00d7";
+      }
+    }
+  }
+  .modal-body {
+    padding: 0px 30px;
+  }
+  .browse-audio, .browse-audio:hover {
+    border: 1px solid #3187d5;
+    border-radius: 5px;
+    color: #3187d5;
+    padding: 6px 12px;
+    background: rgba(49, 135, 213, 0.1);
+  }
+  .input-group {
+    width: 100%;
+    .playlist-url {
+      background: rgba(238, 238, 238, 0.2);
+    }
+  }
+  .audio-import-quality {
+    font-size: 14px;
+    display: table-row;
+    .audio-import-quality-item {
+      display: table-cell;
+      vertical-align: top;
+      padding: 0px 35px 0px 0px;
+    }
+    div.audio-quality {
+      /* width: 20px; */
+      height: 16px;
+      display: inline-block;
+      background-repeat: no-repeat;
+      padding-left: 18px;
+      vertical-align: top;
+      &.-raw {
+        background: url(/static/audio_quality/raw-16.png) no-repeat;
+      }
+      &.-improved {
+        background: url(/static/audio_quality/improved-16.png) no-repeat;
+      }
+      &.-mastered {
+        background: url(/static/audio_quality/mastered-16.png) no-repeat;
+      }
+    }
+    label {
+      margin-bottom: 0px;
+      font-weight: 400;
+    }
+  }
+  .modal-header {
+    border-bottom: none;
+    h4 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+  }
+  .modal-footer {
+    border-top: none;
+    .btn-default {
+      width: 88px;
+    }
+    .btn-primary {
+      width: 84px;
+    }
+    .btn {
+      margin: 0px 7px;
+    }
+  }
 }
 </style>

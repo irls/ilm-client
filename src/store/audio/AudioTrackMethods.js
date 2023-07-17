@@ -2,6 +2,8 @@ import { secondsToPixels } from 'waveform-playlist/lib/utils/conversions';
 import CanvasHook from 'waveform-playlist/lib/render/CanvasHook';
 import h from 'virtual-dom/h';
 
+import SelectState from './states/SelectState.js';
+
 const MAX_CANVAS_WIDTH = 1000;
 
 var renderTrack = function(data) {
@@ -227,6 +229,16 @@ var renderTrack = function(data) {
     );
 };
 
+var setState = function(state) {
+  this.state = state;
+
+  if (this.state && this.enabledStates[this.state] && this.state === 'select') {
+    this.stateObj = new SelectState(this);
+  } else {
+    this.stateObj = undefined;
+  }
+};
+
 module.exports = {
-  renderTrack: renderTrack
+  renderTrack, setState
 }

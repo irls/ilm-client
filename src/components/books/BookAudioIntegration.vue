@@ -1,8 +1,19 @@
 <template>
   <div>
-    <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion">
+    <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
+          <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
+          <div class="block-selection-info">
+            <template v-if="!blockSelection.start._id">
+              0 blocks selected
+            </template>
+            <template v-else>
+              {{alignCounter.countAudio}} Audio file block(s) in range
+              <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
+              <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+            </template>
+          </div>
           <div class="file-catalogue-buttons" v-if="allowEditing">
             <div class="" v-if="allowEditing">
               <label class="checkbox-container">
@@ -109,6 +120,16 @@
         </div>
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
+        <div class="block-selection-info">
+          <template v-if="!blockSelection.start._id">
+            0 blocks selected
+          </template>
+          <template v-else>
+            {{alignCounter.countTTS}} TTS block(s) in range 
+            <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
+            <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
+          </template>
+        </div>
         <div class="volume-slider-margin">
           <div class="tts-volume-label">Volume:</div>
           <Slider ref="slider" v-model="pre_volume" :step="0.1" :min="0.1" :max="1.0" />
@@ -176,6 +197,9 @@
           <button v-if="hasLocks('align')" class="cancel-align pull-left" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
         </div>
       </AccordionTab>
+      <AccordionTab :header="'Export & Replace audio'" v-bind:key="'export-replace-audio'">
+        <ReplaceAudio/>
+      </AccordionTab>
     </Accordion>
     <div id="player"></div>
   </div>
@@ -191,12 +215,16 @@
   import {mapGetters, mapActions} from 'vuex';
   import Slider from 'primevue/slider';
   import SelectTTSVoice from '../generic/SelectTTSVoice'
+  import ReplaceAudio from './details/ReplaceAudio.vue';
+  import AudioImport from '../audio/AudioImport';
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
   import superlogin from 'superlogin-client';
   import PouchDB from 'pouchdb';
   import Split from 'split.js';
   import _ from 'lodash';
+  import v_modal from 'vue-js-modal';
+  Vue.use(v_modal, {dialog: true});
   //var d3 = require('d3')
   export default {
     name: 'BookAudioIntegration',
@@ -211,7 +239,8 @@
       dropdown,
       Slider,
       'select-tts-voice':SelectTTSVoice,
-      draggable
+      draggable,
+      ReplaceAudio
 
     },
     props: {
@@ -269,22 +298,14 @@
       })
       var self = this;
 
-      this.$root.$on('from-audioeditor:close', function(blockId, audiofileId) {
-        if (audiofileId && self.playing === audiofileId) {
-          self.playing = false;
-          // this.audioEditorIsOpeed = false;
-          // self.initSplit(true,false);
-        }else{
-          // this.audioEditorIsOpeed = true;
-          // self.initSplit(true, true);
+      this.$root.$on('from-audioeditor:close', (blockId, audiofileId) => {
+        if (audiofileId && this.playing === audiofileId) {
+          this.playing = false;
         }
 
-
-        var initSplitDebounce = _.debounce(function () {
-          self.splitRecalc(true)
-        }, 1000);
-        // initSplitDebounce
-        initSplitDebounce();
+        Vue.nextTick(() => {
+          this.splitRecalc(true)
+        });
 
       })
       this.$root.$on('from-audioeditor:save-positions', function(id, selections) {
@@ -329,10 +350,7 @@
         }
       });
       this.$root.$on('from-audioeditor:content-loaded', (id) => {
-        var initSplitDebounce = _.debounce(function () {
-          self.splitRecalc(true,false)
-        }, 500);
-        initSplitDebounce();
+        this.splitRecalc(true,false)
       });
 
       this.$root.$on('from-audioeditor:audio-loaded', (id) => {
@@ -388,11 +406,23 @@
       })
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
-      })
+      });
+      
+      /*this.$root.$on('for-audioeditor:load', this.resizeToc);
+      this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
+      this.$root.$on('from-audioeditor:close', this.resizeToc);
+      this.$root.$on('from-audioeditor:content-loaded', this.resizeToc);*/
     },
     methods: {
       uploadAudio() {
-        this.$emit('uploadAudio')
+        this.$modal.show(AudioImport, {
+          book: this.currentBookMeta,
+          uploadInfo: {}
+        }, {
+          height: 'auto',
+          width: '590px',
+          clickToClose: false
+        });
       },
       renameAudiofile(id) {
         this.renaming = {
@@ -1098,35 +1128,11 @@
         return Math.max(0, t>0? Math.min(elH, H-t) : Math.min(b, H));
       },
       splitRecalc(force = false, state) {
-        //console.log('splitRecalc')
-
-        let parentHeight;
-        let parentBottomPadding;
-
-        parentHeight = parseInt($(document).height());
-        //console.log(`parentHeight:${parentHeight}`);
-        if(state || $('.waveform-playlist:visible').length ){
-          if( $('.annotations-boxes').length ){
-            parentBottomPadding = 435;
-          }else{
-            parentBottomPadding = 410;
-          }
-          parentHeight -=20;
-        }else{
-          parentBottomPadding = 240;
+        let height = this.getFileCatalogueContainerHeight();
+        if (height) {
+          $('.file-catalogue-files-wrapper').css('max-height', height + 'px');
         }
-
-        parentHeight -=parentBottomPadding
-        //console.log(`parentHeight:${parentHeight}`);
-
-        // The additional scroll is appear
-        parentHeight -=45;
-
-        //console.log(`parentHeight:${parentHeight}`);
-        let height = parentHeight / 100 * 70 - 5;
-
-        let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-        $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
+        this.checkCatalogueScroll();
 
       },
       initSplit(force = false, state) {
@@ -1189,10 +1195,11 @@
 
               //console.log('SET HEIGHT TO', height - gutterSize + 'px', height, parentHeight)
               if (resizeWrapper || force) {
-                let wrapper = parentHeight - parseInt($('.file-catalogue-buttons').css('height'));
-                //console.log(`parentHeight:${parentHeight}`);
-                //console.log(`wrapper:${wrapper}`);
-                $('.file-catalogue-files-wrapper').css('max-height', wrapper + 'px')
+                let containerHeight = this.getFileCatalogueContainerHeight();
+                if (containerHeight) {
+                  $('.file-catalogue-files-wrapper').css('max-height', containerHeight + 'px');
+                }
+                this.checkCatalogueScroll();
                 // height = this.inViewport($('.file-catalogue-files-wrapper'));
                 // console.log(`parentHeight inViewport:${parentHeight}`);
                 //
@@ -1247,6 +1254,66 @@
       capitalizeFirst(text) {
         return _.upperFirst(text);
       },
+      
+      goToBlock(id) {
+        this.$emit('goToBlock', id);
+      },
+      
+      checkCatalogueScroll() {
+        Vue.nextTick(() => {
+          if ($('.file-catalogue-files-wrapper').is(':visible')) {// check if additional scroll appears
+            let scrollHeight = parseInt($('.sidebar')[0].scrollHeight) - parseInt($('.sidebar').height());
+            if (scrollHeight > 0) {
+              let heightDifference = parseInt($('.file-catalogue-files-wrapper').height() - (scrollHeight + 2));
+              $('.file-catalogue-files-wrapper').css('max-height', `${heightDifference}px`);
+            }
+          }
+        });
+      },
+      
+      checkTabOpen(ev) {// on tab open event component start slowly open, need to wait until full open
+        if (ev.index === 0) {
+          let containerHeight = this.getFileCatalogueContainerHeight();
+          if (containerHeight) {
+            $('.file-catalogue-files-wrapper').css('max-height', `${containerHeight}px`);
+          }
+          /*let tab = document.querySelector(`.audio-integration-accordion .p-accordion-tab:nth-child(${ev.index + 1}) .p-toggleable-content`);
+          if (tab) {
+            let checks = 0;
+            let prevHeight = null;
+            let checkInterval = setInterval(() => {
+              if (prevHeight !== null && prevHeight === tab.offsetHeight) {
+                clearInterval(checkInterval);
+                this.checkCatalogueScroll();
+              } else {
+                prevHeight = tab.offsetHeight;
+              }
+              ++checks;
+              if (checks >= 20) {
+                clearInterval(checkInterval);
+              }
+            }, 50);
+          }*/
+        }
+      },
+      
+      getFileCatalogueContainerHeight() {
+        let containerHeight = 0;
+        let container = document.querySelector('.sidebar');// main container for all section
+        if (container) {
+          containerHeight = container.offsetHeight;
+          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          if (tabs) {
+            containerHeight-= tabs.offsetHeight;
+          }
+          let header = document.querySelector('.audio-integration-accordion .p-accordion-header');// headers in accordion
+          if (header) {
+            containerHeight-= header.offsetHeight * 3;
+          }
+          containerHeight-= 135;// height for file catalogue buttons
+        }
+        return containerHeight && containerHeight > 0 ? containerHeight : null;
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS'])
@@ -1300,7 +1367,7 @@
       },
       startAlignDisabled: {
         get() {
-          return this.alignCounter.count == 0 || this.selections.length == 0 || !this.allowAlignBlocksLimit;
+          return this.alignCounter.countAudio == 0 || this.selections.length == 0 || !this.allowAlignBlocksLimit;
         }
       },
       ...mapGetters({
@@ -1315,7 +1382,8 @@
         audiobook: 'currentAudiobook',
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian',
-        allowAlignBlocksLimit: 'allowAlignBlocksLimit'})
+        allowAlignBlocksLimit: 'allowAlignBlocksLimit',
+        alignBlocksLimitMessage: 'alignBlocksLimitMessage'})
     },
     watch: {
       'audiobook': {
@@ -1431,11 +1499,15 @@
       'isActive': {
         handler(val) {
           this.initSplit();
+          this.checkCatalogueScroll();
         }
       },
       'activeTabIndex': {
         handler(val) {
-          this.initSplit();
+          //this.initSplit();
+          setTimeout(() => {
+            this.checkCatalogueScroll();
+          }, 600);// tab activation time 50ms
         }
       },
       'renaming': {
@@ -1470,6 +1542,12 @@
 
       .volume-slider-margin {
         margin: 0px 8px;
+      }
+    }
+    .block-selection-info {
+      padding: 7px 20px 10px;
+      a {
+        cursor: pointer;
       }
     }
   }
@@ -1666,6 +1744,12 @@
       border-left: 1px solid #ccc;
       margin-left: 3px;
       padding-left: 7px;
+    }
+    .align-blocks-limit {
+      padding: 0px 0px 0px 20px;
+    }
+    .red-message {
+      color: red;
     }
   }
   h4.panel-title {
