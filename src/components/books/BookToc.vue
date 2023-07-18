@@ -1003,7 +1003,15 @@ export default {
       }
     },
     
-    resizeToc() {
+    minimizeToc() {
+      this.resizeToc(false);
+    },
+    
+    maximizeToc() {
+      this.resizeToc(true);
+    },
+    
+    resizeToc(editorClosed = false) {
       // when section is activated or audio editor opened resize section to keep internal scroll and not display sidebar scroll
       let audioEditor = document.querySelector('.waveform-playlist');
       let elementsHeight = 15;
@@ -1016,7 +1024,7 @@ export default {
         elementsHeight+= navTabs.offsetHeight;
       }
       Vue.nextTick(() => {
-        if (audioEditor) {
+        if (audioEditor && !editorClosed) {
           //console.log(audioEditor.offsetHeight);
           if (audioEditor.offsetHeight) {
             elementsHeight+= audioEditor.offsetHeight;
@@ -1042,7 +1050,7 @@ export default {
     }
     this.$root.$on('for-audioeditor:load', this.resizeToc);
     this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
-    this.$root.$on('from-audioeditor:close', this.resizeToc);
+    this.$root.$on('from-audioeditor:close', this.maximizeToc);
     this.$root.$on('from-audioeditor:content-loaded', this.resizeToc);
   },
 
@@ -1155,7 +1163,7 @@ export default {
       text-align: center;
       background-position: top center;
       position: absolute;
-      z-index: 999;
+      z-index: 100;
       background-color: white;
       /*background-size: 83%;*/
     }
