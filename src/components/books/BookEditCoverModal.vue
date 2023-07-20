@@ -182,6 +182,7 @@ export default {
       uploadImageBlank: 'https://dl.dropboxusercontent.com/u/382588/share/book_blank_sm.png',
       isUploading: false,
       uploadProgress: '',
+      bookRemoveClicked: false,
 
       tmp: {
         coverimg: '',
@@ -259,7 +260,8 @@ export default {
 
   methods: {
     ...mapActions([
-      'updateBookCover'
+      'updateBookCover',
+      'removeBookCover'
     ]),
     addBookCover(e) {
       console.log('addedBookCover', e.target.files[0])
@@ -287,6 +289,7 @@ export default {
 
     resetInput() {
       this.uploadImage = "";
+      this.bookRemoveClicked = true;
     },
 
 
@@ -328,26 +331,42 @@ export default {
       }
       formData.append('coverimgURL', this.uploadImage);
 
-      var config = {
+      const config = {
         onUploadProgress: (progressEvent) => {
-          var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
         }
       }
 
+
       this.isUploading = true;
       this.fileChanged = false;
       this.uploadProgress = 'Uploading file';
-      return this.updateBookCover({ formData: formData, config: config })
+
+      const cleanParams = ()=>{
+        this.isUploading = false;
+        this.uploadProgress = '';
+        this.uploadFile = null;
+        this.bookRemoveClicked = false;
+      };
+
+      if (this.uploadImage.length == 0 && this.bookRemoveClicked) { // cover removed
+        return this.removeBookCover({ formData: formData, config: config })
         .then(doc => {
-          this.isUploading = false;
-          this.uploadProgress = '';
-          this.uploadFile = null;
+          cleanParams();
           return Promise.resolve();
         }).catch(err => {
-          this.isUploading = false;
-          this.uploadProgress = '';
-          this.uploadFile = null;
+          cleanParams();
+          return Promise.resolve();
+        })
+      }
+
+      return this.updateBookCover({ formData: formData, config: config })
+        .then(doc => {
+          cleanParams();
+          return Promise.resolve();
+        }).catch(err => {
+          cleanParams();
           return Promise.resolve();
         })
     },

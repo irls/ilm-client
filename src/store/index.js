@@ -153,6 +153,9 @@ export const store = new Vuex.Store({
     ttsVoices : [],
 
     blockers: [],
+    reqSignals: {
+      metaUpdate: new AbortController()
+    },
 
     lockedBlocks: [],
     aligningBlocks: [],
@@ -277,9 +280,10 @@ export const store = new Vuex.Store({
       partIdx: null,
       playingPauseAfter: false
     },
+    pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
-  },
-
+  }, // end state
+  
   getters: {
     getSelectionModalProgress: state=>state.SelectionModalProgress,
     livedbStatus: state => state.livedbStatus,
@@ -797,6 +801,11 @@ export const store = new Vuex.Store({
         if (meta.hasOwnProperty('collection_id') && (!meta.collection_id || meta.collection_id === null || meta.collection_id.length == 0)) {
           state.currentBookMeta.collection_id = false;
         }
+        if (meta.hasOwnProperty('coverimgURL')) {
+          this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: meta.coverimgURL});
+        } else {
+          this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
+        }
       } else {
         state.currentBookMeta = {};
         state.currentBookid = '';
@@ -814,6 +823,7 @@ export const store = new Vuex.Store({
         //state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?time='  + Date.now();
         state.currentBookFiles[fileObj.fileName] = process.env.ILM_API + fileObj.fileURL + '?v=' + (state.currentBookMeta['@version'] || Date.now());
       } else state.currentBookFiles[fileObj.fileName] = false;
+      //console.log(`state.currentBookFiles[${fileObj.fileName}] : `, state.currentBookFiles[fileObj.fileName] );
     },
 
     SET_CURRENT_COLLECTION (state, _id) {
@@ -873,7 +883,7 @@ export const store = new Vuex.Store({
       Vue.prototype.user_id = session ? session.user_id : null;
     },
 
-    updateBookMeta (state, meta) {
+    SET_CURRENTBOOK_META_RAW (state, meta) {
       state.currentBookMeta = meta
     },
 
@@ -1350,7 +1360,7 @@ export const store = new Vuex.Store({
         this.dispatch('setBlockSelection', {start: {}, end: {}});
       }
     },
-    pause_liveDBBlock(state, blockId, blockRid) {
+    pause_liveDBBlock(state, [blockId, blockRid]) {
       let index = state.pauseLiveDBBlocks.findIndex(record => {
         return record.blockid === blockId;
       });
@@ -1624,7 +1634,7 @@ export const store = new Vuex.Store({
                         && data.collection.slug.trim().length) {
                         delete collection.validationErrors.slug;
                       }
-                      state.bookCollectionsAll[cIdx] = {...collection, ...data.collection};
+                      state.bookCollectionsAll[cIdx] = new Collection({...collection, ...data.collection});
                       commit('PREPARE_BOOK_COLLECTIONS');
                     }
                   }
@@ -1653,9 +1663,9 @@ export const store = new Vuex.Store({
           }
         });
 
-        console.log(`liveDB.startWatch.pubMetaV: `);
+        //console.log(`liveDB.startWatch.pubMetaV: `);
         state.liveDB.startWatch('pubMetaV', 'pubMetaV', {bookid: 'pubMetaV'}, (data) => {
-          console.log(`liveDB.startWatch.pubMetaV.data: `, data);
+          //console.log(`liveDB.startWatch.pubMetaV.data: `, data);
           const cIdx = state.bookCollectionsAll.findIndex(c => {
             return c.id === data.meta.collection;
           });
@@ -1665,7 +1675,7 @@ export const store = new Vuex.Store({
               return c.bookid === data.meta.bookid;
             });
             if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
-              console.log(`state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              console.log(`liveDB.pubMetaV.data state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
@@ -1673,6 +1683,7 @@ export const store = new Vuex.Store({
               state.books_meta[bIdx].publishedVersion = data.meta.publishedVersion;
               state.books_meta[bIdx].version = data.meta.version;
               state.books_meta[bIdx].publishLog = data.meta.publishLog;
+              state.books_meta[bIdx].slug_status = data.meta.slug_status;
               commit('PREPARE_BOOK_COLLECTIONS');
             }
             // const collection = state.bookCollectionsAll[cIdx];
@@ -1907,9 +1918,9 @@ export const store = new Vuex.Store({
 
           //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
-            console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+            //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version'], data.meta);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              // console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version']);
+              console.log('liveDB metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
               if (bookMetaIdx > -1) {
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
@@ -1961,6 +1972,27 @@ export const store = new Vuex.Store({
       }
     },
 
+    removeBookCover({commit, state, dispatch}, data) {
+      if (state.currentBookMeta.bookid) {
+        return axios.delete(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/coverimg', data.formData, data.config)
+        .then(doc => {
+          dispatch('updateBookVersion', {minor: true})
+          .then(()=>{
+            const index = state.books_meta.findIndex(meta => {
+              return meta.bookid === state.currentBookMeta.bookid;
+            });
+            if (typeof index !== 'undefined' && state.books_meta[index].coverimgURL) {
+              delete state.books_meta[index].coverimgURL;
+            }
+            commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
+            return Promise.resolve();
+          })
+        }).catch(err => {
+          return Promise.reject(err);
+        })
+      }
+    },
+
     loadBookToc({state, commit, dispatch}, params) {
       if (state.currentBookToc.bookId === params.bookId && !params.isWait) return state.currentBookToc;
       if (state.blockers.indexOf('loadBookToc') !== -1 && state.currentBookToc.bookId !== params.bookId) {
@@ -1987,7 +2019,7 @@ export const store = new Vuex.Store({
 
     updateBlockToc({state, dispatch}, params) {
       dispatch('freeze', 'loadBookToc');
-      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${params.blockid}`)
+      return axios.put(state.API_URL + `books/toc/${params.bookid}/block/${encodeURIComponent(params.rid)}`)
       .then((response) => {
         //state.currentBookToc.bookId = params.bookId;
         state.currentBookToc.data = response.data;
@@ -2035,9 +2067,12 @@ export const store = new Vuex.Store({
     updateBookMeta({state, dispatch, commit}, update) {
       //console.log(`updateBookMeta.update: `, update);
 
-      update.bookid = state.currentBookMeta._id;
+      update = {...update};
+      if (!update.hasOwnProperty('bookid')) {
+        update.bookid = state.currentBookMeta._id;
+      }
 
-      let currMeta = state.currentBookMeta;
+      let currMeta = {...state.currentBookMeta};
       if (!currMeta.hasOwnProperty('publishLog')){
         currMeta.publishLog = {publishTime: false, updateTime: false}
       }
@@ -2050,10 +2085,10 @@ export const store = new Vuex.Store({
         if (update.major && update.major == true) updateVersion = {major: true}
       }
 
-      if (!(Object.keys(update).length === 2 &&
-              (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined') &&
-              typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
-              //console.log('Update version');
+      if (!(Object.keys(update).length === 2
+        && (typeof update.authors !== 'undefined' || typeof update.masteringRequired !== 'undefined' || typeof update.voices !== 'undefined')
+        && typeof update.bookid !== 'undefined')) {// updating authors from quote or masteringRequired
+        //console.log('Update version');
         if (typeof currMeta.version !== 'undefined' && currMeta.version === currMeta.publishedVersion && currMeta.published === true) {
           let versions = currMeta.version.split('.');
           if (update.hasOwnProperty('hashTags')){
@@ -2088,39 +2123,38 @@ export const store = new Vuex.Store({
             }
           }
         }
-        if (currMeta.hasOwnProperty('publishLog')){
-          //console.log('income publishLog: ', currMeta.publishLog);
-          var publishLogAction = currMeta.publishLog || {publishTime: false, updateTime: false};
-          publishLogAction.updateTime = Date();
-        } else {
-          var publishLogAction = {
+        if (!update.hasOwnProperty('private')) {
+          let publishLogAction = {
             publishTime : false,
             updateTime : Date()
           };
-        }
-        if (!update.hasOwnProperty('private'))
+          if (currMeta.publishLog && currMeta.publishLog.publishTime) {
+            publishLogAction.publishTime = currMeta.publishLog.publishTime;
+          }
           update.publishLog = publishLogAction;
-
+        }
       } else {
         delete update.major;
       }
 
-      let newMeta = Object.assign(state.currentBookMeta, update);
-      commit('SET_CURRENTBOOK_META', newMeta);
+      //let newMeta = Object.assign(state.currentBookMeta, update);
+      //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
+      //return Promise.resolve('No data updated');
 
-      return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
+      const BOOKID = update.bookid || state.currentBookMeta._id;
+      return axios.put(`${state.API_URL}meta/${BOOKID}`, update, { signal: state.reqSignals.metaUpdate.signal })
         .then(response => {
           dispatch('tocSections/loadBookTocSections', []);
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
-            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
+            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
             if (bookMetaIdx > -1) {
               update['@version'] = response.data['@version'];
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
             }
 
-            let checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
+            const checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
             if (response.data.bookid === checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
               state.currentBookMeta['@version'] = response.data['@version'];
 
@@ -2139,12 +2173,20 @@ export const store = new Vuex.Store({
               commit('PREPARE_BOOK_COLLECTIONS');
             }
 
+            //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
           }
         })
         .catch(err => {
+          if (err.message && err.message === 'canceled') {
+            let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
+              if (bookMetaIdx > -1) {
+                state.books_meta[bookMetaIdx]['@version'] += 1;
+                state.currentBookMeta['@version'] += 1;
+              }
+            }
           return dispatch('checkError', err);
         })
     },
@@ -2273,14 +2315,15 @@ export const store = new Vuex.Store({
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
-        return axios.get(state.API_URL + 'book/block/' + block_id)
-          .then(response => {
-            return Promise.resolve(response.data);
-          })
-          .catch(err => {
-            console.log(err);
-            return Promise.reject(err);
-          });
+      let block = state.storeList.get(block_id);
+      return axios.get(state.API_URL + 'book/block/' + encodeURIComponent(block._rid))
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          console.log(err);
+          return Promise.reject(err);
+        });
     },
 
     getBlocks ({commit, state, dispatch}, blocksIds) {
@@ -2504,7 +2547,7 @@ export const store = new Vuex.Store({
         update.block.content = block.content;
       }
       let storeBlock = state.storeList.get(block.blockid);
-      return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
+      return axios.put(state.API_URL + 'book/block/' + encodeURIComponent(storeBlock._rid) + '/proofread', update)
         .then((response) => {
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
@@ -2522,7 +2565,9 @@ export const store = new Vuex.Store({
     },
     putBlockNarrate({state, dispatch, commit}, [block, realign, partIdx]) {
       commit('set_blocker', 'putBlock');
-      let url = `${state.API_URL}book/block/${block.blockid}/narrate`;
+
+      let storeBlock = state.storeList.get(block.blockid);
+      let url = `${state.API_URL}book/block/${encodeURIComponent(storeBlock._rid)}/narrate`;
       if (realign) {
         url+= '?realign=true';
       }
@@ -2556,8 +2601,6 @@ export const store = new Vuex.Store({
       isSplitting = isSplitting ? isSplitting.length : 0;
       return axios.put(url, update)
         .then((response) => {
-
-          let storeBlock = state.storeList.get(response.data.blockid);
           if (storeBlock && storeBlock.audiosrc_config) {// stored only locally
             response.data.audiosrc_config = storeBlock.audiosrc_config;
           }
@@ -2814,16 +2857,21 @@ export const store = new Vuex.Store({
         })
     },
     tc_approveBookTask({state, commit, dispatch}, task) {
-      if (task.blockid) {
-        state.approveBlocksList.push(task.blockid);
-      }
-      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
-      {
+      let request = {
         'bookId': task.bookid || false,
         'taskId': task.id || false,
         'taskStep': task.nextStep || 'narrate-block',
         'taskType': task.type || false
-      })
+      };
+      if (task.blockid) {
+        state.approveBlocksList.push(task.blockid);
+        let block = state.storeList.get(task.blockid);
+        if (block) {
+          request.blockRid = block._rid;
+        }
+      }
+      return axios.post(state.API_URL + 'task/' + task.blockid + '/approve_block',
+      request)
       .then((response) => {
         return dispatch('checkResponse', response)
           .then(list => {
@@ -2860,6 +2908,16 @@ export const store = new Vuex.Store({
             //}
             //dispatch('getCurrentJobInfo');
             dispatch('getCurrentJobInfo');
+            if (task.blockid) {
+              let block = state.storeList.get(task.blockid);
+              if (block) {
+                block.setPauseAfter(response.data.pause_after);
+              }
+              let blockO = state.storeListO.get(task.blockid);
+              if (blockO.checked) {
+                state.blockSelection.refresh = Date.now();// to update pause after
+              }
+            }
             return Promise.resolve(list);
           })
       })
@@ -3999,25 +4057,25 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         })
     },
-    removeBlock({state, commit, dispatch}, blockid) {
-      return axios.delete(state.API_URL + 'book/block/' + blockid)
+    removeBlock({state, commit, dispatch}, block) {
+      return axios.delete(state.API_URL + 'book/block/' + encodeURIComponent(block._rid))
         .then(response => {
-          if (state.blockSelection.start && blockid === state.blockSelection.start._id) {
+          if (state.blockSelection.start && block.blockid === state.blockSelection.start._id) {
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               dispatch('set_block_selection', {start: {}, end: {}});
             } else {
-              let outId = state.storeListO.getOutId(blockid);
+              let outId = state.storeListO.getOutId(block.blockid);
               if (outId) {
                 dispatch('set_block_selection', Object.assign(state.blockSelection, {
                   start: {_id: outId}
                 }));
               }
             }
-          } else if (state.blockSelection.end && blockid === state.blockSelection.end._id) {
+          } else if (state.blockSelection.end && block.blockid === state.blockSelection.end._id) {
             if (state.blockSelection.start._id === state.blockSelection.end._id) {
               dispatch('set_block_selection', {start: {}, end: {}});
             } else {
-              let inId = state.storeListO.getInId(blockid);
+              let inId = state.storeListO.getInId(block.blockid);
               if (inId) {
                 dispatch('set_block_selection', Object.assign(state.blockSelection, {
                   end: {_id: inId}
@@ -4470,7 +4528,7 @@ export const store = new Vuex.Store({
         }
       })
       state.audioTasksQueue.running = Object.assign({}, queue[queue.length - 1]);
-      return axios.post(`${state.API_URL}book/block/${blockid}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
+      return axios.post(`${state.API_URL}book/block/${encodeURIComponent(block._rid)}${partIdx !== null ? '/' + partIdx : ''}/apply_queue`, {
         queue: queue,
         block: {
           content: content,
@@ -4534,12 +4592,12 @@ export const store = new Vuex.Store({
     saveBlockAudio({state, dispatch}, [realign, preparedData]) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let alignBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit${alignBlock.partIdx === null ? '' : '/part/' + alignBlock.partIdx}`;
       let data = {
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(alignBlock.partIdx || 0, false, false),
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
-        mode: state.bookMode
+        mode: state.bookMode,
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
@@ -4652,7 +4710,7 @@ export const store = new Vuex.Store({
     discardAudioChanges({state}) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let queueBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${block.blockid}/audio_edit`;
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit`;
       if (queueBlock.partIdx !== null) {
         api_url+= '/part/' + queueBlock.partIdx;
       }
@@ -4677,8 +4735,8 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo]) {
-      return axios.post(`${state.API_URL}books/blocks/${blockid}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
+    mergeBlockParts({state, commit, dispatch}, [blockid, partFrom, partTo, blockRid]) {
+      return axios.post(`${state.API_URL}books/blocks/${encodeURIComponent(blockRid)}/parts/${partFrom}/merge/${partTo}`, {mode: state.bookMode})
         .then((response) => {
           let storeBlock = state.storeList.get(blockid);
           if (storeBlock && Array.isArray(storeBlock.parts) && storeBlock.parts.length > 2) {
@@ -4900,8 +4958,8 @@ export const store = new Vuex.Store({
       }
       return axios.put(`${state.API_URL}collection/${state.currentCollection._id}`, data)
         .then((response) => {
+          let updObj = {};
           if (response && response.data) {
-            let updObj = {};
             Object.keys(data).filter(k => {
               return !state.currentCollection.validationErrors[k];
             }).forEach(k => {
@@ -4919,10 +4977,17 @@ export const store = new Vuex.Store({
               }
             }
 
-            state.currentCollection = {...state.currentCollection, ...updObj};
-            //commit('PREPARE_BOOK_COLLECTIONS');
+            const cIdx = state.bookCollectionsAll.findIndex(c => {
+              return c.id === state.currentCollection.id;
+            });
+
+            if (cIdx > -1) {
+              const collection = state.bookCollectionsAll[cIdx];
+              state.bookCollectionsAll[cIdx] = new Collection({...collection, ...response.data});
+              commit('PREPARE_BOOK_COLLECTIONS');
+            }
           }
-          return Promise.resolve();
+          return updObj;
         })
         .catch(err => {
           return Promise.reject(err);
@@ -5025,7 +5090,7 @@ export const store = new Vuex.Store({
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
       update.mode = state.bookMode;
-      commit('pause_liveDBBlock', blockid, storeBlock._id);
+      commit('pause_liveDBBlock', [blockid, currentBlockO.id]);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
@@ -5047,7 +5112,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update]) {
+    splitBlockToSubblocks({state, commit, dispatch}, [blockid, update, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
@@ -5055,7 +5120,7 @@ export const store = new Vuex.Store({
       let currentBlockO = state.storeListO.get(blockid);
       let currentOut = currentBlockO.out;
 
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_subblocks`, update)
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/split_to_subblocks`, update)
         .then(response => {
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
           let storeBlock = state.storeList.get(blockid);
@@ -5089,7 +5154,7 @@ export const store = new Vuex.Store({
         });
     },
 
-    splitBySubblock({state, dispatch, commit}, [blockid, partIdx]) {
+    splitBySubblock({state, dispatch, commit}, [blockid, partIdx, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
@@ -5097,8 +5162,8 @@ export const store = new Vuex.Store({
       let currentOut = currentBlockO.out;
       let storeBlock = state.storeList.get(blockid);
       storeBlock.isSaving = true;
-      commit('pause_liveDBBlock', blockid, storeBlock._id);
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_by_subblock`, {
+      commit('pause_liveDBBlock', [blockid, currentBlockO.id]);
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/split_by_subblock`, {
         partIdx: partIdx,
         mode: state.bookMode
       })
@@ -5123,11 +5188,11 @@ export const store = new Vuex.Store({
         });
     },
 
-    mergeAllBlockParts({state, commit, dispatch}, [blockid]) {
+    mergeAllBlockParts({state, commit, dispatch}, [blockid, blockRid]) {
       if (!state.currentBookid) {
         return Promise.resolve();
       }
-      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/parts/merge_all`, {mode: state.bookMode})
+      return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${encodeURIComponent(blockRid)}/parts/merge_all`, {mode: state.bookMode})
         .then((response) => {
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
@@ -5230,6 +5295,18 @@ export const store = new Vuex.Store({
       }
       if (data.action === 'create' && data.block) {
         if (!state.storeListO.get(data.block.id)) {
+          let inId = data.block.in;
+          if (Array.isArray(inId)) {
+            inId = inId[0];
+          }
+          if (inId) {
+            let paused = state.pauseLiveDBBlocks.find(blk => {
+              return blk.rid = inId;
+            });
+            if (paused) {
+              data.block.isSaving = true;
+            }
+          }
           state.storeListO.addBlock(data.block);//add if added, remove if removed, do not touch if updated
         }
       } else if (data.action === 'change' && data.block) {
@@ -5301,6 +5378,12 @@ export const store = new Vuex.Store({
       }
       return false;
     },
-
+    
+    abortRequest({state}, signalName) {
+      if (state.reqSignals[signalName] && state.reqSignals[signalName].abort) {
+        state.reqSignals[signalName].abort();
+      }
+      state.reqSignals[signalName] = new AbortController();
+    }
   }
 })
