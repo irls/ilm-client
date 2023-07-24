@@ -4243,7 +4243,7 @@ export const store = new Vuex.Store({
         let selection = {};
         if (state.blockSelection.start._id) {
           selection.start = state.blockSelection.start._id;
-        } else {
+        } else if (state.storeList.entries().next().value) {
           selection.start = state.storeList.entries().next().value[0]
         }
         if (state.blockSelection.end._id) {
