@@ -2853,22 +2853,27 @@
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
           let unpinned_indexes = {start: [], end: []};
+          let unpin = 0;
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             let resize_w = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w.manual`);
             if (al.start >= position && resize_w.length > 0) {
               unpinned_indexes.start.push(i);
               resize_w.removeClass('manual');
+              ++unpin;
             }
             let resize_e = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e.manual`);
             if (al.end >= position && resize_e.length > 0) {
               unpinned_indexes.end.push(i);
               resize_e.removeClass('manual');
+              ++unpin;
             }
           });
 
-          this._addHistoryLocal('unpin_right', null, null, null, {unpinned_indexes: unpinned_indexes});
-          this.addTaskQueue('unpin_right', [position * 1000]);
-          this.isModified = true;
+          if (unpin > 0) {
+            this._addHistoryLocal('unpin_right', null, null, null, {unpinned_indexes: unpinned_indexes});
+            this.addTaskQueue('unpin_right', [position * 1000]);
+            this.isModified = true;
+          }
           //this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         },
         revert(warn = false) {
