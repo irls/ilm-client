@@ -4525,6 +4525,9 @@ Save text changes and realign the Block?`,
               this.voiceworkUpdateType = 'single';
             }
           });
+      },
+      hideChangeVoiceworkModal() {
+        this.$root.$emit('voicework-update-finished');
       }
   },
   watch: {
