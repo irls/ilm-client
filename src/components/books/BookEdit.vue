@@ -2591,7 +2591,7 @@ export default {
               if (this.$refs.blocks && this.$refs.blocks.length) {
                 this.$refs.blocks[0].voiceworkUpdating = false;
                 this.$refs.blocks[0].voiceworkBlockType = false;
-                this.$refs.blocks[0].hideModal('voicework-change');
+                this.$refs.blocks[0].hideChangeVoiceworkModal();
               } else {
                 this.$store.state.liveDB.onBookReimport();
                 this.$store.state.liveDB.stopWatch('metaV');

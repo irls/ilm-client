@@ -54,6 +54,10 @@
     props: ['blockType', 'voicework', 'isBatch', 'isNarratedBlockCompleteAudio', 'adminOrLibrarian', 'isSingleBlockRemoveAudio', 'updateVoicework', 'voiceworkUpdateProgress', 'voiceworkChange', 'block'],
     mounted() {
       this.voiceworkUpdating = this.voiceworkUpdateProgress;
+      this.$root.$on('voicework-update-finished', this.close);
+    },
+    beforeDestroy() {
+      this.$root.$off('voicework-update-finished', this.close);
     },
     computed: {
       ...mapGetters(['currentBookCounters']),
