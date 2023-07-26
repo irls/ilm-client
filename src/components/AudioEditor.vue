@@ -1909,16 +1909,29 @@
               if ((this.selection.start >= 0 && this.selection.start !== null) || (this.selection.end >= 0 && this.selection.end !== null)) {
                 //$('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
                 let pixelsPerSecond = this.getPixelsPerSecond();
+                let setRight = null;
+                let setLeft = null;
                 if (this.dragRight) {
                   $('[id="resize-selection-right"]').show();
-                  this.dragRight.set(this.selection.end / pixelsPerSecond - 1, 0);
+                  setRight = this.selection.end / pixelsPerSecond - 1;
                 }
                 //$('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
                 if (this.dragLeft) {
                   $('[id="resize-selection-left"]').show();
-                  this.dragLeft.set(this.selection.start / pixelsPerSecond - 1, 0);
+                  setLeft = this.selection.start / pixelsPerSecond - 1;
                 }
                 this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                if (setLeft !== null) {
+                  this.dragLeft.set(setLeft, 0);
+                }
+                Vue.nextTick(() => {
+                  if (setRight !== null) {
+                    this.dragRight.set(setRight, 0);
+                    if (setLeft !== null) {
+                      this.dragLeft.set(setLeft, 0);
+                    }
+                  }
+                });
                 this.selectionBordersVisible = true;
               } else {
                 //$('[id="resize-selection-right"]').hide().css('left', 0);
@@ -1988,7 +2001,11 @@
             });
             if (word) {
               this.stop().then(() => {
-                this.plEventEmitter.emit('select', word.start, word.end);
+                let r_start = this._round(word.start, 2);
+                let r_end = this._round(word.end, 2);
+                if (r_start !== this._round(this.selection.start, 2) || r_end !== this._round(this.selection.end, 2)) {
+                  this.plEventEmitter.emit('select', word.start, word.end);
+                }
                 this._showSelectionBorders()
                   .then(() => {
                     if (autoplay) {
