@@ -1920,7 +1920,7 @@
                   $('[id="resize-selection-left"]').show();
                   setLeft = this.selection.start / pixelsPerSecond - 1;
                 }
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                 if (setLeft !== null) {
                   this.dragLeft.set(setLeft, 0);
                 }
