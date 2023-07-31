@@ -283,7 +283,7 @@ export const store = new Vuex.Store({
     pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
   }, // end state
-  
+
   getters: {
     getSelectionModalProgress: state=>state.SelectionModalProgress,
     livedbStatus: state => state.livedbStatus,
@@ -4302,7 +4302,7 @@ export const store = new Vuex.Store({
         let selection = {};
         if (state.blockSelection.start._id) {
           selection.start = state.blockSelection.start._id;
-        } else {
+        } else if (state.storeList.entries().next().value) {
           selection.start = state.storeList.entries().next().value[0]
         }
         if (state.blockSelection.end._id) {
@@ -5388,7 +5388,7 @@ export const store = new Vuex.Store({
       }
       return false;
     },
-    
+
     abortRequest({state}, signalName) {
       if (state.reqSignals[signalName] && state.reqSignals[signalName].abort) {
         state.reqSignals[signalName].abort();
