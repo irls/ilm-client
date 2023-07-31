@@ -4834,6 +4834,7 @@ export const store = new Vuex.Store({
                     blk.voicework = block.voicework;
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
+                    blk.pause_after = block.pause_after;
 
                     if (blk.isChanged) {
                       response.data.blocks[idx] = _.assign(response.data.blocks[idx], {
@@ -5336,6 +5337,15 @@ export const store = new Vuex.Store({
           data.block.sync_changes = changes;
           if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
             state.storeListO.updBlockByRid(data.block.id, data.block);
+            if (state.selectedBlocks && state.selectedBlocks.length > 0) {
+              let listIds = state.storeListO.idsArray();
+              let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+              let currentIndex = listIds.indexOf(data.block.blockid);
+              let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+              if (currentIndex >= firstIndex && currentIndex <= lastIndex) {
+                state.blockSelection.refresh = Date.now();
+              }
+            }
             //state.storeListUpdateCounter +=1;
           }
         }
