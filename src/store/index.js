@@ -283,7 +283,7 @@ export const store = new Vuex.Store({
     pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
   }, // end state
-  
+
   getters: {
     getSelectionModalProgress: state=>state.SelectionModalProgress,
     livedbStatus: state => state.livedbStatus,
@@ -4302,7 +4302,7 @@ export const store = new Vuex.Store({
         let selection = {};
         if (state.blockSelection.start._id) {
           selection.start = state.blockSelection.start._id;
-        } else {
+        } else if (state.storeList.entries().next().value) {
           selection.start = state.storeList.entries().next().value[0]
         }
         if (state.blockSelection.end._id) {
@@ -4834,6 +4834,7 @@ export const store = new Vuex.Store({
                     blk.voicework = block.voicework;
                     blk.audiosrc = block.audiosrc;
                     blk.audiosrc_ver = block.audiorc_ver;
+                    blk.pause_after = block.pause_after;
 
                     if (blk.isChanged) {
                       response.data.blocks[idx] = _.assign(response.data.blocks[idx], {
@@ -5336,6 +5337,15 @@ export const store = new Vuex.Store({
           data.block.sync_changes = changes;
           if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
             state.storeListO.updBlockByRid(data.block.id, data.block);
+            if (state.selectedBlocks && state.selectedBlocks.length > 0) {
+              let listIds = state.storeListO.idsArray();
+              let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+              let currentIndex = listIds.indexOf(data.block.blockid);
+              let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+              if (currentIndex >= firstIndex && currentIndex <= lastIndex) {
+                state.blockSelection.refresh = Date.now();
+              }
+            }
             //state.storeListUpdateCounter +=1;
           }
         }
@@ -5378,7 +5388,7 @@ export const store = new Vuex.Store({
       }
       return false;
     },
-    
+
     abortRequest({state}, signalName) {
       if (state.reqSignals[signalName] && state.reqSignals[signalName].abort) {
         state.reqSignals[signalName].abort();
