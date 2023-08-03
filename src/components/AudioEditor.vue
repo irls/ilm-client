@@ -761,6 +761,11 @@
                   this.fixDragEnd(null);
                 }
               });
+              waveform.addEventListener('mouseleave', () => {
+                setTimeout(() => {
+                  this.setSelectionWidth();
+                }, 50);
+              });
             }
           })
           .catch(err => {
@@ -2652,7 +2657,7 @@
           //console.log(this.annotations[8].begin, this.annotations[8].end);
           let length = 0;
           //let shift = 0;
-          this.annotations.forEach((an, i) => {
+          this.annotations.forEach((an, i) => {// fix annotations, avoid spaces between word positions
             if (length > an.begin) {
               //console.log(an.begin, 'overlapped by ', this.annotations[i - 1]);
               an.begin = length;
@@ -2765,8 +2770,8 @@
               return _w.alignedIndex == i;
             });
             if (w) {
-              w.start = al.begin;
-              w.end = al.end;
+              w.start = this._round(al.begin, 2);
+              w.end = this._round(al.end, 2);
             }
           });
           if (shifted) {
@@ -3084,20 +3089,22 @@ Revert to original block audio?`,
         },
         // make sure selection highlight has correct positions
         setSelectionWidth(x, direction) {
-          switch (direction) {
-            case 'right':
-              $('.selection.segment').css('width', this._round(x - this.selection.start / this.getPixelsPerSecond()) + 'px');
-              break;
-            case 'left':
-              $('.selection.segment').css('width', this._round(this.selection.end / this.getPixelsPerSecond() - x) + 'px');
-              $('.selection.segment').css('left', x + 'px');
-              break;
-            default:
-              let pixelsPerSecond = this.getPixelsPerSecond();
-              let left = this.selection.start / pixelsPerSecond;
-              $('.selection.segment').css('width', this._round(this.selection.end / pixelsPerSecond - left));
-              $('.selection.segment').css('left', left);
-              break;
+          if ((this.selection.start >= 0 || this.selection.end >= 0)) {
+            switch (direction) {
+              case 'right':
+                $('.selection.segment').css('width', this._round(x - this.selection.start / this.getPixelsPerSecond()) + 'px');
+                break;
+              case 'left':
+                $('.selection.segment').css('width', this._round(this.selection.end / this.getPixelsPerSecond() - x) + 'px');
+                $('.selection.segment').css('left', x + 'px');
+                break;
+              default:
+                let pixelsPerSecond = this.getPixelsPerSecond();
+                let left = this.selection.start / pixelsPerSecond;
+                $('.selection.segment').css('width', this._round(this.selection.end / pixelsPerSecond - left));
+                $('.selection.segment').css('left', left);
+                break;
+            }
           }
         },
         // limits for selection drag start and end
