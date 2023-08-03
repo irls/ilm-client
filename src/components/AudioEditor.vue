@@ -2018,16 +2018,18 @@
                 if (r_start !== this._round(this.selection.start, 2) || r_end !== this._round(this.selection.end, 2)) {
                   this.plEventEmitter.emit('select', word.start, word.end);
                 }
-                this._showSelectionBorders()
-                  .then(() => {
-                    if (autoplay) {
-                      this.cursorPosition = false;
-                      this.forceCleanupSource();
-                      Vue.nextTick(() => {
-                        this.play();
-                      });
-                    }
-                  });
+                Vue.nextTick(() => {
+                  this._showSelectionBorders()
+                    .then(() => {
+                      if (autoplay) {
+                        this.cursorPosition = false;
+                        this.forceCleanupSource();
+                        Vue.nextTick(() => {
+                          this.play();
+                        });
+                      }
+                    });
+                });
               });
             }
           }
