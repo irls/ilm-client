@@ -680,51 +680,8 @@
                 self.cursorPosition = self.selection.start;
               }
             });
-            this.plEventEmitter.on('select', (r_start, r_end) => {
-              console.log('on select', r_start, r_end);
-              let start = this._round(r_start, 2);
-              let end = this._round(r_end, 2);
-              let is_single_cursor = end - start == 0;
-              if (is_single_cursor && this.contextPosition && self.mode === 'file' &&
-                      typeof this.selection.start !== 'undefined' &&
-                      typeof this.selection.end !== 'undefined') {
-                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                return;
-              }
-              // do not select less than 0.2 sec
-              if (this.mode === 'file' && Math.abs(end - start) < 0.2 &&
-                      typeof this.selection.start !== 'undefined' &&
-                      typeof this.selection.end !== 'undefined' &&
-                      (this.selection.start != start ||
-                      this.selection.end != end)) {
-                this.selection.start = this._round(this.selection.start, 2);
-                this.selection.end = this._round(this.selection.end, 2);
-                if (this.selection.start != start ||
-                      this.selection.end != end) {
-                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                }
-                //Vue.nextTick(() => {
-                  //this._showSelectionBorders();
-                //});
-                return;
-              }
-              if (!is_single_cursor) {
-                if (start != self.selection.start) {
-                  //self.cursorPosition = start;
-                }
-                if (r_start > 0 && start === 0 && end === self.selection.end) {
-                  self.plEventEmitter.emit('select', 0, self.selection.end);
-                } else if(end > self.audioDuration) {
-                  self.plEventEmitter.emit('select', start, self.audioDuration);
-                  //self._showSelectionBorders();
-                } else {
-                  self.selection = {start: start < 0 ? 0 : start, end: end};
-                }
-              } //else {
-                //self.cursorPosition = start;
-              //}
-              return;
-            });
+            this.plEventEmitter.off('select', this.onEmittedSelect);
+            this.plEventEmitter.on('select', this.onEmittedSelect);
             this.initDragSelection();
             this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
@@ -906,6 +863,51 @@
               }
             }, 500);
           }
+        },
+        onEmittedSelect (r_start, r_end) {
+          console.log('on select', r_start, r_end);
+          let start = this._round(r_start, 2);
+          let end = this._round(r_end, 2);
+          let is_single_cursor = end - start == 0;
+          if (is_single_cursor && this.contextPosition && self.mode === 'file' &&
+                  typeof this.selection.start !== 'undefined' &&
+                  typeof this.selection.end !== 'undefined') {
+            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            return;
+          }
+          // do not select less than 0.2 sec
+          if (this.mode === 'file' && Math.abs(end - start) < 0.2 &&
+                  typeof this.selection.start !== 'undefined' &&
+                  typeof this.selection.end !== 'undefined' &&
+                  (this.selection.start != start ||
+                  this.selection.end != end)) {
+            this.selection.start = this._round(this.selection.start, 2);
+            this.selection.end = this._round(this.selection.end, 2);
+            if (this.selection.start != start ||
+                  this.selection.end != end) {
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            }
+            //Vue.nextTick(() => {
+              //this._showSelectionBorders();
+            //});
+            return;
+          }
+          if (!is_single_cursor) {
+            if (start != this.selection.start) {
+              //self.cursorPosition = start;
+            }
+            if (r_start > 0 && start === 0 && end === this.selection.end) {
+              this.plEventEmitter.emit('select', 0, this.selection.end);
+            } else if(end > this.audioDuration) {
+              this.plEventEmitter.emit('select', start, this.audioDuration);
+              //self._showSelectionBorders();
+            } else {
+              this.selection = {start: start < 0 ? 0 : start, end: end};
+            }
+          } //else {
+            //self.cursorPosition = start;
+          //}
+          return;
         },
         showSelection (event) {
           this.wordSelectionMode = false;
@@ -1922,11 +1924,13 @@
                 if (setLeft !== null) {
                   this.dragLeft.set(setLeft, 0);
                 }
+                console.log('show borders:', setRight, setLeft);
                 Vue.nextTick(() => {
                   if (setRight !== null) {
+                    console.log('show borders: right');
                     this.dragRight.set(setRight, 0);
                     if (setLeft !== null) {
-                      console.log('show borders', setRight, setLeft);
+                      console.log('show borders: left');
                       this.dragLeft.set(setLeft, 0);
                     }
                   }
