@@ -681,6 +681,7 @@
               }
             });
             this.plEventEmitter.on('select', (r_start, r_end) => {
+              console.log('on select', r_start, r_end);
               let start = this._round(r_start, 2);
               let end = this._round(r_end, 2);
               let is_single_cursor = end - start == 0;
@@ -782,6 +783,7 @@
             self.blockSelectionEmit = true;
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
+            console.log('click word', index);
           });
           $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
             if (this.editingLocked) {
@@ -1924,6 +1926,7 @@
                   if (setRight !== null) {
                     this.dragRight.set(setRight, 0);
                     if (setLeft !== null) {
+                      console.log('show borders', setRight, setLeft);
                       this.dragLeft.set(setLeft, 0);
                     }
                   }
@@ -2652,6 +2655,7 @@
               this.annotations[i].end = al.end;
             }
           });
+          console.log('drag', shiftedIndex);
           let shifted = false;
           //console.log(this.audiosourceEditor.annotationList.annotations[8].start, this.audiosourceEditor.annotationList.annotations[8].end);
           //console.log(this.annotations[8].begin, this.annotations[8].end);
@@ -2772,6 +2776,9 @@
             if (w) {
               w.start = this._round(al.begin, 2);
               w.end = this._round(al.end, 2);
+              if (i === shiftedIndex) {
+                console.log('drag word', w.start, w.end);
+              }
             }
           });
           if (shifted) {
@@ -2821,6 +2828,7 @@
                     (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') ||
                     (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
               Vue.nextTick(() => {
+                console.log('select on drag');
                 this._setWordSelection(this.wordSelectionMode, true, true);
               });
             }
