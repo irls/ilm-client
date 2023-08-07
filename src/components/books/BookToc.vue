@@ -1050,7 +1050,7 @@ export default {
     }
     this.$root.$on('for-audioeditor:load', this.resizeToc);
     this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
-    this.$root.$on('from-audioeditor:close', this.maximizeToc);
+    this.$root.$on('from-audioeditor:visible', this.resizeToc);
     this.$root.$on('from-audioeditor:content-loaded', this.resizeToc);
   },
 
@@ -1131,7 +1131,7 @@ export default {
     this.$root.$off('from-book-meta:upd-toc', this.loadBookTocProxy);
     this.$root.$off('for-audioeditor:load', this.resizeToc);
     this.$root.$off('for-audioeditor:load-and-play', this.resizeToc);
-    this.$root.$off('from-audioeditor:close', this.resizeToc);
+    this.$root.$off('from-audioeditor:visible', this.resizeToc);
     this.$root.$off('from-audioeditor:content-loaded', this.resizeToc);
   }
 }
