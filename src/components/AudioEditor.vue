@@ -1922,12 +1922,12 @@
                 let setLeft = null;
                 if (this.dragRight) {
                   $('[id="resize-selection-right"]').show();
-                  setRight = this.selection.end / pixelsPerSecond - 1;
+                  setRight = this._round(this.selection.end / pixelsPerSecond - 1, 1);
                 }
                 //$('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
                 if (this.dragLeft) {
                   $('[id="resize-selection-left"]').show();
-                  setLeft = this.selection.start / pixelsPerSecond - 1;
+                  setLeft = this._round(this.selection.start / pixelsPerSecond - 1, 1);
                 }
                 //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
                 if (setLeft !== null) {
@@ -1938,10 +1938,12 @@
                   if (setRight !== null) {
                     console.log('show borders: right');
                     this.dragRight.set(setRight, 0);
-                    if (setLeft !== null) {
-                      console.log('show borders: left');
-                      this.dragLeft.set(setLeft, 0);
-                    }
+                    Vue.nextTick(() => {
+                      if (setLeft !== null) {
+                        console.log('show borders: left');
+                        this.dragLeft.set(setLeft, 0);
+                      }
+                    });
                   }
                 });
                 this.selectionBordersVisible = true;
