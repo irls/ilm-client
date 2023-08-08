@@ -61,7 +61,7 @@
         return {
           uploadImage: '',
           uploadURL: '',
-
+          uploadMode: true,
         }
       },
       mounted() {
