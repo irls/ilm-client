@@ -737,8 +737,11 @@
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             if (e.target.nodeName === 'SPAN') {
               console.log('CLICK ON SPAN');
-              //e.preventDefault();
-              //return;
+              self.wordSelectionMode = false;
+              let index = $('.annotations-boxes .annotation-box').index($(this));
+              self.wordSelectionMode = index;
+              self._drawWordSelection();
+              return;
             }
             self.wordSelectionMode = false;
             let index = $('.annotations-boxes .annotation-box').index($(this));
@@ -2039,6 +2042,28 @@
             }
           }
         },
+        _drawWordSelection() {
+          
+          let word = this.words.find(_w => {
+            return _w.alignedIndex === this.wordSelectionMode;
+          });
+          if (word) {
+            let r_start = this._round(word.start, 2);
+            let r_end = this._round(word.end, 2);
+            this.selection.start = r_start;
+            this.selection.end = r_end;
+            this.cursorPosition = r_start;
+            this._showSelectionBorders();
+            let selectedAnnotation = document.querySelector('.annotations-boxes .annotation-box.selected');
+            if (selectedAnnotation) {
+              selectedAnnotation.classList.remove('selected');
+            }
+            let annotation = document.querySelectorAll('.annotations-boxes .annotation-box')[this.wordSelectionMode];
+            if (annotation) {
+              annotation.classList.add('selected');
+            }
+          }
+        },
         forceCleanupSource() {
           if (this.audiosourceEditor && this.audiosourceEditor.tracks && this.audiosourceEditor.tracks[0] && this.audiosourceEditor.tracks[0].playout && this.audiosourceEditor.tracks[0].playout.source) {
             onSourceEnded.call(this.audiosourceEditor.tracks[0].playout);
@@ -2363,16 +2388,16 @@
 //                  console.log(clickMutations)
 //                  console.log('ANNOTATIONS3');
 //                  Vue.nextTick(() => {
-//                    /*document.querySelectorAll('.waveform-wrapper .annotations span.id').forEach((annotation) => {
+//                    document.querySelectorAll('.waveform-wrapper .annotations span.id').forEach((annotation) => {
 //                      //annotation.removeEventListener('click', annotation.onclick);
 //                      console.log(annotation.onclick)
 //                      let annotationCopy = annotation.cloneNode(true);
 //                      annotation.parentNode.replaceChild(annotationCopy, annotation);
 //                      annotation.remove();
-//                    });*/
+//                    });
 //                  });
 //                });
-//                observerClick.observe(addedAnnotations, { /*attributes: true, attributeOldValue: true,*/ subtree: true, childList: true });
+//                observerClick.observe(addedAnnotations, { attributes: true, /*attributeOldValue: true,*/ subtree: true/*, childList: true*/ });
 //              }
 //            });
 //            observer.observe(targetNode, { /*attributes: true, attributeFilter: ['onclick'],*/ subtree: true, childList: true });
@@ -3742,7 +3767,7 @@ Revert to original block audio?`,
             .id {
                 height: 100%;
                 display: inline-block;
-                margin: 4px 0px;
+                padding: 4px 0px;
                 width: 100%;
                 cursor: all-scroll;
             }
