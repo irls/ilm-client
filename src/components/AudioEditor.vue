@@ -3781,7 +3781,7 @@ Revert to original block audio?`,
                 display: inline-block;
                 margin: 4px 0px;
                 width: 100%;
-                /*cursor: alias;*/
+                cursor: all-scroll;
             }
             &:after {
               content: ' ';
