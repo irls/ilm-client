@@ -735,11 +735,17 @@
           let self = this;
           $('.wf-playlist').off('click', '.annotations-boxes .annotation-box');
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
+            if (e.target.nodeName === 'SPAN') {
+              console.log('CLICK ON SPAN');
+              //e.preventDefault();
+              //return;
+            }
             self.wordSelectionMode = false;
             let index = $('.annotations-boxes .annotation-box').index($(this));
             self.blockSelectionEmit = true;
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
+            //console.log(e.target.nodeName);
             console.log('click word', index);
           });
           $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
@@ -1904,7 +1910,7 @@
         },
         _showSelectionBorders(scroll_to_selection = false) {
           return new Promise((resolve, reject) => {
-            setTimeout(() => {
+            //setTimeout(() => {
               //let selection = $('.selection.segment')[0];
               if ((this.selection.start >= 0 && this.selection.start !== null) || (this.selection.end >= 0 && this.selection.end !== null)) {
                 //$('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
@@ -1912,51 +1918,57 @@
                 let setRight = null;
                 let setLeft = null;
                 if (this.dragRight) {
-                  $('[id="resize-selection-right"]').show();
+                  //$('[id="resize-selection-right"]').show();
                   setRight = this._round(this.selection.end / pixelsPerSecond - 1, 1);
                 }
                 //$('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
                 if (this.dragLeft) {
-                  $('[id="resize-selection-left"]').show();
+                  //$('[id="resize-selection-left"]').show();
                   setLeft = this._round(this.selection.start / pixelsPerSecond - 1, 1);
                 }
                 //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                if (setLeft !== null) {
-                  this.dragLeft.set(setLeft, 0);
-                }
                 console.log('show borders:', setRight, setLeft);
-                Vue.nextTick(() => {
-                  if (setRight !== null) {
-                    console.log('show borders: right');
-                    this.dragRight.set(setRight, 0);
-                    Vue.nextTick(() => {
-                      if (setLeft !== null) {
-                        console.log('show borders: left');
-                        this.dragLeft.set(setLeft, 0);
-                      }
-                    });
-                  }
-                });
+                if (setLeft !== null) {
+                  console.log('show borders: left');
+                  //this.dragLeft.stop();
+                  this.setDragLeftPosition(setLeft);
+                }
+                if (setRight !== null) {
+                  console.log('show borders: right');
+                  this.setDragRightPosition(setRight);
+                }
                 this.selectionBordersVisible = true;
               } else {
                 //$('[id="resize-selection-right"]').hide().css('left', 0);
                 //$('[id="resize-selection-left"]').hide().css('left', 0);
-                if (this.dragRight) {
-                  $('[id="resize-selection-right"]').hide();
-                  this.dragRight.set(0);
-                }
-                if (this.dragLeft) {
-                  $('[id="resize-selection-left"]').hide();
-                  this.dragLeft.set(0);
-                }
+                this.setDragRightPosition(null);
+                this.setDragLeftPosition(null);
                 this.selectionBordersVisible = false;
               }
               if (scroll_to_selection) {
                 this._scrollToCursor();
               }
-              resolve();
-            }, 50);
+              return resolve();
+            //}, 50);
           })
+        },
+        setDragLeftPosition(position) {
+          if (this.dragLeft) {
+            //this.dragLeft.set(position === null ? 0 : position, 0);
+            //$('[id="resize-selection-left"]').css('left', setLeft);
+            this.dragLeft.element.style.left = position !== null ? `${position}px` : '0px';
+            this.dragLeft.element.style.display = position !== null ? 'block' : 'none';
+            console.log('left set', position, this.dragLeft.element, 'element');
+          }
+        },
+        setDragRightPosition(position) {
+          if (this.dragRight) {
+            //this.dragRight.set(position !== null ? position : 0, 0);
+            //$('[id="resize-selection-right"]').css('left', setRight);
+            this.dragRight.element.style.left = position !== null ? `${position}px` : '0px';
+            this.dragRight.element.style.display = position !== null ? 'block' : 'none';
+            console.log('right set', position);
+          }
         },
         _scrollToCursor() {
           if (this.cursorPosition && this.cursorPosition > 0) {
@@ -2297,24 +2309,24 @@
             this.contentContainer = $('#' + this.blockId);//footnote
           }
           //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
-          if (self.audiosourceEditor && self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
-            self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
+          if (this.audiosourceEditor && this.audiosourceEditor.getEventEmitter().__ee__ && this.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+            this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
           }
-          if (self.audiosourceEditor) {
+          if (this.audiosourceEditor) {
             //annotations = annotations.splice(annotations.length - 10);
-            self.annotations = annotations;
-            self.audiosourceEditor.setAnnotations({
+            this.annotations = annotations;
+            this.audiosourceEditor.setAnnotations({
                 annotations: annotations,
                 editable: true,
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
-            self.fixMap();
+            this.fixMap();
             $('.resize-handle').removeClass('manual');
-            if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
-              let waitAnnotations = setInterval(() => {
-                if ($('.annotation-box').length > 0) {
-                  clearInterval(waitAnnotations);
+            let waitAnnotations = setInterval(() => {
+              if ($('.annotation-box').length > 0) {
+                clearInterval(waitAnnotations);
+                if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
                   $('.annotation-box').each(function(index) {// set indexes for manual class
                     $(this).attr('data-index', index);
                   });
@@ -2330,9 +2342,16 @@
                     });
                   });
                 }
-              }, 100);
-            }
-            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
+                /*document.querySelectorAll('.waveform-wrapper .annotations span.id').forEach((annotation) => {
+                  //annotation.removeEventListener('click', annotation.onclick);
+                  //console.log(annotation.onclick)
+                  let annotationCopy = annotation.cloneNode(true);
+                  annotation.parentNode.replaceChild(annotationCopy, annotation);
+                  annotation.remove();
+                });*/
+              }
+            }, 100);
+            if (this.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
                   $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
