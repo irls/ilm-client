@@ -745,7 +745,7 @@
             self.blockSelectionEmit = true;
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
-            //console.log(e.target.nodeName);
+            console.log('TARGET', e.target.className, e.target.nodeName, e.target.onclick);
             console.log('click word', index);
           });
           $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
@@ -1958,7 +1958,7 @@
             //$('[id="resize-selection-left"]').css('left', setLeft);
             this.dragLeft.element.style.left = position !== null ? `${position}px` : '0px';
             this.dragLeft.element.style.display = position !== null ? 'block' : 'none';
-            console.log('left set', position, this.dragLeft.element, 'element');
+            console.log('left set', position);
           }
         },
         setDragRightPosition(position) {
@@ -2351,6 +2351,32 @@
                 });*/
               }
             }, 100);
+            
+//            let targetNode = document.querySelector('.waveform-wrapper');
+//            let observer = new MutationObserver((mutationList) => {
+//              console.log(mutationList)
+//              let addedAnnotations = targetNode.querySelector('.annotations-boxes');
+//              if (addedAnnotations) {
+//                console.log('ANNOTATIONS2');
+//                observer.disconnect();
+//                let observerClick = new MutationObserver((clickMutations) => {
+//                  console.log(clickMutations)
+//                  console.log('ANNOTATIONS3');
+//                  Vue.nextTick(() => {
+//                    /*document.querySelectorAll('.waveform-wrapper .annotations span.id').forEach((annotation) => {
+//                      //annotation.removeEventListener('click', annotation.onclick);
+//                      console.log(annotation.onclick)
+//                      let annotationCopy = annotation.cloneNode(true);
+//                      annotation.parentNode.replaceChild(annotationCopy, annotation);
+//                      annotation.remove();
+//                    });*/
+//                  });
+//                });
+//                observerClick.observe(addedAnnotations, { /*attributes: true, attributeOldValue: true,*/ subtree: true, childList: true });
+//              }
+//            });
+//            observer.observe(targetNode, { /*attributes: true, attributeFilter: ['onclick'],*/ subtree: true, childList: true });
+            
             if (this.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
@@ -3718,6 +3744,7 @@ Revert to original block audio?`,
                 display: inline-block;
                 margin: 4px 0px;
                 width: 100%;
+                /*cursor: alias;*/
             }
             &:after {
               content: ' ';
