@@ -718,9 +718,29 @@
                   this.dragRight.stop();
                   this.fixDragEnd(null);
                 }
+                Vue.nextTick(() => {
+                  this._showSelectionBorders();
+                });
               });
-              waveform.addEventListener('mouseleave', () => {
+              waveform.addEventListener('mouseleave', (e) => {
+                let toDragLeft = this.dragLeft && this.dragLeft.element === e.toElement;
+                let toDragRight = this.dragRight && this.dragRight.element === e.toElement;
+                let toCursor = e.toElement && e.toElement.classList.contains('cursor-position');
+                if (!toDragLeft && !toDragRight && !toCursor) {
+                  if (this.dragLeft) {
+                    this.dragLeft.stop();
+                    this.fixDragStart(null);
+                  }
+                  if (this.dragRight) {
+                    this.dragRight.stop();
+                    this.fixDragEnd(null);
+                  }
+                  //Vue.nextTick(() => {
+                    //this._showSelectionBorders();
+                  //});
+                }
                 setTimeout(() => {
+                  this._showSelectionBorders();
                   this.setSelectionWidth();
                 }, 50);
               });
@@ -837,8 +857,10 @@
                     }
                   });
                   stop.then(() => {
-                $('[id="resize-selection-right"]').hide().css('left', 0);
-                $('[id="resize-selection-left"]').hide().css('left', 0);
+                //$('[id="resize-selection-right"]').hide().css('left', 0);
+                //$('[id="resize-selection-left"]').hide().css('left', 0);
+                this.setDragRightPosition(null);
+                this.setDragLeftPosition(null);
                 this.selectionBordersVisible = false;
                 $('#cursor-position').hide();
                 if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
@@ -878,7 +900,7 @@
           let start = this._round(r_start, 2);
           let end = this._round(r_end, 2);
           let is_single_cursor = end - start == 0;
-          if (is_single_cursor && this.contextPosition && self.mode === 'file' &&
+          if (is_single_cursor && this.contextPosition && this.mode === 'file' &&
                   typeof this.selection.start !== 'undefined' &&
                   typeof this.selection.end !== 'undefined') {
             this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
@@ -909,14 +931,40 @@
               this.plEventEmitter.emit('select', 0, this.selection.end);
             } else if(end > this.audioDuration) {
               this.plEventEmitter.emit('select', start, this.audioDuration);
-              //self._showSelectionBorders();
+              this.stopDrag();
             } else {
+              if (start < 0) {
+                this.plEventEmitter.emit('select', 0, end);
+                this.stopDrag();
+              }
               this.selection = {start: start < 0 ? 0 : start, end: end};
             }
           } //else {
             //self.cursorPosition = start;
           //}
+          
+          //setTimeout(() => {
+            //if (this.selection.start === start && this.selection.end === end) {
+              //this._showSelectionBorders(false, true);
+            //} else {
+              //console.log('differs', JSON.stringify(this.selection), start, end);
+            //}
+          //}, 100);
           return;
+        },
+        stopDrag() {
+          if (this.dragLeft) {
+            this.dragLeft.stop();
+            this.fixDragStart(null);
+          }
+          if (this.dragRight) {
+            this.dragRight.stop();
+            this.fixDragEnd(null);
+          }
+          Vue.nextTick(() => {
+            this._showSelectionBorders();
+          });
+          //self._showSelectionBorders();
         },
         showSelection (event) {
           this.wordSelectionMode = false;
@@ -1911,7 +1959,7 @@
           //this._showSelectionBorders(false);
           return false;
         },
-        _showSelectionBorders(scroll_to_selection = false) {
+        _showSelectionBorders(scroll_to_selection = false, skip_when_hidden = false) {
           return new Promise((resolve, reject) => {
             //setTimeout(() => {
               //let selection = $('.selection.segment')[0];
@@ -1921,6 +1969,11 @@
                 let setRight = null;
                 let setLeft = null;
                 if (this.dragRight) {
+                  if (skip_when_hidden) {
+                    if (this.dragRight.element.style.display === 'none') {
+                      return resolve();
+                    }
+                  }
                   //$('[id="resize-selection-right"]').show();
                   setRight = this._round(this.selection.end / pixelsPerSecond - 1, 1);
                 }
