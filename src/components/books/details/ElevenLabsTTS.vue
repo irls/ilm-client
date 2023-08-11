@@ -661,6 +661,7 @@
         margin: 0px 5px;
         &[disabled] {
           cursor: not-allowed;
+          opacity: 50%;
         }
       }
       button {
