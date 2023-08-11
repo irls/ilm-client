@@ -19,8 +19,10 @@
                 :voices="all_voices"
                 :block_type="'title'"
                 :generating_example="generating_example"
+                :playing_type="audio_playing_type"
                 @onSelect="onVoiceChange"
                 @play="playVoiceExample"
+                @stop="stopVoiceExample"
               ></select-tts-voice>
             </td>
           </tr>
@@ -32,8 +34,10 @@
                 :voices="all_voices"
                 :block_type="'header'"
                 :generating_example="generating_example"
+                :playing_type="audio_playing_type"
                 @onSelect="onVoiceChange"
                 @play="playVoiceExample"
+                @stop="stopVoiceExample"
               ></select-tts-voice>
             </td>
           </tr>
@@ -45,8 +49,10 @@
                 :voices="all_voices"
                 :block_type="'paragraph'"
                 :generating_example="generating_example"
+                :playing_type="audio_playing_type"
                 @onSelect="onVoiceChange"
                 @play="playVoiceExample"
+                @stop="stopVoiceExample"
               ></select-tts-voice>
             </td>
           </tr>
@@ -122,7 +128,10 @@
       </table>
       <div class="new-voice-data">
         <span v-if="generating_voice" class="preloader -generating-voice"></span>
-        <button class="play-voice" v-on:click="startGenerateVoice()" v-else></button>
+        <template v-else>
+          <button class="play-voice -stop" v-on:click="stopVoiceExample" v-if="playing_generated_example"></button>
+          <button class="play-voice" v-on:click="startGenerateVoice()" v-else></button>
+        </template>
         <input type="text" v-model="new_voice.name" :maxlength="new_name_maxlength" class="new-voice-name" placeholder="Define Voice Name" />
         <span class="name-length">{{new_voice.name.length}}/{{new_name_maxlength}}</span>
         <span class="preloader -creating-voice" v-if="creating_voice"></span>
@@ -132,7 +141,10 @@
         <div class="book-voice" v-for="voice in book_voices">
           <div class="book-voice-option -play">
             <span class="preloader -generating-example" v-if="generating_example === voice.voice_id"></span>
-            <button class="play-voice" v-on:click="playVoiceExample(voice.voice_id)" v-else></button>
+            <template v-else>
+              <button class="play-voice -stop" v-if="audio_playing_voice === voice.voice_id" v-on:click="stopVoiceExample"></button>
+              <button class="play-voice" v-on:click="playVoiceExample(voice.voice_id)" v-else></button>
+            </template>
           </div>
           <div class="book-voice-option -name" v-on:dblclick="setEditingVoice(voice)">
             <input v-model="editing_voice_name" v-if="editing_voice_id === voice.id" class="editing-voice-name"
@@ -179,7 +191,10 @@
         editing_voice_name: '',
         creating_voice: false,
         audio_playing: false,
-        generating_example: null
+        generating_example: null,
+        audio_playing_type: null,
+        audio_playing_voice: null,
+        playing_generated_example: false
       }
     },
     components: {
@@ -202,7 +217,8 @@
       saveNewVoiceDisabled: {
         get() {
           return this.generated_voice_url.length === 0 || this.new_voice.name.length === 0;
-        }
+        },
+        cache: false
       }
     },
     mounted() {
@@ -229,6 +245,9 @@
         return this.currentBookMeta.voices ? this.currentBookMeta.voices[type] : '';
       },
       onVoiceChange(type, value) {
+        if (this.audio_playing_type === type) {
+          this.stopVoiceExample();
+        }
         this.currentBookMeta.voices[type] = value;
         this.updateBookMeta({voices: this.currentBookMeta.voices});
       },
@@ -280,24 +299,38 @@
         }
       },
       playGeneratedVoice() {
-        if (this.audio_playing) {
-          return;
-        }
+        //if (this.audio_playing) {
+          //return;
+        //}
+        this.stopVoiceExample()
         if (this.generated_voice_url) {
           this.checkCreateAudioElement();
           //console.log(process.env.ILM_API + this.generated_voice_url);
           this.audio_element.src = process.env.ILM_API + this.generated_voice_url;
           this.audio_playing = true;
           this.audio_element.play();
+          this.playing_generated_example = true;
         }
       },
       checkCreateAudioElement() {
         if (!this.audio_element) {
           this.audio_element = document.createElement('audio');
           this.audio_element.addEventListener('ended', () => {
-            this.audio_playing = false;
+            this.clearPlayingAudio();
           });
+          this.audio_element.addEventListener('pause', () => {
+            this.clearPlayingAudio();
+          });
+          //this.audio_element.addEventListener('loadstart', () => {
+            //this.clearPlayingAudio();
+          //});
         }
+      },
+      clearPlayingAudio() {
+        this.audio_playing = false;
+        this.audio_playing_type = null;
+        this.audio_playing_voice = null;
+        this.playing_generated_example = false;
       },
       saveNewVoice() {
         let voice = lodash.cloneDeep(this.new_voice);
@@ -310,6 +343,7 @@
             this.creating_voice = false;
             this.generated_voice_id = null;
             this.new_voice.name = '';
+            this.generated_voice_url = '';
             this.loadBookVoices();
           })
           .catch(err => {
@@ -379,20 +413,25 @@
             })
         }
       },
-      playVoiceExample(voice_id, attempt = 0) {
+      playVoiceExample(voice_id, block_type = null, attempt = 0) {
         if (attempt >= 2) {
           return;
         }
-        if (this.audio_playing) {
-          return;
-        }
+        this.stopVoiceExample();
+        //if (this.audio_playing) {
+          //return;
+        //}
         this.checkCreateAudioElement();
         let voice = this.all_voices.find(v => {
           return v.voice_id === voice_id;
         });
         if (voice && voice.voice_example) {
           this.audio_element.src = process.env.ILM_API + voice.voice_example;
-          this.audio_playing = true;
+          this.audio_playing = voice.voice_id;
+          this.audio_playing_type = block_type;
+          if (!block_type) {
+            this.audio_playing_voice = voice.voice_id;
+          }
           this.audio_element.play();
           return;
         }
@@ -410,6 +449,12 @@
               this.generating_example = null;
               console.log(err);
             });
+        }
+      },
+      stopVoiceExample() {
+        if (this.audio_element) {
+          this.audio_element.pause();
+          this.clearPlayingAudio();
         }
       },
       setMaxContainerHeight() {
@@ -432,6 +477,9 @@
         if (containerHeight && containerHeight > 0) {
           element.style['max-height'] = `${containerHeight}px`;
         };
+      },
+      goToBlock(blockid) {
+        this.$root.$emit('for-bookedit:scroll-to-block', blockid);
       },
       ...mapActions(['updateBookMeta']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
@@ -481,7 +529,7 @@
 </script>
 <style lang="less">
   .eleven-labs-tts {
-    overflow-y: scroll;
+    overflow-y: auto;
     &::-webkit-scrollbar-track {
       -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
       border-radius: 10px;
@@ -542,6 +590,9 @@
         display: inline-block;
         width: 70%;
         padding: 10px 5px;
+        a {
+          cursor: pointer;
+        }
       }
       .align-blocks-section {
         text-align: right;
@@ -598,6 +649,9 @@
         height: 34px;
         border: none;
         margin: 0px 5px;
+        &.-stop {
+          background: url(/static/tts-catalog/stop-big.png);
+        }
       }
       .save-voice {
         background: url(/static/tts-catalog/save-voice.png);
@@ -605,6 +659,9 @@
         height: 34px;
         border: none;
         margin: 0px 5px;
+        &[disabled] {
+          cursor: not-allowed;
+        }
       }
       button {
         vertical-align: middle;
@@ -648,6 +705,9 @@
             width: 24px;
             height: 24px;
             border: none;
+            &.-stop {
+              background: url(/static/tts-catalog/stop-small.png);
+            }
           }
           .delete-voice {
             background-image: url(/static/tts-catalog/delete-voice.png);

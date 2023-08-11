@@ -1,7 +1,10 @@
 <template>
 <div class="voice-select-el">
   <span class="preloader -generating-example" v-if="generating_example === value"></span>
-  <button class="test-tts-voice" v-on:click="playAudio" v-else></button>
+  <template v-else>
+    <button class="test-tts-voice -stop" v-on:click="stopAudio" v-if="playing_type === block_type"></button>
+    <button class="test-tts-voice" v-on:click="playAudio" v-else></button>
+  </template>
   <select class="select-voice" v-model="value" v-on:change="onInput">
     <option v-for="voice in voices" :value="voice.voice_id">{{voice.name}}</option>
   </select>
@@ -22,7 +25,7 @@
     },
 
     props: [
-      'voices', 'pre_selected', 'block_type', 'generating_example'
+      'voices', 'pre_selected', 'block_type', 'generating_example', 'playing_type'
     ],
 
     computed: {
@@ -35,7 +38,11 @@
       },
 
       playAudio() {
-        this.$emit('play', this.value);
+        this.$emit('play', this.value, this.block_type);
+      },
+      
+      stopAudio() {
+        this.$emit('stop');
       }
     },
 
@@ -62,6 +69,9 @@
       margin-right: 10px;
       border: none;
       vertical-align: middle;
+      &.-stop {
+        background: url(/static/tts-catalog/stop-small.png);
+      }
     }
     .select-voice {
       border: 1px solid #b9b6b6;
