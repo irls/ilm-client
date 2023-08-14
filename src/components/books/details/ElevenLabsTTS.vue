@@ -118,10 +118,12 @@
               Accent<br>Strength
             </td>
             <td>
-              <Slider v-if="new_voice_settings.accent_strength" v-model="new_voice.accent_strength"
-                :min="new_voice_settings.accent_strength.min"
-                :max="new_voice_settings.accent_strength.max"
-                :step="0.1"></Slider>
+              <div class="slider-container">
+                <Slider v-if="new_voice_settings.accent_strength" v-model="new_voice.accent_strength"
+                  :min="new_voice_settings.accent_strength.min"
+                  :max="new_voice_settings.accent_strength.max"
+                  :step="0.1"></Slider>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -639,6 +641,9 @@
           text-align: right;
           padding-right: 20px;
         }
+      }
+      .slider-container {
+        padding: 0px 5px;
       }
     }
     .new-voice-data {
