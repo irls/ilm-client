@@ -227,18 +227,7 @@
       this.loadBookVoices();
       this.getNewVoiceSettings()
         .then(() => {
-          if (this.new_voice_settings.gender) {
-            this.new_voice.gender = this.new_voice_settings.gender[0].value;
-          }
-          if (this.new_voice_settings.age) {
-            this.new_voice.age = this.new_voice_settings.age[0].value;
-          }
-          if (this.new_voice_settings.accent) {
-            this.new_voice.accent = this.new_voice_settings.accent[0].value;
-          }
-          if (this.new_voice_settings.accent_strength) {
-            this.new_voice.accent_strength = this.new_voice_settings.accent_strength.min;
-          }
+          this.resetNewVoiceSettings();
         });
       window.addEventListener('resize', this.setMaxContainerHeight);
     },
@@ -483,6 +472,21 @@
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
       },
+      resetNewVoiceSettings() {
+        if (this.new_voice_settings.gender) {
+          this.new_voice.gender = this.new_voice_settings.gender[0].value;
+        }
+        if (this.new_voice_settings.age) {
+          this.new_voice.age = this.new_voice_settings.age[0].value;
+        }
+        if (this.new_voice_settings.accent) {
+          this.new_voice.accent = this.new_voice_settings.accent[0].value;
+        }
+        if (this.new_voice_settings.accent_strength) {
+          this.new_voice.accent_strength = this.new_voice_settings.accent_strength.min;
+        }
+        this.new_voice.name = '';
+      },
       ...mapActions(['updateBookMeta']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
     },
@@ -492,6 +496,7 @@
         handler(val) {
           if (val) {
             this.loadBookVoices();
+            this.resetNewVoiceSettings();
           }
         }
       },
