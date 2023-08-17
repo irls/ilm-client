@@ -683,47 +683,8 @@
                 self.cursorPosition = self.selection.start;
               }
             });
-            this.plEventEmitter.on('select', function(r_start, r_end) {
-              let start = self._round(r_start, 2);
-              let end = self._round(r_end, 2);
-              let is_single_cursor = end - start == 0;
-              if (is_single_cursor && self.contextPosition && self.mode === 'file' &&
-                      typeof self.selection.start !== 'undefined' &&
-                      typeof self.selection.end !== 'undefined') {
-                self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
-                return;
-              }
-              // do not select less than 0.2 sec
-              if (self.mode === 'file' && Math.abs(end - start) < 0.2 &&
-                      typeof self.selection.start !== 'undefined' &&
-                      typeof self.selection.end !== 'undefined' &&
-                      (self.selection.start != start ||
-                      self.selection.end != end)) {
-                self.selection.start = self._round(self.selection.start, 2);
-                self.selection.end = self._round(self.selection.end, 2);
-                if (self.selection.start != start ||
-                      self.selection.end != end) {
-                  self.plEventEmitter.emit('select', self.selection.start, self.selection.end);
-                }
-                return;
-              }
-              if (!is_single_cursor) {
-                if (start != self.selection.start) {
-                  //self.cursorPosition = start;
-                }
-                if (r_start > 0 && start === 0 && end === self.selection.end) {
-                  self.plEventEmitter.emit('select', 0, self.selection.end);
-                } else if(end > self.audioDuration) {
-                  self.plEventEmitter.emit('select', start, self.audioDuration);
-                  //self._showSelectionBorders();
-                } else {
-                  self.selection = {start: start < 0 ? 0 : start, end: end};
-                }
-              } //else {
-                //self.cursorPosition = start;
-              //}
-              return;
-            });
+            this.plEventEmitter.off('select', this.onEmittedSelect);
+            this.plEventEmitter.on('select', this.onEmittedSelect);
             this.initDragSelection();
             this.hideModal('onDiscardMessage');
             if (this.mode == 'file') {
@@ -749,6 +710,44 @@
               this.play();
             }
             //$(`#content-${this.blockId}`).on('click', 'w', {blockId: this.blockId}, this.showSelection)
+            let waveform = document.querySelector('.playlist-overlay');
+            if (waveform) {
+              waveform.addEventListener('mouseup', () => {// make sure selection drag stops at the event
+                if (this.dragLeft) {
+                  this.dragLeft.stop();
+                  this.fixDragStart(null);
+                }
+                if (this.dragRight) {
+                  this.dragRight.stop();
+                  this.fixDragEnd(null);
+                }
+                Vue.nextTick(() => {
+                  this._showSelectionBorders();
+                });
+              });
+              waveform.addEventListener('mouseleave', (e) => {
+                let toDragLeft = this.dragLeft && this.dragLeft.element === e.toElement;
+                let toDragRight = this.dragRight && this.dragRight.element === e.toElement;
+                let toCursor = e.toElement && e.toElement.classList.contains('cursor-position');
+                if (!toDragLeft && !toDragRight && !toCursor) {
+                  if (this.dragLeft) {
+                    this.dragLeft.stop();
+                    this.fixDragStart(null);
+                  }
+                  if (this.dragRight) {
+                    this.dragRight.stop();
+                    this.fixDragEnd(null);
+                  }
+                  //Vue.nextTick(() => {
+                    //this._showSelectionBorders();
+                  //});
+                }
+                setTimeout(() => {
+                  this._showSelectionBorders();
+                  this.setSelectionWidth();
+                }, 50);
+              });
+            }
           })
           .catch(err => {
             //console.log(err)
@@ -759,11 +758,21 @@
           let self = this;
           $('.wf-playlist').off('click', '.annotations-boxes .annotation-box');
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
+            if (e.target.nodeName === 'SPAN') {
+              console.log('CLICK ON SPAN');
+              self.wordSelectionMode = false;
+              let index = $('.annotations-boxes .annotation-box').index($(this));
+              self.wordSelectionMode = index;
+              self._drawWordSelection();
+              return;
+            }
             self.wordSelectionMode = false;
             let index = $('.annotations-boxes .annotation-box').index($(this));
             self.blockSelectionEmit = true;
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
+            console.log('TARGET', e.target.className, e.target.nodeName, e.target.onclick);
+            console.log('click word', index);
           });
           $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
             if (this.editingLocked) {
@@ -857,8 +866,10 @@
                     }
                   });
                   stop.then(() => {
-                $('[id="resize-selection-right"]').hide().css('left', 0);
-                $('[id="resize-selection-left"]').hide().css('left', 0);
+                //$('[id="resize-selection-right"]').hide().css('left', 0);
+                //$('[id="resize-selection-left"]').hide().css('left', 0);
+                this.setDragRightPosition(null);
+                this.setDragLeftPosition(null);
                 this.selectionBordersVisible = false;
                 $('#cursor-position').hide();
                 if (typeof this.audiosourceEditor.samplesPerPixel !== 'undefined') {
@@ -892,6 +903,77 @@
               }
             }, 500);
           }
+        },
+        onEmittedSelect (r_start, r_end) {
+          console.log('on select', r_start, r_end);
+          let start = this._round(r_start, 2);
+          let end = this._round(r_end, 2);
+          let is_single_cursor = end - start == 0;
+          if (is_single_cursor && this.contextPosition && this.mode === 'file' &&
+                  typeof this.selection.start !== 'undefined' &&
+                  typeof this.selection.end !== 'undefined') {
+            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            return;
+          }
+          // do not select less than 0.2 sec
+          if (this.mode === 'file' && Math.abs(end - start) < 0.2 &&
+                  typeof this.selection.start !== 'undefined' &&
+                  typeof this.selection.end !== 'undefined' &&
+                  (this.selection.start != start ||
+                  this.selection.end != end)) {
+            this.selection.start = this._round(this.selection.start, 2);
+            this.selection.end = this._round(this.selection.end, 2);
+            if (this.selection.start != start ||
+                  this.selection.end != end) {
+              this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+            }
+            //Vue.nextTick(() => {
+              //this._showSelectionBorders();
+            //});
+            return;
+          }
+          if (!is_single_cursor) {
+            if (start != this.selection.start) {
+              //self.cursorPosition = start;
+            }
+            if (r_start > 0 && start === 0 && end === this.selection.end) {
+              this.plEventEmitter.emit('select', 0, this.selection.end);
+            } else if(end > this.audioDuration) {
+              this.plEventEmitter.emit('select', start, this.audioDuration);
+              this.stopDrag();
+            } else {
+              if (start < 0) {
+                this.plEventEmitter.emit('select', 0, end);
+                this.stopDrag();
+              }
+              this.selection = {start: start < 0 ? 0 : start, end: end};
+            }
+          } //else {
+            //self.cursorPosition = start;
+          //}
+          
+          //setTimeout(() => {
+            //if (this.selection.start === start && this.selection.end === end) {
+              //this._showSelectionBorders(false, true);
+            //} else {
+              //console.log('differs', JSON.stringify(this.selection), start, end);
+            //}
+          //}, 100);
+          return;
+        },
+        stopDrag() {
+          if (this.dragLeft) {
+            this.dragLeft.stop();
+            this.fixDragStart(null);
+          }
+          if (this.dragRight) {
+            this.dragRight.stop();
+            this.fixDragEnd(null);
+          }
+          Vue.nextTick(() => {
+            this._showSelectionBorders();
+          });
+          //self._showSelectionBorders();
         },
         showSelection (event) {
           this.wordSelectionMode = false;
@@ -1058,16 +1140,11 @@
             }
           }
           if (this.allowZoomIn) {
-            this._setDraggableOptions();
+            //this._setDraggableOptions();setDragLimit
             this.plEventEmitter.emit('zoomin');
             let index = this.zoomLevels.indexOf(this.zoomLevel)
             if (this.zoomLevels[--index]) {
               this.zoomLevel = this.zoomLevels[index]
-            }
-            this._showSelectionBorders();
-            this._scrollToCursor();
-            if ($('.cursor').position()) {
-              $('.cursor-position').css('left', $('.cursor').position().left);
             }
             return true;
           }
@@ -1075,22 +1152,17 @@
         },
         zoomOut() {
           if (this.allowZoomOut) {
-            this._setDraggableOptions();
+            //this._setDraggableOptions();
             this.plEventEmitter.emit('zoomout');
             let index = this.zoomLevels.indexOf(this.zoomLevel)
             if (this.zoomLevels[++index]) {
               this.zoomLevel = this.zoomLevels[index]
             }
-            this._showSelectionBorders();
-            this._scrollToCursor();
-            if ($('.cursor').position()) {
-              $('.cursor-position').css('left', $('.cursor').position().left);
-            }
             return true;
           }
           return false;
         },
-        _setDraggableOptions() {
+        /*_setDraggableOptions() {
           if ($('.channel-0').length > 0 && this.dragLeft && this.dragRight) {
             let width = $('.channel-0').width();
             let self = this;
@@ -1101,7 +1173,7 @@
               }
             }, 100);
           }
-        },
+        },*/
         goToStart() {
           if (this.mode == 'block') {
             this.pause()
@@ -1896,25 +1968,72 @@
           //this._showSelectionBorders(false);
           return false;
         },
-        _showSelectionBorders(scroll_to_selection = false) {
+        _showSelectionBorders(scroll_to_selection = false, skip_when_hidden = false) {
           return new Promise((resolve, reject) => {
-            setTimeout(() => {
-              let selection = $('.selection.segment')[0];
-              if (selection) {
-                $('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
-                $('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
+            //setTimeout(() => {
+              //let selection = $('.selection.segment')[0];
+              if ((this.selection.start >= 0 && this.selection.start !== null) || (this.selection.end >= 0 && this.selection.end !== null)) {
+                //$('[id="resize-selection-right"]').show().css('left', selection.offsetLeft + selection.offsetWidth - 2);
+                let pixelsPerSecond = this.getPixelsPerSecond();
+                let setRight = null;
+                let setLeft = null;
+                if (this.dragRight) {
+                  if (skip_when_hidden) {
+                    if (this.dragRight.element.style.display === 'none') {
+                      return resolve();
+                    }
+                  }
+                  //$('[id="resize-selection-right"]').show();
+                  setRight = this._round(this.selection.end / pixelsPerSecond - 1, 1);
+                }
+                //$('[id="resize-selection-left"]').show().css('left', selection.offsetLeft < 0 ? 0 : selection.offsetLeft);
+                if (this.dragLeft) {
+                  //$('[id="resize-selection-left"]').show();
+                  setLeft = this._round(this.selection.start / pixelsPerSecond - 1, 1);
+                }
+                //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                console.log('show borders:', setRight, setLeft);
+                if (setLeft !== null) {
+                  console.log('show borders: left');
+                  //this.dragLeft.stop();
+                  this.setDragLeftPosition(setLeft);
+                }
+                if (setRight !== null) {
+                  console.log('show borders: right');
+                  this.setDragRightPosition(setRight);
+                }
                 this.selectionBordersVisible = true;
               } else {
-                $('[id="resize-selection-right"]').hide().css('left', 0);
-                $('[id="resize-selection-left"]').hide().css('left', 0);
+                //$('[id="resize-selection-right"]').hide().css('left', 0);
+                //$('[id="resize-selection-left"]').hide().css('left', 0);
+                this.setDragRightPosition(null);
+                this.setDragLeftPosition(null);
                 this.selectionBordersVisible = false;
               }
               if (scroll_to_selection) {
                 this._scrollToCursor();
               }
-              resolve();
-            }, 50);
+              return resolve();
+            //}, 50);
           })
+        },
+        setDragLeftPosition(position) {
+          if (this.dragLeft) {
+            //this.dragLeft.set(position === null ? 0 : position, 0);
+            //$('[id="resize-selection-left"]').css('left', setLeft);
+            this.dragLeft.element.style.left = position !== null ? `${position}px` : '0px';
+            this.dragLeft.element.style.display = position !== null ? 'block' : 'none';
+            console.log('left set', position);
+          }
+        },
+        setDragRightPosition(position) {
+          if (this.dragRight) {
+            //this.dragRight.set(position !== null ? position : 0, 0);
+            //$('[id="resize-selection-right"]').css('left', setRight);
+            this.dragRight.element.style.left = position !== null ? `${position}px` : '0px';
+            this.dragRight.element.style.display = position !== null ? 'block' : 'none';
+            console.log('right set', position);
+          }
         },
         _scrollToCursor() {
           if (this.cursorPosition && this.cursorPosition > 0) {
@@ -1964,18 +2083,46 @@
             });
             if (word) {
               this.stop().then(() => {
-                this.plEventEmitter.emit('select', word.start, word.end);
-                this._showSelectionBorders()
-                  .then(() => {
-                    if (autoplay) {
-                      this.cursorPosition = false;
-                      this.forceCleanupSource();
-                      Vue.nextTick(() => {
-                        this.play();
-                      });
-                    }
-                  });
+                let r_start = this._round(word.start, 2);
+                let r_end = this._round(word.end, 2);
+                if (r_start !== this._round(this.selection.start, 2) || r_end !== this._round(this.selection.end, 2)) {
+                  this.plEventEmitter.emit('select', word.start, word.end);
+                }
+                Vue.nextTick(() => {
+                  this._showSelectionBorders()
+                    .then(() => {
+                      if (autoplay) {
+                        this.cursorPosition = false;
+                        this.forceCleanupSource();
+                        Vue.nextTick(() => {
+                          this.play();
+                        });
+                      }
+                    });
+                });
               });
+            }
+          }
+        },
+        _drawWordSelection() {
+          
+          let word = this.words.find(_w => {
+            return _w.alignedIndex === this.wordSelectionMode;
+          });
+          if (word) {
+            let r_start = this._round(word.start, 2);
+            let r_end = this._round(word.end, 2);
+            this.selection.start = r_start;
+            this.selection.end = r_end;
+            this.cursorPosition = r_start;
+            this._showSelectionBorders();
+            let selectedAnnotation = document.querySelector('.annotations-boxes .annotation-box.selected');
+            if (selectedAnnotation) {
+              selectedAnnotation.classList.remove('selected');
+            }
+            let annotation = document.querySelectorAll('.annotations-boxes .annotation-box')[this.wordSelectionMode];
+            if (annotation) {
+              annotation.classList.add('selected');
             }
           }
         },
@@ -2191,9 +2338,11 @@
           //});
           return record;
         },
-        _setSelectionOnWaveform() {
-          if (this.selection && typeof this.selection.start != 'undefined' && typeof this.selection.end != 'undefined' && this.plEventEmitter && !isNaN(this.selection.start)) {
-            this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+        _setSelectionOnWaveform(start = null, end = null) {
+          let s_start = start === null ? this.selection.start : start;
+          let s_end = end === null ? this.selection.end : end
+          if (this.selection && typeof s_start !== 'undefined' && typeof s_end !== 'undefined' && this.plEventEmitter && !isNaN(s_start)) {
+            this.plEventEmitter.emit('select', s_start, s_end);
             this._showSelectionBorders();
           }
         },
@@ -2255,24 +2404,24 @@
             this.contentContainer = $('#' + this.blockId);//footnote
           }
           //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
-          if (self.audiosourceEditor && self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
-            self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
+          if (this.audiosourceEditor && this.audiosourceEditor.getEventEmitter().__ee__ && this.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
+            this.audiosourceEditor.getEventEmitter().off('dragged', this.audiosourceEditor.getEventEmitter().__ee__['dragged']);
           }
-          if (self.audiosourceEditor) {
+          if (this.audiosourceEditor) {
             //annotations = annotations.splice(annotations.length - 10);
-            self.annotations = annotations;
-            self.audiosourceEditor.setAnnotations({
+            this.annotations = annotations;
+            this.audiosourceEditor.setAnnotations({
                 annotations: annotations,
                 editable: true,
                 isContinuousPlay: false,
                 linkEndpoints: true
               });
-            self.fixMap();
+            this.fixMap();
             $('.resize-handle').removeClass('manual');
-            if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
-              let waitAnnotations = setInterval(() => {
-                if ($('.annotation-box').length > 0) {
-                  clearInterval(waitAnnotations);
+            let waitAnnotations = setInterval(() => {
+              if ($('.annotation-box').length > 0) {
+                clearInterval(waitAnnotations);
+                if (block && block.manual_boundaries && block.manual_boundaries.length > 0) {
                   $('.annotation-box').each(function(index) {// set indexes for manual class
                     $(this).attr('data-index', index);
                   });
@@ -2288,9 +2437,42 @@
                     });
                   });
                 }
-              }, 100);
-            }
-            if (self.audiosourceEditor.annotationList.annotations.length > 0) {
+                /*document.querySelectorAll('.waveform-wrapper .annotations span.id').forEach((annotation) => {
+                  //annotation.removeEventListener('click', annotation.onclick);
+                  //console.log(annotation.onclick)
+                  let annotationCopy = annotation.cloneNode(true);
+                  annotation.parentNode.replaceChild(annotationCopy, annotation);
+                  annotation.remove();
+                });*/
+              }
+            }, 100);
+            
+//            let targetNode = document.querySelector('.waveform-wrapper');
+//            let observer = new MutationObserver((mutationList) => {
+//              console.log(mutationList)
+//              let addedAnnotations = targetNode.querySelector('.annotations-boxes');
+//              if (addedAnnotations) {
+//                console.log('ANNOTATIONS2');
+//                observer.disconnect();
+//                let observerClick = new MutationObserver((clickMutations) => {
+//                  console.log(clickMutations)
+//                  console.log('ANNOTATIONS3');
+//                  Vue.nextTick(() => {
+//                    document.querySelectorAll('.waveform-wrapper .annotations span.id').forEach((annotation) => {
+//                      //annotation.removeEventListener('click', annotation.onclick);
+//                      console.log(annotation.onclick)
+//                      let annotationCopy = annotation.cloneNode(true);
+//                      annotation.parentNode.replaceChild(annotationCopy, annotation);
+//                      annotation.remove();
+//                    });
+//                  });
+//                });
+//                observerClick.observe(addedAnnotations, { attributes: true, /*attributeOldValue: true,*/ subtree: true/*, childList: true*/ });
+//              }
+//            });
+//            observer.observe(targetNode, { /*attributes: true, attributeFilter: ['onclick'],*/ subtree: true, childList: true });
+            
+            if (this.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
                   $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
@@ -2568,7 +2750,7 @@
           this.$root.$emit('from-audioeditor:selection-change', this.blockId, val.start, val.end);
           if (this.selection.end >= this.audioDuration && this.mode === 'block') {
 
-            setTimeout(() => {
+            /*setTimeout(() => {
               let resizeRight = document.getElementById('resize-selection-right');
               if (resizeRight) {
                 let win = window,
@@ -2578,10 +2760,11 @@
                   w = win.innerWidth || e.clientWidth || g.clientWidth;
                 let offset = resizeRight.getBoundingClientRect();
                 if (offset.left < w) {
+                  console.log('SCROLL')
                   $('.playlist-tracks').scrollLeft($('.playlist-tracks').scrollLeft() + 100);
                 }
               }
-            }, 500);
+            }, 500);*/
           }
         }, 30),
 
@@ -2626,12 +2809,13 @@
               this.annotations[i].end = al.end;
             }
           });
+          console.log('drag', shiftedIndex);
           let shifted = false;
           //console.log(this.audiosourceEditor.annotationList.annotations[8].start, this.audiosourceEditor.annotationList.annotations[8].end);
           //console.log(this.annotations[8].begin, this.annotations[8].end);
           let length = 0;
           //let shift = 0;
-          this.annotations.forEach((an, i) => {
+          this.annotations.forEach((an, i) => {// fix annotations, avoid spaces between word positions
             if (length > an.begin) {
               //console.log(an.begin, 'overlapped by ', this.annotations[i - 1]);
               an.begin = length;
@@ -2744,8 +2928,11 @@
               return _w.alignedIndex == i;
             });
             if (w) {
-              w.start = al.begin;
-              w.end = al.end;
+              w.start = this._round(al.begin, 2);
+              w.end = this._round(al.end, 2);
+              if (i === shiftedIndex) {
+                console.log('drag word', w.start, w.end);
+              }
             }
           });
           if (shifted) {
@@ -2795,6 +2982,7 @@
                     (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') ||
                     (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
               Vue.nextTick(() => {
+                console.log('select on drag');
                 this._setWordSelection(this.wordSelectionMode, true, true);
               });
             }
@@ -2969,7 +3157,7 @@ Revert to original block audio?`,
               });
               this.dragRight = new Draggable (document.getElementById('resize-selection-right'), {
 
-                limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
+                limit: this.calculateDragLimit(),
                 onDrag: (element, x, y, event) => {
                   //console.log(event.buttons, event.which)
                   this.pause()
@@ -2982,9 +3170,10 @@ Revert to original block audio?`,
                       }
                       this.wordSelectionMode = false;
                       if ($('[id="resize-selection-left"]').position().left >= x) {
-                        let start = x * this.getPixelsPerSecond();
-                        this.selection.start = start-1;
-                        this._setSelectionOnWaveform();
+                        let end = this._round(x * this.getPixelsPerSecond());
+                        this.selection.start = end - 1;
+                        this.dragRight.stop();
+                        this._setSelectionOnWaveform(null, end);
                         return false;
                       }
                       let startX = 0;
@@ -2993,46 +3182,52 @@ Revert to original block audio?`,
                       } else {
                         startX = $('[id="resize-selection-left"]').position().left;
                       }
-                      if ($('.selection.segment').length > 0) {
-                        $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-                      }
+                      this.setSelectionWidth(x, 'right');
+                      
 
                       if (typeof this.audiosourceEditor.activeTrack !== 'undefined') {
                         this.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                        let startSec = x * this.getPixelsPerSecond();
+                        let startSec = this._round(x * this.getPixelsPerSecond(), 2);
+                        //console.log(`SET END ${startSec}`);
                         this.plEventEmitter.emit('select', this.selection.start, startSec);
                       }
                       //self.cursorPosition = self.selection.start;
                     })
+                },
+                onDragEnd: (element, x, y, event) =>  {
+                  this.fixDragEnd(x);
                 }
               })
               this.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
-                limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
+                limit: this.calculateDragLimit(),
                 onDrag: (element, x, y, event) => {
                   this.pause()
                     .then(() => {
                       this.wordSelectionMode = false;
                       if ($('[id="resize-selection-right"]').position().left <= x) {
-                        let start = x * this.getPixelsPerSecond();
-                        this.selection.end = start+1;
-                        this._setSelectionOnWaveform();
+                        let start = this._round(x * this.getPixelsPerSecond());
+                        this.selection.end = start + 1;
+                        this.dragLeft.stop();
+                        this._setSelectionOnWaveform(start);
                         return false;
                       }
-                      $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
-                      $('.selection.segment').css('left', x - 5)
                       let startX = 0;
                       if (this.selection && typeof this.selection.end !== 'undefined') {
                         startX = this.selection.end / (this.getPixelsPerSecond());
                       } else {
                         startX = $('[id="resize-selection-right"]').position().left;
                       }
+                      this.setSelectionWidth(x, 'left');
                       if (typeof this.audiosourceEditor.activeTrack !== 'undefined') {
                         this.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                        let startSec = x * this.getPixelsPerSecond();
+                        let startSec = this._round(x * this.getPixelsPerSecond(), 2);
                         this.plEventEmitter.emit('select', startSec, this.selection.end);
                       }
                       this.cursorPosition = this.selection.start;
                     });
+                },
+                onDragEnd: (element, x, y, event) => {
+                  this.fixDragStart(x);
                 }
               })
               if (this.mode === 'file') {
@@ -3040,6 +3235,60 @@ Revert to original block audio?`,
               }
             }
           }, 100);
+        },
+        // make sure selection border has same position as drag right
+        fixDragEnd(x) {
+          if (typeof this.selection.end !== 'undefined' && this.selection.end !== null) {
+            this.dragRight.set(this.selection.end / this.getPixelsPerSecond() - 1);
+            Vue.nextTick(() => {
+              this.setSelectionWidth(x);
+            });
+          }
+        },
+        // make sure selection border has same position as drag left
+        fixDragStart(x) {
+          if (typeof this.selection.start !== 'undefined' && this.selection.start !== null) {
+            this.dragLeft.set(this.selection.start / this.getPixelsPerSecond() - 1);
+            Vue.nextTick(() => {
+              this.setSelectionWidth(x);
+            });
+          }
+        },
+        // make sure selection highlight has correct positions
+        setSelectionWidth(x, direction) {
+          if ((this.selection.start >= 0 || this.selection.end >= 0)) {
+            switch (direction) {
+              case 'right':
+                $('.selection.segment').css('width', this._round(x - this.selection.start / this.getPixelsPerSecond()) + 'px');
+                break;
+              case 'left':
+                $('.selection.segment').css('width', this._round(this.selection.end / this.getPixelsPerSecond() - x) + 'px');
+                $('.selection.segment').css('left', x + 'px');
+                break;
+              default:
+                let pixelsPerSecond = this.getPixelsPerSecond();
+                let left = this.selection.start / pixelsPerSecond;
+                $('.selection.segment').css('width', this._round(this.selection.end / pixelsPerSecond - left));
+                $('.selection.segment').css('left', left);
+                break;
+            }
+          }
+        },
+        // limits for selection drag start and end
+        setDragLimit() {
+          if (this.dragLeft) {
+            this.dragLeft.setOption('limit', this.calculateDragLimit());
+          }
+          if (this.dragRight) {
+            this.dragRight.setOption('limit', this.calculateDragLimit());
+          }
+        },
+        // limits for selection drag start and end
+        calculateDragLimit() {
+          return {
+            x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000],
+            y: [0, 0]
+          };
         },
         getPixelsPerSecond() {
           if (this.audiosourceEditor) {
@@ -3389,13 +3638,21 @@ Revert to original block audio?`,
         },
         'zoomLevel': {
           handler(val) {
-            if (this.mode == 'file') {
+            //if (this.mode == 'file') {
               let pos = this.cursorPosition * this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel;
               $('#cursor-position').css('left', pos);
-            }
+            //}
             Vue.nextTick(() => {
               this.showSelectionTooltip();
             });
+            setTimeout(() => {
+              this.setDragLimit();
+            }, 50);
+            this._showSelectionBorders();
+            this._scrollToCursor();
+            //if ($('.cursor').position()) {
+              //$('.cursor-position').css('left', $('.cursor').position().left);
+            //}
           }
         },
         'blockSelection.start._id': {
@@ -3591,8 +3848,9 @@ Revert to original block audio?`,
             .id {
                 height: 100%;
                 display: inline-block;
-                margin: 4px 0px;
+                padding: 4px 0px;
                 width: 100%;
+                cursor: all-scroll;
             }
             &:after {
               content: ' ';
@@ -4029,6 +4287,7 @@ Revert to original block audio?`,
       background: rgb(186, 232, 195);
       border-radius: 4px 4px 0px 0px;
       padding: 4px 5px;
+      user-select: none;
       &.-start {
         float: left;
       }
