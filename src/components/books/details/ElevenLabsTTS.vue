@@ -230,6 +230,11 @@
           this.resetNewVoiceSettings();
         });
       window.addEventListener('resize', this.setMaxContainerHeight);
+      let accentElement = document.querySelector('.generate-voice .slider-container');
+      accentElement.addEventListener('click', () => {
+        let sliderHandler = accentElement.querySelector('.p-slider-handle');
+        sliderHandler.focus();
+      });
     },
     methods: {
       defaultVoice(type) {
@@ -661,6 +666,10 @@
         margin: 0px 5px;
         &.-stop {
           background: url(/static/tts-catalog/stop-big.png);
+        }
+        &:focus {
+          border: none;
+          outline: none;
         }
       }
       .save-voice {
