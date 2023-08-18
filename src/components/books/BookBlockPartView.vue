@@ -1526,7 +1526,8 @@ export default {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
         let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
-        if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
+        let isContext = el.relatedTarget && el.relatedTarget.classList && el.relatedTarget.classList.contains('context-menu');
+        if (this.isChanged && this.changes.includes('content') && !isPasteEvent && !isContext) {
 
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
@@ -2165,7 +2166,8 @@ export default {
         this.isChanged = true;
         this.pushChange('description');
         let isPasteEvent = ev.relatedTarget && ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0;
-        if (setContent && !isPasteEvent) {
+        let isRedactor = ev.relatedTarget && ev.relatedTarget.classList && ev.relatedTarget.classList.contains('medium-editor-action');
+        if (setContent && !isPasteEvent && !isRedactor) {
           this.block.description = this.$refs.blockDescription.innerHTML;
         }
       },
