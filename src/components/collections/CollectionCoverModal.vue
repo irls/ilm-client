@@ -191,9 +191,8 @@
       margin-left: 0;
     }
     img.preview-upload {
-      width: 150px;
+      height: 200px;
       margin-right: 1em;
-      margin-top: -.75em;
       padding: 0;
     }
     .image-upload-wrapper {
