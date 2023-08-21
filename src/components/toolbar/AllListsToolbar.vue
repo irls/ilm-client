@@ -4,33 +4,33 @@
     <!-- Meta Filter -->
     <span v-if="showBooksFilters">
       <input placeholder="Filter by Title / Author / Category"
-        :value="booksFilters.filter" type="text"
+        ref="booksFilters.filter" type="text"
         :class="['form-control book-filter', {filled: booksFilters.filter!=''}]"
         @keyup="filterChangeBooksDebounce('filter', $event)"
         @paste="filterChangeBooksDebounce('filter', $event)" ></input>
       <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
         v-if="booksFilters.filter!=''"
-        @click="booksFilters.filter=''; filterChangeBooks('filter');"></i>
+        @click="cleanFilterVal('booksFilters.filter'); filterChangeBooks('filter');"></i>
 
       <input placeholder="Filter by Editor / Tag"
-        :value="booksFilters.secFilter" type="text"
+        ref="booksFilters.secFilter" type="text"
         :class="['form-control book-filter second-filter', {filled: booksFilters.secFilter!=''}]"
         @keyup="filterChangeBooksDebounce('secFilter', $event)"
         @paste="filterChangeBooksDebounce('secFilter', $event)"></input>
       <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
         v-if="booksFilters.secFilter!=''"
-        @click="booksFilters.secFilter=''; filterChangeBooks('secFilter');"></i>
+        @click="cleanFilterVal('booksFilters.secFilter'); filterChangeBooks('secFilter');"></i>
     </span>
 
     <span v-if="showCollectionsFilters">
       <input placeholder="Filter by Title / Author / Category"
-        :value="collectionsFilters.filter" type="text"
+        ref="collectionsFilters.filter" type="text"
         :class="['form-control book-filter', {filled: collectionsFilters.filter!=''}]"
         @keyup="filterChangeCollectionsDebounce('filter', $event)"
         @paste="filterChangeCollectionsDebounce('filter', $event)" ></input>
       <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
         v-if="collectionsFilters.filter!=''"
-        @click="collectionsFilters.filter=''; filterChangeCollections('filter');"></i>
+        @click="cleanFilterVal('collectionsFilters.filter'); filterChangeCollections('filter');"></i>
     </span>
 
     <!--<MultiSelect v-model="multiBookFilters.multiProjectTag"
@@ -234,6 +234,13 @@ export default {
     filterChangeCollectionsDebounce: _.debounce(function (key, $event) {
       this.filterChangeCollections(key, $event)
     }, 300),
+
+    cleanFilterVal (key) {
+      // To unlink chain between input value and model because of debounce
+      if (this.$refs[key]) {
+        this.$refs[key].value = '';
+      }
+    },
 
     changeFilterVisual() {
       Vue.nextTick(()=>{
