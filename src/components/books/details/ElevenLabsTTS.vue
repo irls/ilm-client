@@ -70,8 +70,8 @@
           </template>
         </div>
         <div class="align-blocks-section">
-          <button class="align-blocks" :disabled="alignCounter.countTTS === 0" v-on:click="startAlign" v-if="!alignProcess"></button>
-          <button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()">
+          <button class="align-blocks" :disabled="alignCounter.countTTS === 0" v-on:click="startAlign" v-if="!alignProcess" title="Align Text with TTS Audio"></button>
+          <button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()" title="Cancel Alignment">
             <i class="fa fa-ban"></i>
           </button>
         </div>
@@ -137,7 +137,7 @@
         <input type="text" v-model="new_voice.name" :maxlength="new_name_maxlength" class="new-voice-name" placeholder="Define Voice Name" />
         <span class="name-length">{{new_voice.name.length}}/{{new_name_maxlength}}</span>
         <span class="preloader -creating-voice" v-if="creating_voice"></span>
-        <button class="save-voice" :disabled="saveNewVoiceDisabled" v-on:click="saveNewVoice()" v-else></button>
+        <button class="save-voice" :disabled="saveNewVoiceDisabled" v-on:click="saveNewVoice()" v-else title="Save Voice"></button>
       </div>
       <div class="book-voices">
         <div class="book-voice" v-for="voice in book_voices">
@@ -156,7 +156,7 @@
             <span class="book-voice-name" v-else>{{voice.name}}</span>
           </div>
           <div class="book-voice-option">
-            <button class="delete-voice" v-on:click="checkDeleteVoice(voice)"></button>
+            <button class="delete-voice" v-on:click="checkDeleteVoice(voice)" title="Delete Voice"></button>
           </div>
         </div>
       </div>
