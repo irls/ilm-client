@@ -1322,7 +1322,42 @@ export default {
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log(event, target);
               if (event.inputType === 'formatItalic') {
-                this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+                if (this.$refs.blockContent.innerHTML.indexOf(`<span class="pin">`) !== -1) {
+                  let currentSelection = window.getSelection().getRangeAt(0).cloneRange();
+                  let startContainer = currentSelection.startContainer;
+                  let startOffset = currentSelection.startOffset;
+                  if (startContainer.nodeName !== 'W') {
+                    while (startContainer.parentElement && startContainer.nodeName !== 'W') {
+                      startContainer = startContainer.parentElement;
+                    }
+                  }
+                  let endContainer = currentSelection.endContainer;
+                  let endOffset = currentSelection.endOffset;
+                  if (endContainer.nodeName !== 'W') {
+                    while (endContainer.parentElement && endContainer.nodeName !== 'W') {
+                      endContainer = endContainer.parentElement;
+                    }
+                  }
+                  this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+                  let selectionRange = document.createRange();
+                  startContainer = document.getElementById(startContainer.id);
+                  endContainer = document.getElementById(endContainer.id);
+                  if (startContainer.nodeType !== 3) {
+                    while (startContainer.nodeType !== 3 && startContainer.childNodes.length > 0) {
+                      startContainer = startContainer.childNodes[0];
+                    }
+                  }
+                  if (endContainer.nodeType !== 3) {
+                    while (endContainer.nodeType !== 3 && endContainer.childNodes.length > 0) {
+                      endContainer = endContainer.childNodes[0];
+                    }
+                  }
+                  selectionRange.setStart(startContainer, startOffset);
+                  selectionRange.setEnd(endContainer, endOffset);
+                  let sel = window.getSelection();
+                  sel.removeAllRanges();
+                  sel.addRange(selectionRange);
+                }
               }
             });
           } else if (this.block.voicework === 'narration' && this.mode === 'narrate') {
