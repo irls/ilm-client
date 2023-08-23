@@ -218,7 +218,7 @@
       },
       saveNewVoiceDisabled: {
         get() {
-          return this.generated_voice_url.length === 0 || this.new_voice.name.length === 0;
+          return this.generated_voice_url.length === 0 || this.new_voice.name.length === 0 || this.new_voice.name.replace(/\s+/, '').length === 0;
         },
         cache: false
       }
