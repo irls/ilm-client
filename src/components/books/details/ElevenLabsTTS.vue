@@ -394,7 +394,11 @@
       },
       saveVoice() {
         if (this.editing_voice_id) {
-          let update = {name: this.editing_voice_name};
+          let update = {name: this.editing_voice_name.trim()};
+          if (this.editing_voice_name.length === 0 || this.editing_voice_name.replace(/\s+/, '').length === 0) {
+            this.setEditingVoice(null);
+            return;
+          }
           let id = this.editing_voice_id;
           let voice = this.book_voices.find(v => {
             return v.id === this.editing_voice_id;
@@ -738,6 +742,9 @@
             background-color: #F0F0F0;
             background-repeat: no-repeat;
             background-position: center;
+            &:focus {
+              outline: none;
+            }
           }
           .editing-voice-name {
             width: 100%;
