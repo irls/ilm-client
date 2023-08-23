@@ -776,4 +776,14 @@
       }
     }
   }
+  .vue-dialog {
+    button {
+      border: inherit;
+      outline: none;
+      &:focus {
+        border: none;
+        outline: none;
+      }
+    }
+  }
 </style>
