@@ -1479,11 +1479,6 @@ export default {
 
         acc[key] = value;
 
-        // Batch updates
-        if (key === 'language') {
-          acc.voices = {};
-        }
-
         return acc;
       }, {});
 
