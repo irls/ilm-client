@@ -9,11 +9,15 @@
       </template>
     </template>
     <template v-if="bookMode !== 'proofread'">
-      <Slider v-model="pause"
+      <div v-if="disableSelection" class="disabled-pause-slider" v-on:click="confirmPauseUptdMessage(range)">
+        <span class="slider-handler"></span>
+      </div>
+      <Slider v-else
         :step="interval"
         :min="min" :max="max"
         @change="inputPauseDebounced"
-        :class="['block-pause-slider']" />
+        :class="['block-pause-slider']"
+        :disabled="disableSelection" />
       <br/>
     </template>
 
@@ -67,11 +71,22 @@
         range: [],
         blockList: [],
         player: null,
-        nowPlaying: false
+        nowPlaying: false,
+        disableSelection: false
       }
     },
     mounted() {
       this.resetPause();
+      let sliderElement = document.querySelector('.pause-after-container');
+      if (sliderElement) {
+        sliderElement.onclick = (e) => {
+          if (this.disableSelection) {
+            //console.log('ON CLICK')
+            //console.log(e)
+            //this.confirmPauseUptdMessage(this.range);
+          }
+        }
+      }
     },
     methods: {
       inputPauseDebounced: _.debounce(function (pauseVal) {
@@ -288,6 +303,7 @@
                 this.pause = 0;
                 this.flatPauseAfterRange();
                 this.$root.$emit('hide-modal');
+                this.disableSelection = false;
                 // this.updates ();
               },
               'class': 'btn btn-primary'
@@ -296,7 +312,7 @@
           class: ['modal-width align-modal']
         });
       },
-
+      
     },
     computed: {
       allowConfirmPopup: {
@@ -409,6 +425,15 @@
           Vue.nextTick(() => {
               this.recalcPauseAfterRange(true);
           });
+        }
+      },
+      'allowConfirmPopup': {
+        handler() {
+          if (this.allowConfirmPopup) {
+            this.disableSelection = true;
+          } else {
+            this.disableSelection = false;
+          }
         }
       }
     }
@@ -560,6 +585,32 @@
         i {
           vertical-align: top;
         }
+      }
+    }
+    .disabled-pause-slider {
+      height: 6px;
+      z-index: 0;
+      margin: 0px 8px;
+      border-radius: 4px;
+      background: #c8c6c4;
+      border: 0 none;
+      opacity: 0.6;
+      user-select: none;
+      width: 96%;
+      .slider-handler {
+        transition: all 0.2s ease 0s;
+        border: none;
+        box-shadow: 0.5px 0.5px 2px 1px rgb(0, 0, 0, 32%);
+        cursor: pointer;
+        margin-top: -8px;
+        margin-left: -8px;
+        height: 16px;
+        width: 16px;
+        background: #ffffff;
+        border-radius: 50%;
+        position: absolute;
+        display: block;
+        top: 66%;
       }
     }
   }
