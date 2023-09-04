@@ -1570,13 +1570,9 @@ export default {
         [key]: value
       }
 
-      // Batch updates
-      if (key === 'language') {
-        update.voices = {};
-      }
 
       //console.log(`updateBookMeta.update: `, update);
-
+      
       return this.updateBookMeta(update)
       .then((response)=>{
 

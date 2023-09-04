@@ -266,7 +266,7 @@
             });
             allVoices.forEach(voice => {
               if (voice.category) {
-                voice.name = `${voice.category} / ${voice.name}`;
+                voice.name = `${voice.name} / ${voice.category}`;
               }
             });
             this.all_voices = allVoices;
