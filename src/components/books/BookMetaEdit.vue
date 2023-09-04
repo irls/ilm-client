@@ -1425,11 +1425,6 @@ export default {
         [key]: value
       }
 
-      // Batch updates
-      if (key === 'language') {
-        update.voices = {};
-      }
-
       return this.updateBookMeta(update)
       .then((response)=>{
         if(event)
