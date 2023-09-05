@@ -3878,16 +3878,46 @@ Revert to original block audio?`,
 
       &.-active {
         max-width: 1310px;
+        
+        @media screen and (max-width: 1200px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
+        
+        @media screen and (max-width: 1150px) {
+          padding: 15px 9px;
+        }
 
-        @media screen and (max-width: 807px) {
+        @media screen and (max-width: 1066px) {
           justify-content: flex-start;
+          max-width: 1060px;
+          padding: 15px 15px;
+        }
+        
+        @media screen and (max-width: 805px) {
+          max-width: 795px;
+        }
+        
+        @media screen and (max-width: 744px) {
+          max-width: 734px;
+        }
+        
+        @media screen and (max-width: 683px) {
+          max-width: 673px;
+        }
+        
+        @media screen and (max-width: 584px) {
+          max-width: 570px;
         }
       }
 
       &.-inactive {
         max-width: 935px;
 
-        @media screen and (max-width: 819px) {
+        @media screen and (max-width: 837px) {
           justify-content: flex-start;
         }
       }
@@ -3895,7 +3925,7 @@ Revert to original block audio?`,
       &.-align-mode {
         max-width: 582px;
 
-        @media screen and (max-width: 466px) {
+        @media screen and (max-width: 476px) {
           justify-content: flex-start;
         }
       }
@@ -3923,9 +3953,9 @@ Revert to original block audio?`,
       display: flex;
       gap: 2px;
 
-      &.-special-control {
+      /*&.-special-control {
         padding-inline-end: 20px;
-      }
+      }*/
     }
     
     .audio-btn {
