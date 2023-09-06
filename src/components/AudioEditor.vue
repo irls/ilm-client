@@ -4145,34 +4145,94 @@ Revert to original block audio?`,
       justify-content: space-between;
 
       &.-active {
-        max-width: 1310px;
+        max-width: 1305px;
+        padding: 15px 20px;
+        
+        @media screen and (max-width: 1200px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
+        
+        @media screen and (max-width: 1150px) {
+          padding: 15px 9px;
+        }
 
-        @media screen and (max-width: 807px) {
+        @media screen and (max-width: 1066px) {
           justify-content: flex-start;
+          max-width: 1060px;
+          padding: 15px 15px;
+        }
+        
+        @media screen and (max-width: 805px) {
+          max-width: 795px;
+        }
+        
+        @media screen and (max-width: 744px) {
+          max-width: 734px;
+        }
+        
+        @media screen and (max-width: 683px) {
+          max-width: 673px;
+        }
+        
+        @media screen and (max-width: 584px) {
+          max-width: 570px;
         }
       }
 
       &.-inactive {
         max-width: 935px;
+        
+        @media screen and (max-width: 880px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
 
-        @media screen and (max-width: 819px) {
+        @media screen and (max-width: 840px) {
           justify-content: flex-start;
+          max-width: 812px;
         }
       }
 
       &.-align-mode {
-        max-width: 582px;
+        max-width: 564px;
+        padding: 15px 25px;
+        
+        @media screen and (max-width: 530px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
 
-        @media screen and (max-width: 466px) {
+        @media screen and (max-width: 474px) {
           justify-content: flex-start;
+          max-width: 462px;
         }
       }
 
       &.-align-mode-active {
-        max-width: 624px;
+        max-width: 606px;
+        padding: 15px 25px;
+        
+        @media screen and (max-width: 560px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
 
-        @media screen and (max-width: 517px) {
+        @media screen and (max-width: 524px) {
           justify-content: flex-start;
+          max-width: 505px;
         }
       }
     }
@@ -4191,9 +4251,9 @@ Revert to original block audio?`,
       display: flex;
       gap: 2px;
 
-      &.-special-control {
+      /*&.-special-control {
         padding-inline-end: 20px;
-      }
+      }*/
     }
     
     .audio-btn {
