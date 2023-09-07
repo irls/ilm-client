@@ -635,7 +635,8 @@ div.modal-dialog {
 }
 
 img.preview-upload {
-  height: 200px;
+  max-height: 200px;
+  max-width: 160px;
   margin-right: 1em;
   padding: 0;
 }
