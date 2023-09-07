@@ -70,7 +70,7 @@
           </template>
         </div>
         <div class="align-blocks-section">
-          <button class="align-blocks" :disabled="alignCounter.countTTS === 0" v-on:click="startAlign" v-if="!alignProcess" title="Align Text with TTS Audio"></button>
+          <button class="align-blocks" :disabled="alignCounter.countTTS === 0" v-on:click="startAlign" title="Align Text with TTS Audio"></button>
           <button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()" title="Cancel Alignment">
             <i class="fa fa-ban"></i>
           </button>
