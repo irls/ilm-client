@@ -13,6 +13,7 @@
         <span class="slider-handler"></span>
       </div>
       <Slider v-else
+        v-model="pause"
         :step="interval"
         :min="min" :max="max"
         @change="inputPauseDebounced"
@@ -38,7 +39,8 @@
             class="pause-after" type="number"
             :min="min" :max="max"
             :step="interval"
-            @change="inputPauseManually" />
+            @change="inputPauseManually"
+            @click="checkAllowInputPause" />
 
           <button @click="increasePause" class="plus" :disabled="pause === max"></button>
         </template>
@@ -72,7 +74,8 @@
         blockList: [],
         player: null,
         nowPlaying: false,
-        disableSelection: false
+        disableSelection: false,
+        allowChangeRange: false
       }
     },
     mounted() {
@@ -301,7 +304,8 @@
               title: 'Confirm',
               handler: () => {
                 this.pause = 0;
-                this.flatPauseAfterRange();
+                //this.flatPauseAfterRange();
+                this.allowChangeRange = true;
                 this.$root.$emit('hide-modal');
                 this.disableSelection = false;
                 // this.updates ();
@@ -312,11 +316,20 @@
           class: ['modal-width align-modal']
         });
       },
+      checkAllowInputPause(ev) {
+        if (this.allowConfirmPopup) {
+          ev.preventDefault();
+          this.confirmPauseUptdMessage(this.range);
+        }
+      }
       
     },
     computed: {
       allowConfirmPopup: {
         get() {
+          if (this.allowChangeRange) {
+            return false;
+          }
           const checkPause = (this.range[0] && this.range[0] !== 'none') ? this.range[0] : 0;
           return this.range.length > 1 && !this.range.every((pause)=>pause == checkPause);
         },
@@ -407,6 +420,7 @@
     watch: {
       'blockSelection.start._id': {
         handler(val, oldVal) {
+          this.allowChangeRange = false;
           if (val) {
             this.resetPause();
           }
@@ -414,6 +428,7 @@
       },
       'blockSelection.end._id': {
         handler(val, oldVal) {
+          this.allowChangeRange = false;
           let singleSelection = !oldVal && val === this.blockSelection.start._id;
           if (this.blockSelection.start._id && this.blockSelection.end._id && (this.blockSelection.start._id !== this.blockSelection.end._id || !singleSelection)) {
             this.resetPause();
