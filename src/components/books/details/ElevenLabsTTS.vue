@@ -622,13 +622,16 @@
           vertical-align: middle;
           padding: 8px 5px;
           &[disabled] {
-            background: url(/static/audio_editor/align-disabled.png);
+            opacity: 0.4;
           }
         }
         .cancel-align {
           width: 41px;
           height: 34px;
           padding: 8px 5px;
+        }
+        button {
+          vertical-align: middle;
         }
       }
     }
