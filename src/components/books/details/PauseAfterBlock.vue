@@ -9,7 +9,7 @@
       </template>
     </template>
     <template v-if="bookMode !== 'proofread'">
-      <div v-if="disableSelection" class="disabled-pause-slider" v-on:click="confirmPauseUptdMessage(range)">
+      <div v-if="disableSelection" class="block-pause-slider -disabled" v-on:click="confirmPauseUptdMessage(range)">
         <span class="slider-handler"></span>
       </div>
       <Slider v-else
@@ -602,7 +602,7 @@
         }
       }
     }
-    .disabled-pause-slider {
+    .block-pause-slider.-disabled {
       height: 6px;
       z-index: 0;
       margin: 0px 8px;
