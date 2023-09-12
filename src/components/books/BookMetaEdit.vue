@@ -1479,11 +1479,6 @@ export default {
 
         acc[key] = value;
 
-        // Batch updates
-        if (key === 'language') {
-          acc.voices = {};
-        }
-
         return acc;
       }, {});
 
@@ -1568,11 +1563,6 @@ export default {
 
       let update = {
         [key]: value
-      }
-
-      // Batch updates
-      if (key === 'language') {
-        update.voices = {};
       }
 
       //console.log(`updateBookMeta.update: `, update);
