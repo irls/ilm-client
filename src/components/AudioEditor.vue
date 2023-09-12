@@ -26,107 +26,117 @@
       <div class="waveform-wrapper" @contextmenu.prevent="onContext">
         <div id="playlist" class="wf-playlist" ref="playlist"></div>
       </div>
-      <div class="player-controls">
-
-        <div :class="['play-controls', '-' + mode]">
-          <div class="hidden">cursorPosition: {{cursorPosition}}</div>
-          <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
-          <button class="audio-btn -pause" v-if="isPlaying" v-on:click="pause()"></button>
-          <div class="speed-controls" v-if="mode === 'block'">
-            <dropdown 
-              v-model="playbackRate" 
-              :options="playbackRates" 
-              scrollHeight="410px" 
-              @change="onPlaybackRateChange"
-              class="playbackrate-dropdown"/>
-          </div>
-        </div>
-        <div :class="['play-controls seek-controls', '-' + mode]">
-          <button class="audio-btn -go-to-start" v-on:click="goToStart()"></button>
-          <button class="audio-btn -go-to-end" v-on:click="goToEnd()"></button>
-        </div>
-        <div class="zoom-controls">
-          <button class="audio-btn -zoom-in" :disabled="!allowZoomIn" v-on:click="zoomIn()"></button>
-          <button class="audio-btn -zoom-out" :disabled="!allowZoomOut" v-on:click="zoomOut()"></button>
-        </div>
-        <div class="silence-controls" v-if="mode == 'block' && !editingLocked">
-          <dropdown 
-            v-model="silenceLength" 
-            :options="silenceLengths" 
-            scrollHeight="auto"
-            class="add-silence-dropdown" />
-          <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
-        </div>
-        <div class="selection-controls" v-bind:class="['-' + mode]" v-if="mode === 'block'">
-          <div class="hidden">{{origFilePositions}}
-            {{selection}}</div>
-          <div v-if="selection.start >= 0" class="selection-display hidden">
-            <div>Selection Start</div>
-            <div>
-              <template v-if="mode == 'block'">
-                <input type="text" v-model="selectionStartH" disabled />:<input type="text" v-model="selectionStartM" disabled />:<input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
-              </template>
-              <template v-else-if="mode == 'file'">
-                <input type="number" step="1" v-model="selectionStartH" />:
-                <input type="number" step="1" v-model="selectionStartM" />:
-                <input type="number" v-model="selectionStartS" class="sec" step="0.1" ref="selectionStartNum" />
-              </template>
+      <div class="audio-player-component">
+        <div :class="['controls-list', controlsClassname]">
+          <div class="controls-group">
+            <div class="control-wrapper -special-control">
+              <button class="audio-btn -play" v-if="!isPlaying" v-on:click="play()"></button>
+              <button class="audio-btn -pause" v-if="isPlaying" v-on:click="pause()"></button>
             </div>
           </div>
-          <div v-if="selection.end >= 0" class="selection-display hidden">
-            <div>Selection End</div>
-            <div>
-              <template v-if="mode == 'block'">
-                <input type="text" v-model="selectionEndH" disabled />:<input type="text" v-model="selectionEndM" disabled />:<input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
-              </template>
-              <template v-else-if="mode == 'file'">
-                <input type="number" step="1" v-model="selectionEndH" />:
-                <input type="number" step="1" v-model="selectionEndM" />:
-                <input type="number" v-model="selectionEndS" class="sec" step="0.1" ref="selectionEndNum" :disabled="isSinglePointSelection"/>
-              </template>
+          <div class="controls-group silence-controls" v-if="mode == 'block' && !editingLocked">
+            <div class="control-wrapper">
+              <dropdown 
+                v-model="silenceLength" 
+                :options="silenceLengths" 
+                scrollHeight="auto"
+                class="add-silence-dropdown" />
+              <button class="audio-btn -add-silence" v-on:click="addSilenceLocal()" :disabled="cursorPosition === false" v-ilm-tooltip.top="'Add Silence'"></button>
             </div>
           </div>
-          <template v-if="mode == 'block'">
+          <div class="controls-group" v-if="mode == 'block'">
             <template v-if="!editingLocked">
-              <div>
-                <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
-                <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
-                <div class="dropdown-controls">
-                  <dropdown 
-                    v-model="fadePercent" 
-                    :options="fadePercents" 
-                    scrollHeight="410px" 
-                    class="fade-percent-dropdown"/>
-                  <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
-                </div>
-              </div>
+            <div class="control-wrapper">
+              <button class="audio-btn -cut" v-on:click="cutLocal()" :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Cut'"></button>
+            </div>
+            <div class="control-wrapper">
+              <button class="audio-btn -erase" v-on:click="eraseLocal()"  :disabled="!hasSelection || isSinglePointSelection" v-ilm-tooltip.top="'Erase'"></button>
+            </div>
+            <div class="control-wrapper">
+              <dropdown 
+                v-model="fadePercent" 
+                :options="fadePercents" 
+                scrollHeight="410px" 
+                class="fade-percent-dropdown"/>
+              <button class="audio-btn -fade" v-on:click="fade()" :disabled="isFadeDisabled" v-ilm-tooltip.top="'Fade'" v-btn-toast.top="{value: rangeFadePercent, timeout: 2000}"></button>
+            </div>
             </template>
-            <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
+            <div class="control-wrapper">
+              <button class="audio-btn -clear" v-on:click="clearSelection()" :disabled="!hasSelection || isSinglePointSelection"  v-ilm-tooltip.top="'Clear'"></button>
+            </div>
+          </div>
+          <div class="controls-group" v-if="mode == 'block' && !editingLocked">
+            <div class="control-wrapper">
+              <button class="audio-btn -save" v-on:click="save()"  :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save'"></button>
+            </div>
+            <div class="control-wrapper">
+              <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save & Re-align'"></button>
+            </div>
+          </div>
+          <div class="controls-group" v-if="mode == 'block' && !editingLocked">
+            <div class="control-wrapper">
+              <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName, closeOnClick: false}"></button>
+            </div>
+          </div>
+          <div class="controls-group" v-if="mode == 'block' && !editingLocked">
+            <div class="control-wrapper">
+              <button class="audio-btn -revert" :disabled="isRevertDisabled" v-on:click="revert(true)" v-ilm-tooltip.top="'Revert'"></button>
+            </div>
+          </div>
+          <template v-if="mode === 'file'">
+            <div class="controls-group">
+              <div class="control-wrapper">
+                <button class="audio-btn -undo" :disabled="!isModifiedComputed" v-on:click="undo()" v-ilm-tooltip.top="'Undo'"></button>
+              </div>
+            </div>
+            <div class="controls-group">
+              <div class="control-wrapper">
+                <button class="audio-btn -align" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess" v-ilm-tooltip.top="'Align'"></button>
+                <span v-else class="align-preloader -small"></span>
+              </div>
+              <div class="control-wrapper">
+                <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
+              </div>
+              <div class="control-wrapper">
+                <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
+                <template v-else>
+                  <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
+                    {{selectionBlocksToAlign}}
+                  </span>
+                  <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)" :data-blockid="blockSelection.start._id">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)" :data-blockid="blockSelection.end._id">{{blockSelection.end._id_short}}</a></div>
+                </template>
+              </div>
+            </div>
           </template>
-        </div>
-        <template v-if="mode == 'block' && !isFootnote && !editingLocked">
-        </template>
-        <div class="audio-controls" v-if="mode == 'block' && !editingLocked">
-          <button class="audio-btn -undo" :disabled="actionsLog.length === 0" v-on:click="undo()" v-ilm-tooltip.top="{value: 'Undo ' + lastActionName, closeOnClick: false}"></button>
-          <button class="audio-btn -save" v-on:click="save()"  :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save'"></button>
-          <button class="audio-btn -save-and-realign" v-on:click="saveAndRealign()" :disabled="isSaveDisabled" v-ilm-tooltip.top="'Save & Re-align'"></button>
-          <button class="audio-btn -revert" :disabled="isRevertDisabled" v-on:click="revert(true)" v-ilm-tooltip.top="'Revert'"></button>
-        </div>
-        <div v-if="editingLocked" class="audio-controls blocked-message">
-          {{editingLockedReason}}
-        </div>
-        <div class="audio-controls" v-if="mode == 'file'">
-          <button class="audio-btn -undo" :disabled="!isModifiedComputed" v-on:click="undo()" v-ilm-tooltip.top="'Undo'"></button>
-          <button class="audio-btn -align" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess" v-ilm-tooltip.top="'Align'"></button>
-          <span v-else class="align-preloader -small"></span>
-          <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
-          <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
-          <template v-else>
-            <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
-              {{selectionBlocksToAlign}}
-            </span>
-            <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)" :data-blockid="blockSelection.start._id">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)" :data-blockid="blockSelection.end._id">{{blockSelection.end._id_short}}</a></div>
-          </template>
+          <div class="controls-group -special-group">
+            <div class="controls-group">
+              <div class="control-wrapper">
+                <button class="audio-btn -go-to-start" v-on:click="goToStart()"></button>
+              </div>
+              <div class="control-wrapper">
+                <button class="audio-btn -go-to-end" v-on:click="goToEnd()"></button>
+              </div>
+            </div>
+            <div class="controls-group">
+              <div class="control-wrapper">
+                <button class="audio-btn -zoom-in" :disabled="!allowZoomIn" v-on:click="zoomIn()"></button>
+              </div>
+              <div class="control-wrapper">
+                <button class="audio-btn -zoom-out" :disabled="!allowZoomOut" v-on:click="zoomOut()"></button>
+              </div>
+            </div>
+            <div class="control-wrapper" v-if="mode == 'block'">
+              <dropdown 
+                v-model="playbackRate" 
+                :options="playbackRates" 
+                scrollHeight="410px" 
+                @change="onPlaybackRateChange"
+                class="playbackrate-dropdown"/>
+            </div>
+          </div>
+          <div class="controls-group" v-if="editingLocked">
+            <div class="control-wrapper">{{editingLockedReason}}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -3592,6 +3602,26 @@ Revert to original block audio?`,
           },
           cache: false
         },
+        controlsClassname: {
+          get() {
+            let classname = '';
+            if (this.mode === 'block') {
+              if (!this.editingLocked) {
+                classname+= '-active';
+              } else {
+                classname+= '-inactive';
+              }
+            } else if (this.mode === 'file') {
+              if (this.hasLocks('align')) {
+                classname+= '-align-mode-active';
+              } else {
+                classname+= '-align-mode';
+              }
+            }
+            return classname;
+          },
+          cache: false
+        },
         ...mapGetters({
           currentBookMeta: 'currentBookMeta',
           blkSelection: 'blockSelection',
@@ -3801,7 +3831,7 @@ Revert to original block audio?`,
           border: 1px solid green;
           cursor: ew-resize;
           position: absolute;
-          z-index: 1001;
+          z-index: 1000;
           display: none;
           background-color: green;
       }
@@ -3941,166 +3971,6 @@ Revert to original block audio?`,
       }
     }
   }
-  .player-controls {
-    background-color: #d9d9d9;
-    vertical-align: middle;
-    min-height: 62px;
-    height: auto;
-    user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    .play-controls {
-      display: inline-block;
-      padding: 17px 15px;
-      i {
-        font-size: 29px;
-        color: #0089ff;
-        display: inline-block;
-        margin: 0px 5px;
-      }
-      .speed-controls {
-        display: inline-block;
-        width: 70px;
-        margin: -13px 2px -3px 5px;
-        span {
-          display: block;
-          text-align: center;
-        }
-        input {
-          width: 50px;
-        }
-      }
-    }
-    .seek-controls {
-      width: 115px;
-    }
-    .zoom-controls {
-      display: inline-block;
-      padding: 17px 14px;
-      width: 115px;
-      i {
-        font-size: 29px;
-        color: #0089ff;
-        display: inline-block;
-        margin: 0px 5px;
-        &.disabled {
-            color: gray;
-            cursor: inherit;
-        }
-      }
-    }
-    .silence-controls {
-      width: 163px;
-      display: inline-block;
-      padding: 21px 20px 9px 20px;
-      .add-silence-dropdown.p-dropdown {
-        width: 48px;
-        .p-dropdown-trigger {
-          .pi-chevron-down::before {
-            left: 70%;
-          }
-        }
-      }
-    }
-    .selection-controls {
-      display: inline-block;
-      padding: 21px 20px 9px 20px;
-      /*width: 265px;*/
-      &>div:not(.p-dropdown) {
-        display: inline-block;
-        /*padding: 0px 10px;*/
-      }
-      input[type="number"] {
-        width: 40px;
-        &.sec {
-          width: 50px;
-        }
-      }
-      input[type="text"] {
-        width: 30px;
-      }
-      .selection-display {
-        margin-top: -21px;
-      }
-      &.-file {
-        padding: 25px 20px 14px 20px;
-      }
-    }
-    .audio-controls {
-      display: inline-block;
-      float: right;
-      margin: 18px 30px;
-      height: 70px;
-      &.blocked-message {
-        color: gray;
-        padding: 0px 0px;
-        float: none;
-      }
-    }
-    >div:not(.audio-controls, .seek-controls) {
-      border-right: solid 2px #b1b1b1;
-    }
-    .p-dropdown {
-      height: 34px;
-      vertical-align: middle;
-      .p-inputtext {
-        font-size: inherit;
-      }
-    }
-    .speed-controls, .silence-controls, .selection-controls {
-      .p-dropdown {
-        .p-dropdown-panel {
-          border-radius: 5px;
-        }
-        .p-dropdown-items-wrapper {
-          box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
-          &::-webkit-scrollbar {
-            width: 10px;
-          }
-          &::-webkit-scrollbar-track {
-            background: white;
-            border-radius: 10px;
-          }
-          &::-webkit-scrollbar-thumb {
-            background: #D9D9D9;
-            border-radius: 9999px;
-            width: 2px;
-            background-clip: padding-box;
-            border: 4px solid rgba(0, 0, 0, 0);
-          }
-          .p-dropdown-items {
-            border-radius: 5px;
-          }
-          .p-dropdown-item {
-            &.p-highlight {
-              background: inherit;
-              font-weight: bolder;
-            }
-          }
-        }
-      }
-    }
-    .p-dropdown {
-      .p-inputtext {
-        /*padding: 5px 3px;*/
-      }
-      .p-dropdown-trigger {
-        width: 15px;
-        .pi-chevron-down::before {
-          content: '';
-          position: absolute;
-          left: 75%;
-          top: 13px;
-          width: 0;
-          height: 0;
-          border-left: 4px solid transparent;
-          border-right: 4px solid transparent;
-          border-top: 6px solid #000;
-          clear: both;
-        }
-      }
-    }
-  }
   .cursor-position {
       width: 1px;
       height: 100%;
@@ -4160,110 +4030,6 @@ Revert to original block audio?`,
   .modal.on-word-reposition {
     .btn.btn-default {
       display: none;
-    }
-  }
-  .audio-btn {
-    display: inline-block;
-    vertical-align: middle;
-    cursor: pointer;
-    border: none;
-    width: 41px;
-    height: 34px;
-    margin: 1px 3px;
-    &[disabled] {
-      cursor: not-allowed;
-    }
-    &.-play {
-      background: url("@{audio-btn}play.png");
-    }
-    &.-pause {
-      background: url("@{audio-btn}pause.png");
-    }
-    &.-go-to-start {
-      background: url("@{audio-btn}go-to-start.png");
-    }
-    &.-go-to-end {
-      background: url("@{audio-btn}go-to-end.png");
-    }
-    &.-zoom-in {
-      background: url("@{audio-btn}zoom-in.png");
-      &[disabled] {
-        background: url("@{audio-btn}zoom-in-disabled.png");
-      }
-    }
-    &.-zoom-out {
-      background: url("@{audio-btn}zoom-out.png");
-      &[disabled] {
-        background: url("@{audio-btn}zoom-out-disabled.png");
-      }
-    }
-    &.-fade {
-      background: url("@{audio-btn}fade.png");
-      width: 49px;
-      &[disabled] {
-        background: url("@{audio-btn}fade-disabled.png");
-      }
-    }
-    &.-clear {
-      background: url("@{audio-btn}clear.png");
-      &[disabled] {
-        background: url("@{audio-btn}clear-disabled.png");
-      }
-    }
-    &.-erase {
-      background: url("@{audio-btn}erase.png");
-      &[disabled] {
-        background: url("@{audio-btn}erase-disabled.png");
-      }
-    }
-    &.-cut {
-      background: url("@{audio-btn}cut.png");
-      &[disabled] {
-        background: url("@{audio-btn}cut-disabled.png");
-      }
-    }
-    &.-add-silence {
-      background: url("@{audio-btn}add-silence.png");
-      width: 63px;
-      &[disabled] {
-        background: url("@{audio-btn}add-silence-disabled.png");
-      }
-    }
-    &.-revert{
-      background: url("@{audio-btn}revert.png");
-      &[disabled] {
-        background: url("@{audio-btn}revert-disabled.png");
-      }
-    }
-    &.-save {
-      background: url("@{audio-btn}save.png");
-      &[disabled] {
-        background: url("@{audio-btn}save-disabled.png");
-      }
-    }
-    &.-save-and-realign {
-      background: url("@{audio-btn}save-and-realign.png");
-      width: 91px;
-      &[disabled] {
-        background: url("@{audio-btn}save-and-realign-disabled.png");
-      }
-    }
-    &.-undo {
-      background: url("@{audio-btn}undo.png");
-      &[disabled] {
-        background: url("@{audio-btn}undo-disabled.png");
-      }
-    }
-    &.-align {
-      background: url("@{audio-btn}align.png");
-      &[disabled] {
-        background: url("@{audio-btn}align-disabled.png");
-      }
-    }
-  }
-  .play-controls, .zoom-controls {
-    .audio-btn {
-      width: 34px;
     }
   }
   .playbackrate-dropdown.p-dropdown {
@@ -4350,5 +4116,323 @@ Revert to original block audio?`,
     text-decoration: underline;
     cursor: pointer;
     color: #2D76B0;
+  }
+  
+  .audio-player-component {
+    width: 100%;
+    background-color: #aaa9a97c;
+    border: #b1b1b1 1px solid;
+    border-bottom: 0;
+    color: #828282;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: Helvetica;
+
+    .controls-list {
+      padding: 15px 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-between;
+
+      &.-active {
+        max-width: 1305px;
+        padding: 15px 20px;
+        
+        @media screen and (max-width: 1200px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
+        
+        @media screen and (max-width: 1150px) {
+          padding: 15px 9px;
+        }
+
+        @media screen and (max-width: 1066px) {
+          justify-content: flex-start;
+          max-width: 1060px;
+          padding: 15px 15px;
+        }
+        
+        @media screen and (max-width: 805px) {
+          max-width: 795px;
+        }
+        
+        @media screen and (max-width: 744px) {
+          max-width: 734px;
+        }
+        
+        @media screen and (max-width: 683px) {
+          max-width: 673px;
+        }
+        
+        @media screen and (max-width: 584px) {
+          max-width: 570px;
+        }
+      }
+
+      &.-inactive {
+        max-width: 935px;
+        
+        @media screen and (max-width: 880px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
+
+        @media screen and (max-width: 840px) {
+          justify-content: flex-start;
+          max-width: 812px;
+        }
+      }
+
+      &.-align-mode {
+        max-width: 564px;
+        padding: 15px 25px;
+        
+        @media screen and (max-width: 530px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
+
+        @media screen and (max-width: 474px) {
+          justify-content: flex-start;
+          max-width: 462px;
+        }
+      }
+
+      &.-align-mode-active {
+        max-width: 606px;
+        padding: 15px 25px;
+        
+        @media screen and (max-width: 560px) {
+          .control-wrapper {
+            &.-special-control {
+              padding-inline-end: 20px;
+            }
+          }
+        }
+
+        @media screen and (max-width: 524px) {
+          justify-content: flex-start;
+          max-width: 505px;
+        }
+      }
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      &.-special-group {
+        gap: 20px;
+      }
+    }
+
+    .control-wrapper {
+      display: flex;
+      gap: 2px;
+
+      /*&.-special-control {
+        padding-inline-end: 20px;
+      }*/
+    }
+    
+    .audio-btn {
+      display: inline-block;
+      vertical-align: middle;
+      cursor: pointer;
+      border: none;
+      width: 41px;
+      height: 34px;
+      margin: 0px;
+      border-radius: 4px;
+      &[disabled] {
+        cursor: not-allowed;
+      }
+      &.-play {
+        background: url("@{audio-btn}play.png");
+        width: 34px;
+      }
+      &.-pause {
+        background: url("@{audio-btn}pause.png");
+        width: 34px;
+      }
+      &.-go-to-start {
+        background: url("@{audio-btn}go-to-start.png");
+        width: 34px;
+      }
+      &.-go-to-end {
+        background: url("@{audio-btn}go-to-end.png");
+        width: 34px;
+      }
+      &.-zoom-in {
+        background: url("@{audio-btn}zoom-in.png");
+        border-radius: 20px;
+        width: 34px;
+        &[disabled] {
+          background: url("@{audio-btn}zoom-in-disabled.png");
+        }
+      }
+      &.-zoom-out {
+        background: url("@{audio-btn}zoom-out.png");
+        width: 34px;
+        border-radius: 20px;
+        &[disabled] {
+          background: url("@{audio-btn}zoom-out-disabled.png");
+        }
+      }
+      &.-fade {
+        background: url("@{audio-btn}fade.png");
+        width: 49px;
+        &[disabled] {
+          background: url("@{audio-btn}fade-disabled.png");
+        }
+      }
+      &.-clear {
+        background: url("@{audio-btn}clear.png");
+        &[disabled] {
+          background: url("@{audio-btn}clear-disabled.png");
+        }
+      }
+      &.-erase {
+        background: url("@{audio-btn}erase.png");
+        &[disabled] {
+          background: url("@{audio-btn}erase-disabled.png");
+        }
+      }
+      &.-cut {
+        background: url("@{audio-btn}cut.png");
+        &[disabled] {
+          background: url("@{audio-btn}cut-disabled.png");
+        }
+      }
+      &.-add-silence {
+        background: url("@{audio-btn}add-silence.png");
+        width: 63px;
+        &[disabled] {
+          background: url("@{audio-btn}add-silence-disabled.png");
+        }
+      }
+      &.-revert{
+        background: url("@{audio-btn}revert.png");
+        &[disabled] {
+          background: url("@{audio-btn}revert-disabled.png");
+        }
+      }
+      &.-save {
+        background: url("@{audio-btn}save.png");
+        &[disabled] {
+          background: url("@{audio-btn}save-disabled.png");
+        }
+      }
+      &.-save-and-realign {
+        background: url("@{audio-btn}save-and-realign.png");
+        width: 91px;
+        &[disabled] {
+          background: url("@{audio-btn}save-and-realign-disabled.png");
+        }
+      }
+      &.-undo {
+        background: url("@{audio-btn}undo.png");
+        &[disabled] {
+          background: url("@{audio-btn}undo-disabled.png");
+        }
+      }
+      &.-align {
+        background: url("@{audio-btn}align.png");
+        &[disabled] {
+          background: url("@{audio-btn}align-disabled.png");
+        }
+      }
+    }
+    
+    
+    .silence-controls {
+      .add-silence-dropdown.p-dropdown {
+        width: 48px;
+        .p-dropdown-trigger {
+          .pi-chevron-down::before {
+            left: 70%;
+          }
+        }
+      }
+    }
+    
+    .p-dropdown {
+      height: 34px;
+      vertical-align: middle;
+      .p-inputtext {
+        font-size: inherit;
+      }
+    }
+    .speed-controls, .silence-controls, .selection-controls {
+      .p-dropdown {
+        .p-dropdown-panel {
+          border-radius: 5px;
+        }
+        .p-dropdown-items-wrapper {
+          box-shadow: rgba(0, 0, 0, 0.13) 0px 3.2px 7.2px 0px, rgba(0, 0, 0, 0.11) 0px 0.6px 1.8px 0px;
+          &::-webkit-scrollbar {
+            width: 10px;
+          }
+          &::-webkit-scrollbar-track {
+            background: white;
+            border-radius: 10px;
+          }
+          &::-webkit-scrollbar-thumb {
+            background: #D9D9D9;
+            border-radius: 9999px;
+            width: 2px;
+            background-clip: padding-box;
+            border: 4px solid rgba(0, 0, 0, 0);
+          }
+          .p-dropdown-items {
+            border-radius: 5px;
+          }
+          .p-dropdown-item {
+            &.p-highlight {
+              background: inherit;
+              font-weight: bolder;
+            }
+          }
+        }
+      }
+    }
+    .p-dropdown {
+      .p-inputtext {
+        /*padding: 5px 3px;*/
+      }
+      .p-dropdown-trigger {
+        width: 15px;
+        .pi-chevron-down::before {
+          content: '';
+          position: absolute;
+          left: 75%;
+          top: 13px;
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top: 6px solid #000;
+          clear: both;
+        }
+      }
+    }
+    .align-preloader{
+      &.-small {
+        height: 20px;
+        width: 34px;
+      }
+    }
   }
 </style>
