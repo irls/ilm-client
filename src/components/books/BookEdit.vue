@@ -2797,8 +2797,8 @@ export default {
       handler(val) {
         if (val) {
           this.$modal.show(SelectionModal, {
-            
-          }, 
+
+          },
           {
             width: '500px',
             height: '100px',
@@ -2882,21 +2882,16 @@ export default {
     }
 
     .container-block {
-      /*padding-top: 15px;*/
       width: 100%;
 
       &.back {
-        /*margin-right: -50%;*/
-        /*width: 100%;*/
         .content-background {
           height: 100%;
-          /*width: 100%;*/
         }
       }
       &.front {
         position: absolute;
         top: 0px;
-        /*margin-left: -300%;*/
 
         .content-background {
           background: white;
