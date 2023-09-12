@@ -395,6 +395,8 @@
         this.alignProcess = false;
       });
       
+      this.$root.$on('from-audioeditor:visible', this.splitRecalc);
+      
       /*this.$root.$on('for-audioeditor:load', this.resizeToc);
       this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
       this.$root.$on('from-audioeditor:close', this.resizeToc);
@@ -1309,6 +1311,7 @@
       this.$root.$off('from-audioeditor:save-positions');
       this.$root.$off('from-audioeditor:align');
       this.$root.$off('cancel-align', this.cancelAlign);
+      this.$root.$off('from-audioeditor:visible', this.splitRecalc);
     },
     computed: {
       selectionLength: {

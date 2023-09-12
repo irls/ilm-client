@@ -301,6 +301,15 @@
         for (let i = 1; i >= 0.1; i-=0.1) {
           this.silenceLengths.push(this._round(i, 1));
         }
+        
+        let targetNode = document.querySelector('.navbar.fixed-bottom.navbar-light.bg-faded');
+        let observer = new MutationObserver(() => {
+          Vue.nextTick(() => {
+            this.$root.$emit('from-audioeditor:visible', targetNode.classList.contains('hidden'));
+          });
+        });
+        observer.observe(targetNode, { attributes: true, attributeFilter: ['class'] });
+
       },
       beforeDestroy() {
         if (this.audioContext) {
