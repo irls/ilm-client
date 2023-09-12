@@ -4159,6 +4159,10 @@ Revert to original block audio?`,
         @media screen and (max-width: 1150px) {
           padding: 15px 9px;
         }
+        
+        @media screen and (max-width: 1070px) {
+          padding: 15px 5px;
+        }
 
         @media screen and (max-width: 1066px) {
           justify-content: flex-start;
