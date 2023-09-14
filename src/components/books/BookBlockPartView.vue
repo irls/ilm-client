@@ -1563,7 +1563,7 @@ export default {
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
         const isPasteEvent = ev.relatedTarget && ((ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (ev.relatedTarget.classList && ev.relatedTarget.classList.contains('medium-editor-action')));
         const isContextMenu = this.$refs.blockCntx.viewMenu;
-        let isContext = el.relatedTarget && el.relatedTarget.classList && el.relatedTarget.classList.contains('context-menu');
+        let isContext = ev.relatedTarget && ev.relatedTarget.classList && ev.relatedTarget.classList.contains('context-menu');
         if (this.isChanged && this.changes.includes('content') && !isPasteEvent && !isContextMenu && !isContext) {
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
