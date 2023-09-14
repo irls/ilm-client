@@ -93,6 +93,9 @@
     },
     methods: {
       inputPauseDebounced: _.debounce(function (pauseVal) {
+        if (this.selectionRecount) {
+          return false;
+        }
         if (this.allowConfirmPopup) {
           this.confirmPauseUptdMessage(this.range);
         } else {
@@ -414,7 +417,8 @@
         storeList: 'storeList',
         storeListO: 'storeListO',
         bookMode: 'bookMode',
-        selectedBlocks: 'filteredSelectedBlocks'
+        selectedBlocks: 'filteredSelectedBlocks',
+        selectionRecount: 'selectionRecount'
       })
     },
     watch: {
