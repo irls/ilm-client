@@ -59,7 +59,32 @@ var onSourceEnded = function() {
   }
 }
 
+// change volume to max at beginning, to min at the end
+var playPlayout = function(when, start, duration) {
+  let gainDelta = 0.02;
+  let currentGain = this.volumeGain.gain.value;
+  this.volumeGain.gain.setValueAtTime(0.0001, when - gainDelta);
+  //start-= gainDelta;
+  if (start < 0) {
+    start = 0;
+  }
+  this.source.start(when, start);
+  this.volumeGain.gain.exponentialRampToValueAtTime(currentGain, when + gainDelta);
+  setTimeout(() => {
+    if (this.volumeGain) {
+      this.volumeGain.gain.setValueAtTime(this.volumeGain.gain.value, this.ac.currentTime);
+      this.volumeGain.gain.exponentialRampToValueAtTime(0.0001, this.ac.currentTime + gainDelta);
+      setTimeout(() => {
+        if (this.source) {
+          this.source.stop();
+        }
+      }, gainDelta * 1000);
+    }
+  }, duration * 1000);
+}
+
 module.exports = {
   setUpSource,
-  onSourceEnded
+  onSourceEnded,
+  playPlayout
 }
