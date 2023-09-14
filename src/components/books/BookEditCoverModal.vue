@@ -1,7 +1,11 @@
 <template>
   <!-- <transition name="modal"> -->
-  <modal id="bookEditCoverModal" name="bookEditCoverModal" :adaptive="true" height="auto" :clickToClose="false"
-    @opened="opened">
+  <modal name="bookEditCoverModal"
+        id="bookEditCoverModal"
+        :adaptive="true"
+        height="auto"
+        :clickToClose="false"
+        @opened="opened">
 
     <div class="modal-header">
       <div class="header-title">
@@ -31,7 +35,7 @@
             <div class="col-md-12">
 
               <div class="col-sm-4">
-                <img :src="uploadImage" class="preview_upload" v-show="uploadImage.length > 0" />
+                <img :src="uploadImage" class="preview-upload" v-show="uploadImage.length > 0" />
                 <!-- <img :src="uploadImageBlank" class="preview_upload" v-show="uploadImage.length<1" /> -->
                 <div class='coverimg-wrap' v-show="uploadImage.length < 1"></div>
               </div>
@@ -630,10 +634,10 @@ div.modal-dialog {
   margin-left: 0;
 }
 
-img.preview_upload {
-  width: 150px;
+img.preview-upload {
+  max-height: 200px;
+  max-width: 160px;
   margin-right: 1em;
-  margin-top: -.75em;
   padding: 0;
 }
 

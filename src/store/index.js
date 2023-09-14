@@ -20,6 +20,7 @@ import tasks from './modules/tasks';
 import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
+import ttsModule from './modules/tts';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -83,7 +84,8 @@ export const store = new Vuex.Store({
     tasks,
     gridFilters,
     audioExport,
-    tocSections
+    tocSections,
+    ttsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -149,8 +151,6 @@ export const store = new Vuex.Store({
 
     user: {},
     currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0', total_blocks: '0', enabled_blocks: '0'},
-
-    ttsVoices : [],
 
     blockers: [],
     reqSignals: {
@@ -395,17 +395,6 @@ export const store = new Vuex.Store({
     currentLibrary: state => state.currentLibrary,
     user: state => state.user,
     currentBookCounters: state => state.currentBookCounters,
-    ttsVoices: state => {
-      if (!state.currentBookMeta.language || state.currentBookMeta.language === '') return state.ttsVoices;
-      let langPrefix = state.currentBookMeta.language.split('-')[0];
-      let result = [];
-      if (state.ttsVoices) {
-        state.ttsVoices.forEach((batch)=>{
-          if (batch.code.indexOf(langPrefix+'-') !== -1) result.push(batch);
-        })
-      }
-      return result;
-    },
 
     isBlocked: state => state.blockers.length > 0,
     blockers: state => state.blockers,
@@ -738,13 +727,12 @@ export const store = new Vuex.Store({
             }
           });
         }
-        if (!meta.voices || (meta.voices && Object.keys(meta.voices).length === 0)) {
-          meta.voices = {
-            'title': false,
-            'header': false,
-            'paragraph': false,
-            'footnote': false
-          };
+        let checkVoiceDefaults = false;
+        if (state.currentBookMeta && meta && state.currentBookMeta.bookid === meta.bookid) {
+          checkVoiceDefaults = true;
+          if (state.currentBookMeta.voices && !meta.voices) {
+            meta.voices = state.currentBookMeta.voices;
+          }
         }
         if (meta.styles instanceof Object) {
           Object.keys(meta.styles).forEach(k => {
@@ -780,21 +768,6 @@ export const store = new Vuex.Store({
         if (!state.currentBookMeta.isMastered) {
           state.currentBookMeta.isMastered = false;
         }
-        if (state.currentBookMeta.language == 'en') {
-          let default_voice = null;
-          state.ttsVoices.forEach(group => {
-            if (!default_voice && group.children) {
-              default_voice = group.children.find(ch => ch.id == 'Brian');
-            }
-          });
-          if (default_voice && Object.keys(state.currentBookMeta.voices).length > 0) {
-            for (let type in state.currentBookMeta.voices) {
-              if (!state.currentBookMeta.voices[type]) {
-                state.currentBookMeta.voices[type] = default_voice.id
-              }
-            }
-          }
-        }
         if (!state.currentBookMeta.numbering) {
           state.currentBookMeta.numbering = 'x_x';
         }
@@ -805,6 +778,9 @@ export const store = new Vuex.Store({
           this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: meta.coverimgURL});
         } else {
           this.commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: false});
+        }
+        if (checkVoiceDefaults) {
+          this.commit('ttsModule/set_book_defaults');
         }
       } else {
         state.currentBookMeta = {};
@@ -1018,10 +994,6 @@ export const store = new Vuex.Store({
       state.currentBookCounters[counter.name] = counter.value;
     },
 
-    SET_TTS_VOICES (state, ttsVoices) {
-      state.ttsVoices = ttsVoices;
-    },
-
     set_blocker (state, bName) {
       if (state.blockers.indexOf(bName) == -1) state.blockers.push(bName);
     },
@@ -1171,7 +1143,7 @@ export const store = new Vuex.Store({
     set_aligning_blocks(state, blocks) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
-        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false});
+        state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false, voicework: b.voicework});
       });
     },
     add_aligning_block(state, block) {
@@ -3042,37 +3014,6 @@ export const store = new Vuex.Store({
 
           });
       }
-    },
-
-    getTTSVoices({state, commit}, lang) {
-      return axios.get(state.API_URL + 'tts/voices' + (lang ? `/${lang}` : ''))
-      .then((response) => {
-        commit('SET_TTS_VOICES', response.data);
-        if (state.currentBookMeta && state.currentBookMeta.language == 'en') {
-          let default_voice = null;
-          state.ttsVoices.forEach(group => {
-            if (!default_voice && group.children) {
-              default_voice = group.children.find(ch => ch.id == 'Brian');
-            }
-          });
-          if (default_voice && Object.keys(state.currentBookMeta.voices).length > 0) {
-            for (let type in state.currentBookMeta.voices) {
-              if (!state.currentBookMeta.voices[type]) {
-                state.currentBookMeta.voices[type] = default_voice.id
-              }
-            }
-          }
-        }
-      })
-      .catch(err => err)
-    },
-
-    getTestSpeech({state, commit}, data) {
-      return axios.get(state.API_URL + `tts/testspeech/${data.voiceId}/${data.text}`)
-      .then((response) => {
-        return response;
-      })
-      .catch(err => err)
     },
 
     freeze({commit}, bName) {

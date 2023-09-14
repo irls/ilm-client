@@ -4,7 +4,7 @@
     <router-view v-if="isLoggedIn"></router-view>
     <Login v-if="!isLoggedIn"></Login>
 
-    <nav :class="['navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor}, audioeditorMode]" >
+    <nav :class="['audio-editor navbar', 'fixed-bottom', 'navbar-light', 'bg-faded', {'hidden': !showAudioeditor}, audioeditorMode]" >
       <div v-if="preloader" :class="['audio-process-run', 'preloader-' + preloaderType]"></div>
       <AudioEditor ref="audioEditor"></AudioEditor>
     </nav>
@@ -139,9 +139,9 @@ export default {
       height: auto;
       margin-bottom: 0px;
       z-index: 990;
-      &.-mode-file {
-          min-height: 183px;
-      }
+    }
+    .audio-editor {
+      min-height: fit-content;
     }
   }
 

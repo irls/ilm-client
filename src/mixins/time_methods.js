@@ -8,6 +8,12 @@ export default {
     convertTime(dt, time = false) {
 
       let date = new Date(dt);
+      if (isNaN(date.getFullYear())) {
+        let checkDate = /(\d+)\D(\d+)\D(\d+)\D+(\d+)\D(\d+)\D(\d+)/.exec(dt);//format DD.MM.yyyy, hh:mm:ss
+        if (checkDate && checkDate[0] && checkDate[6]) {//make it yyyy-MM-DDThh:mm:ssZ
+          date = new Date(`${checkDate[3]}-${checkDate[2]}-${checkDate[1]}T${checkDate[4]}:${checkDate[5]}:${checkDate[6]}Z`);
+        }
+      }
       let toutc = date.toUTCString();
       let locdate = new Date(toutc + " UTC");
 

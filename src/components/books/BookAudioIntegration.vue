@@ -120,7 +120,11 @@
         </div>
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
-        <div class="block-selection-info">
+        <ElevenLabsTTS
+          :is_active="activeTabIndex === 1"
+          @alignTts="alignTts"
+          @cancelAlign="cancelAlign" />
+        <!-- <div class="block-selection-info">
           <template v-if="!blockSelection.start._id">
             0 blocks selected
           </template>
@@ -159,14 +163,6 @@
               @onSelect="onTtsSelect('header', $event)"
             ></select-tts-voice></td>
           </tr>
-          <!--<tr>
-            <td>Subheader</td>
-            <td><select-tts-voice
-              pre_selected=""
-              :pre_volume="pre_volume"
-              :pre_options="pre_options"
-            ></select-tts-voice></td>
-          </tr>-->
           <tr>
             <td>Paragraph</td>
             <td><select-tts-voice
@@ -187,15 +183,11 @@
           </tr>
         </tbody>
         </table>
-
-        <!--<div class="pull-left" v-if="hasBlocksForAlignment && !enableAlignment">
-          <span class="red">Select audio</span>
-        </div>-->
         <div class="clearfix align-process-start">
           <button class="btn btn-default pull-right" :disabled="!enableTtsAlignment" v-on:click="alignTts()" v-if="!alignProcess">Convert text to speech &amp; Align with text</button>
           <span v-else class="align-preloader -big"></span>
           <button v-if="hasLocks('align')" class="cancel-align pull-left" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
-        </div>
+        </div> -->
       </AccordionTab>
       <AccordionTab :header="'Export & Replace audio'" v-bind:key="'export-replace-audio'">
         <ReplaceAudio/>
@@ -214,9 +206,9 @@
   import access from '../../mixins/access.js';
   import {mapGetters, mapActions} from 'vuex';
   import Slider from 'primevue/slider';
-  import SelectTTSVoice from '../generic/SelectTTSVoice'
   import ReplaceAudio from './details/ReplaceAudio.vue';
   import AudioImport from '../audio/AudioImport';
+  import ElevenLabsTTS from './details/ElevenLabsTTS.vue';
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
   import superlogin from 'superlogin-client';
@@ -238,9 +230,9 @@
       AccordionTab,
       dropdown,
       Slider,
-      'select-tts-voice':SelectTTSVoice,
       draggable,
-      ReplaceAudio
+      ReplaceAudio,
+      ElevenLabsTTS
 
     },
     props: {
@@ -393,11 +385,6 @@
         this.audioOpening = false;
       });
 
-      this.getTTSVoices(/*this.currentBookMeta.language*/)
-      .then(()=>{
-        this.pre_options = this.ttsVoices;
-      })
-      .catch(err=>err);
       this._setCatalogueSize();
       window.addEventListener('resize', this.splitRecalc, true);
       this.$root.$on('cancel-align', this.cancelAlign)
@@ -407,6 +394,8 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       });
+      
+      this.$root.$on('from-audioeditor:visible', this.splitRecalc);
       
       /*this.$root.$on('for-audioeditor:load', this.resizeToc);
       this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
@@ -1315,13 +1304,14 @@
         return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
+      ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
       this.$root.$off('from-audioeditor:align');
       this.$root.$off('cancel-align', this.cancelAlign);
+      this.$root.$off('from-audioeditor:visible', this.splitRecalc);
     },
     computed: {
       selectionLength: {
@@ -1372,7 +1362,6 @@
       },
       ...mapGetters({
         currentBookCounters: 'currentBookCounters',
-        ttsVoices: 'ttsVoices',
         currentBookid: 'currentBookid',
         currentBookMeta: 'currentBookMeta',
         blockSelection: 'blockSelection',
@@ -1474,9 +1463,6 @@
           }
 
         }
-      },
-      'ttsVoices': function (val) {
-        this.pre_options = val;
       },
       'aligningBlocks': function() {
         /*if (this.aligningBlocks.length > 0) {
@@ -1780,32 +1766,6 @@
     .modal-footer {
       button {
           width: 100%;
-      }
-    }
-  }
-  .table.table-voices {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    thead {
-      tr {
-
-      }
-      th {
-        background-color: silver;
-        padding-top: 2px;
-        padding-bottom: 2px;
-        border-bottom: none;
-      }
-    }
-    tbody {
-      tr:nth-child(odd) {
-        background-color:#eee;
-      }
-      td {
-        vertical-align: middle;
-      }
-      td:nth-child(2) {
-        width: 280px;
       }
     }
   }

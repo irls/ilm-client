@@ -1322,7 +1322,42 @@ export default {
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log(event, target);
               if (event.inputType === 'formatItalic') {
-                this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+                if (this.$refs.blockContent.innerHTML.indexOf(`<span class="pin">`) !== -1) {
+                  let currentSelection = window.getSelection().getRangeAt(0).cloneRange();
+                  let startContainer = currentSelection.startContainer;
+                  let startOffset = currentSelection.startOffset;
+                  if (startContainer.nodeName !== 'W') {
+                    while (startContainer.parentElement && startContainer.nodeName !== 'W') {
+                      startContainer = startContainer.parentElement;
+                    }
+                  }
+                  let endContainer = currentSelection.endContainer;
+                  let endOffset = currentSelection.endOffset;
+                  if (endContainer.nodeName !== 'W') {
+                    while (endContainer.parentElement && endContainer.nodeName !== 'W') {
+                      endContainer = endContainer.parentElement;
+                    }
+                  }
+                  this.$refs.blockContent.innerHTML = this.$refs.blockContent.innerHTML.replace(/<span class="pin"><\/span>/img, '<i class="pin"></i>');// adding italic replaces split positions
+                  let selectionRange = document.createRange();
+                  startContainer = document.getElementById(startContainer.id);
+                  endContainer = document.getElementById(endContainer.id);
+                  if (startContainer.nodeType !== 3) {
+                    while (startContainer.nodeType !== 3 && startContainer.childNodes.length > 0) {
+                      startContainer = startContainer.childNodes[0];
+                    }
+                  }
+                  if (endContainer.nodeType !== 3) {
+                    while (endContainer.nodeType !== 3 && endContainer.childNodes.length > 0) {
+                      endContainer = endContainer.childNodes[0];
+                    }
+                  }
+                  selectionRange.setStart(startContainer, startOffset);
+                  selectionRange.setEnd(endContainer, endOffset);
+                  let sel = window.getSelection();
+                  sel.removeAllRanges();
+                  sel.addRange(selectionRange);
+                }
               }
             });
           } else if (this.block.voicework === 'narration' && this.mode === 'narrate') {
@@ -1494,6 +1529,7 @@ export default {
       onInput: function(ev) {
         this.isChanged = true;
         this.pushChange('content');
+
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
         // emit for virtual scroll correction
@@ -1522,12 +1558,13 @@ export default {
         }
         //console.log(this.flagsSel);
       },
-      onFocusout: function(el) {
+      onFocusout: function(ev) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
-        let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
-        if (this.isChanged && this.changes.includes('content') && !isPasteEvent) {
-
+        const isPasteEvent = ev.relatedTarget && ((ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (ev.relatedTarget.classList && ev.relatedTarget.classList.contains('medium-editor-action')));
+        const isContextMenu = this.$refs.blockCntx.viewMenu;
+        let isContext = el.relatedTarget && el.relatedTarget.classList && el.relatedTarget.classList.contains('context-menu');
+        if (this.isChanged && this.changes.includes('content') && !isPasteEvent && !isContextMenu && !isContext) {
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
       },
@@ -2165,7 +2202,8 @@ export default {
         this.isChanged = true;
         this.pushChange('description');
         let isPasteEvent = ev.relatedTarget && ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0;
-        if (setContent && !isPasteEvent) {
+        let isRedactor = ev.relatedTarget && ev.relatedTarget.classList && ev.relatedTarget.classList.contains('medium-editor-action');
+        if (setContent && !isPasteEvent && !isRedactor) {
           this.block.description = this.$refs.blockDescription.innerHTML;
         }
       },
