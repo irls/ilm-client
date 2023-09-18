@@ -254,7 +254,7 @@
         this.$emit('cancelAlign');
       },
       loadBookVoices() {
-        this.all_voices = [];
+        //this.all_voices = [];
         return this.getTTSVoices()
           .then(()=>{
             let allVoices = this.tts_voices;
@@ -687,7 +687,7 @@
         margin: 0px 5px;
         &[disabled] {
           cursor: not-allowed;
-          opacity: 50%;
+          opacity: 0.5;
         }
       }
       button {

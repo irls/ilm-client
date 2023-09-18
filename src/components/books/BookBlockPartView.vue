@@ -1529,6 +1529,7 @@ export default {
       onInput: function(ev) {
         this.isChanged = true;
         this.pushChange('content');
+
         $(ev.target).find("span[style]").contents().unwrap();
         ev.target.focus();
         // emit for virtual scroll correction
@@ -1557,13 +1558,13 @@ export default {
         }
         //console.log(this.flagsSel);
       },
-      onFocusout: function(el) {
+      onFocusout: function(ev) {
         /*let blockContent = this.$refs.blockContent.innerHTML;
         this.block.content = blockContent.replace(/(<[^>]+)(selected)/g, '$1').replace(/(<[^>]+)(audio-highlight)/g, '$1');*/
-        let isPasteEvent = el.relatedTarget && ((el.relatedTarget.id && el.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (el.relatedTarget.classList && el.relatedTarget.classList.contains('medium-editor-action')));
-        let isContext = el.relatedTarget && el.relatedTarget.classList && el.relatedTarget.classList.contains('context-menu');
-        if (this.isChanged && this.changes.includes('content') && !isPasteEvent && !isContext) {
-
+        const isPasteEvent = ev.relatedTarget && ((ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0) || (ev.relatedTarget.classList && ev.relatedTarget.classList.contains('medium-editor-action')));
+        const isContextMenu = this.$refs.blockCntx.viewMenu;
+        let isContext = ev.relatedTarget && ev.relatedTarget.classList && ev.relatedTarget.classList.contains('context-menu');
+        if (this.isChanged && this.changes.includes('content') && !isPasteEvent && !isContextMenu && !isContext) {
           this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
         }
       },
