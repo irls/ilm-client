@@ -254,7 +254,7 @@
         this.$emit('cancelAlign');
       },
       loadBookVoices() {
-        this.all_voices = [];
+        //this.all_voices = [];
         return this.getTTSVoices()
           .then(()=>{
             let allVoices = this.tts_voices;
