@@ -179,7 +179,7 @@
   import Track from 'waveform-playlist/lib/Track';
   import { renderTrack, setState } from '../store/audio/AudioTrackMethods.js';
   import { calculateTrackPeaks } from '../store/audio/CalculateTrackPeaks.js';
-  import { setUpSource, onSourceEnded } from '../store/audio/AudioPlayout.js';
+  import { setUpSource, onSourceEnded, playPlayout } from '../store/audio/AudioPlayout.js';
   import { updateEditor } from '../store/audio/AudioPlaylist.js';
   import dropdown from 'primevue/dropdown';
   import IlmTooltip from '../directives/ilm-tooltip/ilm-tooltip.js';
@@ -270,6 +270,9 @@
         _Playout.prototype.setUpSource = function() {
           //console.log(self.audiosourceEditor.tracks[0].playout)
           setUpSource.call(this, self.playbackRate);
+        }
+        _Playout.prototype.play = function(when, start, duration) {
+          playPlayout.call(this, when, start, duration);
         }
         Track.prototype.setState = function(state) {
           setState.call(this, state);
@@ -742,6 +745,9 @@
                 }
                 Vue.nextTick(() => {
                   this._showSelectionBorders();
+                  if (this.selection.start >= 0 && this.selection.start !== null) {
+                    this.cursorPosition = this.selection.start;
+                  }
                 });
               });
               waveform.addEventListener('mouseleave', (e) => {
@@ -778,7 +784,6 @@
           $('.wf-playlist').off('click', '.annotations-boxes .annotation-box');
           $('.wf-playlist').on('click', '.annotations-boxes .annotation-box', function(e) {
             if (e.target.nodeName === 'SPAN') {
-              console.log('CLICK ON SPAN');
               self.wordSelectionMode = false;
               let index = $('.annotations-boxes .annotation-box').index($(this));
               self.wordSelectionMode = index;
@@ -790,8 +795,6 @@
             self.blockSelectionEmit = true;
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
-            console.log('TARGET', e.target.className, e.target.nodeName, e.target.onclick);
-            console.log('click word', index);
           });
           $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
             if (this.editingLocked) {
@@ -924,7 +927,6 @@
           }
         },
         onEmittedSelect (r_start, r_end) {
-          console.log('on select', r_start, r_end);
           let start = this._round(r_start, 2);
           let end = this._round(r_end, 2);
           let is_single_cursor = end - start == 0;
@@ -2011,14 +2013,11 @@
                   setLeft = this._round(this.selection.start / pixelsPerSecond - 1, 1);
                 }
                 //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                console.log('show borders:', setRight, setLeft);
                 if (setLeft !== null) {
-                  console.log('show borders: left');
                   //this.dragLeft.stop();
                   this.setDragLeftPosition(setLeft);
                 }
                 if (setRight !== null) {
-                  console.log('show borders: right');
                   this.setDragRightPosition(setRight);
                 }
                 this.selectionBordersVisible = true;
@@ -2042,7 +2041,6 @@
             //$('[id="resize-selection-left"]').css('left', setLeft);
             this.dragLeft.element.style.left = position !== null ? `${position}px` : '0px';
             this.dragLeft.element.style.display = position !== null ? 'block' : 'none';
-            console.log('left set', position);
           }
         },
         setDragRightPosition(position) {
@@ -2051,7 +2049,6 @@
             //$('[id="resize-selection-right"]').css('left', setRight);
             this.dragRight.element.style.left = position !== null ? `${position}px` : '0px';
             this.dragRight.element.style.display = position !== null ? 'block' : 'none';
-            console.log('right set', position);
           }
         },
         _scrollToCursor() {
@@ -2828,7 +2825,6 @@
               this.annotations[i].end = al.end;
             }
           });
-          console.log('drag', shiftedIndex);
           let shifted = false;
           //console.log(this.audiosourceEditor.annotationList.annotations[8].start, this.audiosourceEditor.annotationList.annotations[8].end);
           //console.log(this.annotations[8].begin, this.annotations[8].end);
@@ -2949,9 +2945,6 @@
             if (w) {
               w.start = this._round(al.begin, 2);
               w.end = this._round(al.end, 2);
-              if (i === shiftedIndex) {
-                console.log('drag word', w.start, w.end);
-              }
             }
           });
           if (shifted) {
@@ -3001,7 +2994,6 @@
                     (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') ||
                     (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
               Vue.nextTick(() => {
-                console.log('select on drag');
                 this._setWordSelection(this.wordSelectionMode, true, true);
               });
             }
