@@ -4,6 +4,10 @@
       <legend>
         Align text with TTS audio
       </legend>
+      <AlignAudioSpeed 
+        :type=alignWpmSettings.type
+        :wpm=alignWpmSettings.wpm
+        @settingsChanged="alignWpmSettingsChanged"/>
       <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -169,6 +173,7 @@
   import SelectTTSVoice from '../../generic/SelectTTSVoice_el';
   import Slider from 'primevue/slider';
   import lodash from 'lodash';
+  import AlignAudioSpeed from './AlignAudioSpeed.vue';
   //import v_modal from 'vue-js-modal';
   
   //Vue.use(v_modal, { dialog: true });
@@ -196,17 +201,23 @@
         generating_example: null,
         audio_playing_type: null,
         audio_playing_voice: null,
-        playing_generated_example: false
+        playing_generated_example: false,
+        alignWpmSettings: {
+          type: 'custom',
+          wpm: 140
+        }
       }
     },
     components: {
       'select-tts-voice': SelectTTSVoice,
-      'Slider': Slider
+      'Slider': Slider,
+      'AlignAudioSpeed': AlignAudioSpeed
     },
     props: ['is_active'],
     computed: {
-      ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid']),
+      ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid', 'user']),
       ...mapGetters('ttsModule', ['new_voice_settings', 'tts_voices']),
+      ...mapGetters('userActions', ['userAlignWpmSettings']),
       alignProcess: {
         get() {
           let hasBlock = this.aligningBlocks.find(blk => {
@@ -235,6 +246,9 @@
         let sliderHandler = accentElement.querySelector('.p-slider-handle');
         sliderHandler.focus();
       });
+      let alignWpmSettings = this.userAlignWpmSettings('tts');
+      this.alignWpmSettings = lodash.assign(this.alignWpmSettings, alignWpmSettings);
+      this.setUserWpmSettings();
     },
     methods: {
       defaultVoice(type) {
@@ -495,6 +509,14 @@
           this.new_voice.accent_strength = this.new_voice_settings.accent_strength.min;
         }
         this.new_voice.name = '';
+      },
+      alignWpmSettingsChanged(data) {
+        this.alignWpmSettings.type = data.type;
+        this.alignWpmSettings.wpm = data.wpm;
+      },
+      setUserWpmSettings() {
+        this.user.alignWpmSettings = this.user.alignWpmSettings || {};
+        this.user.alignWpmSettings[this.currentBookid] = this.alignWpmSettings;
       },
       ...mapActions(['updateBookMeta']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])

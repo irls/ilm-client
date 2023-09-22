@@ -1,5 +1,6 @@
 import superlogin from 'superlogin-client';
 import axios from 'axios';
+import lodash from 'lodash';
 const store = require('../index');
 
 let actionsInstance;
@@ -63,10 +64,30 @@ superlogin.on('logout', (message) => {
   location.href = '/';
 })
 
+const alignWpmSettingsDefaults = {
+  tts: {
+    type: 'custom',
+    wpm: 140
+  },
+  audio_file: {
+    type: 'original',
+    wpm: 140
+  }
+}
+
 export default {
   namespaced: true,
   state: {},
-  getters: {},
+  getters: {
+    userAlignWpmSettings: (state, getters, rootState) => (voicework) => {
+      let settings = rootState.user.alignWpmSettings || {};
+      settings = settings[rootState.currentBookid] || {};
+      if (settings[voicework]) {
+        return lodash.assign(alignWpmSettingsDefaults[voicework], settings[voicework]);
+      }
+      return alignWpmSettingsDefaults[voicework];
+    }
+  },
   mutations: {},
   actions: {
   

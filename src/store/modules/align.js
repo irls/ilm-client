@@ -42,7 +42,8 @@ export default {
         audiofiles: false,
         realign: true,
         voicework: 'all_with_tts',
-        voices: rootState.currentBookMeta.voices
+        voices: rootState.currentBookMeta.voices,
+        wpm_settings: rootState.user.alignWpmSettings[rootState.currentBookid]
       }, {
         validateStatus: function (status) {
           return status == 200 || status == 504;
