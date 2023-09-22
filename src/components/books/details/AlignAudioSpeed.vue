@@ -52,8 +52,8 @@
   export default {
     data() {
       return {
-        align_wpm_type: 'custom',
-        custom_wpm: 140,
+        align_wpm_type: '',
+        custom_wpm: 0,
         custom_wpm_min: 50,
         custom_wpm_max: 200
       }
@@ -63,10 +63,15 @@
       'Accordion': Accordion,
       'AccordionTab': AccordionTab
     },
-    props: ['type', 'wpm'],
+    props: ['audio_type'],
     mounted() {
-      this.align_wpm_type = this.type;
-      this.custom_wpm = this.wpm;
+      
+      let alignWpmSettings = this.userAlignWpmSettings(this.audio_type);
+      //this.alignWpmSettings = lodash.assign(this.alignWpmSettings, alignWpmSettings);
+      
+      this.align_wpm_type = alignWpmSettings.type;
+      this.custom_wpm = alignWpmSettings.wpm;
+      this.setUserWpmSettings();
     },
     computed: {
       audioSpeedSettingLabel: {
@@ -74,7 +79,9 @@
           return `Audio speed: ${this.align_wpm_type}` + (this.align_wpm_type === 'custom' ? ` ${this.custom_wpm}` + ' wpm' : '');
         },
         cache: false
-      }
+      },
+      ...mapGetters('userActions', ['userAlignWpmSettings']),
+      ...mapGetters(['user', 'currentBookid'])
     },
     methods: {
       inputWPMManually(e) {
@@ -106,10 +113,17 @@
           type: this.align_wpm_type,
           wpm: this.custom_wpm,
         });
+      },
+      setUserWpmSettings() {
+        this.user.alignWpmSettings = this.user.alignWpmSettings || {};
+        this.user.alignWpmSettings[this.currentBookid] = this.user.alignWpmSettings[this.currentBookid] || {};
+        let settings = {};
+        settings[this.audio_type] = {type: this.align_wpm_type, wpm: this.custom_wpm}
+        this.user.alignWpmSettings[this.currentBookid] = lodash.assign(this.user.alignWpmSettings[this.currentBookid], settings);
       }
     },
     watch: {
-      'type': {
+      /*'type': {
         handler(val) {
           this.align_wpm_type = this.type;
         }
@@ -117,6 +131,16 @@
       'wpm': {
         handler(val) {
           this.custom_wpm = this.wpm;
+        }
+      }*/
+      'align_wpm_type': {
+        handler(val) {
+          this.setUserWpmSettings();
+        }
+      },
+      'custom_wpm': {
+        handler(val) {
+          this.setUserWpmSettings();
         }
       }
     }
