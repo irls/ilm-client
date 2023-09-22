@@ -5335,6 +5335,15 @@ export const store = new Vuex.Store({
         state.reqSignals[signalName].abort();
       }
       state.reqSignals[signalName] = new AbortController();
+    },
+    
+    loadSilenceSample({state}) {
+      return axios.get(state.API_URL + 'get_silence_sample', {
+        responseType: 'arraybuffer'
+      })
+        .then(response => {
+          return response.data;
+        })
     }
   }
 })
