@@ -41,7 +41,9 @@ let defBlock = [
   'pause_before',
   'audio_quality',
   'disabled',
-  'pause_after'
+  'pause_after',
+  'calculated_wpm',
+  'aligned_wpm'
 ];
 
 let BlockTypes = {
@@ -366,6 +368,8 @@ class BookBlock {
     this.disabled = init.disabled || false;
     this.audiosrc_config = init.audiosrc_config || {};
     this.pause_after = init.pause_after;
+    this.calculated_wpm = init.calculated_wpm || null;
+    this.aligned_wpm = init.aligned_wpm || null;
   }
 
   clean() {

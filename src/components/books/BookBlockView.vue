@@ -176,7 +176,7 @@
                   </template>
                   <template v-if="block.voicework === 'tts'">
                     <div class="par-ctrl-divider"></div>
-                    <i class="fa fa-volume-up" title="Text to Speech"></i>
+                    <i class="fa fa-volume-up" :title="ttsAudioQualityTitle"></i>
                   </template>
                   <template v-else-if="block.audio_quality && !['illustration', 'hr'].includes(block.type)">
                     <div class="par-ctrl-divider"></div>
@@ -1209,18 +1209,32 @@ Save or discard your changes to continue editing`,
       },
       audioQualityTitle: {
         get() {
+          let title = "";
           switch (this.block.audio_quality) {
             case 'raw':
-              return "Raw";
+              title = "Raw";
               break;
             case 'improved':
-              return "Improved";
+              title = "Improved";
               break;
             case 'mastered':
-              return "Mastered";
+              title = "Mastered";
               break;
           }
-          return "";
+          if (this.block.aligned_wpm) {
+            title+= `, ${this.block.aligned_wpm} wpm`;
+          }
+          return title;
+        },
+        cache: false
+      },
+      ttsAudioQualityTitle: {
+        get() {
+          let title = "Text to Speech";
+          if (this.block.aligned_wpm) {
+            title+= `, ${this.block.aligned_wpm} wpm`;
+          }
+          return title;
         },
         cache: false
       },
