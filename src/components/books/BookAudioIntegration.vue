@@ -4,7 +4,8 @@
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
           <AlignAudioSpeed 
-            :audio_type="'audio_file'" />
+            :audio_type="'audio_file'"
+            :is_catalog_active="activeTabIndex === 0 && isActive" />
           <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
           <div class="block-selection-info">
             <template v-if="!blockSelection.start._id">
@@ -123,7 +124,7 @@
       </AccordionTab>
       <AccordionTab :header="'TTS audio catalogue'" v-bind:key="'tts-audio-catalogue'" ref="panelTTS">
         <ElevenLabsTTS
-          :is_active="activeTabIndex === 1"
+          :is_active="activeTabIndex === 1 && isActive"
           @alignTts="alignTts"
           @cancelAlign="cancelAlign" />
         <!-- <div class="block-selection-info">

@@ -1,6 +1,6 @@
 <template>
   <div class="audio-speed-data">
-    <Accordion>
+    <Accordion :activeIndex="accordionContainerExpanded">
       <AccordionTab :header="audioSpeedSettingLabel">
         <div class="audio-speed-type">
           <div class="audio-speed-option">
@@ -20,7 +20,7 @@
               :min="custom_wpm_min" 
               :max="custom_wpm_max" 
               :step="1"
-              v-on:change="settingsChanged" />
+              v-on:change="settingsChangedDebounced" />
           </div>
           <div class="custom-wpm-controls">
             <button class="minus" :disabled="custom_wpm <= custom_wpm_min" v-on:click="decreaseCustomWPM"></button>
@@ -55,7 +55,8 @@
         align_wpm_type: '',
         custom_wpm: 0,
         custom_wpm_min: 50,
-        custom_wpm_max: 200
+        custom_wpm_max: 200,
+        accordionContainerExpanded: 1
       }
     },
     components: {
@@ -63,15 +64,10 @@
       'Accordion': Accordion,
       'AccordionTab': AccordionTab
     },
-    props: ['audio_type'],
+    props: ['audio_type', 'is_catalog_active'],
     mounted() {
-      
-      let alignWpmSettings = this.userAlignWpmSettings(this.audio_type);
-      //this.alignWpmSettings = lodash.assign(this.alignWpmSettings, alignWpmSettings);
-      
-      this.align_wpm_type = alignWpmSettings.type;
-      this.custom_wpm = alignWpmSettings.wpm;
-      this.setUserWpmSettings();
+      this.loadUserWpmSettings();
+      this.setUserWpmSettings(false);
     },
     computed: {
       audioSpeedSettingLabel: {
@@ -114,12 +110,29 @@
           wpm: this.custom_wpm,
         });
       },
-      setUserWpmSettings() {
+      settingsChangedDebounced: lodash.debounce(function(wpm) {
+        this.settingsChanged();
+      }, 300),
+      setUserWpmSettings(save = true) {
         this.user.alignWpmSettings = this.user.alignWpmSettings || {};
         this.user.alignWpmSettings[this.currentBookid] = this.user.alignWpmSettings[this.currentBookid] || {};
         let settings = {};
-        settings[this.audio_type] = {type: this.align_wpm_type, wpm: this.custom_wpm}
+        settings[this.audio_type] = {type: this.align_wpm_type, wpm: this.custom_wpm};
+        /*console.log(`${JSON.stringify(settings)};
+${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
+        let differentSetting = !lodash.isEqual(this.user.alignWpmSettings[this.currentBookid][this.audio_type], settings[this.audio_type]);
         this.user.alignWpmSettings[this.currentBookid] = lodash.assign(this.user.alignWpmSettings[this.currentBookid], settings);
+        if (save && differentSetting) {
+          console.log('SAVE SETTINGS');
+        }
+      },
+      loadUserWpmSettings() {
+
+        let alignWpmSettings = this.userAlignWpmSettings(this.audio_type);
+        //this.alignWpmSettings = lodash.assign(this.alignWpmSettings, alignWpmSettings);
+
+        this.align_wpm_type = alignWpmSettings.type;
+        this.custom_wpm = alignWpmSettings.wpm;
       }
     },
     watch: {
@@ -134,13 +147,36 @@
         }
       }*/
       'align_wpm_type': {
-        handler(val) {
+        handler(val, oldVal) {
+          if (oldVal) {
+            if (this.align_wpm_type === 'original') {// to set slider to position
+              this.custom_wpm = 0;
+            } else {
+              this.custom_wpm = 140;
+            }
+          }
           this.setUserWpmSettings();
         }
       },
       'custom_wpm': {
         handler(val) {
-          this.setUserWpmSettings();
+          if (this.align_wpm_type === 'custom') {
+            this.setUserWpmSettings();
+          }
+        }
+      },
+      'currentBookid': {
+        handler(val) {
+          if (val) {
+            this.loadUserWpmSettings();
+          }
+        }
+      },
+      'is_catalog_active': {
+        handler(val) {
+          if (!val) {
+            this.accordionContainerExpanded *= -1;
+          }
         }
       }
     }

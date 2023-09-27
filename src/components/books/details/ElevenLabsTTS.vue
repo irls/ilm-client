@@ -5,7 +5,8 @@
         Align text with TTS audio
       </legend>
       <AlignAudioSpeed 
-        :audio_type="'tts'"/>
+        :audio_type="'tts'"
+        :is_catalog_active="is_active"/>
       <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>

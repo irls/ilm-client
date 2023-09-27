@@ -83,9 +83,12 @@ export default {
       let settings = rootState.user.alignWpmSettings || {};
       settings = settings[rootState.currentBookid] || {};
       if (settings[voicework]) {
-        return lodash.assign(alignWpmSettingsDefaults[voicework], settings[voicework]);
+        if (settings[voicework].wpm === 0) {// zero means assigned original
+          delete settings[voicework].wpm;
+        }
+        return lodash.assign(lodash.cloneDeep(alignWpmSettingsDefaults[voicework]), settings[voicework]);
       }
-      return alignWpmSettingsDefaults[voicework];
+      return lodash.cloneDeep(alignWpmSettingsDefaults[voicework]);
     }
   },
   mutations: {},
