@@ -168,18 +168,31 @@
                 </tr>
 
                 <tr class='category'>
-                  <td>Category</td>
+                  <td>Reader category</td>
                   <td>
                     <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="debounceUpdate('category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
-                      <template v-for="(data, index) in subjectCategories">
-                        <optgroup :label="data.group">
-                          <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
-                        </optgroup>
-                      </template>
+                      <!--<template v-for="(data, index) in subjectCategories">-->
+                        <!--<optgroup :label="data.group">-->
+                          <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
+                        <!--</optgroup>-->
+                      <!--</template>-->
                     </select>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category for Reader</span>
                   </td>
-                       </tr>
+                </tr>
+                <tr class='category'>
+                <td>Ocean category</td>
+                  <td>
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.ocean.category'] }" class="form-control" v-model='currentBook.alt_meta.ocean.category' @change="debounceUpdate('alt_meta.ocean.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                      <!--<template v-for="(data, index) in subjectCategories">-->
+                        <!--<optgroup :label="data.group">-->
+                          <option v-for="(value, ind) in subjectCategories.ocean" :value="value">{{ value }}</option>
+                        <!--</optgroup>-->
+                      <!--</template>-->
+                    </select>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.ocean.category']" class="validation-error">Define Category for Ocean</span>
+                  </td>
+                </tr>
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
@@ -1247,6 +1260,8 @@ export default {
           this.requiredFields[this.currentBookMeta.bookid]['category'] = true;
         }
 
+        //this.requiredFields[this.currentBookMeta.bookid]['alt_meta.ocean.category'] = true;
+
         if (this.currentBookMeta.title == ''){
           this.requiredFields[this.currentBookMeta.bookid]['title'] = true;
         }
@@ -1437,7 +1452,7 @@ export default {
       }
 
       let keys = key.split('.');
-      if (keys.length > 1) {
+      if (keys.length == 2) {
         if (keys[0] && ['styles'].includes(keys[0])) {
           this.currentBook[keys[0]][keys[1]] = value;
         }
@@ -1470,8 +1485,15 @@ export default {
         }
 
         let keys = key.split('.');
-        key = keys[0];
-        if (keys.length > 1) {
+
+        if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+          acc[keys[0]] = {};
+          acc[keys[0]][keys[1]] = {};
+          acc[keys[0]][keys[1]][keys[2]] = value;
+          return acc;
+        }
+        if (keys.length == 2) {
+          key = keys[0];
           const prevVal = this.currentBook[keys[0]];
           prevVal[keys[1]] = value;
           value = prevVal;
@@ -2065,12 +2087,12 @@ export default {
         let coupletInfo = {};
         this.$modal.show(CoupletWarningPopup, {
           coupletInfo: coupletInfo
-        }, 
+        },
         {
           height: 'auto',
           width: '440px',
           clickToClose: false
-        }, 
+        },
         {
           'closed': (e) => {
             if (coupletInfo && coupletInfo.success) {
@@ -2658,6 +2680,10 @@ select.text-danger#categorySelection, input.text-danger{
 
   .tab-container[role="tabpanel"] {
     padding-top: 3px;
+
+    fieldset {
+      width: 99%;
+    }
   }
 
   .block-style-tabs {
