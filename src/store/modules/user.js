@@ -71,7 +71,7 @@ const alignWpmSettingsDefaults = {
   },
   audio_file: {
     type: 'original',
-    wpm: 140
+    wpm: 0
   }
 }
 
@@ -83,10 +83,10 @@ export default {
       let settings = rootState.user.alignWpmSettings || {};
       settings = settings[rootState.currentBookid] || {};
       if (settings[voicework]) {
-        if (settings[voicework].wpm === 0) {// zero means assigned original
-          delete settings[voicework].wpm;
-        }
-        return lodash.assign(lodash.cloneDeep(alignWpmSettingsDefaults[voicework]), settings[voicework]);
+        //if (settings[voicework].wpm === 0) {// zero means assigned original
+          //delete settings[voicework].wpm;
+        //}
+        return lodash.assign(lodash.cloneDeep(alignWpmSettingsDefaults[voicework]), lodash.cloneDeep(settings[voicework]));
       }
       return lodash.cloneDeep(alignWpmSettingsDefaults[voicework]);
     }

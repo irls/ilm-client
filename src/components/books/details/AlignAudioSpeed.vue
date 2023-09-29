@@ -1,5 +1,5 @@
 <template>
-  <div class="audio-speed-data">
+  <div class="audio-speed-data" v-if="isComponentEnabled">
     <Accordion :activeIndex="accordionContainerExpanded">
       <AccordionTab :header="audioSpeedSettingLabel">
         <div class="audio-speed-type">
@@ -49,6 +49,7 @@
   import lodash from 'lodash';
   import Accordion from 'primevue/accordion';
   import AccordionTab from 'primevue/accordiontab';
+  import access from '../../../mixins/access';
   export default {
     data() {
       return {
@@ -65,6 +66,7 @@
       'AccordionTab': AccordionTab
     },
     props: ['audio_type', 'is_catalog_active'],
+    mixins: [access],
     mounted() {
       this.loadUserWpmSettings();
       this.setUserWpmSettings(false);
@@ -76,8 +78,14 @@
         },
         cache: false
       },
+      isComponentEnabled: {
+        get() {
+          return this.adminOrLibrarian || this._is('editor', true);
+        },
+        cache: false
+      },
       ...mapGetters('userActions', ['userAlignWpmSettings']),
-      ...mapGetters(['user', 'currentBookid'])
+      ...mapGetters(['user', 'currentBookid', 'adminOrLibrarian'])
     },
     methods: {
       inputWPMManually(e) {
@@ -112,6 +120,7 @@
       },
       settingsChangedDebounced: lodash.debounce(function(wpm) {
         this.settingsChanged();
+        this.setUserWpmSettings();
       }, 300),
       setUserWpmSettings(save = true) {
         this.user.alignWpmSettings = this.user.alignWpmSettings || {};
@@ -123,7 +132,7 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
         let differentSetting = !lodash.isEqual(this.user.alignWpmSettings[this.currentBookid][this.audio_type], settings[this.audio_type]);
         this.user.alignWpmSettings[this.currentBookid] = lodash.assign(this.user.alignWpmSettings[this.currentBookid], settings);
         if (save && differentSetting) {
-          console.log('SAVE SETTINGS');
+          this.updateUser([this.user._id, {alignWpmSettings: this.user.alignWpmSettings}]);
         }
       },
       loadUserWpmSettings() {
@@ -133,7 +142,8 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
 
         this.align_wpm_type = alignWpmSettings.type;
         this.custom_wpm = alignWpmSettings.wpm;
-      }
+      },
+      ...mapActions('userActions', ['updateUser'])
     },
     watch: {
       /*'type': {
@@ -161,7 +171,8 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
       'custom_wpm': {
         handler(val) {
           if (this.align_wpm_type === 'custom') {
-            this.setUserWpmSettings();
+            //this.setUserWpmSettings();
+            this.settingsChangedDebounced();
           }
         }
       },
