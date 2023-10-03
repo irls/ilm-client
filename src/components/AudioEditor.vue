@@ -1337,66 +1337,77 @@
           let original_buffer = this.audiosourceEditor.activeTrack.buffer;
               
           let fadeTime = 0.02;
-
-          let fadeOut = new Float32Array((fadeTime) * original_buffer.sampleRate);
-
-          fadeOut.fill(SILENCE_VALUE);
-          let fadeOutStart = time - fadeTime;
-          let fadeOutEnd = time;
-          let range = this.cutRangeAction(fadeOutStart, fadeOutEnd);
-
+          
+          let fadeOutStart = 0;
+          let fadeOutEnd = 0;
           let fadeLength = fadeTime * original_buffer.sampleRate;
           let fadePercent = 30;
           let removePercent = (100 - fadePercent);
-          // Fade out from original volume to fadePercent starting from selection start till fadeLength
-          for (let i = 0; i <= fadeLength; ++i) {
-            if (range[i]) {
-              let currentPercent = i * removePercent / fadeLength;
-              let currentDelta = currentPercent * Math.abs(range[i]) / 100;
-              let currentValue;
-              if (range[i] < 0) {
-                currentValue = range[i] + currentDelta;
-              } else if (range[i] > 0) {
-                currentValue = range[i] - currentDelta;
-              } else {
-                currentValue = 0;
+          let range = [];
+          
+          if (time >= fadeTime) {
+
+            let fadeOut = new Float32Array((fadeTime) * original_buffer.sampleRate);
+
+            fadeOut.fill(SILENCE_VALUE);
+            fadeOutStart = time - fadeTime;
+            fadeOutEnd = time;
+            range = this.cutRangeAction(fadeOutStart, fadeOutEnd);
+            
+            // Fade out from original volume to fadePercent starting from selection start till fadeLength
+            for (let i = 0; i <= fadeLength; ++i) {
+              if (range[i]) {
+                let currentPercent = i * removePercent / fadeLength;
+                let currentDelta = currentPercent * Math.abs(range[i]) / 100;
+                let currentValue;
+                if (range[i] < 0) {
+                  currentValue = range[i] + currentDelta;
+                } else if (range[i] > 0) {
+                  currentValue = range[i] - currentDelta;
+                } else {
+                  currentValue = 0;
+                }
+                fadeOut[i] = currentValue;
               }
-              fadeOut[i] = currentValue;
             }
+            this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
           }
-          this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
           // Fade in from fadePercent to original volume at the end of selection
           //let fadeInStart = range.length - fadeLength;
-          
-          let fadeIn = new Float32Array((fadeTime) * original_buffer.sampleRate);
-
-          fadeIn.fill(SILENCE_VALUE);
           let fadeInStart = time + this.silenceLength;
           let fadeInEnd = time + this.silenceLength + fadeTime;
-          let rangeEnd = this.cutRangeAction(fadeInStart, fadeInEnd);
+          let rangeEnd = [];
           
-          for (let i = 0; i <= fadeLength; ++i) {
-            //console.log(i, fadeInStart, range.length)
-            //console.log(range[i]);
-            let currentPercent = i * removePercent / fadeLength;
-            //console.log(currentPercent);
-            let rangePos = rangeEnd.length - 1 - i;
-            if (rangeEnd[rangePos]) {
-              let currentDelta = currentPercent * Math.abs(rangeEnd[rangePos]) / 100;
-              let currentValue;
-              if (rangeEnd[rangePos] < 0) {
-                currentValue = rangeEnd[rangePos] + currentDelta;
-              } else if (rangeEnd[rangePos] > 0) {
-                currentValue = rangeEnd[rangePos] - currentDelta;
-              } else {
-                currentValue = 0;
+          if (time < this.audioDuration - fadeTime) {
+          
+            let fadeIn = new Float32Array((fadeTime) * original_buffer.sampleRate);
+
+            fadeIn.fill(SILENCE_VALUE);
+            rangeEnd = this.cutRangeAction(fadeInStart, fadeInEnd);
+
+            for (let i = 0; i <= fadeLength; ++i) {
+              //console.log(i, fadeInStart, range.length)
+              //console.log(range[i]);
+              let currentPercent = i * removePercent / fadeLength;
+              //console.log(currentPercent);
+              let rangePos = rangeEnd.length - 1 - i;
+              if (rangeEnd[rangePos]) {
+                let currentDelta = currentPercent * Math.abs(rangeEnd[rangePos]) / 100;
+                let currentValue;
+                if (rangeEnd[rangePos] < 0) {
+                  currentValue = rangeEnd[rangePos] + currentDelta;
+                } else if (rangeEnd[rangePos] > 0) {
+                  currentValue = rangeEnd[rangePos] - currentDelta;
+                } else {
+                  currentValue = 0;
+                }
+                fadeIn[rangePos] = currentValue;
               }
-              fadeIn[rangePos] = currentValue;
+              //console.log('===========', silence[i]);
             }
-            //console.log('===========', silence[i]);
+
+            this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
           }
-          
-          this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
 
           // Fill middle part with fadePercent
           /*for (let i = fadeLength + 1; i < fadeInStart; ++i) {
@@ -1431,7 +1442,7 @@
           });
           this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
-          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength, fadeTime]);
           //this.clearSelection();
           this.isModified = true;
           this.clearSelection();
@@ -2377,11 +2388,15 @@
                   this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
                   break;
                 case 'insert_silence':
-                  this.cutRangeAction(record.range[1].start, record.range[1].end);
-                  this.insertRangeAction(record.range[1].start, record.range[1].range, record.range[1].length);
+                  if (record.range[1].range && record.range[1].range.length) {
+                    this.cutRangeAction(record.range[1].start, record.range[1].end);
+                    this.insertRangeAction(record.range[1].start, record.range[1].range, record.range[1].length);
+                  }
                   this.cutRangeAction(record.selection.start, record.selection.end);
-                  this.cutRangeAction(record.range[0].start, record.range[0].end);
-                  this.insertRangeAction(record.range[0].start, record.range[0].range, record.range[0].length);
+                  if (record.range[0].range && record.range[0].range.length) {
+                    this.cutRangeAction(record.range[0].start, record.range[0].end);
+                    this.insertRangeAction(record.range[0].start, record.range[0].range, record.range[0].length);
+                  }
                   break;
                 case 'erase':
                   this.cutRangeAction(record.selection.start, record.selection.end);
@@ -3499,9 +3514,9 @@ Revert to original block audio?`,
                 if (response && response.byteLength > 0) {
                   return this.audiosourceEditor.ac.decodeAudioData(response)
                     .then(silenceBuffer => {
-                      console.log(silenceBuffer);
+                      //console.log(silenceBuffer);
                       this.remoteSilenceData = silenceBuffer.getChannelData(0);
-                      console.log(this.remoteSilenceData);
+                      //console.log(this.remoteSilenceData);
                       this.silencePeaks.push(Math.min(...this.remoteSilenceData));
                       this.silencePeaks.push(Math.max(...this.remoteSilenceData));
                       return resolve();
