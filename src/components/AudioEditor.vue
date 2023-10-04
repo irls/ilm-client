@@ -1346,7 +1346,7 @@
           let fadePercent = 30;
           let removePercent = (100 - fadePercent);
           let range = [];
-          let maxRemote = Math.max(...this.remoteSilenceData);
+          let maxRemote = this.remoteSilenceData.length > 0 ? Math.max(...this.remoteSilenceData) : 0;
           
           if (time >= fadeTime) {
 
@@ -1359,7 +1359,9 @@
             let maxRange = Math.max(...range);
             
             if (maxRange > maxRemote) {
-              removePercent = 100 - maxRemote * 100 / maxRange;
+              if (this.remoteSilenceData.length > 0) {
+                removePercent = 100 - maxRemote * 100 / maxRange;
+              }
               // Fade out from original volume to fadePercent starting from selection start till fadeLength
               for (let i = 0; i <= fadeLength; ++i) {
                 if (range[i]) {
@@ -1395,7 +1397,9 @@
             let maxRange = Math.max(...rangeEnd);
             
             if (maxRange > maxRemote) {
-              removePercent = 100 - maxRemote * 100 / maxRange;
+              if (this.remoteSilenceData.length > 0) {
+                removePercent = 100 - maxRemote * 100 / maxRange;
+              }
               for (let i = 0; i <= fadeLength; ++i) {
                 //console.log(i, fadeInStart, range.length)
                 //console.log(range[i]);
