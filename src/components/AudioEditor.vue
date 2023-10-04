@@ -1346,6 +1346,7 @@
           let fadePercent = 30;
           let removePercent = (100 - fadePercent);
           let range = [];
+          let maxRemote = Math.max(...this.remoteSilenceData);
           
           if (time >= fadeTime) {
 
@@ -1355,24 +1356,28 @@
             fadeOutStart = time - fadeTime;
             fadeOutEnd = time;
             range = this.cutRangeAction(fadeOutStart, fadeOutEnd);
+            let maxRange = Math.max(...range);
             
-            // Fade out from original volume to fadePercent starting from selection start till fadeLength
-            for (let i = 0; i <= fadeLength; ++i) {
-              if (range[i]) {
-                let currentPercent = i * removePercent / fadeLength;
-                let currentDelta = currentPercent * Math.abs(range[i]) / 100;
-                let currentValue;
-                if (range[i] < 0) {
-                  currentValue = range[i] + currentDelta;
-                } else if (range[i] > 0) {
-                  currentValue = range[i] - currentDelta;
-                } else {
-                  currentValue = 0;
+            if (maxRange > maxRemote) {
+              removePercent = 100 - maxRemote * 100 / maxRange;
+              // Fade out from original volume to fadePercent starting from selection start till fadeLength
+              for (let i = 0; i <= fadeLength; ++i) {
+                if (range[i]) {
+                  let currentPercent = i * removePercent / fadeLength;
+                  let currentDelta = currentPercent * Math.abs(range[i]) / 100;
+                  let currentValue;
+                  if (range[i] < 0) {
+                    currentValue = range[i] + currentDelta;
+                  } else if (range[i] > 0) {
+                    currentValue = range[i] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  fadeOut[i] = currentValue;
                 }
-                fadeOut[i] = currentValue;
               }
+              this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
             }
-            this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
           }
           // Fade in from fadePercent to original volume at the end of selection
           //let fadeInStart = range.length - fadeLength;
@@ -1386,29 +1391,34 @@
 
             fadeIn.fill(SILENCE_VALUE);
             rangeEnd = this.cutRangeAction(fadeInStart, fadeInEnd);
-
-            for (let i = 0; i <= fadeLength; ++i) {
-              //console.log(i, fadeInStart, range.length)
-              //console.log(range[i]);
-              let currentPercent = i * removePercent / fadeLength;
-              //console.log(currentPercent);
-              let rangePos = rangeEnd.length - 1 - i;
-              if (rangeEnd[rangePos]) {
-                let currentDelta = currentPercent * Math.abs(rangeEnd[rangePos]) / 100;
-                let currentValue;
-                if (rangeEnd[rangePos] < 0) {
-                  currentValue = rangeEnd[rangePos] + currentDelta;
-                } else if (rangeEnd[rangePos] > 0) {
-                  currentValue = rangeEnd[rangePos] - currentDelta;
-                } else {
-                  currentValue = 0;
+            
+            let maxRange = Math.max(...rangeEnd);
+            
+            if (maxRange > maxRemote) {
+              removePercent = 100 - maxRemote * 100 / maxRange;
+              for (let i = 0; i <= fadeLength; ++i) {
+                //console.log(i, fadeInStart, range.length)
+                //console.log(range[i]);
+                let currentPercent = i * removePercent / fadeLength;
+                //console.log(currentPercent);
+                let rangePos = rangeEnd.length - 1 - i;
+                if (rangeEnd[rangePos]) {
+                  let currentDelta = currentPercent * Math.abs(rangeEnd[rangePos]) / 100;
+                  let currentValue;
+                  if (rangeEnd[rangePos] < 0) {
+                    currentValue = rangeEnd[rangePos] + currentDelta;
+                  } else if (rangeEnd[rangePos] > 0) {
+                    currentValue = rangeEnd[rangePos] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  fadeIn[rangePos] = currentValue;
                 }
-                fadeIn[rangePos] = currentValue;
+                //console.log('===========', silence[i]);
               }
-              //console.log('===========', silence[i]);
-            }
 
-            this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
+              this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
+            }
           }
 
           // Fill middle part with fadePercent
