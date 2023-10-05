@@ -69,10 +69,10 @@ const alignWpmSettingsDefaults = {
     type: 'custom',
     wpm: 140
   },
-  audio_file: {
+  /*audio_file: {
     type: 'original',
     wpm: 0
-  }
+  }*/
 }
 
 export default {

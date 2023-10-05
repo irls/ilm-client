@@ -3,9 +3,9 @@
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
-          <AlignAudioSpeed 
+          <!-- <AlignAudioSpeed 
             :audio_type="'audio_file'"
-            :is_catalog_active="activeTabIndex === 0 && isActive" />
+            :is_catalog_active="activeTabIndex === 0 && isActive" /> -->
           <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
           <div class="block-selection-info">
             <template v-if="!blockSelection.start._id">
@@ -212,7 +212,7 @@
   import ReplaceAudio from './details/ReplaceAudio.vue';
   import AudioImport from '../audio/AudioImport';
   import ElevenLabsTTS from './details/ElevenLabsTTS.vue';
-  import AlignAudioSpeed from './details/AlignAudioSpeed.vue';
+  //import AlignAudioSpeed from './details/AlignAudioSpeed.vue';
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
   import superlogin from 'superlogin-client';
@@ -237,7 +237,7 @@
       draggable,
       ReplaceAudio,
       ElevenLabsTTS,
-      AlignAudioSpeed
+      //AlignAudioSpeed
     },
     props: {
       'isActive': Boolean
