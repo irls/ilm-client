@@ -139,18 +139,29 @@
     <fieldset>
       <table class="properties">
         <tr>
+          <td>Reader category</td>
           <td>
-            Category
-          </td>
-          <td>
-            <select :class="['form-control', {'-has-error': currentCollection.validationErrors.category}]" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
-              <template v-for="(data, index) in bookCategories">
-                <optgroup :label="data.group">
-                  <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
-                </optgroup>
-              </template>
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['alt_meta.reader.category']}]" v-model="collection.alt_meta.reader.category" v-on:change="update('alt_meta.reader.category', $event)" :disabled="!allowCollectionsEdit">
+              <!--<template v-for="(data, index) in bookCategories">-->
+                <!--<optgroup :label="data.group">-->
+                  <option v-for="(value, ind) in bookCategories.reader" :value="value">{{ value }}</option>
+                <!--</optgroup>-->
+              <!--</template>-->
             </select>
-            <span class="validation-error" v-if="currentCollection.validationErrors.category">{{ currentCollection.validationErrors['category'] }}</span>
+            <span class="validation-error" v-if="currentCollection.validationErrors['alt_meta.reader.category']">{{ currentCollection.validationErrors['alt_meta.reader.category'] }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td>Ocean category</td>
+          <td>
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['alt_meta.ocean.category']}]" v-model="collection.alt_meta.ocean.category" v-on:change="update('alt_meta.ocean.category', $event)" :disabled="!allowCollectionsEdit">
+              <!--<template v-for="(data, index) in bookCategories">-->
+                <!--<optgroup :label="data.group">-->
+                  <option v-for="(value, ind) in bookCategories.ocean" :value="value">{{ value }}</option>
+                <!--</optgroup>-->
+              <!--</template>-->
+            </select>
+            <span class="validation-error" v-if="currentCollection.validationErrors['alt_meta.ocean.category']">{{ currentCollection.validationErrors['alt_meta.ocean.category'] }}</span>
           </td>
         </tr>
         <tr>
@@ -229,7 +240,7 @@
       name: 'CollectionMeta',
       data() {
         return {
-          'collection': {},
+          collection: {alt_meta:{ reader:{category: null}, ocean:{category: null}}},
           showCollectionCoverModal: false,
           collectionImage: '',
           showUnknownAuthor: false,
@@ -257,6 +268,7 @@
           } else {
             this.collection = {};
           }
+          //console.log(`this.currentCollection::: `,this.currentCollection);
           this.resetCollectionImage();
           if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
             this.$refs.collectionDescription.setValue(this.collection.description);
@@ -284,7 +296,14 @@
             return false;
           }
           let update = {};
-          update[field] = value;
+          let keys = field.split('.');
+          if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+            update[keys[0]] = {};
+            update[keys[0]][keys[1]] = {};
+            update[keys[0]][keys[1]][keys[2]] = value;
+          } else {
+            update[field] = value;
+          }
           return this.updateCollection(update)
           .then(() => {
             this.currentCollection[field] = value;
