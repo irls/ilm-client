@@ -1231,6 +1231,10 @@ Save or discard your changes to continue editing`,
       ttsAudioQualityTitle: {
         get() {
           let title = "Text to Speech";
+          if (!this.block.tts_voice_name && this.block.tts_voice_data && this.block.tts_voice_data.name) {
+            this.block.tts_voice_name = this.block.tts_voice_data.name;
+            this.block.tts_voice_wpm = this.block.tts_voice_data.wpm;
+          }
           if (this.block.tts_voice_name) {
             title+= `, ${this.block.tts_voice_name}`;
           }

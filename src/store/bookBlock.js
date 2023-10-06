@@ -374,10 +374,10 @@ class BookBlock {
     this.tts_voice_name = init.tts_voice_name || '';
     this.tts_voice_wpm = init.tts_voice_wpm || null;
     this.tts_voice_data = init.tts_voice_data || {};
-    if (!this.tts_voice_name && this.tts_voice_data) {
+    /*if (!this.tts_voice_name && this.tts_voice_data) {
       this.tts_voice_name = this.tts_voice_data.name;
       this.tts_voice_wpm = this.tts_voice_data.wpm;
-    }
+    }*/
   }
 
   clean() {
