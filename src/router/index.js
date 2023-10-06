@@ -18,6 +18,7 @@ import Collections from '../components/Collections'
 import CollectionsGrid from '../components/collections/CollectionsGrid';
 import Settings from '../components/Settings'
 import TestAudioConvert from '../components/audio/TestAudioConvert';
+import CalculateWords from '../components/audio/CalculateWords';
 
 
 Vue.use(Router)
@@ -147,6 +148,10 @@ export default new Router({
     {
       path: '/test_audio_convert',
       component: TestAudioConvert
+    },
+    {
+      path: '/calculate_words',
+      component: CalculateWords
     },
     { path: '*', redirect: '/books' }
   ]
