@@ -13,14 +13,16 @@
           <td>Average word length:</td>
           <td>{{totalCounters.averageLength}}</td>
         </tr>
-        <tr>
-          <td>Audio length:</td>
-          <td>{{totalCounters.audioInfo.duration}}</td>
-        </tr>
-        <tr>
-          <td>WPM:</td>
-          <td>{{totalCounters.wpm}}</td>
-        </tr>
+        <template v-if="totalCounters.audioInfo.duration">
+          <tr>
+            <td>Audio length:</td>
+            <td>{{totalCounters.audioInfo.duration}}&nbsp;({{totalCounters.audioInfo.duration_sec}}&nbsp;sec.)</td>
+          </tr>
+          <tr>
+            <td>WPM:</td>
+            <td>{{totalCounters.wpm}}</td>
+          </tr>
+        </template>
       </table>
     </div>
     <div>
@@ -31,7 +33,7 @@
       {{filename}}
     </div>
     <div v-if="!isUploading">
-      <button class="btn btn-primary" v-on:click="submit" :disabled="!filename || !text">Submit</button>
+      <button class="btn btn-primary" v-on:click="submit" :disabled="!text">Submit</button>
     </div>
   </div>
 </template>
@@ -53,7 +55,9 @@
         //console.log(this.text, this.file);
         this.totalCounters = {};
         let formData = new FormData();
-        formData.append('audiofile', this.file, this.filename);
+        if (this.filename) {
+          formData.append('audiofile', this.file, this.filename);
+        }
         formData.append(`text`, this.text);
         this.isUploading = true;
         let api = this.$store.state.auth.getHttp();
