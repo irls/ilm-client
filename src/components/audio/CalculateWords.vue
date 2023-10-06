@@ -51,6 +51,7 @@
     methods: {
       submit() {
         //console.log(this.text, this.file);
+        this.totalCounters = {};
         let formData = new FormData();
         formData.append('audiofile', this.file, this.filename);
         formData.append(`text`, this.text);
