@@ -140,7 +140,7 @@
       <table class="properties">
         <tr>
           <td>Reader category</td>
-          <td>
+          <td class="category-wrapper">
             <select :class="['form-control', {'-has-error': currentCollection.validationErrors['alt_meta.reader.category']}]" v-model="collection.alt_meta.reader.category" v-on:change="update('alt_meta.reader.category', $event)" :disabled="!allowCollectionsEdit">
               <!--<template v-for="(data, index) in bookCategories">-->
                 <!--<optgroup :label="data.group">-->
@@ -148,12 +148,15 @@
                 <!--</optgroup>-->
               <!--</template>-->
             </select>
+            <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+              v-if="collection.alt_meta.reader.category"
+              @click="collection.alt_meta.reader.category = null; update('alt_meta.reader.category', {target:{value:''}})"></i>
             <span class="validation-error" v-if="currentCollection.validationErrors['alt_meta.reader.category']">{{ currentCollection.validationErrors['alt_meta.reader.category'] }}</span>
           </td>
         </tr>
         <tr>
           <td>Ocean category</td>
-          <td>
+          <td class="category-wrapper">
             <select :class="['form-control', {'-has-error': currentCollection.validationErrors['alt_meta.ocean.category']}]" v-model="collection.alt_meta.ocean.category" v-on:change="update('alt_meta.ocean.category', $event)" :disabled="!allowCollectionsEdit">
               <!--<template v-for="(data, index) in bookCategories">-->
                 <!--<optgroup :label="data.group">-->
@@ -161,6 +164,9 @@
                 <!--</optgroup>-->
               <!--</template>-->
             </select>
+            <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+              v-if="collection.alt_meta.ocean.category"
+              @click="collection.alt_meta.ocean.category = null; update('alt_meta.ocean.category', {target:{value:''}})"></i>
             <span class="validation-error" v-if="currentCollection.validationErrors['alt_meta.ocean.category']">{{ currentCollection.validationErrors['alt_meta.ocean.category'] }}</span>
           </td>
         </tr>
@@ -300,7 +306,7 @@
           if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
             update[keys[0]] = {};
             update[keys[0]][keys[1]] = {};
-            update[keys[0]][keys[1]][keys[2]] = value;
+            update[keys[0]][keys[1]][keys[2]] = (value !== '' ? value : null);
           } else {
             update[field] = value;
           }
@@ -493,6 +499,16 @@
     border-radius: 10px;
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
+  }
+
+  td.category-wrapper {
+    position: relative;
+
+    .ico-clear-filter {
+      position: absolute;
+      top: 6px;
+      right: 29px;
+    }
   }
 
   /* Properties editor area */

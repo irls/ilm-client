@@ -169,7 +169,7 @@
 
                 <tr class='category'>
                   <td>Reader category</td>
-                  <td>
+                  <td class="category-wrapper">
                     <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="debounceUpdate('category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
@@ -177,12 +177,15 @@
                         <!--</optgroup>-->
                       <!--</template>-->
                     </select>
+                    <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+                      v-if="currentBookCategory"
+                      @click="currentBook.category = ''; debounceUpdate('category', '', $event)"></i>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category for Reader</span>
                   </td>
                 </tr>
                 <tr class='category'>
                 <td>Ocean category</td>
-                  <td>
+                  <td class="category-wrapper">
                     <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.ocean.category'] }" class="form-control" v-model='currentBook.alt_meta.ocean.category' @change="debounceUpdate('alt_meta.ocean.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
@@ -190,6 +193,9 @@
                         <!--</optgroup>-->
                       <!--</template>-->
                     </select>
+                    <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+                      v-if="currentBook.alt_meta.ocean.category"
+                      @click="currentBook.alt_meta.ocean.category = null; debounceUpdate('alt_meta.ocean.category', '', $event)"></i>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.ocean.category']" class="validation-error">Define Category for Ocean</span>
                   </td>
                 </tr>
@@ -1489,7 +1495,7 @@ export default {
         if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
           acc[keys[0]] = {};
           acc[keys[0]][keys[1]] = {};
-          acc[keys[0]][keys[1]][keys[2]] = value;
+          acc[keys[0]][keys[1]][keys[2]] = (value !== '' ? value : null);
           return acc;
         }
         if (keys.length == 2) {
@@ -2912,6 +2918,16 @@ select.text-danger#categorySelection, input.text-danger{
     color: #fff;
   }
 
+  td.category-wrapper {
+    position: relative;
+
+    .ico-clear-filter {
+      position: absolute;
+      top: 6px;
+      right: 29px;
+    }
+  }
+
   .tags-input {
     width: 100%;
   }
@@ -2922,23 +2938,25 @@ select.text-danger#categorySelection, input.text-danger{
     position: fixed;
     top: 0px;
     left: 0px;
-}
-.block-style-tabs {
-  .nav-tabs-wrapper {
-    li:disabled, li[disabled="true"] {
-      display: none;
+  }
+
+  .block-style-tabs {
+    .nav-tabs-wrapper {
+      li:disabled, li[disabled="true"] {
+        display: none;
+      }
+    }
+    .tab-container {
+      &:disabled, &[disabled="true"] {
+        display: none;
+      }
     }
   }
-  .tab-container {
-    &:disabled, &[disabled="true"] {
-      display: none;
-    }
+
+  ul.no-bullets {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
   }
-}
-ul.no-bullets {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
 
 </style>
