@@ -117,9 +117,30 @@ export default {
         });
     },
     
-    removeVoice({rootState}, id) {
+    removeVoice({rootState, dispatch}, id) {
       return axios.delete(`${rootState.API_URL}tts/eleven_labs/voice/${encodeURIComponent(id)}`)
         .then(response => {
+          let blocks = Array.from(rootState.storeList).filter(block => {
+            return block[1] && block[1].tts_voice === id;
+          });
+          if (Array.isArray(blocks) && blocks.length > 0) {
+            let ids = blocks.reduce((acc, block) => {
+              acc.push(block[1].blockid);
+              return acc;
+            }, []);
+            dispatch('getBlocks', ids, {root: true})
+              .then(blocks => {
+                blocks.forEach(block => {
+                  let storeBlock = rootState.storeList.get(block.blockid);
+                  if (storeBlock) {
+                    storeBlock.tts_voice_name = block.tts_voice_name;
+                    storeBlock.tts_voice_wpm = block.tts_voice_wpm;
+                    storeBlock.tts_voice = block.tts_voice;
+                    storeBlock.tts_voice_data = block.tts_voice_data;
+                  }
+                });
+              });
+          }
           return response;
         })
         .catch(err => {
