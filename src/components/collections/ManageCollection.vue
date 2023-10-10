@@ -407,12 +407,13 @@
           mandatoryFields.push('URL slug');
           this.currentCollection.validationErrors.slug = defaultMessage + 'URL slug';
         }
-        if (!this.currentCollection.category
-          || this.currentCollection.category.trim().length == 0
-          || defaultCategory.includes(this.currentCollection.category))
+        const alt_meta = this.currentCollection.alt_meta;
+        if ((!alt_meta.reader.category && !alt_meta.ocean.category)
+          || (alt_meta.reader.category.trim().length == 0 && alt_meta.ocean.category.trim().length == 0)
+          || defaultCategory.includes(alt_meta.reader.category))
         {
           mandatoryFields.push('Category');
-          this.currentCollection.validationErrors.category = defaultMessage + 'Category';
+          this.currentCollection.validationErrors['alt_meta.reader.category'] = defaultMessage + 'Category';
         }
         if (!this.currentCollection.difficulty
           || this.currentCollection.difficulty.toString().trim().length == 0)
