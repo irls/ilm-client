@@ -170,7 +170,7 @@
                 <tr class='category'>
                   <td>Reader category</td>
                   <td class="category-wrapper">
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="debounceUpdate('category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.reader.category'] }" class="form-control" v-model='currentBook.alt_meta.reader.category' @change="debounceUpdate('alt_meta.reader.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
                           <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
@@ -178,9 +178,9 @@
                       <!--</template>-->
                     </select>
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-                      v-if="currentBookCategory"
-                      @click="currentBook.category = ''; debounceUpdate('category', '', $event)"></i>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category for Reader</span>
+                      v-if="currentBook.alt_meta.reader.category"
+                      @click="currentBook.alt_meta.reader.category = null; debounceUpdate('alt_meta.reader.category', '', $event)"></i>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.reader.category']" class="validation-error">Define Category for Reader</span>
                   </td>
                 </tr>
                 <tr class='category'>
@@ -702,7 +702,7 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      currentBook: { author: [] },
+      currentBook: { author: [], alt_meta: {reader: {}, ocean: {}} },
       masteringTask: {},
       importTask: {},
       linkTaskError: '',
@@ -1262,10 +1262,10 @@ export default {
 
         let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
-        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
-          this.requiredFields[this.currentBookMeta.bookid]['category'] = true;
+        const alt_meta = this.currentBookMeta.alt_meta;
+        if((!alt_meta.reader.category && !alt_meta.ocean.category) || (defaultCategory.includes(alt_meta.reader.category) && defaultCategory.includes(alt_meta.ocean.category))){
+          this.requiredFields[this.currentBookMeta.bookid]['alt_meta.reader.category'] = true;
         }
-
         //this.requiredFields[this.currentBookMeta.bookid]['alt_meta.ocean.category'] = true;
 
         if (this.currentBookMeta.title == ''){
@@ -1493,8 +1493,8 @@ export default {
         let keys = key.split('.');
 
         if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
-          acc[keys[0]] = {};
-          acc[keys[0]][keys[1]] = {};
+          acc[keys[0]] = this.currentBook[keys[0]] || {};
+          acc[keys[0]][keys[1]] = this.currentBook[keys[0]][keys[1]] || {};
           acc[keys[0]][keys[1]][keys[2]] = (value !== '' ? value : null);
           return acc;
         }
@@ -1520,7 +1520,7 @@ export default {
         });
 
         if (response && response.bookid === this.currentBook.bookid) {// ILM-5595 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
-          this.currentBook = Object.assign(this.currentBookMeta, update);
+          this.currentBook = Object.assign(this.currentBookMeta, response);
           this.currentBook.coverimg = this.currentBookFiles.coverimg;
 
           this.lockLanguage = false;

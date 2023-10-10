@@ -304,8 +304,8 @@
           let update = {};
           let keys = field.split('.');
           if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
-            update[keys[0]] = {};
-            update[keys[0]][keys[1]] = {};
+            update[keys[0]] = this.currentCollection[keys[0]] || {};
+            update[keys[0]][keys[1]] = this.currentCollection[keys[0]][keys[1]] || {};
             update[keys[0]][keys[1]][keys[2]] = (value !== '' ? value : null);
           } else {
             update[field] = value;

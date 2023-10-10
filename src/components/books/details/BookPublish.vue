@@ -123,7 +123,8 @@
         }
 
         //if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
-        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)) {
+        const alt_meta = this.currentBookMeta.alt_meta;
+        if((!alt_meta.reader.category && !alt_meta.ocean.category) || defaultCategory.includes(alt_meta.reader.category)) {
             canPublish = false;
             mandatoryFields.push('Category');
         }
