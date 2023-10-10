@@ -28,7 +28,7 @@
     <div>
       <label class="btn btn-default">
         <i class="fa fa-folder-open"></i>Browse
-        <input type="file" v-on:change="onAudiofileChange" />
+        <input type="file" accept="audio/*" v-on:change="onAudiofileChange" />
       </label>
       {{filename}}
     </div>
