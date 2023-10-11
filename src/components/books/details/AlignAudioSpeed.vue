@@ -24,7 +24,7 @@
           </div>
           <div class="custom-wpm-controls">
             <button class="minus" :disabled="custom_wpm <= custom_wpm_min" v-on:click="decreaseCustomWPM"></button>
-            <input type="number" :value="custom_wpm" class="custom-wpm-input" v-on:change="inputWPMManually" />
+            <input type="number" :value="custom_wpm" class="custom-wpm-input" v-on:change="inputWPMManually" v-on:focusout="inputWPMFocusout" />
             <button class="plus" :disabled="custom_wpm >= custom_wpm_max" v-on:click="increaseCustomWPM"></button>
           </div>
         </template>
@@ -98,7 +98,18 @@
           newVal = this.custom_wpm_max;
         }
         this.custom_wpm = newVal;
+        if (newVal !== e.target.value) {
+          e.target.value = newVal;
+        }
         this.settingsChanged();
+      },
+      inputWPMFocusout(ev) {
+        let value = ev.target.value;
+        if (value > this.custom_wpm_max && this.custom_wpm === this.custom_wpm_max) {
+          ev.target.value = this.custom_wpm;
+        } else if (value < this.custom_wpm_min && this.custom_wpm === this.custom_wpm_min) {
+          ev.target.value = this.custom_wpm_min;
+        }
       },
       increaseCustomWPM() {
         if (this.custom_wpm < this.custom_wpm_max) {
