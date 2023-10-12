@@ -162,10 +162,12 @@
   }
   .tts-history {
     overflow-y: scroll;
-    max-height: 90vh;
+    max-height: 80vh;
     .tts-history-items {
       thead {
         background-color: #F0F0F0;
+        position: sticky;
+        top: 35px;
       }
       tr {
         &:nth-child(odd) {
@@ -178,6 +180,15 @@
           color: #337ab7;
           cursor: pointer;
         }
+      }
+    }
+    label {
+      position: sticky;
+      top: 0px;
+      i {
+        display: inline-block;
+        padding: 0px 3px;
+        color: white;
       }
     }
   }
