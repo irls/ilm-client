@@ -166,6 +166,20 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    
+    loadHistory({rootState}, [start_from]) {
+      return axios.get(`${rootState.API_URL}tts/eleven_labs/history?${start_from ? 'start_from=' + start_from : ''}`)
+        .then(response => {
+          response.data.history.forEach(historyItem => {
+            let dt = new Date(historyItem.date_unix * 1000);
+            historyItem.date_formatted = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString();
+          });
+          return response.data
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 }
