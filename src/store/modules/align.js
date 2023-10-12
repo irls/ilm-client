@@ -37,27 +37,44 @@ export default {
       });
     },
     alignTTS({rootState, dispatch}) {
-      return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/selection_alignment`, {
-        start: rootState.blockSelection.start._id,
-        end: rootState.blockSelection.end._id,
-        audiofiles: false,
-        realign: true,
-        voicework: 'all_with_tts',
-        voices: rootState.currentBookMeta.voices,
-        wpm_settings: rootState.user.alignWpmSettings[rootState.currentBookid]['tts']
-      }, {
-        validateStatus: function (status) {
-          return status == 200 || status == 504;
+      // if user is updating custom speed before align - wait for updates to be applied
+      let waitAudioSpeedUpdate = new Promise((resolve, reject) => {
+        if (!rootState.userActions.updatingAudioSpeed) {
+          return resolve();
         }
-      })
-      .then((response) => {
-        dispatch('getBookAlign', {}, {root: true});
-        dispatch('setCurrentBookCounters', [], {root: true});
-        dispatch('resetSelectionAudiosrcConfig');
-        return Promise.resolve(response);
-      }).catch((err) => {
-        dispatch('getBookAlign', {}, {root: true});
-        return Promise.reject(err);
+        let checks = 0;
+        let checkInterval = setInterval(() => {
+          if (!rootState.userActions.updatingAudioSpeed || checks >= 10) {
+            clearInterval(checkInterval);
+            return resolve();
+          }
+          ++checks;
+        }, 50);
+      });
+      return waitAudioSpeedUpdate
+        .then(() => {
+          return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/selection_alignment`, {
+            start: rootState.blockSelection.start._id,
+            end: rootState.blockSelection.end._id,
+            audiofiles: false,
+            realign: true,
+            voicework: 'all_with_tts',
+            voices: rootState.currentBookMeta.voices,
+            wpm_settings: rootState.user.alignWpmSettings[rootState.currentBookid]['tts']
+          }, {
+            validateStatus: function (status) {
+              return status == 200 || status == 504;
+            }
+          })
+          .then((response) => {
+            dispatch('getBookAlign', {}, {root: true});
+            dispatch('setCurrentBookCounters', [], {root: true});
+            dispatch('resetSelectionAudiosrcConfig');
+            return Promise.resolve(response);
+          }).catch((err) => {
+            dispatch('getBookAlign', {}, {root: true});
+            return Promise.reject(err);
+          });
       });
     },
     resetSelectionAudiosrcConfig({rootState}) {

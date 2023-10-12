@@ -24,7 +24,7 @@
           </div>
           <div class="custom-wpm-controls">
             <button class="minus" :disabled="custom_wpm <= custom_wpm_min" v-on:click="decreaseCustomWPM"></button>
-            <input type="number" :value="custom_wpm" class="custom-wpm-input" v-on:change="inputWPMManually" v-on:focusout="inputWPMFocusout" />
+            <input type="number" :value="custom_wpm" class="custom-wpm-input" v-on:change="inputWPMManually" v-on:focusout="inputWPMFocusout" v-on:keydown="inputWPMKeydown" />
             <button class="plus" :disabled="custom_wpm >= custom_wpm_max" v-on:click="increaseCustomWPM"></button>
           </div>
         </template>
@@ -44,7 +44,7 @@
 </template>
 <script>
   import Vue from 'vue';
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapGetters, mapActions, mapMutations } from 'vuex';
   import Slider from 'primevue/slider';
   import lodash from 'lodash';
   import Accordion from 'primevue/accordion';
@@ -84,13 +84,16 @@
         },
         cache: false
       },
-      ...mapGetters('userActions', ['userAlignWpmSettings']),
+      ...mapGetters('userActions', ['userAlignWpmSettings', 'updatingAudioSpeed']),
       ...mapGetters(['user', 'currentBookid', 'adminOrLibrarian'])
     },
     methods: {
       inputWPMManually(e) {
         e.preventDefault();
         let newVal = parseInt(e.target.value);
+        if (!newVal) {
+          newVal = this.custom_wpm_min;
+        }
         if (newVal < this.custom_wpm_min) {
           newVal = this.custom_wpm_min;
         }
@@ -110,6 +113,9 @@
         } else if (value < this.custom_wpm_min && this.custom_wpm === this.custom_wpm_min) {
           ev.target.value = this.custom_wpm_min;
         }
+      },
+      inputWPMKeydown() {
+        this.set_updatingAudioSpeed(true);
       },
       increaseCustomWPM() {
         if (this.custom_wpm < this.custom_wpm_max) {
@@ -142,6 +148,7 @@
 ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
         let differentSetting = !lodash.isEqual(this.user.alignWpmSettings[this.currentBookid][this.audio_type], settings[this.audio_type]);
         this.user.alignWpmSettings[this.currentBookid] = lodash.assign(this.user.alignWpmSettings[this.currentBookid], settings);
+        this.set_updatingAudioSpeed(false);
         if (save && differentSetting) {
           this.updateUser([this.user._id, {alignWpmSettings: this.user.alignWpmSettings}]);
         }
@@ -154,7 +161,8 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
         this.align_wpm_type = alignWpmSettings.type;
         this.custom_wpm = alignWpmSettings.wpm;
       },
-      ...mapActions('userActions', ['updateUser'])
+      ...mapActions('userActions', ['updateUser']),
+      ...mapMutations('userActions', ['set_updatingAudioSpeed'])
     },
     watch: {
       /*'type': {

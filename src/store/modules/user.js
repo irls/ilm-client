@@ -77,7 +77,9 @@ const alignWpmSettingsDefaults = {
 
 export default {
   namespaced: true,
-  state: {},
+  state: {
+    updatingAudioSpeed: false
+  },
   getters: {
     userAlignWpmSettings: (state, getters, rootState) => (voicework) => {
       let settings = rootState.user.alignWpmSettings || {};
@@ -89,9 +91,16 @@ export default {
         return lodash.assign(lodash.cloneDeep(alignWpmSettingsDefaults[voicework]), lodash.cloneDeep(settings[voicework]));
       }
       return lodash.cloneDeep(alignWpmSettingsDefaults[voicework]);
+    },
+    updatingAudioSpeed: state => {
+      return state.updatingAudioSpeed;
     }
   },
-  mutations: {},
+  mutations: {
+    set_updatingAudioSpeed(state, isUpdating) {
+      state.updatingAudioSpeed = isUpdating;
+    }
+  },
   actions: {
   
     user_passwordreset({rootState}, email) {
