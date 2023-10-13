@@ -41,9 +41,13 @@
     </v-tab>
     <v-tab title="Eleven Labs history">
       <div class="tts-history">
-        <label class="btn btn-primary" v-on:click="getHistory">
+        <label class="btn btn-primary" v-on:click="getHistory()">
           <i class="fa fa-refresh"></i>Update
         </label>
+        <label class="btn btn-primary" v-if="ttsHistory.has_more" v-on:click="getHistory(ttsHistory.last_history_item_id)">
+          Next list <i class="fa fa-chevron-right"></i>
+        </label>
+        <span class="tts-history-loading" v-if="loadingHistory"></span>
         <table v-if="ttsHistory.history" class="tts-history-items">
           <thead>
             <th>Item</th>
@@ -82,7 +86,8 @@
         filename: '',
         isUploading: false,
         totalCounters: {},
-        ttsHistory: {}
+        ttsHistory: {},
+        loadingHistory: false
       }
     },
     mixins: [api_config],
@@ -119,11 +124,13 @@
         }
       },
       
-      getHistory() {
+      getHistory(start_from = null) {
         //console.log(this.loadHistory)
         this.ttsHistory = {};
-        return this.loadHistory([null])
+        this.loadingHistory = true;
+        return this.loadHistory([start_from])
           .then(response => {
+            this.loadingHistory = false;
             this.ttsHistory = response;
           });
       },
@@ -163,6 +170,14 @@
   .tts-history {
     overflow-y: scroll;
     max-height: 80vh;
+    .tts-history-loading {
+      display: inline-block;
+      background: url(/static/preloader-bubble-20-gray.gif);
+      width: 20px;
+      height: 20px;
+      background-repeat: no-repeat;
+      background-position-y: center;
+    }
     .tts-history-items {
       thead {
         background-color: #F0F0F0;
@@ -189,6 +204,9 @@
         display: inline-block;
         padding: 0px 3px;
         color: white;
+        &:hover {
+          color: white;
+        }
       }
     }
   }
