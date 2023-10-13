@@ -170,7 +170,7 @@
                 <tr class='category'>
                   <td>Reader category</td>
                   <td class="category-wrapper">
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.reader.category'] }" class="form-control" v-model='currentBook.alt_meta.reader.category' @change="debounceUpdate('alt_meta.reader.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.alt_meta.reader.category' @change="debounceUpdate('alt_meta.reader.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
                           <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
@@ -180,13 +180,13 @@
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
                       v-if="currentBook.alt_meta.reader.category"
                       @click="currentBook.alt_meta.reader.category = null; debounceUpdate('alt_meta.reader.category', '', $event)"></i>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.reader.category']" class="validation-error">Define Category for Reader</span>
+                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
                   </td>
                 </tr>
                 <tr class='category'>
                 <td>Ocean category</td>
                   <td class="category-wrapper">
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.ocean.category'] }" class="form-control" v-model='currentBook.alt_meta.ocean.category' @change="debounceUpdate('alt_meta.ocean.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.alt_meta.ocean.category' @change="debounceUpdate('alt_meta.ocean.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
                           <option v-for="(value, ind) in subjectCategories.ocean" :value="value">{{ value }}</option>
@@ -196,7 +196,6 @@
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
                       v-if="currentBook.alt_meta.ocean.category"
                       @click="currentBook.alt_meta.ocean.category = null; debounceUpdate('alt_meta.ocean.category', '', $event)"></i>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['alt_meta.ocean.category']" class="validation-error">Define Category for Ocean</span>
                   </td>
                 </tr>
                 <tr class='difficulty'>
@@ -1264,7 +1263,7 @@ export default {
 
         const alt_meta = this.currentBookMeta.alt_meta;
         if((!alt_meta.reader.category && !alt_meta.ocean.category) || (defaultCategory.includes(alt_meta.reader.category) && defaultCategory.includes(alt_meta.ocean.category))){
-          this.requiredFields[this.currentBookMeta.bookid]['alt_meta.reader.category'] = true;
+          this.requiredFields[this.currentBookMeta.bookid]['category'] = true;
         }
         //this.requiredFields[this.currentBookMeta.bookid]['alt_meta.ocean.category'] = true;
 
@@ -1464,6 +1463,14 @@ export default {
         }
       }
       //-- } -- end -- Set values immediately because of controls --//
+
+      if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+        if (keys[2] == 'category') {
+          try {
+            delete this.requiredFields[this.currentBook.bookid]['category'];
+          } catch (err) {}
+        }
+      }
 
       if (_event && _event.target) {
         if (disable) {

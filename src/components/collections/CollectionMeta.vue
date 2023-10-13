@@ -141,7 +141,7 @@
         <tr>
           <td>Reader category</td>
           <td class="category-wrapper">
-            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['alt_meta.reader.category']}]" v-model="collection.alt_meta.reader.category" v-on:change="update('alt_meta.reader.category', $event)" :disabled="!allowCollectionsEdit">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['category']}]" v-model="collection.alt_meta.reader.category" v-on:change="update('alt_meta.reader.category', $event)" :disabled="!allowCollectionsEdit">
               <!--<template v-for="(data, index) in bookCategories">-->
                 <!--<optgroup :label="data.group">-->
                   <option v-for="(value, ind) in bookCategories.reader" :value="value">{{ value }}</option>
@@ -151,13 +151,13 @@
             <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
               v-if="collection.alt_meta.reader.category"
               @click="collection.alt_meta.reader.category = null; update('alt_meta.reader.category', {target:{value:''}})"></i>
-            <span class="validation-error" v-if="currentCollection.validationErrors['alt_meta.reader.category']">{{ currentCollection.validationErrors['alt_meta.reader.category'] }}</span>
+            <span class="validation-error" v-if="currentCollection.validationErrors['category']">{{ currentCollection.validationErrors['category'] }}</span>
           </td>
         </tr>
         <tr>
           <td>Ocean category</td>
           <td class="category-wrapper">
-            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['alt_meta.ocean.category']}]" v-model="collection.alt_meta.ocean.category" v-on:change="update('alt_meta.ocean.category', $event)" :disabled="!allowCollectionsEdit">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['category']}]" v-model="collection.alt_meta.ocean.category" v-on:change="update('alt_meta.ocean.category', $event)" :disabled="!allowCollectionsEdit">
               <!--<template v-for="(data, index) in bookCategories">-->
                 <!--<optgroup :label="data.group">-->
                   <option v-for="(value, ind) in bookCategories.ocean" :value="value">{{ value }}</option>
@@ -167,7 +167,6 @@
             <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
               v-if="collection.alt_meta.ocean.category"
               @click="collection.alt_meta.ocean.category = null; update('alt_meta.ocean.category', {target:{value:''}})"></i>
-            <span class="validation-error" v-if="currentCollection.validationErrors['alt_meta.ocean.category']">{{ currentCollection.validationErrors['alt_meta.ocean.category'] }}</span>
           </td>
         </tr>
         <tr>
@@ -291,6 +290,14 @@
           if (this.currentCollection.validationErrors
             && this.currentCollection.validationErrors[key]) {
             delete this.currentCollection.validationErrors[key];
+          }
+          let keys = key.split('.');
+          if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+            if (keys[2] == 'category') {
+              try {
+                delete this.currentCollection.validationErrors['category'];
+              } catch (err) {}
+            }
           }
           this.liveUpdate(key, value);
         },
