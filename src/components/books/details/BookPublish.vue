@@ -122,9 +122,24 @@
             mandatoryFields.push('Author EN (author English translation)');
         }
 
-        //if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
         const alt_meta = this.currentBookMeta.alt_meta;
-        if((!alt_meta.reader.category && !alt_meta.ocean.category) || defaultCategory.includes(alt_meta.reader.category)) {
+        let checkCategory = (
+          alt_meta.reader
+          && alt_meta.reader.category
+          && alt_meta.reader.category.trim().length
+          && !defaultCategory.includes(alt_meta.reader.category)
+        );
+        checkCategory = checkCategory || (
+          alt_meta.ocean
+          && alt_meta.ocean.category
+          && alt_meta.ocean.category.trim().length
+          && !defaultCategory.includes(alt_meta.ocean.category)
+        );
+        checkCategory = checkCategory || (
+          this.currentBookMeta.collection_id
+          && this.currentBookMeta.collection_id.length
+        ); // override by collection
+        if(!checkCategory) {
             canPublish = false;
             mandatoryFields.push('Category');
         }
@@ -133,7 +148,6 @@
             canPublish = false;
             mandatoryFields.push('URL slug');
         }
-        //}
 
         if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
           canPublish = false;

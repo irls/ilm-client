@@ -408,11 +408,18 @@
           this.currentCollection.validationErrors.slug = defaultMessage + 'URL slug';
         }
         const alt_meta = this.currentCollection.alt_meta;
-        const checkCategory = (
-          (alt_meta.reader && alt_meta.reader.category && alt_meta.reader.category.trim().length && !defaultCategory.includes(alt_meta.reader.category))
-          || (alt_meta.ocean && alt_meta.ocean.category && alt_meta.ocean.category.trim().length && !defaultCategory.includes(alt_meta.ocean.category))
+        let checkCategory = (
+          alt_meta.reader
+          && alt_meta.reader.category
+          && alt_meta.reader.category.trim().length
+          && !defaultCategory.includes(alt_meta.reader.category)
         );
-
+        checkCategory = checkCategory || (
+          alt_meta.ocean
+          && alt_meta.ocean.category
+          && alt_meta.ocean.category.trim().length
+          && !defaultCategory.includes(alt_meta.ocean.category)
+        );
         if (!checkCategory) {
           mandatoryFields.push('Category');
           this.currentCollection.validationErrors['category'] = defaultMessage + 'Category';
