@@ -2120,6 +2120,11 @@ export const store = new Vuex.Store({
         let updateGenres = Object.keys(update).find(updateField => {
           return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
         });
+        if (!updateGenres) {
+          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
+              updateGenres = true;
+            }
+        }
         if (updateGenres) {
           commit('genreModule/set_autoGenerateInProgress', true);
         }
@@ -4869,7 +4874,12 @@ export const store = new Vuex.Store({
 
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
-        state.bookCategories = categories.data
+        const reader_categories = categories.data.filter(cat=>cat.group==='Reader');
+        const ocean_categories = categories.data.filter(cat=>cat.group==='Ocean');
+        state.bookCategories = {
+          reader: reader_categories[0].categories,
+          ocean: ocean_categories[0].categories,
+        }
         return Promise.resolve(state.bookCategories)
       })
       .catch(error => {
