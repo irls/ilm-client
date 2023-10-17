@@ -228,7 +228,7 @@
                 </tr>
               </table>
             </fieldset>
-
+          <Genre />
           <fieldset class='description brief'>
             <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">
@@ -604,6 +604,7 @@ import CompleteAudioExport  from './details/CompleteAudioExport';
 import PauseAfterBlock      from './details/PauseAfterBlock';
 import VTagSuggestion       from './details/HashTag';
 import ResizableTextarea    from '../generic/ResizableTextarea';
+import Genre                from './details/Genre';
 import v_modal              from 'vue-js-modal';
 
 Vue.use(v_modal, {dialog: true});
@@ -659,7 +660,8 @@ export default {
     PauseAfterBlock,
     VTagSuggestion,
     'resizable-textarea': ResizableTextarea,
-    CoupletWarningPopup
+    CoupletWarningPopup,
+    Genre
   },
 
   data () {
@@ -1265,6 +1267,10 @@ export default {
 
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
           this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
+        }
+        
+        if (!Array.isArray(this.currentBookMeta.genres) || this.currentBookMeta.genres.length === 0) {
+          this.requiredFields[this.currentBookMeta.bookid]['genres'] = true;
         }
     },
 
