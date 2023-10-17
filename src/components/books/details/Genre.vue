@@ -49,12 +49,12 @@
       },
       isActive: {
         get() {
-          if (this.currentBookMeta.alt_meta && this.currentBookMeta.alt_meta.reader && this.currentBookMeta.alt_meta.reader.category) {
-            return true;
+          if (this.currentBookMeta.alt_meta) {
+            return this.currentBookMeta.alt_meta.reader && this.currentBookMeta.alt_meta.reader.category ? true : false;
           }
-          let categories = this.bookCategories.find(category => {
+          let categories = Array.isArray(this.bookCategories) ? this.bookCategories.find(category => {
             return category.group === 'Reader';
-          });
+          }) : null;
           return categories && categories.categories.includes(this.currentBookMeta.category);
         },
         cache: false
