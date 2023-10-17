@@ -228,7 +228,8 @@
                 </tr>
               </table>
             </fieldset>
-          <Genre />
+          <Genre 
+            :allowMetadataEdit="allowMetadataEdit" />
           <fieldset class='description brief'>
             <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">

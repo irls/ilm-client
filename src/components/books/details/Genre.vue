@@ -18,8 +18,8 @@
     <template v-if="genresVisible">
       <div class="genres-list">
         <template v-for="genre in notAssignedGenres">
-          <div class="genre-chip">
-            <div v-on:click="selectGenre(genre.name)">{{genre.name}}</div>
+          <div class="genre-chip" v-on:click="selectGenre(genre.name)">
+            <div>{{genre.name}}</div>
           </div>
         </template>
       </div>
@@ -38,6 +38,7 @@
     components: {
       
     },
+    props: ['allowMetadataEdit'],
     computed: {
       ...mapGetters(['currentBookMeta', 'bookCategories', 'adminOrLibrarian']),
       ...mapGetters('genreModule', ['genres', 'notAssignedGenres', 'autoGenerateInProgress']),
@@ -68,7 +69,7 @@
       ...mapActions('genreModule', ['loadGenres', 'autoGenerate']),
       ...mapMutations('genreModule', ['set_autoGenerateInProgress']),
       selectGenre(genre) {
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian && this.allowMetadataEdit) {
           let genres = this.currentBookMeta.genres || [];
           if (!genres.includes(genre) && genres.length < 3) {
             genres.push(genre);
@@ -80,7 +81,7 @@
         this.genresVisible = !this.genresVisible;
       },
       generateGenres() {
-        if (!this.autoGenerateInProgress) {
+        if (!this.autoGenerateInProgress && this.allowMetadataEdit) {
           this.set_autoGenerateInProgress(true);
           return this.autoGenerate()
             .then(response => {
@@ -92,7 +93,7 @@
         }
       },
       remove(genre) {
-        if (this.adminOrLibrarian) {
+        if (this.adminOrLibrarian && this.allowMetadataEdit) {
           let genres = this.currentBookMeta.genres || [];
           let present = genres.indexOf(genre);
           if (present !== -1) {

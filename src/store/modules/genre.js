@@ -45,11 +45,16 @@ export default {
         });
     },
     
-    autoGenerate({state, rootState, dispatch}) {
+    autoGenerate({state, rootState, dispatch, commit}) {
       if (rootState.currentBookid) {
         return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/auto_generate_genres`)
           .then(response => {
             rootState.currentBookMeta.genres = response.data.genres;
+            rootState.currentBookMeta.version = response.data.version;
+            rootState.currentBookMeta.pubType = response.data.pubType;
+            rootState.currentBookMeta.published = response.data.published;
+            commit('CHECK_SET_ALLOW_BOOK_PUBLISH', null, {root: true});
+            commit('CHECK_SET_BOOK_PUBLISH_BUTTON_STATUS', null, {root: true});
             return response.data;
           });
       }
