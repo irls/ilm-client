@@ -21,6 +21,7 @@ import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
+import genreModule from './modules/genre';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -85,7 +86,8 @@ export const store = new Vuex.Store({
     audioExport,
     gridFilters,
     tocSections,
-    ttsModule
+    ttsModule,
+    genreModule
   },
   state: {
     SelectionModalProgress:0,
@@ -971,6 +973,15 @@ export const store = new Vuex.Store({
     SET_BOOK_PUBLISH_BUTTON_STATUS(state, status) {
       state.publishButtonStatus = status;
     },
+    // TODO: use next two mutations instead of previous two
+    CHECK_SET_ALLOW_BOOK_PUBLISH(state) {// change property status with check
+      this.commit('SET_ALLOW_BOOK_PUBLISH', state.currentJobInfo.workflow.status !== 'archived' && state.adminOrLibrarian);
+    },
+    CHECK_SET_BOOK_PUBLISH_BUTTON_STATUS(state) {// change property status with check
+      let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+      this.commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+    },
+    // END TODO
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
     },
@@ -2116,6 +2127,20 @@ export const store = new Vuex.Store({
       //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
       //return Promise.resolve('No data updated');
+      
+      if (!state.currentBookMeta.genres_manual) {
+        let updateGenres = Object.keys(update).find(updateField => {
+          return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
+        });
+        if (!updateGenres) {
+          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
+              updateGenres = true;
+            }
+        }
+        if (updateGenres) {
+          commit('genreModule/set_autoGenerateInProgress', true);
+        }
+      }
 
       const BOOKID = update.bookid || state.currentBookMeta._id;
       return axios.put(`${state.API_URL}meta/${BOOKID}`, update, { signal: state.reqSignals.metaUpdate.signal })
@@ -2149,6 +2174,7 @@ export const store = new Vuex.Store({
             }
 
             //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
+            commit('genreModule/set_autoGenerateInProgress', false);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
