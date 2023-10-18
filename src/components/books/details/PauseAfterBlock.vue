@@ -616,6 +616,7 @@
       opacity: 0.6;
       user-select: none;
       width: 96%;
+      position: relative;
       .slider-handler {
         transition: all 0.2s ease 0s;
         border: none;
@@ -629,7 +630,7 @@
         border-radius: 50%;
         position: absolute;
         display: block;
-        top: 66%;
+        top: 61%;
       }
     }
   }
