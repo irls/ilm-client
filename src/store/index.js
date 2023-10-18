@@ -4862,7 +4862,12 @@ export const store = new Vuex.Store({
 
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
-        state.bookCategories = categories.data
+        const reader_categories = categories.data.filter(cat=>cat.group==='Reader');
+        const ocean_categories = categories.data.filter(cat=>cat.group==='Ocean');
+        state.bookCategories = {
+          reader: reader_categories[0].categories,
+          ocean: ocean_categories[0].categories,
+        }
         return Promise.resolve(state.bookCategories)
       })
       .catch(error => {
