@@ -126,7 +126,7 @@
               </div>
             </div>
             <div class="control-wrapper" v-if="mode == 'block'">
-              <dropdown 
+              <dropdown v-ilm-tooltip.top="'Speed'"
                 v-model="playbackRate" 
                 :options="playbackRates" 
                 scrollHeight="410px" 
@@ -3568,8 +3568,8 @@ Revert to original block audio?`,
                   return 'Pin';
                   break;
               }
-              return '';
             }
+            return '';
           },
           cache: false
         },
@@ -4293,7 +4293,7 @@ Revert to original block audio?`,
         border-radius: 20px;
         width: 34px;
         &[disabled] {
-          background: url("@{audio-btn}zoom-in-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-zoom-out {
@@ -4301,70 +4301,70 @@ Revert to original block audio?`,
         width: 34px;
         border-radius: 20px;
         &[disabled] {
-          background: url("@{audio-btn}zoom-out-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-fade {
         background: url("@{audio-btn}fade.png");
         width: 49px;
         &[disabled] {
-          background: url("@{audio-btn}fade-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-clear {
         background: url("@{audio-btn}clear.png");
         &[disabled] {
-          background: url("@{audio-btn}clear-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-erase {
         background: url("@{audio-btn}erase.png");
         &[disabled] {
-          background: url("@{audio-btn}erase-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-cut {
         background: url("@{audio-btn}cut.png");
         &[disabled] {
-          background: url("@{audio-btn}cut-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-add-silence {
         background: url("@{audio-btn}add-silence.png");
         width: 63px;
         &[disabled] {
-          background: url("@{audio-btn}add-silence-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-revert{
         background: url("@{audio-btn}revert.png");
         &[disabled] {
-          background: url("@{audio-btn}revert-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-save {
         background: url("@{audio-btn}save.png");
         &[disabled] {
-          background: url("@{audio-btn}save-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-save-and-realign {
         background: url("@{audio-btn}save-and-realign.png");
         width: 91px;
         &[disabled] {
-          background: url("@{audio-btn}save-and-realign-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-undo {
         background: url("@{audio-btn}undo.png");
         &[disabled] {
-          background: url("@{audio-btn}undo-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-align {
         background: url("@{audio-btn}align.png");
         &[disabled] {
-          background: url("@{audio-btn}align-disabled.png");
+          opacity: 0.5;
         }
       }
     }
