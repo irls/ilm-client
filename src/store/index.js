@@ -653,6 +653,18 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
+    },
+    isBookReaderCategory: state => {
+      if (!state.currentBookMeta) {
+        return false;
+      }
+      if (state.currentBookMeta.alt_meta) {
+        return state.currentBookMeta.alt_meta.reader && state.currentBookMeta.alt_meta.reader.category ? true : false;
+      }
+      let categories = Array.isArray(state.bookCategories) ? state.bookCategories.find(category => {
+        return category.group === 'Reader';
+      }) : null;
+      return categories && categories.categories.includes(state.currentBookMeta.category)
     }
   },
 

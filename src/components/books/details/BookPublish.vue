@@ -146,7 +146,7 @@
           canPublish = false;
           mandatoryFields.push('difficulty');
         }
-        let hasGenres = (Array.isArray(this.currentBookMeta.genres) && this.currentBookMeta.genres.length > 0);
+        let hasGenres = !this.isBookReaderCategory || (Array.isArray(this.currentBookMeta.genres) && this.currentBookMeta.genres.length > 0);
         if (!hasGenres) {
           canPublish = false;
         }
@@ -363,7 +363,7 @@
           return 'Published:';
         }
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection']),
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
