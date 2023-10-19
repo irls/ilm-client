@@ -818,7 +818,8 @@ export default {
       aligningBlocks: 'aligningBlocks',
       currentBookCollection: 'currentBookCollection',
       hashTagsSuggestions: 'hashTagsSuggestions',
-      playingBlock: 'playingBlock'
+      playingBlock: 'playingBlock',
+      isBookReaderCategory: 'isBookReaderCategory'
     }),
     proofreadModeReadOnly: {
       get() {
@@ -1307,7 +1308,7 @@ export default {
           this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
         }
         
-        if (!Array.isArray(this.currentBookMeta.genres) || this.currentBookMeta.genres.length === 0) {
+        if (this.isBookReaderCategory && (!Array.isArray(this.currentBookMeta.genres) || this.currentBookMeta.genres.length === 0)) {
           this.requiredFields[this.currentBookMeta.bookid]['genres'] = true;
         }
     },

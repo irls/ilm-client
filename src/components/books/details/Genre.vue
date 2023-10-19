@@ -40,7 +40,7 @@
     },
     props: ['allowMetadataEdit'],
     computed: {
-      ...mapGetters(['currentBookMeta', 'bookCategories', 'adminOrLibrarian']),
+      ...mapGetters(['currentBookMeta', 'bookCategories', 'adminOrLibrarian', 'isBookReaderCategory']),
       ...mapGetters('genreModule', ['genres', 'notAssignedGenres', 'autoGenerateInProgress']),
       bookGenres: {
         get() {
@@ -50,13 +50,7 @@
       },
       isActive: {
         get() {
-          if (this.currentBookMeta.alt_meta) {
-            return this.currentBookMeta.alt_meta.reader && this.currentBookMeta.alt_meta.reader.category ? true : false;
-          }
-          let categories = Array.isArray(this.bookCategories) ? this.bookCategories.find(category => {
-            return category.group === 'Reader';
-          }) : null;
-          return categories && categories.categories.includes(this.currentBookMeta.category);
+          return this.isBookReaderCategory;
         },
         cache: false
       }
