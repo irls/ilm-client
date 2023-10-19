@@ -458,7 +458,7 @@ export default {
       this.audiobook.report = "";
       this.uploadFinished = false;
       this.isUploading = true;
-      if (this.$refs.uploadDropzone.getQueuedFiles().length === 0) {
+      if (this.$refs.uploadDropzone.getQueuedFiles().length === 0 && !this.audioURL) {
         this.closeForm();
         return;
       }
