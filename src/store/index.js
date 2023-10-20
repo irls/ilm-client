@@ -658,13 +658,17 @@ export const store = new Vuex.Store({
       if (!state.currentBookMeta) {
         return false;
       }
-      if (state.currentBookMeta.alt_meta) {
-        return state.currentBookMeta.alt_meta.reader && state.currentBookMeta.alt_meta.reader.category ? true : false;
+      let checkItem = state.currentBookMeta;
+      if (state.currentBookMeta.collection_id) {
+        checkItem = state.currentBookCollection;
+      }
+      if (checkItem.alt_meta) {
+        return checkItem.alt_meta.reader && checkItem.alt_meta.reader.category ? true : false;
       }
       let categories = Array.isArray(state.bookCategories) ? state.bookCategories.find(category => {
         return category.group === 'Reader';
       }) : null;
-      return categories && categories.categories.includes(state.currentBookMeta.category)
+      return categories && categories.categories.includes(checkItem.category);
     }
   },
 
