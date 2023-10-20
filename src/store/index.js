@@ -654,13 +654,13 @@ export const store = new Vuex.Store({
         return res;
       } else return false;
     },
-    isBookReaderCategory: state => {
+    isBookReaderCategory: (state, getters) => {
       if (!state.currentBookMeta) {
         return false;
       }
       let checkItem = state.currentBookMeta;
       if (state.currentBookMeta.collection_id) {
-        checkItem = state.currentBookCollection;
+        checkItem = getters.currentBookCollection;
       }
       if (checkItem.alt_meta) {
         return checkItem.alt_meta.reader && checkItem.alt_meta.reader.category ? true : false;
