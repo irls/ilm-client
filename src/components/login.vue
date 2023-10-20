@@ -22,13 +22,13 @@
         <input type="text" name="email" placeholder="Email" v-model="passwordEmail" v-on:input="clearPasswordMessage()">
         <div class="error-message" v-text="passwordResetError"></div>
         <div class="success-message" v-text="passwordResetSuccess"></div>
-        <input type="submit" 
-               :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}" 
-               :disabled="passwordResetSuccess.length > 0" 
-          @click="passwordreset(passwordEmail)" 
+        <input type="submit"
+               :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}"
+               :disabled="passwordResetSuccess.length > 0"
+          @click="passwordreset(passwordEmail)"
           value='Send new password'>
         <div class="links">
-          <a @click="setActive('login')"> 
+          <a @click="setActive('login')">
             <i class="fa fa-arrow-left"></i> Back to Login
           </a>
         </div>
@@ -56,6 +56,7 @@ export default {
 
       // Modal error messages
       loginError: '',
+      loginTimer: null,
       passwordError: '',
       passwordResetError: '',
       passwordResetSuccess: '',
@@ -64,7 +65,6 @@ export default {
   },
 
   components: {
-    
   },
 
   created () {
@@ -86,10 +86,28 @@ export default {
           return Promise.resolve();
         })
         .catch(error => {
-          this.loginError = error.message
+          if (error.timer) {
+
+            let lockTime = error.timer;
+            this.loginError = this.getLoginTimeCaption(lockTime);
+
+            this.loginTimer = setInterval(()=>{
+              lockTime -= 1000;
+              this.loginError = this.getLoginTimeCaption(lockTime);
+              if (lockTime <= 0) {
+                clearInterval(this.loginTimer);
+                this.loginTimer = null;
+                this.loginError = '';
+              }
+            }, 1000);
+
+          } else {
+            this.loginError = error.message;
+          }
         });
 
     },
+
     passwordreset (email) {
       this.passwordResetError = '';
       if (email.length === 0){
@@ -111,15 +129,16 @@ export default {
         }
       }
     },
+
     keycheck (event) {
       if (event.key === 'Enter') this.login()
     },
-    
+
     clearPasswordMessage() {
       this.passwordResetError = '';
       this.passwordResetSuccess = '';
     },
-    
+
     setActive(value) {
       this.active = value;
       this.loginError = '';
@@ -127,6 +146,17 @@ export default {
       this.passwordResetError = '';
       this.passwordResetSuccess = '';
       this.passwordEmail = '';
+    },
+
+    getLoginTimeCaption (lockTime) {
+      let loginTimeCaption;
+      let timeInSec = lockTime / 1000;
+      if (timeInSec > 60) {
+        loginTimeCaption = Math.ceil(timeInSec / 60) + ' minutes';
+      } else {
+        loginTimeCaption = Math.round(timeInSec) + ' seconds';
+      }
+      return `Your account is currently locked. Wait ${loginTimeCaption} and try again`;
     }
 
   }
