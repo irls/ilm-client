@@ -653,6 +653,22 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
+    },
+    isBookReaderCategory: (state, getters) => {
+      if (!state.currentBookMeta) {
+        return false;
+      }
+      let checkItem = state.currentBookMeta;
+      if (state.currentBookMeta.collection_id) {
+        checkItem = getters.currentBookCollection;
+      }
+      if (checkItem.alt_meta) {
+        return checkItem.alt_meta.reader && checkItem.alt_meta.reader.category ? true : false;
+      }
+      let categories = Array.isArray(state.bookCategories) ? state.bookCategories.find(category => {
+        return category.group === 'Reader';
+      }) : null;
+      return categories && categories.categories.includes(checkItem.category);
     }
   },
 
@@ -970,6 +986,15 @@ export const store = new Vuex.Store({
     SET_BOOK_PUBLISH_BUTTON_STATUS(state, status) {
       state.publishButtonStatus = status;
     },
+    // TODO: use next two mutations instead of previous two
+    CHECK_SET_ALLOW_BOOK_PUBLISH(state) {// change property status with check
+      this.commit('SET_ALLOW_BOOK_PUBLISH', state.currentJobInfo.workflow.status !== 'archived' && state.adminOrLibrarian);
+    },
+    CHECK_SET_BOOK_PUBLISH_BUTTON_STATUS(state) {// change property status with check
+      let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+      this.commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+    },
+    // END TODO
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
     },
