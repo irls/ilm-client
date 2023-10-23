@@ -149,7 +149,7 @@
               <!--</template>-->
             </select>
             <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-              v-if="collection.alt_meta.reader.category"
+              v-if="allowCollectionsEdit && collection.alt_meta.reader.category"
               @click="clearReaderCategory(true)"></i>
             <span class="validation-error" v-if="currentCollection.validationErrors['category']">{{ currentCollection.validationErrors['category'] }}</span>
           </td>
@@ -165,7 +165,7 @@
               <!--</template>-->
             </select>
             <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-              v-if="collection.alt_meta.ocean.category"
+              v-if="allowCollectionsEdit && collection.alt_meta.ocean.category"
               @click="collection.alt_meta.ocean.category = null; update('alt_meta.ocean.category', {target:{value:''}})"></i>
           </td>
         </tr>
