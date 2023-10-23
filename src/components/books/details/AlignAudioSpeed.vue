@@ -90,15 +90,19 @@
     methods: {
       inputWPMManually(e) {
         e.preventDefault();
+        if (isNaN(e.target.value) || e.target.value.length === 0) {
+          e.target.value = this.custom_wpm;
+          return;
+        }
         let newVal = parseInt(e.target.value);
         if (!newVal) {
           newVal = this.custom_wpm_min;
         }
         if (newVal < this.custom_wpm_min) {
-          newVal = this.custom_wpm_min;
+          newVal = this.custom_wpm;
         }
         if (newVal > this.custom_wpm_max) {
-          newVal = this.custom_wpm_max;
+          newVal = this.custom_wpm;
         }
         this.custom_wpm = newVal;
         if (newVal !== e.target.value) {
