@@ -494,6 +494,7 @@
                 });
               }
             }
+            return this.liveUpdate('alt_meta.reader.category', category);
           }
         },
 
