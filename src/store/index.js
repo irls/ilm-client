@@ -659,7 +659,7 @@ export const store = new Vuex.Store({
         return false;
       }
       let checkItem = state.currentBookMeta;
-      if (state.currentBookMeta.collection_id) {
+      if (state.currentBookMeta.collection_id && getters.currentBookCollection._id) {
         checkItem = getters.currentBookCollection;
       }
       if (checkItem.alt_meta) {
