@@ -141,7 +141,7 @@
         <tr>
           <td>Reader category</td>
           <td class="category-wrapper">
-            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['category']}]" v-model="collection.alt_meta.reader.category" v-on:change="update('alt_meta.reader.category', $event)" :disabled="!allowCollectionsEdit">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['category']}]" v-model="readerCategory" :disabled="!allowCollectionsEdit">
               <!--<template v-for="(data, index) in bookCategories">-->
                 <!--<optgroup :label="data.group">-->
                   <option v-for="(value, ind) in bookCategories.reader" :value="value">{{ value }}</option>
@@ -149,8 +149,8 @@
               <!--</template>-->
             </select>
             <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-              v-if="collection.alt_meta.reader.category"
-              @click="collection.alt_meta.reader.category = null; update('alt_meta.reader.category', {target:{value:''}})"></i>
+              v-if="allowCollectionsEdit && collection.alt_meta.reader.category"
+              @click="clearReaderCategory(true)"></i>
             <span class="validation-error" v-if="currentCollection.validationErrors['category']">{{ currentCollection.validationErrors['category'] }}</span>
           </td>
         </tr>
@@ -165,7 +165,7 @@
               <!--</template>-->
             </select>
             <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-              v-if="collection.alt_meta.ocean.category"
+              v-if="allowCollectionsEdit && collection.alt_meta.ocean.category"
               @click="collection.alt_meta.ocean.category = null; update('alt_meta.ocean.category', {target:{value:''}})"></i>
           </td>
         </tr>
@@ -415,6 +415,34 @@
         descriptionValueChanged(event) {
           return this.update('description', event);
         },
+        clearReaderCategory(check = true) {
+          if (check && Array.isArray(this.currentCollection.bookids) && this.currentCollection.bookids.length > 0) {
+            this.$root.$emit('show-modal', {
+              title: 'Remove Category and Genres',
+              text: 'Remove Collection Category and Book Genres?',
+              buttons: [
+                {
+                  title: 'Cancel',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                  },
+                },
+                {
+                  title: 'Remove',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    this.clearReaderCategory(false);
+                  },
+                  'class': 'btn btn-primary'
+                }
+              ],
+              class: ['align-modal']
+            });
+          } else {
+            this.collection.alt_meta.reader.category = null;
+            this.update('alt_meta.reader.category', {target:{value:''}});
+          }
+        },
         ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection'])
       },
       computed: {
@@ -433,6 +461,41 @@
         },
         languages() {
           return Languages;
+        },
+        
+        readerCategory: {
+          get() {
+            return this.collection.alt_meta.reader.category;
+          },
+          set(category) {
+            if (!this.collection.alt_meta.reader.category && category && category !== this.collection.alt_meta.reader.category) {
+              if (Array.isArray(this.currentCollection.bookids) && this.currentCollection.bookids.length > 0) {
+                return this.$root.$emit('show-modal', {
+                  title: 'Add Category and Genres',
+                  text: 'Add Collection Category and Book Genres?',
+                  buttons: [
+                    {
+                      title: 'Cancel',
+                      handler: () => {
+                        this.readerCategory = this.collection.alt_meta.reader.category;
+                        this.$forceUpdate();
+                        this.$root.$emit('hide-modal');
+                      }
+                    },
+                    {
+                      title: 'Add',
+                      handler: () => {
+                        this.$root.$emit('hide-modal');
+                        this.liveUpdate('alt_meta.reader.category', category);
+                      },
+                      class: ['btn btn-primary']
+                    }
+                  ]
+                });
+              }
+            }
+            return this.liveUpdate('alt_meta.reader.category', category);
+          }
         },
 
         ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'allowPublishCurrentCollection', 'bookCategories', 'currentCollectionId'])
