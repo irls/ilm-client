@@ -11,7 +11,7 @@
           @keyup="keycheck"
         >
         <div class="error-message" v-text="loginError"></div>
-        <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="login" value="Login" />
+        <input type="submit" :class="{ 'disabled': this.loginTimer }" @click="login" value="Login" />
         <div class="links"> <a @click="setActive('password')">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
       </div>
 
@@ -81,6 +81,10 @@ export default {
         return;
       }
 
+      if (this.loginTimer) {
+        return;
+      }
+
       this.user_login([this.loginUser, this.loginPassword])
         .then(()=>{
           return Promise.resolve();
@@ -131,6 +135,10 @@ export default {
     },
 
     keycheck (event) {
+      if (this.loginTimer) return;
+      if (this.loginUser.length && this.loginPassword.length) {
+        this.loginError = '';
+      }
       if (event.key === 'Enter') this.login()
     },
 
