@@ -6,10 +6,12 @@
       <!-- Login Form -->
       <div class="form-login" :class="{ 'active': active == 'login' }" id="form-login">
         <h3 class='title'>Login</h3>
-        <input type="text" name="user" placeholder="Email or Username" v-model="loginUser">
+        <input type="text" name="user" placeholder="Email or Username" v-model="loginUser"
+          @keyup="keycheck"
+        />
         <input type="password" name="password" placeholder="Password" v-model="loginPassword"
           @keyup="keycheck"
-        >
+        />
         <div class="error-message" v-text="loginError"></div>
         <input type="submit" :class="{ 'disabled': this.loginTimer }" @click="login" value="Login" />
         <div class="links"> <a @click="setActive('password')">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
