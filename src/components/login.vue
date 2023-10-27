@@ -25,7 +25,7 @@
         <div class="error-message" v-text="passwordResetError"></div>
         <div class="success-message" v-text="passwordResetSuccess"></div>
         <input type="submit"
-               :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}"
+               :class="{'disabled': passwordResetSuccess.length > 0}"
                :disabled="passwordResetSuccess.length > 0"
           @click="passwordreset(passwordEmail)"
           value='Send new password'>
