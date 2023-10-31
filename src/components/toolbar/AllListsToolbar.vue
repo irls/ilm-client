@@ -392,6 +392,15 @@ export default {
           this.activeTabIdx = 0;
         } break;
       }
+    },
+    fillFilters() {
+      if (this.showBooksFilters) {
+        this.$refs['booksFilters.secFilter'].value = this.booksFilters.secFilter;
+        this.$refs['booksFilters.filter'].value = this.booksFilters.filter;
+      }
+      if (this.showCollectionsFilters) {
+        this.$refs['collectionsFilters.filter'].value = this.collectionsFilters.filter;
+      }
     }
   },
 
@@ -400,6 +409,7 @@ export default {
     await Vue.nextTick();
     this.syncRouteWithTab();
     this.changeFilterVisual();
+    this.fillFilters();
   },
   watch:{
     async '$route' ($to, $from) {
@@ -407,6 +417,24 @@ export default {
         await Vue.nextTick();
         this.syncRouteWithTab();
         this.changeFilterVisual();
+      }
+    },
+    'showBooksFilters': {
+      handler() {
+        Vue.nextTick(() => {
+          if (this.showBooksFilters) {
+            this.fillFilters();
+          }
+        });
+      }
+    },
+    'showCollectionsFilters': {
+      handler() {
+        Vue.nextTick(() => {
+          if (this.showCollectionsFilters) {
+            this.fillFilters();
+          }
+        });
       }
     }
   },
