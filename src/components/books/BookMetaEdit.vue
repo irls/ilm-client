@@ -645,7 +645,12 @@ function _cacheDebounce (beforeHook, timeHook, bookid, timeout = 500) {
   return (...args) => {
     if (beforeHook.apply(this, args)) {
       clearTimeout(timer);
-      accum.push(args);
+      let prevIdx = accum.findIndex((el)=>el[0] === args[0]);
+      if (prevIdx >= 0) {
+        accum[prevIdx] = args;
+      } else {
+        accum.push(args);
+      }
       timer = setTimeout(() => {
         timeHook.apply(this, [{bookid: bookid}, ...accum]);
         accum = []
