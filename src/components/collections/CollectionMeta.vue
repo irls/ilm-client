@@ -486,7 +486,7 @@
                       title: 'Add',
                       handler: () => {
                         this.$root.$emit('hide-modal');
-                        this.liveUpdate('alt_meta.reader.category', category);
+                        this.update('alt_meta.reader.category', {target: {value: category}});
                       },
                       class: ['btn btn-primary']
                     }
