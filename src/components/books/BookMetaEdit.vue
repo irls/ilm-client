@@ -110,7 +110,12 @@
                       <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
                       <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
                     </div>
-                    <template v-for="(author, i) in currentBook.author" ><input v-model='currentBook.author[i]' v-on:keyup="debounceUpdate('author.'+i, $event.target.value, $event);" v-on:keydown="debounceUpdate('author.'+i, $event.target.value, $event);" :disabled="!allowMetadataEdit">
+                    <template v-for="(author, i) in currentBook.author" >
+                      <input v-model='currentBook.author[i]' 
+                      v-on:keyup="debounceUpdate('author.'+i, $event.target.value, $event);" 
+                      v-on:keydown="debounceUpdate('author.'+i, $event.target.value, $event);" 
+                      :disabled="!allowMetadataEdit"
+                      v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                       <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
                         <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                         <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
@@ -152,6 +157,7 @@
               <legend style="text-align: left;">URL slug</legend>
                   <input v-model='currentBook.slug'
                   v-on:change="lockLanguage = true; debounceUpdate('slug', $event.target.value,  $event);"
+                  v-on:keyup="clearError('slug', $event)"
                   :disabled="!allowMetadataEdit || currentBook.slug_status == -1 "
                   :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]"
                   maxlength="100" style="width: 100%;"
@@ -1203,6 +1209,16 @@ export default {
           this.jobDescription = this.currentJobInfo.description;
         }
       }
+    },
+    
+    'currentBook.slug': {
+      handler(val) {
+        if (this.currentBook.slug) {
+          if (this.requiredFields && this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid]['slug']) {
+            delete this.requiredFields[this.currentBook.bookid]['slug'];
+          }
+        }
+      }
     }
 
   },
@@ -1394,14 +1410,15 @@ export default {
 
     beforeMetaUpdateHook (...args) {
       let [key, value = null, _event = false, disable = false] = args;
+      let checkErrorKey = /^author\./.test(key) ? 'author' : key;
 
       if (this.requiredFields[this.currentBook.bookid]
-      && this.requiredFields[this.currentBook.bookid][key]) {
-        if (key != 'author'){
-          delete this.requiredFields[this.currentBook.bookid][key];
+      && this.requiredFields[this.currentBook.bookid][checkErrorKey]) {
+        if (checkErrorKey != 'author'){
+          delete this.requiredFields[this.currentBook.bookid][checkErrorKey];
         } else {
           if (this.currentBookMeta.author.join("").length !== 0){
-            delete this.requiredFields[this.currentBook.bookid][key];
+            delete this.requiredFields[this.currentBook.bookid][checkErrorKey];
           }
         }
       }
@@ -2408,6 +2425,15 @@ export default {
         case 'tts_narration':
           return this.debounceUpdate('trim_silence_config', {audio_file: false, tts: true, narration: true}, ev);
           break;
+      }
+    },
+    
+    clearError(field, event) {
+      if (this.requiredFields && this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][field]) {
+        if (event && event.target && event.target.value) {
+          delete this.requiredFields[this.currentBook.bookid][field];
+          this.$forceUpdate();
+        }
       }
     },
 
