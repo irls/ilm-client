@@ -55,7 +55,7 @@
       return {
         align_wpm_type: '',
         custom_wpm: 0,
-        custom_wpm_min: 70,
+        custom_wpm_min: 100,
         custom_wpm_max: 180,
         accordionContainerExpanded: 1
       }
