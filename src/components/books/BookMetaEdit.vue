@@ -178,7 +178,7 @@
                       <!--</template>-->
                     </select>
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-                      v-if="currentBook.alt_meta.reader.category"
+                      v-if="currentBook.alt_meta.reader.category && !categoryEditDisabled"
                       @click="currentBook.alt_meta.reader.category = null; debounceUpdate('alt_meta.reader.category', '', $event)"></i>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
                   </td>
@@ -194,7 +194,7 @@
                       <!--</template>-->
                     </select>
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
-                      v-if="currentBook.alt_meta.ocean.category"
+                      v-if="currentBook.alt_meta.ocean.category && !categoryEditDisabled"
                       @click="currentBook.alt_meta.ocean.category = null; debounceUpdate('alt_meta.ocean.category', '', $event)"></i>
                   </td>
                 </tr>
