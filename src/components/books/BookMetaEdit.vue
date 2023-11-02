@@ -2715,9 +2715,14 @@ select.text-danger#categorySelection, input.text-danger{
 
   .tab-container[role="tabpanel"] {
     padding-top: 3px;
-
+  }
+  #p-assignments.tab-container[role="tabpanel"],
+  #p-book-content.tab-container[role="tabpanel"] {
     fieldset {
       width: 99%;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-bottom: 0px;
     }
   }
 
