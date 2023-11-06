@@ -416,7 +416,7 @@
             //}
           },
           deep: true
-        }/*,
+        },/*
         'currentCollection._id': {
           handler() {
             if (this.$refs.collectionDescription) {
@@ -426,6 +426,15 @@
             }
           }
         }*/
+        'currentCollection.slug': {
+          handler(val) {
+            if (this.currentCollection.validationErrors.slug){
+              if (this.currentCollection.slug) {
+                delete this.currentCollection.validationErrors.slug;
+              }
+            }
+          }
+        }
       }
   }
 </script>
