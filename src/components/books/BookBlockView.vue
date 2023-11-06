@@ -2997,6 +2997,9 @@ Save text changes and realign the Block?`,
           if (!this.checkAllowNarrateUnassigned()) {
             return false;
           }
+          if (this.mode === 'narrate' && this.block && this.block.voicework !== 'narration') {
+            return false;
+          }
           if (this.allowBlockFlag) {
             if (this.block && this.block.voicework === 'narration') {
               if (type === 'editor' && this.mode === 'edit') {
