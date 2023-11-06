@@ -161,11 +161,24 @@
           canPublish = false;
           mandatoryFields.push('difficulty');
         }
+        let hasGenres = !this.isBookReaderCategory || (Array.isArray(this.currentBookMeta.genres) && this.currentBookMeta.genres.length > 0);
+        if (!hasGenres) {
+          canPublish = false;
+        }
 
 
         if(!canPublish){
           title = 'Publication error';
-          text = 'Book meta is incomplete. Define ' + mandatoryFields.join(", ") + ' before publishing';
+          let errorText = '';
+          if (mandatoryFields.length > 0) {
+            errorText+= `${mandatoryFields.join(", ")}`;
+            if (!hasGenres) {
+              errorText+= ` and Genres`;
+            }
+          } else if (!hasGenres) {
+            errorText+= ` Genres`;
+          }
+          text = 'Book meta is incomplete. Define ' + errorText + ' before publishing';
 
           buttons = [
               {
@@ -365,7 +378,7 @@
           return 'Published:';
         }
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection']),
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
