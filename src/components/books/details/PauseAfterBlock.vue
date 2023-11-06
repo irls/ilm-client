@@ -2,10 +2,10 @@
   <div v-bind:key="blockType + '_pause_after'" :class="['pause-after-container', 'mode-' + bookMode]">
     <template v-if="blockTypesInRange.length > 1">
       <template v-if="range.length > 1">
-        <div class="range-info">From {{range[0]}} to {{range[range.length - 1]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
+        <div class="range-info">From {{range[0]}} to {{range[range.length - 1]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a>&nbsp;-&nbsp;<a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
       <template v-else>
-        <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
+        <div class="range-info">{{range[0]}} sec. is applied to {{blockTypesInRange.length}} {{blockTypeLabel}} in range <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a>&nbsp;-&nbsp;<a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a></div>
       </template>
     </template>
     <template v-if="bookMode !== 'proofread'">
@@ -632,6 +632,9 @@
         display: block;
         top: 61%;
       }
+    }
+    .range-info {
+      margin: 0px 0px 7px 0px;
     }
   }
 </style>
