@@ -21,6 +21,7 @@ import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
+import genreModule from './modules/genre';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -85,7 +86,8 @@ export const store = new Vuex.Store({
     gridFilters,
     audioExport,
     tocSections,
-    ttsModule
+    ttsModule,
+    genreModule
   },
   state: {
     SelectionModalProgress:0,
@@ -654,7 +656,23 @@ export const store = new Vuex.Store({
       } else return false;
     },
     
-    selectionRecount: state => state.selectionRecount
+    selectionRecount: state => state.selectionRecount,
+    isBookReaderCategory: (state, getters) => {
+      if (!state.currentBookMeta) {
+        return false;
+      }
+      let checkItem = state.currentBookMeta;
+      if (state.currentBookMeta.collection_id && getters.currentBookCollection._id) {
+        checkItem = getters.currentBookCollection;
+      }
+      if (checkItem.alt_meta) {
+        return checkItem.alt_meta.reader && checkItem.alt_meta.reader.category ? true : false;
+      }
+      let categories = Array.isArray(state.bookCategories) ? state.bookCategories.find(category => {
+        return category.group === 'Reader';
+      }) : null;
+      return categories && categories.categories.includes(checkItem.category);
+    }
   },
 
   mutations: {
@@ -971,6 +989,15 @@ export const store = new Vuex.Store({
     SET_BOOK_PUBLISH_BUTTON_STATUS(state, status) {
       state.publishButtonStatus = status;
     },
+    // TODO: use next two mutations instead of previous two
+    CHECK_SET_ALLOW_BOOK_PUBLISH(state) {// change property status with check
+      this.commit('SET_ALLOW_BOOK_PUBLISH', state.currentJobInfo.workflow.status !== 'archived' && state.adminOrLibrarian);
+    },
+    CHECK_SET_BOOK_PUBLISH_BUTTON_STATUS(state) {// change property status with check
+      let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+      this.commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+    },
+    // END TODO
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
     },
@@ -2116,6 +2143,20 @@ export const store = new Vuex.Store({
       //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
       //return Promise.resolve('No data updated');
+      
+      if (!state.currentBookMeta.genres_manual) {
+        let updateGenres = Object.keys(update).find(updateField => {
+          return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
+        });
+        if (!updateGenres) {
+          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
+              updateGenres = true;
+            }
+        }
+        if (updateGenres) {
+          commit('genreModule/set_autoGenerateInProgress', true);
+        }
+      }
 
       const BOOKID = update.bookid || state.currentBookMeta._id;
 
@@ -2152,6 +2193,7 @@ export const store = new Vuex.Store({
             }
 
             //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
+            commit('genreModule/set_autoGenerateInProgress', false);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
