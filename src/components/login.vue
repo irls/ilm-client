@@ -6,12 +6,14 @@
       <!-- Login Form -->
       <div class="form-login" :class="{ 'active': active == 'login' }" id="form-login">
         <h3 class='title'>Login</h3>
-        <input type="text" name="user" placeholder="Email or Username" v-model="loginUser">
+        <input type="text" name="user" placeholder="Email or Username" v-model="loginUser"
+          @keyup="keycheck"
+        />
         <input type="password" name="password" placeholder="Password" v-model="loginPassword"
           @keyup="keycheck"
-        >
+        />
         <div class="error-message" v-text="loginError"></div>
-        <input type="submit" :class="{ 'disabled': !(loginUser && loginPassword) }" @click="login" value="Login" />
+        <input type="submit" :class="{ 'disabled': this.loginTimer }" @click="login" value="Login" />
         <div class="links"> <a @click="setActive('password')">Forgot your password?  <i class="fa fa-arrow-right"></i></a></div>
       </div>
 
@@ -22,13 +24,13 @@
         <input type="text" name="email" placeholder="Email" v-model="passwordEmail" v-on:input="clearPasswordMessage()">
         <div class="error-message" v-text="passwordResetError"></div>
         <div class="success-message" v-text="passwordResetSuccess"></div>
-        <input type="submit" 
-               :class="{'disabled': !passwordEmail || passwordResetSuccess.length > 0}" 
-               :disabled="passwordResetSuccess.length > 0" 
-          @click="passwordreset(passwordEmail)" 
+        <input type="submit"
+               :class="{'disabled': passwordResetSuccess.length > 0}"
+               :disabled="passwordResetSuccess.length > 0"
+          @click="passwordreset(passwordEmail)"
           value='Send new password'>
         <div class="links">
-          <a @click="setActive('login')"> 
+          <a @click="setActive('login')">
             <i class="fa fa-arrow-left"></i> Back to Login
           </a>
         </div>
@@ -56,6 +58,7 @@ export default {
 
       // Modal error messages
       loginError: '',
+      loginTimer: null,
       passwordError: '',
       passwordResetError: '',
       passwordResetSuccess: '',
@@ -64,7 +67,6 @@ export default {
   },
 
   components: {
-    
   },
 
   created () {
@@ -81,15 +83,37 @@ export default {
         return;
       }
 
+      if (this.loginTimer) {
+        return;
+      }
+
       this.user_login([this.loginUser, this.loginPassword])
         .then(()=>{
           return Promise.resolve();
         })
         .catch(error => {
-          this.loginError = error.message
+          if (error.timer) {
+
+            let lockTime = error.timer;
+            this.loginError = this.getLoginTimeCaption(lockTime);
+
+            this.loginTimer = setInterval(()=>{
+              lockTime -= 1000;
+              this.loginError = this.getLoginTimeCaption(lockTime);
+              if (lockTime <= 0) {
+                clearInterval(this.loginTimer);
+                this.loginTimer = null;
+                this.loginError = '';
+              }
+            }, 1000);
+
+          } else {
+            this.loginError = error.message;
+          }
         });
 
     },
+
     passwordreset (email) {
       this.passwordResetError = '';
       if (email.length === 0){
@@ -111,15 +135,20 @@ export default {
         }
       }
     },
+
     keycheck (event) {
+      if (this.loginTimer) return;
+      if (this.loginUser.length && this.loginPassword.length) {
+        this.loginError = '';
+      }
       if (event.key === 'Enter') this.login()
     },
-    
+
     clearPasswordMessage() {
       this.passwordResetError = '';
       this.passwordResetSuccess = '';
     },
-    
+
     setActive(value) {
       this.active = value;
       this.loginError = '';
@@ -127,6 +156,17 @@ export default {
       this.passwordResetError = '';
       this.passwordResetSuccess = '';
       this.passwordEmail = '';
+    },
+
+    getLoginTimeCaption (lockTime) {
+      let loginTimeCaption;
+      let timeInSec = lockTime / 1000;
+      if (timeInSec > 60) {
+        loginTimeCaption = Math.ceil(timeInSec / 60) + ' minutes';
+      } else {
+        loginTimeCaption = Math.round(timeInSec) + ' seconds';
+      }
+      return `Your account is currently locked. Wait ${loginTimeCaption} and try again`;
     }
 
   }

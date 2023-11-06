@@ -126,7 +126,7 @@
               </div>
             </div>
             <div class="control-wrapper" v-if="mode == 'block'">
-              <dropdown 
+              <dropdown v-ilm-tooltip.top="'Speed'"
                 v-model="playbackRate" 
                 :options="playbackRates" 
                 scrollHeight="410px" 
@@ -259,13 +259,15 @@
           playbackRates: [],
           fadePercent: '',
           fadePercents: ['to 95%', 'to 90%', 'to 75%', 'to 50%', 'to 25%', 'to 10%', 'to 5%'],
-          fadeSelectionLog: []
+          fadeSelectionLog: [],
+          remoteSilenceData: [],
+          silencePeaks: []
         }
       },
       mounted() {
         let self = this;
         Track.prototype.calculatePeaks = function(samplesPerPixel, sampleRate) {
-          calculateTrackPeaks.call(this, samplesPerPixel, sampleRate, SILENCE_VALUE);
+          calculateTrackPeaks.call(this, samplesPerPixel, sampleRate, SILENCE_VALUE, self.silencePeaks);
         }
         _Playout.prototype.setUpSource = function() {
           //console.log(self.audiosourceEditor.tracks[0].playout)
@@ -459,6 +461,7 @@
               this._clearHistoryLocal();
             }
             this.setAudioTasksBlockId([block.blockid, block._id, block.partIdx]);
+            this.fillSilenceSample();
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {
@@ -1319,20 +1322,128 @@
           this.$root.$off('for-audioeditor:reload-text', this._setText);
         },
         addSilenceLocal() {
-          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+          //let original_buffer = this.audiosourceEditor.activeTrack.buffer;
           let time = this._round(this.cursorPosition, 2);
           this.silenceLength = parseFloat(this.silenceLength);
 
-          let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
+          //let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
+          let silence = this.getSilenceSample();
 
-          silence.fill(SILENCE_VALUE);
           this.insertRangeAction(time, silence, this.silenceLength);
           //this.audiosourceEditor.draw(this.audiosourceEditor.render());
           //this.audiosourceEditor.drawRequest();
           //this.audiosourceEditor.renderTrackSection();
+          
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+              
+          let fadeTime = 0.02;
+          
+          let fadeOutStart = 0;
+          let fadeOutEnd = 0;
+          let fadeLength = fadeTime * original_buffer.sampleRate;
+          let fadePercent = 30;
+          let removePercent = (100 - fadePercent);
+          let range = [];
+          let maxRemote = this.remoteSilenceData.length > 0 ? Math.max(...this.remoteSilenceData) : 0;
+          
+          if (time >= fadeTime) {
+
+            let fadeOut = new Float32Array((fadeTime) * original_buffer.sampleRate);
+
+            fadeOut.fill(SILENCE_VALUE);
+            fadeOutStart = time - fadeTime;
+            fadeOutEnd = time;
+            range = this.cutRangeAction(fadeOutStart, fadeOutEnd);
+            let maxRange = Math.max(...range);
+            
+            if (maxRange > maxRemote) {
+              if (this.remoteSilenceData.length > 0) {
+                removePercent = 100 - maxRemote * 100 / maxRange;
+              }
+              // Fade out from original volume to fadePercent starting from selection start till fadeLength
+              for (let i = 0; i <= fadeLength; ++i) {
+                if (range[i]) {
+                  let currentPercent = i * removePercent / fadeLength;
+                  let currentDelta = currentPercent * Math.abs(range[i]) / 100;
+                  let currentValue;
+                  if (range[i] < 0) {
+                    currentValue = range[i] + currentDelta;
+                  } else if (range[i] > 0) {
+                    currentValue = range[i] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  fadeOut[i] = currentValue;
+                }
+              }
+              this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
+            }
+          }
+          // Fade in from fadePercent to original volume at the end of selection
+          //let fadeInStart = range.length - fadeLength;
+          let fadeInStart = time + this.silenceLength;
+          let fadeInEnd = time + this.silenceLength + fadeTime;
+          let rangeEnd = [];
+          
+          if (time < this.audioDuration - fadeTime) {
+          
+            let fadeIn = new Float32Array((fadeTime) * original_buffer.sampleRate);
+
+            fadeIn.fill(SILENCE_VALUE);
+            rangeEnd = this.cutRangeAction(fadeInStart, fadeInEnd);
+            
+            let maxRange = Math.max(...rangeEnd);
+            
+            if (maxRange > maxRemote) {
+              if (this.remoteSilenceData.length > 0) {
+                removePercent = 100 - maxRemote * 100 / maxRange;
+              }
+              for (let i = 0; i <= fadeLength; ++i) {
+                //console.log(i, fadeInStart, range.length)
+                //console.log(range[i]);
+                let currentPercent = i * removePercent / fadeLength;
+                //console.log(currentPercent);
+                let rangePos = rangeEnd.length - 1 - i;
+                if (rangeEnd[rangePos]) {
+                  let currentDelta = currentPercent * Math.abs(rangeEnd[rangePos]) / 100;
+                  let currentValue;
+                  if (rangeEnd[rangePos] < 0) {
+                    currentValue = rangeEnd[rangePos] + currentDelta;
+                  } else if (rangeEnd[rangePos] > 0) {
+                    currentValue = rangeEnd[rangePos] - currentDelta;
+                  } else {
+                    currentValue = 0;
+                  }
+                  fadeIn[rangePos] = currentValue;
+                }
+                //console.log('===========', silence[i]);
+              }
+
+              this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
+            }
+          }
+
+          // Fill middle part with fadePercent
+          /*for (let i = fadeLength + 1; i < fadeInStart; ++i) {
+            if (range[i]) {
+              let currentDelta = removePercent * Math.abs(range[i]) / 100;
+              let currentValue;
+              if (range[i] < 0) {
+                currentValue = range[i] + currentDelta;
+              } else if (range[i] > 0) {
+                currentValue = range[i] - currentDelta;
+              } else {
+                currentValue = 0;
+              }
+              silence[i] = currentValue;
+            }
+          }*/
 
 
-          this._addHistoryLocal('insert_silence', null, this.cursorPosition, this.cursorPosition + this.silenceLength);
+          this._addHistoryLocal('insert_silence', [
+            {range: range, start: fadeOutStart, end: fadeOutEnd, length: fadeTime},
+            {range: rangeEnd, start: fadeInStart, end: fadeInEnd, length: fadeTime}
+          ], this.cursorPosition, this.cursorPosition + this.silenceLength);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start >= time) {
               al.start = this._round(al.start + this.silenceLength, 2);
@@ -1345,7 +1456,7 @@
           });
           this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
-          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength]);
+          this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength, fadeTime]);
           //this.clearSelection();
           this.isModified = true;
           this.clearSelection();
@@ -1678,6 +1789,7 @@
               let fadeLength = calculatedFadeLength * original_buffer.sampleRate;
               let fadePercent = this.getClearFadePercent();
               let removePercent = (100 - fadePercent);
+              // Fade out from original volume to fadePercent starting from selection start till fadeLength
               for (let i = 0; i <= fadeLength; ++i) {
                 if (range[i]) {
                   let currentPercent = i * removePercent / fadeLength;
@@ -1693,6 +1805,7 @@
                   silence[i] = currentValue;
                 }
               }
+              // Fade in from fadePercent to original volume at the end of selection
               let fadeInStart = range.length - fadeLength;
               for (let i = 0; i <= fadeLength; ++i) {
                 //console.log(i, fadeInStart, range.length)
@@ -1715,6 +1828,7 @@
                 //console.log('===========', silence[i]);
               }
               
+              // Fill middle part with fadePercent
               for (let i = fadeLength + 1; i < fadeInStart; ++i) {
                 if (range[i]) {
                   let currentDelta = removePercent * Math.abs(range[i]) / 100;
@@ -2288,7 +2402,15 @@
                   this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
                   break;
                 case 'insert_silence':
+                  if (record.range[1].range && record.range[1].range.length) {
+                    this.cutRangeAction(record.range[1].start, record.range[1].end);
+                    this.insertRangeAction(record.range[1].start, record.range[1].range, record.range[1].length);
+                  }
                   this.cutRangeAction(record.selection.start, record.selection.end);
+                  if (record.range[0].range && record.range[0].range.length) {
+                    this.cutRangeAction(record.range[0].start, record.range[0].end);
+                    this.insertRangeAction(record.range[0].start, record.range[0].range, record.range[0].length);
+                  }
                   break;
                 case 'erase':
                   this.cutRangeAction(record.selection.start, record.selection.end);
@@ -3396,7 +3518,55 @@ Revert to original block audio?`,
         getClearFadePercent() {
           return parseInt(this.fadePercent.replace(/^\D*/, ''));
         },
-        ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId']),
+        fillSilenceSample() {
+          let loadRemoteSilence = new Promise((resolve, reject) => {
+            if (this.remoteSilenceData && this.remoteSilenceData.length > 0) {
+              return resolve(this.remoteSilenceData);
+            }
+            return this.loadSilenceSample()
+              .then(response => {
+                if (response && response.byteLength > 0) {
+                  return this.audiosourceEditor.ac.decodeAudioData(response)
+                    .then(silenceBuffer => {
+                      //console.log(silenceBuffer);
+                      this.remoteSilenceData = silenceBuffer.getChannelData(0);
+                      //console.log(this.remoteSilenceData);
+                      this.silencePeaks.push(Math.min(...this.remoteSilenceData));
+                      this.silencePeaks.push(Math.max(...this.remoteSilenceData));
+                      return resolve();
+                  });
+                }
+                return resolve();
+              })
+              .catch(() => {
+                return resolve();
+              });
+          });
+          return loadRemoteSilence
+            .then(() => {
+              return [];
+          });
+        },
+        getSilenceSample() {
+          let original_buffer = this.audiosourceEditor.activeTrack.buffer;
+          this.silenceLength = parseFloat(this.silenceLength);
+
+          let silence = new Float32Array(this.silenceLength * original_buffer.sampleRate);
+
+          if (this.remoteSilenceData && this.remoteSilenceData.length > 0) {
+            let silenceCopy = [...this.remoteSilenceData];
+            for (let i = 0; i < silence.length; ++i) {
+              silence[i] = silenceCopy.shift();
+              if (silenceCopy.length === 0) {
+                silenceCopy = [...this.remoteSilenceData];
+              }
+            }
+          } else {
+            silence.fill(SILENCE_VALUE);
+          }
+          return silence;
+        },
+        ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId', 'loadSilenceSample']),
         ...mapActions('userActions', ['updateUser'])
 
       },
@@ -3568,8 +3738,8 @@ Revert to original block audio?`,
                   return 'Pin';
                   break;
               }
-              return '';
             }
+            return '';
           },
           cache: false
         },
@@ -4293,7 +4463,7 @@ Revert to original block audio?`,
         border-radius: 20px;
         width: 34px;
         &[disabled] {
-          background: url("@{audio-btn}zoom-in-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-zoom-out {
@@ -4301,70 +4471,70 @@ Revert to original block audio?`,
         width: 34px;
         border-radius: 20px;
         &[disabled] {
-          background: url("@{audio-btn}zoom-out-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-fade {
         background: url("@{audio-btn}fade.png");
         width: 49px;
         &[disabled] {
-          background: url("@{audio-btn}fade-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-clear {
         background: url("@{audio-btn}clear.png");
         &[disabled] {
-          background: url("@{audio-btn}clear-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-erase {
         background: url("@{audio-btn}erase.png");
         &[disabled] {
-          background: url("@{audio-btn}erase-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-cut {
         background: url("@{audio-btn}cut.png");
         &[disabled] {
-          background: url("@{audio-btn}cut-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-add-silence {
         background: url("@{audio-btn}add-silence.png");
         width: 63px;
         &[disabled] {
-          background: url("@{audio-btn}add-silence-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-revert{
         background: url("@{audio-btn}revert.png");
         &[disabled] {
-          background: url("@{audio-btn}revert-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-save {
         background: url("@{audio-btn}save.png");
         &[disabled] {
-          background: url("@{audio-btn}save-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-save-and-realign {
         background: url("@{audio-btn}save-and-realign.png");
         width: 91px;
         &[disabled] {
-          background: url("@{audio-btn}save-and-realign-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-undo {
         background: url("@{audio-btn}undo.png");
         &[disabled] {
-          background: url("@{audio-btn}undo-disabled.png");
+          opacity: 0.5;
         }
       }
       &.-align {
         background: url("@{audio-btn}align.png");
         &[disabled] {
-          background: url("@{audio-btn}align-disabled.png");
+          opacity: 0.5;
         }
       }
     }

@@ -235,6 +235,12 @@
         let sliderHandler = accentElement.querySelector('.p-slider-handle');
         sliderHandler.focus();
       });
+      this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
+      this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
+    },
+    destroyed() {
+      this.$root.$off('from-audioeditor:visible', this.setMaxContainerHeight);
+      this.$root.$off('from-audioeditor:content-loaded', this.setMaxContainerHeight);
     },
     methods: {
       defaultVoice(type) {
@@ -254,7 +260,7 @@
         this.$emit('cancelAlign');
       },
       loadBookVoices() {
-        this.all_voices = [];
+        //this.all_voices = [];
         return this.getTTSVoices()
           .then(()=>{
             let allVoices = this.tts_voices;
