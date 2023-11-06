@@ -154,7 +154,7 @@ export const store = new Vuex.Store({
 
     blockers: [],
     reqSignals: {
-      metaUpdate: new AbortController()
+      metaUpdate: null, //new AbortController()
     },
 
     lockedBlocks: [],
@@ -1650,7 +1650,7 @@ export const store = new Vuex.Store({
               return c.bookid === data.meta.bookid;
             });
             if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
-              console.log(`liveDB.pubMetaV.data state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              console.log(`liveDB pubMetaV update: state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
@@ -1894,10 +1894,10 @@ export const store = new Vuex.Store({
           //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version'], data.meta);
-            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              console.log('liveDB metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
+            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
-              if (bookMetaIdx > -1) {
+              if (bookMetaIdx > -1  && data.meta['@version'] > state.books_meta[bookMetaIdx]['@version']) {
+                console.log('liveDB metaV update:', book_id, state.currentBookMeta['@version'], state.books_meta[bookMetaIdx]['@version'], data.meta['@version']);
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
                 commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
                 let allowPublish = state.adminOrLibrarian;
@@ -2118,6 +2118,9 @@ export const store = new Vuex.Store({
       //return Promise.resolve('No data updated');
 
       const BOOKID = update.bookid || state.currentBookMeta._id;
+
+      dispatch('signalRequest', 'metaUpdate');
+      //console.log(`SEND REQUEST:: `, BOOKID);
       return axios.put(`${state.API_URL}meta/${BOOKID}`, update, { signal: state.reqSignals.metaUpdate.signal })
         .then(response => {
           dispatch('tocSections/loadBookTocSections', []);
@@ -2156,12 +2159,13 @@ export const store = new Vuex.Store({
         })
         .catch(err => {
           if (err.message && err.message === 'canceled') {
+            //console.log(`CANCELED::: `);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
-              if (bookMetaIdx > -1) {
-                state.books_meta[bookMetaIdx]['@version'] += 1;
-                state.currentBookMeta['@version'] += 1;
-              }
+            if (bookMetaIdx > -1) {
+              state.books_meta[bookMetaIdx]['@version'] += 1;
+              //state.currentBookMeta['@version'] += 1;
             }
+          }
           return dispatch('checkError', err);
         })
     },
@@ -4862,7 +4866,12 @@ export const store = new Vuex.Store({
 
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
-        state.bookCategories = categories.data
+        const reader_categories = categories.data.filter(cat=>cat.group==='Reader');
+        const ocean_categories = categories.data.filter(cat=>cat.group==='Ocean');
+        state.bookCategories = {
+          reader: reader_categories[0].categories,
+          ocean: ocean_categories[0].categories,
+        }
         return Promise.resolve(state.bookCategories)
       })
       .catch(error => {
@@ -5335,11 +5344,16 @@ export const store = new Vuex.Store({
       return false;
     },
 
+    signalRequest({state}, signalName) {
+      state.reqSignals[signalName] = new AbortController();
+    },
+
     abortRequest({state}, signalName) {
       if (state.reqSignals[signalName] && state.reqSignals[signalName].abort) {
         state.reqSignals[signalName].abort();
+        state.reqSignals[signalName] = null;
       }
-      state.reqSignals[signalName] = new AbortController();
+      //state.reqSignals[signalName] = new AbortController();
     },
     
     loadSilenceSample({state}) {

@@ -139,18 +139,34 @@
     <fieldset>
       <table class="properties">
         <tr>
-          <td>
-            Category
-          </td>
-          <td>
-            <select :class="['form-control', {'-has-error': currentCollection.validationErrors.category}]" v-model="collection.category" v-on:change="update('category', $event)" :disabled="!allowCollectionsEdit">
-              <template v-for="(data, index) in bookCategories">
-                <optgroup :label="data.group">
-                  <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
-                </optgroup>
-              </template>
+          <td>Reader category</td>
+          <td class="category-wrapper">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['category']}]" v-model="collection.alt_meta.reader.category" v-on:change="update('alt_meta.reader.category', $event)" :disabled="!allowCollectionsEdit">
+              <!--<template v-for="(data, index) in bookCategories">-->
+                <!--<optgroup :label="data.group">-->
+                  <option v-for="(value, ind) in bookCategories.reader" :value="value">{{ value }}</option>
+                <!--</optgroup>-->
+              <!--</template>-->
             </select>
-            <span class="validation-error" v-if="currentCollection.validationErrors.category">{{ currentCollection.validationErrors['category'] }}</span>
+            <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+              v-if="allowCollectionsEdit && collection.alt_meta.reader.category"
+              @click="clearReaderCategory(true)"></i>
+            <span class="validation-error" v-if="currentCollection.validationErrors['category']">{{ currentCollection.validationErrors['category'] }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td>Ocean category</td>
+          <td class="category-wrapper">
+            <select :class="['form-control', {'-has-error': currentCollection.validationErrors['category']}]" v-model="collection.alt_meta.ocean.category" v-on:change="update('alt_meta.ocean.category', $event)" :disabled="!allowCollectionsEdit">
+              <!--<template v-for="(data, index) in bookCategories">-->
+                <!--<optgroup :label="data.group">-->
+                  <option v-for="(value, ind) in bookCategories.ocean" :value="value">{{ value }}</option>
+                <!--</optgroup>-->
+              <!--</template>-->
+            </select>
+            <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+              v-if="allowCollectionsEdit && collection.alt_meta.ocean.category"
+              @click="collection.alt_meta.ocean.category = null; update('alt_meta.ocean.category', {target:{value:''}})"></i>
           </td>
         </tr>
         <tr>
@@ -229,7 +245,7 @@
       name: 'CollectionMeta',
       data() {
         return {
-          'collection': {},
+          collection: {alt_meta:{ reader:{category: null}, ocean:{category: null}}},
           showCollectionCoverModal: false,
           collectionImage: '',
           showUnknownAuthor: false,
@@ -257,6 +273,7 @@
           } else {
             this.collection = {};
           }
+          //console.log(`this.currentCollection::: `,this.currentCollection);
           this.resetCollectionImage();
           if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
             this.$refs.collectionDescription.setValue(this.collection.description);
@@ -274,6 +291,14 @@
             && this.currentCollection.validationErrors[key]) {
             delete this.currentCollection.validationErrors[key];
           }
+          let keys = key.split('.');
+          if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+            if (keys[2] == 'category') {
+              try {
+                delete this.currentCollection.validationErrors['category'];
+              } catch (err) {}
+            }
+          }
           this.liveUpdate(key, value);
         },
         change(field) {
@@ -284,7 +309,14 @@
             return false;
           }
           let update = {};
-          update[field] = value;
+          let keys = field.split('.');
+          if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+            update[keys[0]] = this.currentCollection[keys[0]] || {};
+            update[keys[0]][keys[1]] = this.currentCollection[keys[0]][keys[1]] || {};
+            update[keys[0]][keys[1]][keys[2]] = (value !== '' ? value : null);
+          } else {
+            update[field] = value;
+          }
           return this.updateCollection(update)
           .then(() => {
             this.currentCollection[field] = value;
@@ -483,6 +515,16 @@
     border-radius: 10px;
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
+  }
+
+  td.category-wrapper {
+    position: relative;
+
+    .ico-clear-filter {
+      position: absolute;
+      top: 6px;
+      right: 29px;
+    }
   }
 
   /* Properties editor area */

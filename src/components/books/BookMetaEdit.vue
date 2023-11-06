@@ -174,18 +174,36 @@
                 </tr>
 
                 <tr class='category'>
-                  <td>Category</td>
-                  <td>
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBookCategory' @change="debounceUpdate('category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
-                      <template v-for="(data, index) in subjectCategories">
-                        <optgroup :label="data.group">
-                          <option v-for="(value, ind) in data.categories" :value="value">{{ value }}</option>
-                        </optgroup>
-                      </template>
+                  <td>Reader category</td>
+                  <td class="category-wrapper">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.alt_meta.reader.category' @change="debounceUpdate('alt_meta.reader.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                      <!--<template v-for="(data, index) in subjectCategories">-->
+                        <!--<optgroup :label="data.group">-->
+                          <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
+                        <!--</optgroup>-->
+                      <!--</template>-->
                     </select>
+                    <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+                      v-if="currentBook.alt_meta.reader.category && !categoryEditDisabled"
+                      @click="currentBook.alt_meta.reader.category = null; debounceUpdate('alt_meta.reader.category', '', $event)"></i>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
                   </td>
-                       </tr>
+                </tr>
+                <tr class='category'>
+                <td>Ocean category</td>
+                  <td class="category-wrapper">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.alt_meta.ocean.category' @change="debounceUpdate('alt_meta.ocean.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                      <!--<template v-for="(data, index) in subjectCategories">-->
+                        <!--<optgroup :label="data.group">-->
+                          <option v-for="(value, ind) in subjectCategories.ocean" :value="value">{{ value }}</option>
+                        <!--</optgroup>-->
+                      <!--</template>-->
+                    </select>
+                    <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
+                      v-if="currentBook.alt_meta.ocean.category && !categoryEditDisabled"
+                      @click="currentBook.alt_meta.ocean.category = null; debounceUpdate('alt_meta.ocean.category', '', $event)"></i>
+                  </td>
+                </tr>
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
@@ -633,7 +651,12 @@ function _cacheDebounce (beforeHook, timeHook, bookid, timeout = 500) {
   return (...args) => {
     if (beforeHook.apply(this, args)) {
       clearTimeout(timer);
-      accum.push(args);
+      let prevIdx = accum.findIndex((el)=>el[0] === args[0]);
+      if (prevIdx >= 0) {
+        accum[prevIdx] = args;
+      } else {
+        accum.push(args);
+      }
       timer = setTimeout(() => {
         timeHook.apply(this, [{bookid: bookid}, ...accum]);
         accum = []
@@ -689,7 +712,7 @@ export default {
       showModal: false,
       showModal_audio: false,
       bookEditCoverModalActive: false,
-      currentBook: { author: [] },
+      currentBook: { author: [], alt_meta: {reader: {}, ocean: {}} },
       masteringTask: {},
       importTask: {},
       linkTaskError: '',
@@ -1259,9 +1282,28 @@ export default {
 
         let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
-        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)){
+        const alt_meta = this.currentBookMeta.alt_meta;
+        let checkCategory = (
+          alt_meta.reader
+          && alt_meta.reader.category
+          && alt_meta.reader.category.trim().length
+          && !defaultCategory.includes(alt_meta.reader.category)
+        );
+        checkCategory = checkCategory || (
+          alt_meta.ocean
+          && alt_meta.ocean.category
+          && alt_meta.ocean.category.trim().length
+          && !defaultCategory.includes(alt_meta.ocean.category)
+        );
+        checkCategory = checkCategory || (
+          this.currentBookMeta.collection_id
+          && this.currentBookMeta.collection_id.length
+        ); // override by collection
+
+        if(!checkCategory) {
           this.requiredFields[this.currentBookMeta.bookid]['category'] = true;
         }
+        //this.requiredFields[this.currentBookMeta.bookid]['alt_meta.ocean.category'] = true;
 
         if (this.currentBookMeta.title == ''){
           this.requiredFields[this.currentBookMeta.bookid]['title'] = true;
@@ -1454,12 +1496,20 @@ export default {
       }
 
       let keys = key.split('.');
-      if (keys.length > 1) {
+      if (keys.length == 2) {
         if (keys[0] && ['styles'].includes(keys[0])) {
           this.currentBook[keys[0]][keys[1]] = value;
         }
       }
       //-- } -- end -- Set values immediately because of controls --//
+
+      if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+        if (keys[2] == 'category') {
+          try {
+            delete this.requiredFields[this.currentBook.bookid]['category'];
+          } catch (err) {}
+        }
+      }
 
       if (_event && _event.target) {
         if (disable) {
@@ -1487,8 +1537,15 @@ export default {
         }
 
         let keys = key.split('.');
-        key = keys[0];
-        if (keys.length > 1) {
+
+        if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
+          acc[keys[0]] = this.currentBook[keys[0]] || {};
+          acc[keys[0]][keys[1]] = this.currentBook[keys[0]][keys[1]] || {};
+          acc[keys[0]][keys[1]][keys[2]] = (value !== '' ? value : null);
+          return acc;
+        }
+        if (keys.length == 2) {
+          key = keys[0];
           const prevVal = this.currentBook[keys[0]];
           prevVal[keys[1]] = value;
           value = prevVal;
@@ -1509,7 +1566,7 @@ export default {
         });
 
         if (response && response.bookid === this.currentBook.bookid) {// ILM-5595 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
-          this.currentBook = Object.assign(this.currentBookMeta, update);
+          this.currentBook = Object.assign(this.currentBookMeta, response);
           this.currentBook.coverimg = this.currentBookFiles.coverimg;
 
           this.lockLanguage = false;
@@ -2082,12 +2139,12 @@ export default {
         let coupletInfo = {};
         this.$modal.show(CoupletWarningPopup, {
           coupletInfo: coupletInfo
-        }, 
+        },
         {
           height: 'auto',
           width: '440px',
           clickToClose: false
-        }, 
+        },
         {
           'closed': (e) => {
             if (coupletInfo && coupletInfo.success) {
@@ -2685,6 +2742,15 @@ select.text-danger#categorySelection, input.text-danger{
   .tab-container[role="tabpanel"] {
     padding-top: 3px;
   }
+  #p-assignments.tab-container[role="tabpanel"],
+  #p-book-content.tab-container[role="tabpanel"] {
+    fieldset {
+      width: 98%;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-bottom: 3px;
+    }
+  }
 
   .block-style-tabs {
     .block-style-fieldset {
@@ -2912,6 +2978,16 @@ select.text-danger#categorySelection, input.text-danger{
     color: #fff;
   }
 
+  td.category-wrapper {
+    position: relative;
+
+    .ico-clear-filter {
+      position: absolute;
+      top: 6px;
+      right: 29px;
+    }
+  }
+
   .tags-input {
     width: 100%;
   }
@@ -2922,23 +2998,25 @@ select.text-danger#categorySelection, input.text-danger{
     position: fixed;
     top: 0px;
     left: 0px;
-}
-.block-style-tabs {
-  .nav-tabs-wrapper {
-    li:disabled, li[disabled="true"] {
-      display: none;
+  }
+
+  .block-style-tabs {
+    .nav-tabs-wrapper {
+      li:disabled, li[disabled="true"] {
+        display: none;
+      }
+    }
+    .tab-container {
+      &:disabled, &[disabled="true"] {
+        display: none;
+      }
     }
   }
-  .tab-container {
-    &:disabled, &[disabled="true"] {
-      display: none;
-    }
+
+  ul.no-bullets {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
   }
-}
-ul.no-bullets {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
 
 </style>

@@ -23,6 +23,7 @@ class Collection {
     this.author      = Array.isArray(data.author) ? data.author : [];
     this.author_en   = data.author_en || '';
     this.category    = data.category || '';
+    this.alt_meta    = data.alt_meta || { reader:{category: null}, ocean:{category: null}};
     this.slug        = data.slug || '';
     this.translator  = data.translator || '';
     this.difficulty  = data.difficulty || null;
