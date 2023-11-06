@@ -281,7 +281,8 @@ export const store = new Vuex.Store({
       playingPauseAfter: false
     },
     pauseAfterBlockXhr: null,
-    pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
+    pauseLiveDBBlocks: [],// blocks with pending updates, shall be skipped from liveDB updates
+    selectionRecount: false
   }, // end state
 
   getters: {
@@ -651,7 +652,9 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
-    }
+    },
+    
+    selectionRecount: state => state.selectionRecount
   },
 
   mutations: {
@@ -3034,9 +3037,11 @@ export const store = new Vuex.Store({
 
     async setBlockSelection({state, commit, dispatch}, selection) {
       if (!_.isEqual(state.blockSelection, selection)) {
+        this.selectionRecount = true;
         await dispatch('set_block_selection',selection)
         await dispatch('getAlignCount', selection);
         await dispatch('recountApprovedInRangeAsync', selection);
+        this.selectionRecount = false;
       }
     },
 
