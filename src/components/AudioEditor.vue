@@ -3856,6 +3856,7 @@ Revert to original block audio?`,
             });
             setTimeout(() => {
               this.setDragLimit();
+              this.setSelectionWidth();// pin selection highlight to positions
             }, 50);
             this._showSelectionBorders();
             this._scrollToCursor();
