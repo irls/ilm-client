@@ -168,9 +168,15 @@ export default {
         .filter(book => (state.booksFilters.jobStatus.length == 0 || (state.booksFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          const bookCategories = Object.keys(book.alt_meta).reduce((acc, key)=>{
+            if (book.alt_meta[key].category && book.alt_meta[key].category.length) {
+              acc.push(book.alt_meta[key].category);
+            }
+            return acc;
+          }, []);
           const strParts = [
             book.title, book.subtitle, book.slug,
-            bookAuthors, book.bookid, book.category,
+            bookAuthors, book.bookid, ...bookCategories,
             //book.hashTags, book.executors.editor._id,
             //book.executors.editor.name, book.executors.editor.title
             //book.description
@@ -204,9 +210,15 @@ export default {
             .filter(coll => (state.booksFilters.language.length == 0 || (state.booksFilters.language).indexOf(coll.language) >= 0))
             .filter(coll => {
               const collAuthors = Array.isArray(coll.author) ? coll.author.join('|') : coll.author;
+              const collCategories = Object.keys(coll.alt_meta).reduce((acc, key)=>{
+                if (coll.alt_meta[key].category && coll.alt_meta[key].category.length) {
+                  acc.push(coll.alt_meta[key].category);
+                }
+                return acc;
+              }, []);
               const strParts = [
                 coll.title, coll.subtitle, coll.slug,
-                collAuthors, coll.category, coll._id
+                collAuthors, ...collCategories, coll._id
               ];
               const str = prepareForFilter(strParts.join(' '));
               const find = splitPrepareForFilter(state.collectionsFilters.filter);
@@ -237,9 +249,15 @@ export default {
         .filter(book => (state.booksFilters.jobStatus.length == 0 || (state.booksFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
           const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          const bookCategories = Object.keys(book.alt_meta).reduce((acc, key)=>{
+            if (book.alt_meta[key].category && book.alt_meta[key].category.length) {
+              acc.push(book.alt_meta[key].category);
+            }
+            return acc;
+          }, []);
           const strParts = [
             book.title, book.subtitle, book.slug,
-            bookAuthors, book.bookid, book.category,
+            bookAuthors, book.bookid, ...bookCategories,
             //book.hashTags, book.executors.editor._id,
             //book.executors.editor.name, book.executors.editor.title
             //book.description

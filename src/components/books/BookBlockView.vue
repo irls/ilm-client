@@ -176,7 +176,7 @@
                   </template>
                   <template v-if="block.voicework === 'tts'">
                     <div class="par-ctrl-divider"></div>
-                    <i class="fa fa-volume-up" title="Text to Speech"></i>
+                    <i class="fa fa-volume-up" :title="ttsAudioQualityTitle"></i>
                   </template>
                   <template v-else-if="block.audio_quality && !['illustration', 'hr'].includes(block.type)">
                     <div class="par-ctrl-divider"></div>
@@ -1209,18 +1209,41 @@ Save or discard your changes to continue editing`,
       },
       audioQualityTitle: {
         get() {
+          let title = "";
           switch (this.block.audio_quality) {
             case 'raw':
-              return "Raw";
+              title = "Raw";
               break;
             case 'improved':
-              return "Improved";
+              title = "Improved";
               break;
             case 'mastered':
-              return "Mastered";
+              title = "Mastered";
               break;
           }
-          return "";
+          if (this.block.aligned_wpm) {
+            title+= `, ${this.block.aligned_wpm} wpm`;
+          }
+          return title;
+        },
+        cache: false
+      },
+      ttsAudioQualityTitle: {
+        get() {
+          let title = "Text to Speech";
+          if (!this.block.tts_voice_name && this.block.tts_voice_data && this.block.tts_voice_data.name) {
+            this.block.tts_voice_name = this.block.tts_voice_data.name;
+            this.block.tts_voice_wpm = this.block.tts_voice_data.wpm;
+          }
+          if (this.block.tts_voice_name) {
+            title+= `, ${this.block.tts_voice_name}`;
+          }
+          if (this.block.aligned_wpm) {
+            title+= `, custom, ${this.block.aligned_wpm} wpm`;
+          } else if (this.block.tts_voice_wpm) {
+            title+= `, original, ${this.block.tts_voice_wpm} wpm`;
+          }
+          return title;
         },
         cache: false
       },
@@ -2917,12 +2940,13 @@ Save text changes and realign the Block?`,
           this.block.footnotes[pos] = new FootNote(this.block.footnotes[pos]);
         }
         let isPasteEvent = ev.relatedTarget && ev.relatedTarget.id && ev.relatedTarget.id.indexOf('medium-editor-pastebin') === 0;
+        let isRedactor = ev.relatedTarget && ev.relatedTarget.classList && ev.relatedTarget.classList.contains('medium-editor-action');
         if (field && ev && ev.target) {
           if (typeof ev.target.value !== 'undefined') {
             if (this.block.footnotes[pos] && this.block.footnotes[pos].hasAttribute(field)) {
               this.block.footnotes[pos][field] = ev.target.value;
             }
-          } else if (field === 'content' && !isPasteEvent) {
+          } else if (field === 'content' && !isPasteEvent && !isRedactor) {
             this.block.footnotes[pos][field] = ev.target.innerHTML;
           }
         }
@@ -2995,6 +3019,9 @@ Save text changes and realign the Block?`,
 
         if (foundBlockFlag.length == 0) {
           if (!this.checkAllowNarrateUnassigned()) {
+            return false;
+          }
+          if (this.mode === 'narrate' && this.block && this.block.voicework !== 'narration') {
             return false;
           }
           if (this.allowBlockFlag) {

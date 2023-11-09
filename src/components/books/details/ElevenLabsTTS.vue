@@ -4,6 +4,9 @@
       <legend>
         Align text with TTS audio
       </legend>
+      <AlignAudioSpeed 
+        :audio_type="'tts'"
+        :is_catalog_active="is_active"/>
       <table class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -169,6 +172,7 @@
   import SelectTTSVoice from '../../generic/SelectTTSVoice_el';
   import Slider from 'primevue/slider';
   import lodash from 'lodash';
+  import AlignAudioSpeed from './AlignAudioSpeed.vue';
   //import v_modal from 'vue-js-modal';
   
   //Vue.use(v_modal, { dialog: true });
@@ -196,16 +200,21 @@
         generating_example: null,
         audio_playing_type: null,
         audio_playing_voice: null,
-        playing_generated_example: false
+        playing_generated_example: false,
+        alignWpmSettings: {
+          type: 'custom',
+          wpm: 140
+        }
       }
     },
     components: {
       'select-tts-voice': SelectTTSVoice,
-      'Slider': Slider
+      'Slider': Slider,
+      'AlignAudioSpeed': AlignAudioSpeed
     },
     props: ['is_active'],
     computed: {
-      ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid']),
+      ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid', 'user']),
       ...mapGetters('ttsModule', ['new_voice_settings', 'tts_voices']),
       alignProcess: {
         get() {
@@ -235,6 +244,12 @@
         let sliderHandler = accentElement.querySelector('.p-slider-handle');
         sliderHandler.focus();
       });
+      this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
+      this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
+    },
+    destroyed() {
+      this.$root.$off('from-audioeditor:visible', this.setMaxContainerHeight);
+      this.$root.$off('from-audioeditor:content-loaded', this.setMaxContainerHeight);
     },
     methods: {
       defaultVoice(type) {
@@ -254,7 +269,7 @@
         this.$emit('cancelAlign');
       },
       loadBookVoices() {
-        this.all_voices = [];
+        //this.all_voices = [];
         return this.getTTSVoices()
           .then(()=>{
             let allVoices = this.tts_voices;
@@ -495,6 +510,10 @@
           this.new_voice.accent_strength = this.new_voice_settings.accent_strength.min;
         }
         this.new_voice.name = '';
+      },
+      alignWpmSettingsChanged(data) {
+        this.alignWpmSettings.type = data.type;
+        this.alignWpmSettings.wpm = data.wpm;
       },
       ...mapActions(['updateBookMeta']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])

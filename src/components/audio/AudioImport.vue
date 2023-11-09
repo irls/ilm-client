@@ -447,9 +447,21 @@ export default {
       if (this.saveDisabled) {
         return '';
       }
+      let addedFiles = this.$refs.uploadDropzone.getQueuedFiles();
+      if (addedFiles && addedFiles.length > 0) {
+        addedFiles.forEach(file => {
+          if (file.size === 0) {
+            this.$refs.uploadDropzone.removeFile(file);
+          }
+        });
+      }
       this.audiobook.report = "";
       this.uploadFinished = false;
       this.isUploading = true;
+      if (this.$refs.uploadDropzone.getQueuedFiles().length === 0 && !this.audioURL) {
+        this.closeForm();
+        return;
+      }
       this.$store.commit('set_updateAudiobookProgress', true);
       if (this.audioFiles.length === 0 && this.audioURL) {
         this.onUploadFinished();

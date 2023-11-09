@@ -21,6 +21,7 @@ import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
+import genreModule from './modules/genre';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -85,7 +86,8 @@ export const store = new Vuex.Store({
     gridFilters,
     audioExport,
     tocSections,
-    ttsModule
+    ttsModule,
+    genreModule
   },
   state: {
     SelectionModalProgress:0,
@@ -154,7 +156,7 @@ export const store = new Vuex.Store({
 
     blockers: [],
     reqSignals: {
-      metaUpdate: new AbortController()
+      metaUpdate: null, //new AbortController()
     },
 
     lockedBlocks: [],
@@ -281,7 +283,8 @@ export const store = new Vuex.Store({
       playingPauseAfter: false
     },
     pauseAfterBlockXhr: null,
-    pauseLiveDBBlocks: []// blocks with pending updates, shall be skipped from liveDB updates
+    pauseLiveDBBlocks: [],// blocks with pending updates, shall be skipped from liveDB updates
+    selectionRecount: false
   }, // end state
 
   getters: {
@@ -651,6 +654,24 @@ export const store = new Vuex.Store({
         res._id = prevCollection._id;
         return res;
       } else return false;
+    },
+    
+    selectionRecount: state => state.selectionRecount,
+    isBookReaderCategory: (state, getters) => {
+      if (!state.currentBookMeta) {
+        return false;
+      }
+      let checkItem = state.currentBookMeta;
+      if (state.currentBookMeta.collection_id && getters.currentBookCollection._id) {
+        checkItem = getters.currentBookCollection;
+      }
+      if (checkItem.alt_meta) {
+        return checkItem.alt_meta.reader && checkItem.alt_meta.reader.category ? true : false;
+      }
+      let categories = Array.isArray(state.bookCategories) ? state.bookCategories.find(category => {
+        return category.group === 'Reader';
+      }) : null;
+      return categories && categories.categories.includes(checkItem.category);
     }
   },
 
@@ -968,6 +989,15 @@ export const store = new Vuex.Store({
     SET_BOOK_PUBLISH_BUTTON_STATUS(state, status) {
       state.publishButtonStatus = status;
     },
+    // TODO: use next two mutations instead of previous two
+    CHECK_SET_ALLOW_BOOK_PUBLISH(state) {// change property status with check
+      this.commit('SET_ALLOW_BOOK_PUBLISH', state.currentJobInfo.workflow.status !== 'archived' && state.adminOrLibrarian);
+    },
+    CHECK_SET_BOOK_PUBLISH_BUTTON_STATUS(state) {// change property status with check
+      let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+      this.commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
+    },
+    // END TODO
     SET_ALLOW_COLLECTION_PUBLISH(state, allow) {
       state.allowPublishCurrentCollection = allow;
     },
@@ -1647,7 +1677,7 @@ export const store = new Vuex.Store({
               return c.bookid === data.meta.bookid;
             });
             if (bIdx > -1 && state.books_meta[bIdx]['@version'] < data.meta['@version']) {
-              console.log(`liveDB.pubMetaV.data state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
+              console.log(`liveDB pubMetaV update: state.books_meta[${bIdx}]: `, state.books_meta[bIdx]['@version'], data.meta['@version']);
               state.books_meta[bIdx].isInTheQueueOfPublication = data.meta.isInTheQueueOfPublication;
               state.books_meta[bIdx].isIntheProcessOfPublication = data.meta.isIntheProcessOfPublication;
               state.books_meta[bIdx].publicationStatus = data.meta.publicationStatus;
@@ -1891,10 +1921,10 @@ export const store = new Vuex.Store({
           //console.log(`state.liveDB.startWatch(${book_id} + '-metaV', 'metaV',: `, );
           state.liveDB.startWatch(book_id + '-metaV', 'metaV', {bookid: book_id}, (data) => {
             //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version'], data.meta);
-            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid && data.meta['@version'] > state.currentBookMeta['@version']) {
-              console.log('liveDB metaV watch:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
+            if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
-              if (bookMetaIdx > -1) {
+              if (bookMetaIdx > -1  && data.meta['@version'] > state.books_meta[bookMetaIdx]['@version']) {
+                console.log('liveDB metaV update:', book_id, state.currentBookMeta['@version'], state.books_meta[bookMetaIdx]['@version'], data.meta['@version']);
                 state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
                 commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
                 let allowPublish = state.adminOrLibrarian;
@@ -2113,8 +2143,25 @@ export const store = new Vuex.Store({
       //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
       //return Promise.resolve('No data updated');
+      
+      if (!state.currentBookMeta.genres_manual) {
+        let updateGenres = Object.keys(update).find(updateField => {
+          return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
+        });
+        if (!updateGenres) {
+          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
+              updateGenres = true;
+            }
+        }
+        if (updateGenres) {
+          commit('genreModule/set_autoGenerateInProgress', true);
+        }
+      }
 
       const BOOKID = update.bookid || state.currentBookMeta._id;
+
+      dispatch('signalRequest', 'metaUpdate');
+      //console.log(`SEND REQUEST:: `, BOOKID);
       return axios.put(`${state.API_URL}meta/${BOOKID}`, update, { signal: state.reqSignals.metaUpdate.signal })
         .then(response => {
           dispatch('tocSections/loadBookTocSections', []);
@@ -2146,6 +2193,7 @@ export const store = new Vuex.Store({
             }
 
             //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
+            commit('genreModule/set_autoGenerateInProgress', false);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
@@ -2153,12 +2201,13 @@ export const store = new Vuex.Store({
         })
         .catch(err => {
           if (err.message && err.message === 'canceled') {
+            //console.log(`CANCELED::: `);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
-              if (bookMetaIdx > -1) {
-                state.books_meta[bookMetaIdx]['@version'] += 1;
-                state.currentBookMeta['@version'] += 1;
-              }
+            if (bookMetaIdx > -1) {
+              state.books_meta[bookMetaIdx]['@version'] += 1;
+              //state.currentBookMeta['@version'] += 1;
             }
+          }
           return dispatch('checkError', err);
         })
     },
@@ -3034,9 +3083,11 @@ export const store = new Vuex.Store({
 
     async setBlockSelection({state, commit, dispatch}, selection) {
       if (!_.isEqual(state.blockSelection, selection)) {
+        this.selectionRecount = true;
         await dispatch('set_block_selection',selection)
         await dispatch('getAlignCount', selection);
         await dispatch('recountApprovedInRangeAsync', selection);
+        this.selectionRecount = false;
       }
     },
 
@@ -4857,7 +4908,12 @@ export const store = new Vuex.Store({
 
     getBookCategories({state}) {
       return axios.get(state.API_URL + 'books/categories').then(categories => {
-        state.bookCategories = categories.data
+        const reader_categories = categories.data.filter(cat=>cat.group==='Reader');
+        const ocean_categories = categories.data.filter(cat=>cat.group==='Ocean');
+        state.bookCategories = {
+          reader: reader_categories[0].categories,
+          ocean: ocean_categories[0].categories,
+        }
         return Promise.resolve(state.bookCategories)
       })
       .catch(error => {
@@ -5330,11 +5386,25 @@ export const store = new Vuex.Store({
       return false;
     },
 
+    signalRequest({state}, signalName) {
+      state.reqSignals[signalName] = new AbortController();
+    },
+
     abortRequest({state}, signalName) {
       if (state.reqSignals[signalName] && state.reqSignals[signalName].abort) {
         state.reqSignals[signalName].abort();
+        state.reqSignals[signalName] = null;
       }
-      state.reqSignals[signalName] = new AbortController();
+      //state.reqSignals[signalName] = new AbortController();
+    },
+    
+    loadSilenceSample({state}) {
+      return axios.get(state.API_URL + 'get_silence_sample', {
+        responseType: 'arraybuffer'
+      })
+        .then(response => {
+          return response.data;
+        })
     }
   }
 })

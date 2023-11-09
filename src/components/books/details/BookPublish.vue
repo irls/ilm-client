@@ -122,8 +122,24 @@
             mandatoryFields.push('Author EN (author English translation)');
         }
 
-        //if (!this.currentBookMeta.collection_id || !this.currentBookMeta.collection_id.length) {
-        if(!this.currentBookMeta.category || defaultCategory.includes(this.currentBookMeta.category)) {
+        const alt_meta = this.currentBookMeta.alt_meta;
+        let checkCategory = (
+          alt_meta.reader
+          && alt_meta.reader.category
+          && alt_meta.reader.category.trim().length
+          && !defaultCategory.includes(alt_meta.reader.category)
+        );
+        checkCategory = checkCategory || (
+          alt_meta.ocean
+          && alt_meta.ocean.category
+          && alt_meta.ocean.category.trim().length
+          && !defaultCategory.includes(alt_meta.ocean.category)
+        );
+        checkCategory = checkCategory || (
+          this.currentBookMeta.collection_id
+          && this.currentBookMeta.collection_id.length
+        ); // override by collection
+        if(!checkCategory) {
             canPublish = false;
             mandatoryFields.push('Category');
         }
@@ -132,7 +148,6 @@
             canPublish = false;
             mandatoryFields.push('URL slug');
         }
-        //}
 
         if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
           canPublish = false;
@@ -146,11 +161,24 @@
           canPublish = false;
           mandatoryFields.push('difficulty');
         }
+        let hasGenres = !this.isBookReaderCategory || (Array.isArray(this.currentBookMeta.genres) && this.currentBookMeta.genres.length > 0);
+        if (!hasGenres) {
+          canPublish = false;
+        }
 
 
         if(!canPublish){
           title = 'Publication error';
-          text = 'Book meta is incomplete. Define ' + mandatoryFields.join(", ") + ' before publishing';
+          let errorText = '';
+          if (mandatoryFields.length > 0) {
+            errorText+= `${mandatoryFields.join(", ")}`;
+            if (!hasGenres) {
+              errorText+= ` and Genres`;
+            }
+          } else if (!hasGenres) {
+            errorText+= ` Genres`;
+          }
+          text = 'Book meta is incomplete. Define ' + errorText + ' before publishing';
 
           buttons = [
               {
@@ -350,7 +378,7 @@
           return 'Published:';
         }
       },
-      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection']),
+      ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
     mounted() {
