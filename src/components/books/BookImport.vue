@@ -187,10 +187,7 @@
 
 <script>
 
-import axios from 'axios'
-import api_config from '../../mixins/api_config.js'
-
-const API_URL = process.env.ILM_API + '/api/v1/'
+import { mapActions } from 'vuex';
 
 export default {
   data() {
@@ -219,7 +216,6 @@ export default {
         }
     }
   },
-  mixins: [api_config],
   props: {
       'multiple': {
         type: Boolean,
@@ -306,9 +302,7 @@ export default {
         //this.$emit('close_modal', false)
         return false;
       }
-      let vu_this = this
-      let api = this.$store.state.auth.getHttp()
-
+      
       this.formData.append('bookType', this.bookTypes[this.bookType]);
       if (!this.uploadFiles.bookFiles && this.bookURL.length) this.formData.append('bookURL', this.bookURL);
       if (!this.uploadFiles.audioFiles && this.audioURL.length) this.formData.append('audioURL', this.audioURL);
@@ -316,28 +310,22 @@ export default {
       this.formData.append('bookId', this.bookId);
 
       var config = {
-        onUploadProgress: function(progressEvent) {
+        onUploadProgress: (progressEvent) => {
           var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
-          vu_this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
+          this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
         }
       }
       this.isUploading = true
-      return api.post('/api/v1/books', this.formData, config)
+      return this.uploadBook([this.formData, config])
       .then((response) => {
-        if (response.status===200) {
-          // hide modal after one second
-          this.uploadProgress = "Upload Successful"
-          if (this.isModal) {
-            this.closeForm(true);
-          } else {
-            this.formReset(true);
-          }
-          return Promise.resolve({ok: true});
+        // hide modal after one second
+        this.uploadProgress = "Upload Successful"
+        if (this.isModal) {
+          this.closeForm(true);
         } else {
-          // not sure what we should be doing here
-          this.formReset();
-          return Promise.resolve({ok: true});
+          this.formReset(true);
         }
+        return Promise.resolve({ok: true});
       }).catch((err) => {
         //console.log('importBook Err:', err);
         this.formReset();
@@ -387,7 +375,8 @@ export default {
         self.formReset()
         self.$emit('close_modal', response)
       }, 1000)
-    }
+    },
+    ...mapActions(['uploadBook'])
   },
   watch: {
 //     forceUpload(val) {
