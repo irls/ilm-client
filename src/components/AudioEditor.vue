@@ -3857,6 +3857,18 @@ Revert to original block audio?`,
             setTimeout(() => {
               this.setDragLimit();
               this.setSelectionWidth();// pin selection highlight to positions
+              // move position lines to cursor
+              let cursorPosition = document.querySelector('.cursor-position');
+              if (cursorPosition && cursorPosition.style && cursorPosition.style.left) {
+                let selectionPoint = document.querySelector('.selection.point');
+                if (selectionPoint) {
+                  selectionPoint.style.left = cursorPosition.style.left;
+                }
+                let cursor = document.querySelector('.cursor');
+                if (cursor) {
+                  cursor.style.left = cursorPosition.style.left;
+                }
+              }
             }, 50);
             this._showSelectionBorders();
             this._scrollToCursor();
