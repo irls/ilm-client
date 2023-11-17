@@ -26,7 +26,7 @@
         setMenu(x, y, container) {
           let menuWidth = this.$refs.menu.offsetWidth;
           let containerWidth = container.offsetWidth;
-            if (x + menuWidth > containerWidth) {
+            if (x + menuWidth > containerWidth && menuWidth < containerWidth) {
               //show menu on the left-bottom of cursor position
               x = x - menuWidth;
             }
