@@ -2765,7 +2765,7 @@
                   $(this).css('display', 'none');
               });
               if (this.$refs.waveformContext) {
-                this.$refs.waveformContext.open(e);
+                this.$refs.waveformContext.open(e, document.querySelector('.waveform'));
                 $('body').one('click', () => {
                   this.$refs.waveformContext.close();
                   this.contextPosition = null;
