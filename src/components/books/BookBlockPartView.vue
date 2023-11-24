@@ -455,7 +455,9 @@ export default {
       splitPinSelection: null,
       editingLocked: false,
       pinUpdated: null,
-      maxSplitPoints: 15
+      maxSplitPoints: 15,
+      startedRecording: null,
+      recordingPauses: []
     }
   },
   components: {
@@ -2670,7 +2672,8 @@ export default {
               this.isRecording = true;
               this.startRecording(this.blockPartIdx)
                 .then(() => {
-
+                  this.startedRecording = Date.now();
+                  this.recordingPauses = [];
                 })
                 .catch(err => {
                   this.isRecording = false;
@@ -2709,7 +2712,7 @@ export default {
           this.isUpdating = true;
           this.block.parts[this.blockPartIdx].isUpdating = true;
         }
-        return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
+        return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next, this.recordingPauses)
           .then(() => {
             this.resetListenCompressed();
             this.isUpdating = false;
@@ -2730,11 +2733,17 @@ export default {
       },
       pauseRecording() {
         this.isRecordingPaused = true;
+        let pausePlace = Date.now() - this.startedRecording;
         this.recorder.pauseRecording();
+        if (this.recordingPauses.length > 0) {
+          pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
+        }
+        this.recordingPauses.push(pausePlace);
       },
       resumeRecording() {
         this.isRecordingPaused = false;
         this.recorder.resumeRecording();
+        this.startedRecording = Date.now();
       },
       initPlayer() {
         this.player = new ReadAlong({

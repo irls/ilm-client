@@ -44,7 +44,8 @@ let defBlock = [
   'pause_after',
   'aligned_wpm',
   'tts_voice',
-  'tts_voice_data'
+  'tts_voice_data',
+  'recording_pauses'
 ];
 
 let BlockTypes = {
@@ -374,6 +375,8 @@ class BookBlock {
     this.tts_voice_name = init.tts_voice_name || '';
     this.tts_voice_wpm = init.tts_voice_wpm || null;
     this.tts_voice_data = init.tts_voice_data || {};
+    this.recording_pauses = init.recording_pauses || [];
+    this.recording_pauses_original = init.recording_pauses_original || [];
     /*if (!this.tts_voice_name && this.tts_voice_data) {
       this.tts_voice_name = this.tts_voice_data.name;
       this.tts_voice_wpm = this.tts_voice_data.wpm;
@@ -1344,6 +1347,19 @@ class BookBlock {
   
   resetAudiosrcConfig() {
     this.audiosrc_config = {};
+  }
+  
+  getPartRecordingPauses(partIdx) {
+    if (
+      !(
+        Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined'
+      ) &&
+      partIdx === 0
+    ) {
+      return this.recording_pauses;
+    } else {
+      return this.parts[partIdx].recording_pauses;
+    }
   }
 }
 
