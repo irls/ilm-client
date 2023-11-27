@@ -2,7 +2,7 @@
   <div class="router-view-wrapper" v-cloak>
     <Grid id='books_grid'
       ref="books_grid"
-      :data="filteredBooks"
+      :data="mapFilteredBooks"
       :columns="headers"
       :rowsPerPage="100"
       @clickRow="rowClick"
@@ -85,11 +85,11 @@ export default {
           },
           {
             title: 'Editor',
-            path: 'executors',
+            path: 'editor',
             addClass: 'width-150',
-            render(val) {
-              return val && val.editor ? val.editor.title : '';
-            }
+            //render(val) {
+            //  return val && val.editor ? val.editor.title : '';
+            //}
           },
           {
             title: 'Published',
@@ -155,6 +155,14 @@ export default {
         return headers;
       },
       cache: false
+    },
+
+    mapFilteredBooks() {
+      return this.filteredBooks.map((book)=>{
+        // need to remap for correct sorting by Grid component
+        book.editor = (book.executors && book.executors.editor) ? book.executors.editor.title : '';
+        return book;
+      });
     }
   },
 
