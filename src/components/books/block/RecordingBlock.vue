@@ -17,7 +17,10 @@
           </span>
         </div>
 
-        <div class="table-cell pause-recording -left" @click="_pauseRecording" v-if="!isPaused">
+        <div class="table-cell pause-recording -left" 
+          @click="_pauseRecording" 
+          v-if="!isPaused"
+          v-on:mousedown="_pauseMousedown">
             <span class="btn btn-default">
               <span class="icon"></span>
               <span class="text">
@@ -86,7 +89,7 @@
         editor: null
       }
     },
-    props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang'],
+    props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang', 'pauseMousedown'],
     methods: {
       _cancelRecording() {
         this.isPaused = false;
@@ -105,6 +108,9 @@
       _resumeRecording() {
         this.isPaused = false;
         this.resumeRecording();
+      },
+      _pauseMousedown() {
+        this.pauseMousedown();
       }
     },
     mounted: function() {
