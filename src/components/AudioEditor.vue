@@ -1295,6 +1295,7 @@
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
+          this.displayRecordingPauses = true;
           return this.pause()
             .then(() => {
               if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
@@ -1320,6 +1321,7 @@
             });
         },
         forceClose() {
+          this.displayRecordingPauses = true;
           this.setProcessRun(false);
           if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
           if (this.plEventEmitter) {
