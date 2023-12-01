@@ -2655,7 +2655,8 @@ export default {
               stopRecording: this._stopRecording,
               pauseRecording: this.pauseRecording,
               resumeRecording: this.resumeRecording,
-              lang: this.getBlockLang
+              lang: this.getBlockLang,
+              pauseMousedown: this.recordingPauseMousedown
             },
             {
               clickToClose: false,
@@ -2733,17 +2734,24 @@ export default {
       },
       pauseRecording() {
         this.isRecordingPaused = true;
-        let pausePlace = Date.now() - this.startedRecording;
+        //let pausePlace = Date.now() - this.startedRecording;
         this.recorder.pauseRecording();
-        if (this.recordingPauses.length > 0) {
-          pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
-        }
-        this.recordingPauses.push(pausePlace);
+        //if (this.recordingPauses.length > 0) {
+          //pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
+        //}
+        //this.recordingPauses.push(pausePlace);
       },
       resumeRecording() {
         this.isRecordingPaused = false;
         this.recorder.resumeRecording();
         this.startedRecording = Date.now();
+      },
+      recordingPauseMousedown() {
+        let pausePlace = Date.now() - this.startedRecording;
+        if (this.recordingPauses.length > 0) {
+          pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
+        }
+        this.recordingPauses.push(pausePlace);
       },
       initPlayer() {
         this.player = new ReadAlong({
