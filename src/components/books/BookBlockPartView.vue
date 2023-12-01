@@ -457,7 +457,9 @@ export default {
       pinUpdated: null,
       maxSplitPoints: 15,
       startedRecording: null,
-      recordingPauses: []
+      recordingPauses: [],
+      recordingPauseDelay: 0,
+      lastRecordingPausePlace: null
     }
   },
   components: {
@@ -2674,6 +2676,7 @@ export default {
               this.startRecording(this.blockPartIdx)
                 .then(() => {
                   this.startedRecording = Date.now();
+                  this.recordingPauseDelay = 0;
                   this.recordingPauses = [];
                 })
                 .catch(err => {
@@ -2736,6 +2739,7 @@ export default {
         this.isRecordingPaused = true;
         //let pausePlace = Date.now() - this.startedRecording;
         this.recorder.pauseRecording();
+        this.recordingPauseDelay = Date.now() - this.startedRecording - this.lastRecordingPausePlace;
         //if (this.recordingPauses.length > 0) {
           //pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
         //}
@@ -2748,7 +2752,8 @@ export default {
       },
       recordingPauseMousedown() {
         Vue.nextTick(() => {
-          let pausePlace = Date.now() - this.startedRecording;
+          this.lastRecordingPausePlace = Date.now() - this.startedRecording;
+          let pausePlace = this.lastRecordingPausePlace + this.recordingPauseDelay;
           let pausesCount = this.recordingPauses.length;
           if (pausesCount > 0) {
             pausePlace+= this.recordingPauses[pausesCount - 1];
