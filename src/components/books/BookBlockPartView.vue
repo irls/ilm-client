@@ -2747,11 +2747,14 @@ export default {
         this.startedRecording = Date.now();
       },
       recordingPauseMousedown() {
-        let pausePlace = Date.now() - this.startedRecording;
-        if (this.recordingPauses.length > 0) {
-          pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
-        }
-        this.recordingPauses.push(pausePlace);
+        Vue.nextTick(() => {
+          let pausePlace = Date.now() - this.startedRecording;
+          let pausesCount = this.recordingPauses.length;
+          if (pausesCount > 0) {
+            pausePlace+= this.recordingPauses[pausesCount - 1];
+          }
+          this.recordingPauses.push(pausePlace);
+        });
       },
       initPlayer() {
         this.player = new ReadAlong({
