@@ -3,7 +3,7 @@
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
-          <!-- <AlignAudioSpeed 
+          <!-- <AlignAudioSpeed
             :audio_type="'audio_file'"
             :is_catalog_active="activeTabIndex === 0 && isActive" /> -->
           <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
@@ -132,7 +132,7 @@
             0 blocks selected
           </template>
           <template v-else>
-            {{alignCounter.countTTS}} TTS block(s) in range 
+            {{alignCounter.countTTS}} TTS block(s) in range
             <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
             <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
           </template>
@@ -266,7 +266,8 @@
         filterFilename: '',
         highlightDuplicateId: '',
         split : false,
-        audioEditorIsOpeed : false
+        audioEditorIsOpeed : false,
+        audioSelectionTimers: {}
       }
     },
     mixins: [task_controls, api_config, access],
@@ -398,9 +399,9 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       });
-      
+
       this.$root.$on('from-audioeditor:visible', this.splitRecalc);
-      
+
       /*this.$root.$on('for-audioeditor:load', this.resizeToc);
       this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
       this.$root.$on('from-audioeditor:close', this.resizeToc);
@@ -530,17 +531,39 @@
       },
       addSelection(id, value) {
 
-        if (value === true) {
-          if (this.selections.indexOf(id) === -1) {
-            this.selections.push(id)
+
+        if (this.audioSelectionTimers[id]) {
+          clearTimeout(this.audioSelectionTimers[id]);
+          this.audioSelectionTimers[id] = null;
+          console.log(`::dblClick: `, id, value);
+          for (const selId of this.selections) {
+            $('input[name="' + selId + '"]').prop('checked', false);
           }
+          this.selections = [id];
+          this.align(null);
+
         } else {
-          this.selections.splice(this.selections.indexOf(id), 1)
-          $('input[name="' + id + '"]').prop('checked', false);
+          const cacheId = id;
+          const cacheValue = value;
+          this.audioSelectionTimers[id] = setTimeout(()=>{
+            if (cacheValue === true) {
+              if (this.selections.indexOf(cacheId) === -1) {
+                this.selections.push(cacheId)
+              }
+            } else {
+              this.selections.splice(this.selections.indexOf(cacheId), 1)
+              $('input[name="' + cacheId + '"]').prop('checked', false);
+            }
+            if (this.selections.length > 1 && this.playing) {
+              this.$root.$emit('for-audioeditor:close');
+            }
+            clearTimeout(this.audioSelectionTimers[cacheId]);
+            this.audioSelectionTimers[cacheId] = null;
+          }, 200);
+
         }
-        if (this.selections.length > 1 && this.playing) {
-          this.$root.$emit('for-audioeditor:close');
-        }
+
+
       },
       audiofileClick:_.debounce(function(id, play, event) {
         if (id === this.playing) {
@@ -1247,11 +1270,11 @@
       capitalizeFirst(text) {
         return _.upperFirst(text);
       },
-      
+
       goToBlock(id) {
         this.$emit('goToBlock', id);
       },
-      
+
       checkCatalogueScroll() {
         Vue.nextTick(() => {
           if ($('.file-catalogue-files-wrapper').is(':visible')) {// check if additional scroll appears
@@ -1263,7 +1286,7 @@
           }
         });
       },
-      
+
       checkTabOpen(ev) {// on tab open event component start slowly open, need to wait until full open
         if (ev.index === 0) {
           let containerHeight = this.getFileCatalogueContainerHeight();
@@ -1289,7 +1312,7 @@
           }*/
         }
       },
-      
+
       getFileCatalogueContainerHeight() {
         let containerHeight = 0;
         let container = document.querySelector('.sidebar');// main container for all section
