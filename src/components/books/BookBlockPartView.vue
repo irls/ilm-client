@@ -2650,7 +2650,7 @@ export default {
         }
         return this.initRecorder()
           .then(() => {
-
+            let recordingCheck = {isRecording: false};// object to pass variable when recording is started
             this.$modal.show(RecordingBlock, {
               text: this.narrationBlockContent,
               cancelRecording: this.cancelRecording,
@@ -2658,7 +2658,8 @@ export default {
               pauseRecording: this.pauseRecording,
               resumeRecording: this.resumeRecording,
               lang: this.getBlockLang,
-              pauseMousedown: this.recordingPauseMousedown
+              pauseMousedown: this.recordingPauseMousedown,
+              recordingCheck: recordingCheck
             },
             {
               clickToClose: false,
@@ -2672,12 +2673,13 @@ export default {
               //template: RecordingBlock
             //})
               //this.$emit('startRecording', this.blockPartIdx);
-              this.isRecording = true;
               this.startRecording(this.blockPartIdx)
                 .then(() => {
                   this.startedRecording = Date.now();
                   this.recordingPauseDelay = 0;
                   this.recordingPauses = [];
+                  this.isRecording = true;
+                  recordingCheck.isRecording = true;
                 })
                 .catch(err => {
                   this.isRecording = false;
@@ -3274,13 +3276,6 @@ export default {
       },
       handleAudioControl(e) {
         if (e) {
-          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
-            if (!this.isRecordingPaused) {
-              this.pauseRecording();
-            } else {
-              this.resumeRecording();
-            }
-          }
           if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isAudStarted) {
             if (!this.isAudPaused) {
               this.audPause();
