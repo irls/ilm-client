@@ -2752,16 +2752,19 @@ export default {
         this.recorder.resumeRecording();
         this.startedRecording = Date.now();
       },
-      recordingPauseMousedown() {
-        Vue.nextTick(() => {
+      recordingPauseMousedown(check_delay = true) {
+        //Vue.nextTick(() => {
           this.lastRecordingPausePlace = Date.now() - this.startedRecording;
-          let pausePlace = this.lastRecordingPausePlace + this.recordingPauseDelay;
+          let pausePlace = this.lastRecordingPausePlace;
+          if (check_delay) {
+            pausePlace+= this.recordingPauseDelay;
+          }
           let pausesCount = this.recordingPauses.length;
           if (pausesCount > 0) {
             pausePlace+= this.recordingPauses[pausesCount - 1];
           }
           this.recordingPauses.push(pausePlace);
-        });
+        //});
       },
       initPlayer() {
         this.player = new ReadAlong({

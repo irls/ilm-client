@@ -111,8 +111,8 @@
         this.isPaused = false;
         this.resumeRecording();
       },
-      _pauseMousedown() {
-        this.pauseMousedown();
+      _pauseMousedown(event, check_delay = true) {
+        this.pauseMousedown(check_delay);
       },
       toggleSpaceClickControl(add = true) {
         if (add) {
@@ -126,6 +126,7 @@
           if (this.isPaused) {
             this._resumeRecording();
           } else {
+            this._pauseMousedown(null, false);
             this._pauseRecording();
           }
         }
