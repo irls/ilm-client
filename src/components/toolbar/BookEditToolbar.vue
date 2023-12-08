@@ -219,6 +219,9 @@ export default {
       paste = paste.length ? paste : clipboard.getData('text/plain');
       //-- MSOffice -- { --//
       const wordXreg = new RegExp("<body[\\s\\S]+<\\/body>", 'mi');
+      if (/<\w[^>]*>/.test(paste)) {// for ILM copied list blocks correctly handle line breaks
+        paste = paste.replace(/<span[^>]*?>([\n]+)<\/span>/img, '$1');
+      }
       if (wordXreg.test(paste)) {
         paste = wordXreg.exec(paste)[0];
         //console.log(`paste001: `, paste);
@@ -226,7 +229,8 @@ export default {
         paste = paste.replace(/\[pg\s*\d+\]/mig, '');
         paste = paste.replace(/<div\sstyle=['"]*mso-element:footnote['"]*[\s\S]*?<\/div>/mig, '');
         paste = paste.replace(/<div\sid=['"]{1}sdfootnote\d+['"]{1}[\s\S]*?<\/div>/mig, '');
-        paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
+        // Check: do not clear footnote body for now
+        //paste = paste.replace(/<p\sclass=(?:MsoFootnoteText|MsoFootnoteReference)[\s\S]*?<\/p>/mig, '');
         // clear linebreaks inside html tags
         paste = paste.replace(/(<\w+[^>]*?>)([^<]+?)(<\/\w+>)/img, (item, openTag, content, closedTag) => {
           return `${openTag}${content.replace(/[\r\n]+/img, ' ')}${closedTag}`;
@@ -241,6 +245,8 @@ export default {
       paste = paste.replace(/(<\/p>)(<p)/mig, '$1 $2');
       paste = paste.replace(/<br[^>]*?>[^<]*?/mig, `\n`);
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
+      // couplets in Guttenberg, lines have class i0, i1, i2 etc, need to truncate after first one
+      paste = paste.replace(/(<(span|div).*?class="i\d+"[^>]*>[\s\S]*?<\/(span|div)>)/img, `$1\n`);
       //-- } -- end -- Gutenberg --//
       //console.log(`paste004: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
@@ -252,6 +258,10 @@ export default {
       // for Office docx clear not expected line breaks inside paragraphs
       paste = paste.replace(/<p[\s\S]+?<\/p>/img, (item) => {
         return item.replace(/[\r\n]+/img, ' ');
+      });
+      // Office docx adds line breaks after footnote markers
+      paste = paste.replace(/(<a[\s\S]+?style=[\"\']mso-footnote-id[^\"\']*?[\"\'][\s\S]+?<\/a>)([\n\r]+)/img, (item, footnote, after) => {
+        return footnote + ' ';
       });
       paste = paste.replace(/(<([^>]+)>)/ig, '');
       // remove line breaks at the beginning of string
