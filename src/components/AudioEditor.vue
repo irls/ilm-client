@@ -2514,7 +2514,7 @@
               text = text.replace(sg.toString(), '');
             }
           });
-          text = $('<textarea/>').html(text).text();// remove html entities
+          //text = $('<textarea/>').html(text).text();// remove html entities
           while((match = textRg.exec(text))) {
             let word = match[2];
             if (currentLength < match.index) {
@@ -2616,7 +2616,8 @@
             if (this.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
-                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
+                  // workaround, waveform editor does not update text in annotations by annotations change
+                  el.querySelector('span.id').innerText = annotations[i].id;
                 }
               });
               //$('.channel-wrapper.block-audio').scroll();
