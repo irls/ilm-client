@@ -249,11 +249,17 @@ export default {
       //console.log(`paste222: `, paste);
       // prepare numbered and not numbered lists: add line breaks between list elements
       paste = paste.replace(/(<\/li>[^\n]*?)(<li)/img, `$1\n$2`);
+      // for Office docx clear not expected line breaks inside paragraphs
+      paste = paste.replace(/<p[\s\S]+?<\/p>/img, (item) => {
+        return item.replace(/[\r\n]+/img, ' ');
+      });
       paste = paste.replace(/(<([^>]+)>)/ig, '');
       // remove line breaks at the beginning of string
       paste = paste.replace(/^\s*[\r\n]+/, '');
       // ILM-6302: insert text before the first line break
       paste = paste.split(/[\r\n]+/).shift().replace(/\s\s+/g, ' ');
+      // clear "Zero width space" character
+      paste = paste.replace(new RegExp(`[${String.fromCharCode(8203)}]+`, 'img'), '');
       //console.log(`paste: `, paste);
 
       const start = ev.target.selectionStart;
