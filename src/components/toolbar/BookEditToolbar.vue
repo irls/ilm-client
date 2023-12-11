@@ -245,8 +245,12 @@ export default {
       paste = paste.replace(/(<\/p>)(<p)/mig, '$1 $2');
       paste = paste.replace(/<br[^>]*?>[^<]*?/mig, `\n`);
       paste = paste.replace(/\s*style=\"[^\">]*\"/mig, '');
-      // couplets in Guttenberg, lines have class i0, i1, i2 etc, need to truncate after first one
-      paste = paste.replace(/(<(span|div).*?class="i\d+"[^>]*>[\s\S]*?<\/(span|div)>)/img, `$1\n`);
+      //    couplets in Guttenberg, lines have class i0, i1, i2 etc, need to truncate after first one
+      paste = paste.replace(/(<span.*?class="i\d+"[^>]*>[\s\S]*?<\/span>)/img, `$1\n`);
+      paste = paste.replace(/(<div.*?class="i\d+"[^>]*>[\s\S]*?<\/div>)/img, `$1\n`);
+      paste = paste.replace(/(<div.*?class="line"[^>]*>[\s\S]*?<\/div>)/img, `$1\n`);
+      paste = paste.replace(/(<p[^>]*>.*?<\/p>)\s*(<p)/img, `$1\n$2`);
+      //    end couplets
       //-- } -- end -- Gutenberg --//
       //console.log(`paste004: `, paste);
       paste = paste.replace(/<\/*\s*span>/mig, '');
