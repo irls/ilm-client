@@ -17,7 +17,10 @@
           </span>
         </div>
 
-        <div class="table-cell pause-recording -left" @click="_pauseRecording" v-if="!isPaused">
+        <div class="table-cell pause-recording -left" 
+          @click="_pauseRecording" 
+          v-if="!isPaused"
+          v-on:mousedown="_pauseMousedown">
             <span class="btn btn-default">
               <span class="icon"></span>
               <span class="text">
@@ -86,16 +89,18 @@
         editor: null
       }
     },
-    props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang'],
+    props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang', 'pauseMousedown', 'recordingCheck'],
     methods: {
       _cancelRecording() {
         this.isPaused = false;
         this.cancelRecording();
+        this.toggleSpaceClickControl(false);
         this.$emit('close');
       },
       _stopRecording(start_next = false) {
         this.isPaused = false;
         this.stopRecording(start_next);
+        this.toggleSpaceClickControl(false);
         this.$emit('close');
       },
       _pauseRecording() {
@@ -105,6 +110,26 @@
       _resumeRecording() {
         this.isPaused = false;
         this.resumeRecording();
+      },
+      _pauseMousedown(event, check_delay = true) {
+        this.pauseMousedown(check_delay);
+      },
+      toggleSpaceClickControl(add = true) {
+        if (add) {
+          document.addEventListener('keydown', this.onSpaceClick);
+        } else {
+          document.removeEventListener('keydown', this.onSpaceClick);
+        }
+      },
+      onSpaceClick(e) {
+        if (e.keyCode === 32 || (e.code && e.code.toLowerCase() === 'space')) {
+          if (this.isPaused) {
+            this._resumeRecording();
+          } else {
+            this._pauseMousedown(null, false);
+            this._pauseRecording();
+          }
+        }
       }
     },
     mounted: function() {
@@ -124,6 +149,15 @@
         disableEditing: true,
         imageDragging: false
       });
+    },
+    watch: {
+      'recordingCheck.isRecording': {
+        handler(val) {
+          if (val) {
+            this.toggleSpaceClickControl(true);
+          }
+        }
+      }
     }
   }
 </script>

@@ -1126,7 +1126,8 @@ Save or discard your changes to continue editing`,
                 audiosrc: this.block.audiosrc,
                 audiosrc_ver: this.block.audiosrc_ver,
                 manual_boundaries: this.block.manual_boundaries,
-                audiosrc_original: this.block.audiosrc_original || null
+                audiosrc_original: this.block.audiosrc_original || null,
+                recording_pauses: this.block.recording_pauses
               }
             ];
           }
@@ -3255,7 +3256,7 @@ Save text changes and realign the Block?`,
           }, 710);
         });
       },
-      stopRecording(partIdx, reRecordPosition, start_next = false) {
+      stopRecording(partIdx, reRecordPosition, start_next = false, recordingPauses = []) {
         this.isRecording = false;
         if (!this.isSplittedBlock) {
           partIdx = null;
@@ -3273,7 +3274,8 @@ Save text changes and realign the Block?`,
                 'isTemp': false,
                 'blockid': this.block.blockid,
                 'partIdx': partIdx,
-                rid: this.block._rid
+                rid: this.block._rid,
+                recordingPauses: recordingPauses
               })
                 .then(response => {
                   this.isUpdating = false;
