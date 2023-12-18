@@ -108,7 +108,7 @@
               <div class="control-wrapper">
                 <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
                 <template v-else>
-                  <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
+                  <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" :class="['blue-message', {'-bigger': selectionBlocksToAlign >= 100}]" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
                     {{selectionBlocksToAlign}}
                   </span>
                   <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)" :data-blockid="blockSelection.start._id">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)" :data-blockid="blockSelection.end._id">{{blockSelection.end._id_short}}</a></div>
@@ -4384,6 +4384,11 @@ Revert to original block audio?`,
     vertical-align: middle;
     font-size: 12px;
     font-weight: bold;
+    &.-bigger {
+      width: auto;
+      padding: 4px 6px;
+      height: 26px;
+    }
   }
   a.blue-message {
     font-weight: bold;
