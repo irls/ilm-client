@@ -5420,6 +5420,17 @@ export const store = new Vuex.Store({
         .then(response => {
           return response.data;
         })
+    },
+    
+    uploadBook({state, dispatch}, [data, config]) {
+      return axios.post(`${state.API_URL}books`, data, config)
+        .then(response => {
+          dispatch('updateBooksList');
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })
