@@ -579,6 +579,17 @@ export default {
   }
 }
 
+.outpad-top {
+  .content-process-run {
+    margin-top: -80px;
+  }
+}
+.outpad-top-extra {
+  .content-process-run {
+    margin-top: -160px;
+  }
+}
+
 i.ico {
   &.ico-collection {
     margin-right: -2px;

@@ -108,7 +108,7 @@
               <div class="control-wrapper">
                 <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
                 <template v-else>
-                  <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" class="blue-message" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
+                  <span v-if="hasAlignSelectionStart && hasAlignSelectionEnd" :class="['blue-message', {'-bigger': selectionBlocksToAlign >= 100}]" v-ilm-tooltip.top="{value: '', valueSource: 'selection-alignment-info', classList: {tooltip: 'blue-tooltip'}}">
                     {{selectionBlocksToAlign}}
                   </span>
                   <div id="selection-alignment-info" class="hidden">{{selectionBlocksToAlign}} audio blocks in range <a v-if="hasAlignSelectionStart" class="blue-message" v-on:click="goToBlock(blockSelection.start._id)" :data-blockid="blockSelection.start._id">{{blockSelection.start._id_short}}</a> - <a v-if="hasAlignSelectionEnd" class="blue-message" v-on:click="goToBlock(blockSelection.end._id)" :data-blockid="blockSelection.end._id">{{blockSelection.end._id_short}}</a></div>
@@ -2827,7 +2827,7 @@
                   $(this).css('display', 'none');
               });
               if (this.$refs.waveformContext) {
-                this.$refs.waveformContext.open(e);
+                this.$refs.waveformContext.open(e, document.querySelector('.waveform'));
                 $('body').one('click', () => {
                   this.$refs.waveformContext.close();
                   this.contextPosition = null;
@@ -3938,6 +3938,19 @@ Revert to original block audio?`,
             });
             setTimeout(() => {
               this.setDragLimit();
+              this.setSelectionWidth();// pin selection highlight to positions
+              // move position lines to cursor
+              let cursorPosition = document.querySelector('.cursor-position');
+              if (cursorPosition && cursorPosition.style && cursorPosition.style.left) {
+                let selectionPoint = document.querySelector('.selection.point');
+                if (selectionPoint) {
+                  selectionPoint.style.left = cursorPosition.style.left;
+                }
+                let cursor = document.querySelector('.cursor');
+                if (cursor) {
+                  cursor.style.left = cursorPosition.style.left;
+                }
+              }
             }, 50);
             this._showSelectionBorders();
             this._scrollToCursor();
@@ -4371,6 +4384,11 @@ Revert to original block audio?`,
     vertical-align: middle;
     font-size: 12px;
     font-weight: bold;
+    &.-bigger {
+      width: auto;
+      padding: 4px 6px;
+      height: 26px;
+    }
   }
   a.blue-message {
     font-weight: bold;
