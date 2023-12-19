@@ -235,6 +235,8 @@ export default {
         paste = paste.replace(/(<\w+[^>]*?>)([^<]+?)(<\/\w+>)/img, (item, openTag, content, closedTag) => {
           return `${openTag}${content.replace(/[\r\n]+/img, ' ')}${closedTag}`;
         });
+        // br in Office docx document replaces space
+        paste = paste.replace(/<br[^>]*?>/img, ' ');
         //console.log(`paste002: `, paste);
       } //else console.log(`paste003: `, paste);
       //-- } -- end -- MSOffice --//
