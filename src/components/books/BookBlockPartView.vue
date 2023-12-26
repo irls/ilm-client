@@ -455,7 +455,11 @@ export default {
       splitPinSelection: null,
       editingLocked: false,
       pinUpdated: null,
-      maxSplitPoints: 15
+      maxSplitPoints: 15,
+      startedRecording: null,
+      recordingPauses: [],
+      recordingPauseDelay: 0,
+      lastRecordingPausePlace: null
     }
   },
   components: {
@@ -2646,14 +2650,16 @@ export default {
         }
         return this.initRecorder()
           .then(() => {
-
+            let recordingCheck = {isRecording: false};// object to pass variable when recording is started
             this.$modal.show(RecordingBlock, {
               text: this.narrationBlockContent,
               cancelRecording: this.cancelRecording,
               stopRecording: this._stopRecording,
               pauseRecording: this.pauseRecording,
               resumeRecording: this.resumeRecording,
-              lang: this.getBlockLang
+              lang: this.getBlockLang,
+              pauseMousedown: this.recordingPauseMousedown,
+              recordingCheck: recordingCheck
             },
             {
               clickToClose: false,
@@ -2667,10 +2673,13 @@ export default {
               //template: RecordingBlock
             //})
               //this.$emit('startRecording', this.blockPartIdx);
-              this.isRecording = true;
               this.startRecording(this.blockPartIdx)
                 .then(() => {
-
+                  this.startedRecording = Date.now();
+                  this.recordingPauseDelay = 0;
+                  this.recordingPauses = [];
+                  this.isRecording = true;
+                  recordingCheck.isRecording = true;
                 })
                 .catch(err => {
                   this.isRecording = false;
@@ -2709,7 +2718,7 @@ export default {
           this.isUpdating = true;
           this.block.parts[this.blockPartIdx].isUpdating = true;
         }
-        return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next)
+        return this.stopRecording(this.blockPartIdx, this.reRecordPosition, start_next, this.recordingPauses)
           .then(() => {
             this.resetListenCompressed();
             this.isUpdating = false;
@@ -2730,11 +2739,32 @@ export default {
       },
       pauseRecording() {
         this.isRecordingPaused = true;
+        //let pausePlace = Date.now() - this.startedRecording;
         this.recorder.pauseRecording();
+        this.recordingPauseDelay = Date.now() - this.startedRecording - this.lastRecordingPausePlace;
+        //if (this.recordingPauses.length > 0) {
+          //pausePlace+= this.recordingPauses[this.recordingPauses.length - 1];
+        //}
+        //this.recordingPauses.push(pausePlace);
       },
       resumeRecording() {
         this.isRecordingPaused = false;
         this.recorder.resumeRecording();
+        this.startedRecording = Date.now();
+      },
+      recordingPauseMousedown(check_delay = true) {
+        //Vue.nextTick(() => {
+          this.lastRecordingPausePlace = Date.now() - this.startedRecording;
+          let pausePlace = this.lastRecordingPausePlace;
+          if (check_delay) {
+            pausePlace+= this.recordingPauseDelay;
+          }
+          let pausesCount = this.recordingPauses.length;
+          if (pausesCount > 0) {
+            pausePlace+= this.recordingPauses[pausesCount - 1];
+          }
+          this.recordingPauses.push(pausePlace);
+        //});
       },
       initPlayer() {
         this.player = new ReadAlong({
@@ -3249,13 +3279,6 @@ export default {
       },
       handleAudioControl(e) {
         if (e) {
-          if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isRecording) {
-            if (!this.isRecordingPaused) {
-              this.pauseRecording();
-            } else {
-              this.resumeRecording();
-            }
-          }
           if ((e.keyCode == 32 || (e.code && e.code.toLowerCase() === 'space')) && this.isAudStarted) {
             if (!this.isAudPaused) {
               this.audPause();

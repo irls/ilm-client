@@ -3415,14 +3415,28 @@ export const store = new Vuex.Store({
               let checks = [];
               if (oldBlocks.length > 0) {
                 oldBlocks.forEach(b => {
-                  let _b = blocks.find(bb => bb.blockid == b._id);
-                  if (!_b) {
+                  let aligningBlock = blocks.find(bb => bb.blockid == b._id);
+                  let aligningSubblock = null;// null means not splitted block alignment
+                  if (b.partIdx !== null) {
+                    aligningSubblock = blocks.find(bb => {
+                      return bb.blockid === b._id && bb.partIdx === b.partIdx;
+                    });
+                    if (!aligningSubblock) {
+                      aligningSubblock = false;// false means splitted block part was aligned
+                    }
+                  }
+                  if (!aligningBlock || aligningSubblock === false) {
                     let blockStore = state.storeList.get(b._id);
                     let blockStoreO = state.storeListO.get(b._id);
                     if (blockStore) {
                       //blockStore.content+=' realigned';
                       checks.push(dispatch('getBlock', b._id)
                         .then(block => {
+                          // splitted block part was aligned, more parts are still aligning
+                          if (aligningBlock && aligningSubblock === false) {
+                            blockStore.parts[b.partIdx] = block.parts[b.partIdx];
+                            return {};
+                          }
                           if (Array.isArray(blockStore.parts) && block && Array.isArray(block.parts) && blockStore.parts.length !== block.parts.length && b.partIdx !== null) {
                             let addedSubblocks = block.parts.length - blockStore.parts.length;
                             blockStore.parts.forEach((p, pIdx) => {
@@ -4590,6 +4604,7 @@ export const store = new Vuex.Store({
         content: preparedData.content || block.getPartContent(alignBlock.partIdx || 0),//content: this.blockContent(),
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
         mode: state.bookMode,
+        recording_pauses: block.getPartRecordingPauses(alignBlock.partIdx || 0),
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
@@ -5405,6 +5420,17 @@ export const store = new Vuex.Store({
         .then(response => {
           return response.data;
         })
+    },
+    
+    uploadBook({state, dispatch}, [data, config]) {
+      return axios.post(`${state.API_URL}books`, data, config)
+        .then(response => {
+          dispatch('updateBooksList');
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })

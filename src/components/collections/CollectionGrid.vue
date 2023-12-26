@@ -21,7 +21,7 @@
           :idField="'bookid'"
           :filter-key="''"
           :draggable="allowCollectionsEdit"
-          :sortable="false"
+          :sortable="true"
           :ref="'grid-' + collection._id"
           :class="['collection-books-grid']"
           :scrollTopOnPageClick="true"
@@ -186,7 +186,11 @@
               return collections;
             }
 
-            collections[0].books_list = this.filteredBooks;
+            collections[0].books_list = this.filteredBooks.map((book)=>{
+              // need to remap for correct sorting by Grid component
+              book.editor = (book.executors && book.executors.editor) ? book.executors.editor.title : '';
+              return book;
+            });
 
             /*for (const field in this.collectionsFilters) {
               if (this.collectionsFilters[field].length > 0) {
@@ -268,11 +272,11 @@
               },
               {
                 title: 'Editor',
-                path: 'executors',
+                path: 'editor',
                 addClass: 'width-150',
-                render(val) {
-                  return val && val.editor ? val.editor.title : '';
-                }
+                //render(val) {
+                //  return val && val.editor ? val.editor.title : '';
+                //}
               },
               {
                 title: 'Published',
