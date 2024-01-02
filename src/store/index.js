@@ -3521,23 +3521,29 @@ export const store = new Vuex.Store({
                   if (checks.length > 0) {
                     dispatch('set_selected_blocks');
                   }
-                  if (repeat) {
-                    //console.log('getBookAlign 1', 'currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
-                    if (watchId === state.currentBookid) {
-                      //console.log('getBookAlign 2', 'currentBookid', state.currentBookid, 'watchId', watchId, 'repeat', repeat);
-                      setTimeout(function() {
-                        dispatch('getBookAlign', {watchId: watchId, repeat: repeat})
-                      }, repeat)
-                    }
-                  }
-                  return Promise.resolve();
+                  return Promise.resolve({status: 'ok'});
                 })
+                .catch(err => {
+                  return {status: 'error', error: err};
+                });
             }
-            return Promise.resolve();
+            return Promise.resolve({status: 'ok'});
           })
           .catch(err => {
-            console.log(err);
-            return Promise.resolve(err);
+            //console.log(err);
+            return Promise.resolve({status: 'error', error: err});
+          })
+          .then(response => {
+            if (response && response.error) {
+              console.log(response.error);
+            }
+            if (repeat) {
+              if (watchId === state.currentBookid) {
+                setTimeout(() => {
+                  dispatch('getBookAlign', {watchId: watchId, repeat: repeat});
+                }, repeat);
+              }
+            }
           });
       }
     },
