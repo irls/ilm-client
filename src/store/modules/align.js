@@ -8,7 +8,9 @@ export default {
   getters: {
     aligningAudiofiles: state => {
       return state.aligningBooks.reduce((acc, alignBook) => {
-        return acc.concat(alignBook.audiofiles);
+        return acc.concat(alignBook.audiofiles.filter(audiofile => {
+          return !alignBook.aligned_audiofiles.includes(audiofile);
+        }));
       }, []);
     }
   },
