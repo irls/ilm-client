@@ -548,7 +548,6 @@
         });
       },
       addSelection(id, value) {
-
         if (value === true) {
           if (this.selections.indexOf(id) === -1 && !this.isAudiofileAligning(id)) {
             this.selections.push(id)
