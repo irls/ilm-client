@@ -549,42 +549,17 @@
         });
       },
       addSelection(id, value) {
-
-
-        if (this.audioSelectionTimers[id]) {
-          clearTimeout(this.audioSelectionTimers[id]);
-          this.audioSelectionTimers[id] = null;
-          console.log(`::dblClick: `, id, value);
-          for (const selId of this.selections) {
-            $('input[name="' + selId + '"]').prop('checked', false);
+        if (value === true) {
+          if (this.selections.indexOf(id) === -1 && !this.isAudiofileAligning(id)) {
+            this.selections.push(id)
           }
-          if (!this.isAudiofileAligning(id)) {
-            this.selections = [id];
-            this.align(null);
-          }
-
         } else {
-          const cacheId = id;
-          const cacheValue = value;
-          this.audioSelectionTimers[id] = setTimeout(()=>{
-            if (cacheValue === true) {
-              if (this.selections.indexOf(cacheId) === -1 && !this.isAudiofileAligning(cacheId)) {
-                this.selections.push(cacheId)
-              }
-            } else {
-              this.selections.splice(this.selections.indexOf(cacheId), 1)
-              $('input[name="' + cacheId + '"]').prop('checked', false);
-            }
-            if (this.selections.length > 1 && this.playing) {
-              this.$root.$emit('for-audioeditor:close');
-            }
-            clearTimeout(this.audioSelectionTimers[cacheId]);
-            this.audioSelectionTimers[cacheId] = null;
-          }, 200);
-
+          this.selections.splice(this.selections.indexOf(id), 1)
+          $('input[name="' + id + '"]').prop('checked', false);
         }
-
-
+        if (this.selections.length > 1 && this.playing) {
+          this.$root.$emit('for-audioeditor:close');
+        }
       },
       audiofileClick:_.debounce(function(id, play, event) {
         if (id === this.playing || this.isAudiofileAligning(id)) {
