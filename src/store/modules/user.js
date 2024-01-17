@@ -66,8 +66,7 @@ superlogin.on('logout', (message) => {
 
 const alignWpmSettingsDefaults = {
   tts: {
-    type: 'custom',
-    wpm: 140
+    type: 'original'
   },
   /*audio_file: {
     type: 'original',
