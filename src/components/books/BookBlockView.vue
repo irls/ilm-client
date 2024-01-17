@@ -4347,6 +4347,7 @@ Save text changes and realign the Block?`,
               ref.isChanged = true;
               Vue.nextTick(() => {
                 this.highlightSuspiciousWords();
+                ref.setEndLinebreakClass();
               });
             }
           });
@@ -4389,9 +4390,6 @@ Save text changes and realign the Block?`,
         return null;
       },
       highlightSuspiciousWords() {
-        //if (this.block.blockid === 'greater_than_basics_1657271323905_en-bl33') {
-          //console.time(`greater_than_basics_1657271323905_en-bl33 highlight`);
-        //}
         if (this.mode !== 'edit') {
           return;
         }
@@ -4417,9 +4415,6 @@ Save text changes and realign the Block?`,
             }
           }
         }
-        //if (this.block.blockid === 'greater_than_basics_1657271323905_en-bl33') {
-          //console.timeEnd(`greater_than_basics_1657271323905_en-bl33 highlight`);
-        //}
       },
       clearSuspiciousWords(inText = true) {
         let SUSPICIOUS_WORD_CLASS = this.suspiciousWordsHighlight.getSuspiciousWordClass();
