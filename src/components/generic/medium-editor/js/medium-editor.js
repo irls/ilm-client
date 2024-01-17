@@ -1595,6 +1595,13 @@ MediumEditor.extensions = {};
             }
             node.parentNode.normalize();// merge neighbour text elements
             //console.log(rootNode);
+        },
+        
+        hasAfterPseudoclass(element) {
+            if (element) {
+                return getComputedStyle(element, '::after').getPropertyValue('content') !== "none";
+            }
+            return false;
         }
     };
 
@@ -7021,7 +7028,7 @@ MediumEditor.extensions = {};
     function handleKeypress(event) {
         if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER)) {
             let element = document.getSelection().anchorNode,
-            rootNode = element.parentNode,
+            rootNode = element !== this.elements[0] ? element.parentNode : element,
             isLiElement = element.nodeName === 'LI';
             while (rootNode.nodeName !== 'DIV') {
                 if (!isLiElement) {
@@ -7037,12 +7044,31 @@ MediumEditor.extensions = {};
             selection = length ? element.nodeValue.substring(0, offset) : '',
             afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
             mediumEditorElement = this.elements[0],
-            isVerse = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-wrap']);
+            isVerse = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-wrap']),
+            editingEndLinebreak = false,
+            nextElementEndingLinebreak = false;
+            if (isList && mediumEditorElement.classList.contains('-end-linebreak')) {
+             editingEndLinebreak = MediumEditor.util.hasAfterPseudoclass(parentNode) || MediumEditor.util.hasAfterPseudoclass(parentNode.parentNode);
+             nextElementEndingLinebreak = element !== mediumEditorElement ? MediumEditor.util.hasAfterPseudoclass(element.nextSibling) : false;
+            }
             if (afterSelection.trim().length === 0) {
                 selection+= afterSelection;
                 afterSelection = '';
             }
             if (isLiElement) {
+              // after pressing two Enter browser creates structure with div, which is not correct for block
+              setTimeout(() => {
+                if (mediumEditorElement.lastElementChild && mediumEditorElement.lastElementChild.nodeName === 'DIV') {
+                  let lastDiv = mediumEditorElement.lastElementChild;
+                  if (lastDiv.childNodes.length === 1 && lastDiv.lastElementChild.nodeName === 'BR') {
+                    let br = document.createElement('br');
+                    lastDiv.replaceWith(br);
+                    br.parentNode.insertBefore(document.createElement('br'), br);
+                    br.parentNode.insertBefore(document.createElement('br'), br);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, br, 0);
+                  }
+                }
+              }, 50);
                 return true;// keep default user agent's behaviour for lists
             } else if (element.nodeName === 'W') {
                 let partOne;
@@ -7055,21 +7081,34 @@ MediumEditor.extensions = {};
             } else if (element === mediumEditorElement) {
                 //console.log(document.getSelection());
                 let target = element.childNodes[document.getSelection().anchorOffset];
+                let partOne = document.createElement('br');
                 if (target) {
-                    let partOne = document.createElement('br');
                     element.insertBefore(partOne, target.nextSibling);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, partOne, 0);
                     //console.log('HERE7');
+                } else if (MediumEditor.util.hasAfterPseudoclass(element.lastElementChild)) {
+                    element.insertBefore(partOne, element.lastElementChild);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element.lastElementChild, 0);
                 }
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
-                    let editorContent = (element.parentNode.innerHTML || "");
-                    let lineBreaks = /[\r\n]/.test(editorContent)
-                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
-                    if (isVerse) {
-                      MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                    if (element.nodeName === 'BR') {
+                        parentNode.insertBefore(document.createElement('br'), element);
+                    } else if (element.nodeName === 'DIV' && element.childNodes.length === 1 && element.lastElementChild.nodeName === 'BR') {
+                        let br = document.createElement('br');
+                        element.replaceWith(br);
+                        br.parentNode.insertBefore(document.createElement('br'), br);
+                        br.parentNode.insertBefore(document.createElement('br'), br);
+                        MediumEditor.selection.moveCursor(this.options.ownerDocument, br, 0);
                     } else {
-                      MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length : selection.length + 1);
+                        let editorContent = (element.parentNode.innerHTML || "");
+                        let lineBreaks = /[\r\n]/.test(editorContent)
+                        element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
+                        if (isVerse || nextElementEndingLinebreak) {
+                          MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                        } else {
+                          MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length : selection.length + 1);
+                    }
                     }
                 } else {
                     if (element.nodeName === 'BR') {
@@ -7116,7 +7155,7 @@ MediumEditor.extensions = {};
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
                 } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
-                    if (!isList) {
+                    if (!isList || editingEndLinebreak) {
                         partTwo = document.createElement('br');
                     } else {
                         partTwo = document.createTextNode('\n');
@@ -7166,10 +7205,14 @@ MediumEditor.extensions = {};
                 } else {
                     if (containerTwo.childNodes.length === 0 || !containerTwo.innerHTML || !containerTwo.innerHTML.trim()) {
                         //console.log('HERE1', containerTwo);
-                        baseNode.replaceChild(partTwo, parentNode);
-                        lastNode = partOne;
-                        containerOne.appendChild(partOne);
-                        baseNode.insertBefore(containerOne, partTwo);
+                        if (editingEndLinebreak) {
+                          mediumEditorElement.appendChild(partTwo);
+                        } else {
+                          baseNode.replaceChild(partTwo, parentNode);
+                          lastNode = partOne;
+                          containerOne.appendChild(partOne);
+                          baseNode.insertBefore(containerOne, partTwo);
+                        }
                         for (let i = currentIndex - 1; i >=0; --i) {
                             let currentNode = allChildNodes[i];
                             containerOne.insertBefore(currentNode, lastNode);
@@ -7195,13 +7238,17 @@ MediumEditor.extensions = {};
                           moveTo = moveTo.childNodes[0];
                         }
                     } else {
+                      if (editingEndLinebreak) {
+                        moveTo = partTwo.previousSibling;
+                      } else {
                         moveTo = partTwo;
+                      }
                     }
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, moveTo, 0);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, moveTo, editingEndLinebreak ? 1 : 0);
                     //MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
                     //console.log('HERE5');// end of block + <br><br> - cursor not moved
                     //console.log(partOne, partTwo);
-                    if (!nextSibling) {
+                    if (!nextSibling && !editingEndLinebreak) {
                         let partThree = partTwo.cloneNode();
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
