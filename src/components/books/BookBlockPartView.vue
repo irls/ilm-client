@@ -4158,8 +4158,19 @@ Join subblocks?`,
       setEndLinebreakClass() {
         if (this.$refs.blockContent) {
           if (this.isSplittedBlock && this.blockPartIdx < this.block.parts.length - 1) {
-            if (/<br\s*\/?>|<\/ul>|<\/ol>$/.test(this.blockPart.content) || (this.block && this.block.classes && ['verse', 'list', 'couplet'].includes(this.block.classes.whitespace) && /[\r\n]$/.test(this.blockPart.content))) {
+            let hasWhitespaceStyle = (this.block && this.block.classes && ['verse', 'list', 'couplet'].includes(this.block.classes.whitespace) && /[\r\n]$/.test(this.blockPart.content));
+            if (/<br\s*\/?>|<\/ul>|<\/ol>$/.test(this.blockPart.content) || hasWhitespaceStyle) {
               this.hasEndLinebreak = true;
+              if (hasWhitespaceStyle) {
+                let textNode = this.$refs.blockContent.lastChild;
+                let spacesRegex = /(\s+)\n$/;
+                if (textNode && textNode.nodeType === 3 && spacesRegex.test(textNode.nodeValue)) {
+                  // if whitespace style block ends with spaces
+                  textNode.nodeValue = textNode.nodeValue.replace(/\n$/, '');
+                  this.$refs.blockContent.appendChild(document.createElement('br'));
+                }
+                //this.$refs.blockContent.appendChild(document.createElement('span'));
+              }
               return;
             }
           }
