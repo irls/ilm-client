@@ -3153,6 +3153,23 @@ MediumEditor.extensions = {};
             if (MediumEditor.util.isKey(event, [MediumEditor.util.keyCode.DELETE, MediumEditor.util.keyCode.BACKSPACE])) {
                 return this.triggerCustomEvent('editableKeydownDelete', event, event.currentTarget);
             }
+            if (event.code === 'ArrowRight' || event.keyCode === 39) {
+                // do not move cursor after end line break marker
+                let element = document.getSelection().anchorNode,
+                offset = document.getSelection().anchorOffset,
+                length = element.nodeValue ? element.nodeValue.length : 0,
+                afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
+                nextElement = element.nextSibling,
+                isMediumEditorElement = MediumEditor.util.isMediumEditorElement(element);
+                if (afterSelection.length === 0 && nextElement && nextElement.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(nextElement)) {
+                    event.preventDefault();
+                    return;
+                }
+                if (afterSelection.length === 0 && isMediumEditorElement && element.lastChild && element.lastChild.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.lastChild)) {
+                    event.preventDefault();
+                    return;
+                }
+            }
         }
     };
 
