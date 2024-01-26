@@ -3057,6 +3057,12 @@ export default {
           content: ""
         }
       }
+      &>sup:last-child {
+        &::after {
+          font-size: 16pt;
+          top: 0.2em;
+        }
+      }
     }
   }
 
