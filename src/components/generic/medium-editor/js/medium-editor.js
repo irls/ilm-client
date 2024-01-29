@@ -3169,6 +3169,10 @@ MediumEditor.extensions = {};
                     event.preventDefault();
                     return;
                 }
+                if (afterSelection.length === 0 && element.nodeType === 3 && element.parentElement && element.parentElement.nextSibling && element.parentElement.nextSibling.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.parentElement.nextSibling)) {
+                    event.preventDefault();
+                    return;
+                }
             }
         }
     };
