@@ -1597,9 +1597,14 @@ MediumEditor.extensions = {};
             //console.log(rootNode);
         },
         
-        hasAfterPseudoclass(element) {
-            if (element) {
-                return getComputedStyle(element, '::after').getPropertyValue('content') !== "none";
+        hasAfterPseudoclass(element, searchValue = false) {
+            if (element && element.nodeType === 1) {
+                let value = getComputedStyle(element, '::after').getPropertyValue('content');
+                if (!searchValue) {
+                    return value !== "none";
+                } else {
+                    return value === searchValue;
+                }
             }
             return false;
         }
@@ -7118,7 +7123,7 @@ MediumEditor.extensions = {};
             editingEndLinebreak = false,
             nextElementEndingLinebreak = false;
             if (isList && mediumEditorElement.classList.contains('-end-linebreak')) {
-             editingEndLinebreak = MediumEditor.util.hasAfterPseudoclass(parentNode) || MediumEditor.util.hasAfterPseudoclass(parentNode.parentNode);
+             editingEndLinebreak = MediumEditor.util.hasAfterPseudoclass(parentNode) || MediumEditor.util.hasAfterPseudoclass(parentNode.parentNode, "\"¶\"");
              nextElementEndingLinebreak = element !== mediumEditorElement ? MediumEditor.util.hasAfterPseudoclass(element.nextSibling) : false;
             }
             if (afterSelection.trim().length === 0) {
