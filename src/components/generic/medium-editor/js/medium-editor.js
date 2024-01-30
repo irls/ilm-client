@@ -3161,17 +3161,66 @@ MediumEditor.extensions = {};
                 afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
                 nextElement = element.nextSibling,
                 isMediumEditorElement = MediumEditor.util.isMediumEditorElement(element);
-                if (afterSelection.length === 0 && nextElement && nextElement.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(nextElement)) {
-                    event.preventDefault();
-                    return;
+                if (afterSelection.length === 0) {
+                    if (nextElement && nextElement.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(nextElement)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (isMediumEditorElement && element.lastChild && element.lastChild.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.lastChild)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (element.nodeType === 3 && element.parentElement && element.parentElement.nextSibling && element.parentElement.nextSibling.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.parentElement.nextSibling)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (element.parentElement && element.parentElement.parentElement) {
+                        let parent = element.parentElement.parentElement;
+                        if (parent.nodeName === 'F' && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    if (element.nodeType === 1 && MediumEditor.util.hasAfterPseudoclass(element)) {
+                        event.preventDefault();
+                        return;
+                    }
                 }
-                if (afterSelection.length === 0 && isMediumEditorElement && element.lastChild && element.lastChild.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.lastChild)) {
-                    event.preventDefault();
-                    return;
+            }
+            if (event.code === 'ArrowDown' || event.keyCode === 40) {
+                let element = document.getSelection().anchorNode,
+                offset = document.getSelection().anchorOffset,
+                length = element.nodeValue ? element.nodeValue.length : 0,
+                afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
+                nextElement = element.nextSibling,
+                isMediumEditorElement = null,
+                parentElement = element.parentElement;
+                let checkParent = element.parentElement;
+                while (checkParent && !isMediumEditorElement) {
+                    isMediumEditorElement = MediumEditor.util.isMediumEditorElement(checkParent);
+                    checkParent = checkParent.parentElement;
                 }
-                if (afterSelection.length === 0 && element.nodeType === 3 && element.parentElement && element.parentElement.nextSibling && element.parentElement.nextSibling.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.parentElement.nextSibling)) {
-                    event.preventDefault();
-                    return;
+                if (isMediumEditorElement) {
+                    let checkHeight = checkParent.offsetHeight;
+                    let elementHeight = 0;
+                    if (element.nodeType === 1) {
+                        elementHeight = element.offsetTop + element.offsetHeight;
+                    } else {
+                        elementHeight = parentElement.offsetTop + parentElement.offsetHeight;
+                    }
+                    if (elementHeight > checkHeight) {
+                        event.preventDefault();
+                        return false;
+                    }
+                    setTimeout(function() {
+                        let selectedElement = document.getSelection().anchorNode;
+                        if (MediumEditor.util.isMediumEditorElement(selectedElement)) {
+                          let lastElement = selectedElement.lastChild;
+                          if (lastElement && MediumEditor.util.hasAfterPseudoclass(lastElement)) {
+                            MediumEditor.selection.moveCursor(document, lastElement, 0);
+                          }
+                        }
+                    }, 20);
                 }
             }
         }
