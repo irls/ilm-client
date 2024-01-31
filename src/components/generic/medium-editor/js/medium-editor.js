@@ -3200,12 +3200,15 @@ MediumEditor.extensions = {};
                 nextElement = element.nextSibling,
                 isMediumEditorElement = null,
                 parentElement = element.parentElement;
-                let checkParent = element.parentElement;
+                let checkParent = element;
                 while (checkParent && !isMediumEditorElement) {
                     isMediumEditorElement = MediumEditor.util.isMediumEditorElement(checkParent);
                     checkParent = checkParent.parentElement;
                 }
                 if (isMediumEditorElement) {
+                    // default behaviuor is to move cursor to the end of the line
+                    // when pressed arrow down at the end of the line.
+                    // check position of cursor and not move it to the end of the line
                     let checkHeight = checkParent.offsetHeight;
                     let elementHeight = 0;
                     if (element.nodeType === 1) {
