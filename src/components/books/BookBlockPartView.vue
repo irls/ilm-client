@@ -3129,7 +3129,7 @@ export default {
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
-        api.post(api_url, formData, {}).then((response) => {
+        return api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
             if (this.isCompleted) {
               this.tc_loadBookTask();
@@ -3151,10 +3151,7 @@ export default {
             $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
               .removeAttr('data-placeholder');
-          } else {
-
           }
-
           //if (this.blockO.type !== this.block.type) {
             this.blockO.status = Object.assign(this.blockO.status, {
               marked: this.block.markedAsDone,
@@ -3167,19 +3164,22 @@ export default {
               type: this.block.type,
               status: this.blockO.status
             }
-            this.putBlockO(upd).then(()=>{
-              this.putNumBlockO({
-                bookId: this.block.bookid,
-                rid: this.blockO.rid,
-                type: this.block.type,
-                secnum: '',
-                parnum: ''
-              }).then((blocks)=>{
-                //console.log('assembleBlock putNumBlockO', blocks[0]);
-                //this.storeListO.updBlockByRid(this.blockO.rid, {
-                //  type: this.block.type
-                //})
-              });
+            return this.putBlockO(upd).then(()=>{
+              return Promise.All[
+                this.putNumBlockO({
+                  bookId: this.block.bookid,
+                  rid: this.blockO.rid,
+                  type: this.block.type,
+                  secnum: '',
+                  parnum: ''
+                }).then((blocks)=>{
+                  //console.log('assembleBlock putNumBlockO', blocks[0]);
+                  //this.storeListO.updBlockByRid(this.blockO.rid, {
+                  //  type: this.block.type
+                  //})
+                }),
+                this.updateBookVersion({major: true})
+              ]
             });
           //}
         }).catch((err) => {
