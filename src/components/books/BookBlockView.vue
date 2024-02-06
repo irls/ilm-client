@@ -3884,7 +3884,7 @@ Save text changes and realign the Block?`,
               status: this.blockO.status
             }
             return this.putBlockO(upd).then(()=>{
-              return Promise.All[
+              return Promise.all[
                 this.putNumBlockO({
                   bookId: this.block.bookid,
                   rid: this.blockO.rid,
