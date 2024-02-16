@@ -672,6 +672,23 @@ export const store = new Vuex.Store({
         return category.group === 'Reader';
       }) : null;
       return categories && categories.categories.includes(checkItem.category);
+    },
+    selectedBlocksData: state => {
+      let data = [];
+      if (state.blockSelection.start._id && state.blockSelection.end._id) {
+        let crossId = state.blockSelection.start._id;
+        for (let idx = 0; idx < state.storeList.size; idx++) {
+          let block = state.storeList.get(crossId);
+          if (block) {
+            data.push(block);
+            if (block._id === state.blockSelection.end._id) {
+              break;
+            }
+            crossId = state.storeListO.getOutId(block.blockid);
+          } else break;
+        }
+      }
+      return data;
     }
   },
 

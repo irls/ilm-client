@@ -286,7 +286,8 @@
         highlightDuplicateId: '',
         split : false,
         audioEditorIsOpeed : false,
-        audioSelectionTimers: {}
+        audioSelectionTimers: {},
+        highlightedAudiofiles: []
       }
     },
     mixins: [task_controls, api_config, access],
@@ -1245,17 +1246,6 @@
           //console.log(split)
         }
       },
-      isAudiofileHighlighted(audiofile) {
-        if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
-        if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap && !this.highlightDuplicateId) {
-          let hasMap = this.alignCounter.blocks.find(b => {
-            return typeof audiofile.blockMap[b.blockid] !== 'undefined';
-          });
-          return hasMap;
-        } else {
-          return false;
-        }
-      },
       isAudiofileAligned(audiofile) {
         if ('done' in audiofile && audiofile.done == true){
           return true;
@@ -1334,7 +1324,7 @@
       
       getAudiofileClass(audiofile) {
         return ['audiofile', {
-            '-selected': this.isAudiofileHighlighted(audiofile)
+            '-selected': this.highlightedAudiofiles.includes(audiofile.id)
           }, 
           {
             '-renaming': (this.renaming && (this.renaming.id == audiofile.id && !audiofile.duplicate))
@@ -1345,6 +1335,27 @@
           {
             '-aligning': this.isAudiofileAligning(audiofile.id)
           }];
+      },
+      setHighlightedAudiofiles() {
+        let highlightedAudiofiles = [];
+        this.selectedBlocksData.forEach(block => {
+          if (block.audiocatalog_map) {
+            Object.keys(block.audiocatalog_map).forEach(file_id => {
+              if (!highlightedAudiofiles.includes(file_id)) {
+                highlightedAudiofiles.push(file_id);
+              }
+            });
+          } else {
+            let hasMap = this.audiobook.importFiles.find(audiofile => {
+              return audiofile.blockMap && typeof audiofile.blockMap[b.blockid] !== 'undefined';
+            });
+            
+            if (hasMap) {
+              highlightedAudiofiles.push(audiofile.id);
+            }
+          }
+        });
+        this.highlightedAudiofiles = highlightedAudiofiles;
       },
 
       ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
@@ -1415,7 +1426,9 @@
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
-        alignBlocksLimitMessage: 'alignBlocksLimitMessage'}),
+        alignBlocksLimitMessage: 'alignBlocksLimitMessage',
+        selectedBlocksData: 'selectedBlocksData'
+      }),
       ...mapGetters('alignActions', ['aligningAudiofiles'])
     },
     watch: {
@@ -1523,6 +1536,7 @@
           if (!openAudio && openTTS) {
             this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
           }
+          this.setHighlightedAudiofiles();
         },
         deep: true
       },
