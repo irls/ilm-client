@@ -61,7 +61,7 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable :options="{disabled : renaming}" v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())"   :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-renaming': (renaming && (renaming.id == audiofile.id && !audiofile.duplicate))}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
+              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())"   :class="['audiofile', {'-selected': highlightedAudiofiles.includes(audiofile.id)}, {'-renaming': (renaming && (renaming.id == audiofile.id && !audiofile.duplicate))}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
                 <template v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                   <template v-if="audiofile.status == 'processing' && (audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                     <div class="audiofile-info">
@@ -266,7 +266,8 @@
         filterFilename: '',
         highlightDuplicateId: '',
         split : false,
-        audioEditorIsOpeed : false
+        audioEditorIsOpeed : false,
+        highlightedAudiofiles: []
       }
     },
     mixins: [task_controls, api_config, access],
@@ -1225,17 +1226,6 @@
           //console.log(split)
         }
       },
-      isAudiofileHighlighted(audiofile) {
-        if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
-        if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap && !this.highlightDuplicateId) {
-          let hasMap = this.alignCounter.blocks.find(b => {
-            return typeof audiofile.blockMap[b.blockid] !== 'undefined';
-          });
-          return hasMap;
-        } else {
-          return false;
-        }
-      },
       isAudiofileAligned(audiofile) {
         if ('done' in audiofile && audiofile.done == true){
           return true;
@@ -1307,6 +1297,28 @@
         }
         return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
+      
+      setHighlightedAudiofiles() {
+        let highlightedAudiofiles = [];
+        this.selectedBlocksData.forEach(block => {
+          if (block.audiocatalog_map) {
+            Object.keys(block.audiocatalog_map).forEach(file_id => {
+              if (!highlightedAudiofiles.includes(file_id)) {
+                highlightedAudiofiles.push(file_id);
+              }
+            });
+          } else {
+            let hasMap = this.audiobook.importFiles.find(audiofile => {
+              return audiofile.blockMap && typeof audiofile.blockMap[b.blockid] !== 'undefined';
+            });
+            
+            if (hasMap) {
+              highlightedAudiofiles.push(audiofile.id);
+            }
+          }
+        });
+        this.highlightedAudiofiles = highlightedAudiofiles;
+      },
 
       ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS'])
@@ -1376,7 +1388,9 @@
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
-        alignBlocksLimitMessage: 'alignBlocksLimitMessage'})
+        alignBlocksLimitMessage: 'alignBlocksLimitMessage',
+        selectedBlocksData: 'selectedBlocksData'
+      })
     },
     watch: {
       'audiobook': {
@@ -1483,6 +1497,7 @@
           if (!openAudio && openTTS) {
             this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
           }
+          this.setHighlightedAudiofiles();
         },
         deep: true
       },
