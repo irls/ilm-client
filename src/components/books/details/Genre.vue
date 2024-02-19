@@ -2,7 +2,8 @@
   <!-- <div class="genres"> -->
   <fieldset class="genres" v-if="isActive">
     <legend>Genre</legend>
-    <div class="genres-list">
+    <div :class="['genres-list selected-genres', {'-has-error': requiredError}]">
+      <span class="error-text" v-if="requiredError">Define genres</span>
       <template v-for="bookGenre in bookGenres">
         <div class="genre-chip">
           <div>{{bookGenre}}<template v-if="adminOrLibrarian">&nbsp;<span class="remove-item" v-on:click="remove(bookGenre)">&times;</span></template></div>
@@ -38,7 +39,7 @@
     components: {
       
     },
-    props: ['allowMetadataEdit'],
+    props: ['allowMetadataEdit', 'requiredError'],
     computed: {
       ...mapGetters(['currentBookMeta', 'bookCategories', 'adminOrLibrarian', 'isBookReaderCategory']),
       ...mapGetters('genreModule', ['genres', 'notAssignedGenres', 'autoGenerateInProgress']),
@@ -113,6 +114,14 @@
       border: 1px solid #f0f0f0;
       padding: 4px;
       margin: 5px 0px;
+      &.-has-error {
+        border: 1px solid red;
+        .error-text {
+          color: red;
+          display: inline-block;
+          margin: 4px 0px;
+        }
+      }
     }
     .genre-chip {
       display: inline-block;
