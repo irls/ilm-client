@@ -253,7 +253,8 @@
               </table>
             </fieldset>
           <Genre 
-            :allowMetadataEdit="allowMetadataEdit" />
+            :allowMetadataEdit="allowMetadataEdit" 
+            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']" />
           <fieldset class='description brief'>
             <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">
@@ -1222,6 +1223,13 @@ export default {
           if (this.requiredFields && this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid]['slug']) {
             delete this.requiredFields[this.currentBook.bookid]['slug'];
           }
+        }
+      }
+    },
+    'currentBookMeta.genres.length': {
+      handler(val) {
+        if (this.requiredFields[this.currentBookMeta.bookid]) {
+          delete this.requiredFields[this.currentBookMeta.bookid].genres;
         }
       }
     }
