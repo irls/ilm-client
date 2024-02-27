@@ -3,7 +3,7 @@
   <fieldset class="genres" v-if="isActive">
     <legend>Genre</legend>
     <div :class="['genres-list selected-genres', {'-has-error': requiredError}]">
-      <span class="error-text" v-if="requiredError">Define genres</span>
+      <span class="error-text" v-if="requiredError">Define Genres</span>
       <template v-for="bookGenre in bookGenres">
         <div class="genre-chip">
           <div>{{bookGenre}}<template v-if="adminOrLibrarian">&nbsp;<span class="remove-item" v-on:click="remove(bookGenre)">&times;</span></template></div>
@@ -67,6 +67,7 @@
         if (this.adminOrLibrarian && this.allowMetadataEdit) {
           let genres = this.currentBookMeta.genres || [];
           if (!genres.includes(genre) && genres.length < 3) {
+            this.$emit('genresUpdate');
             genres.push(genre);
             return this.updateBookMeta({genres: genres, genres_manual: true});
           }
@@ -78,6 +79,7 @@
       generateGenres() {
         if (!this.autoGenerateInProgress && this.allowMetadataEdit) {
           this.set_autoGenerateInProgress(true);
+          this.$emit('genresUpdate');
           return this.autoGenerate()
             .then(response => {
               this.set_autoGenerateInProgress(false);
