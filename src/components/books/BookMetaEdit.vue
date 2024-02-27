@@ -2446,6 +2446,7 @@ export default {
     checkGenresErrors() {
       if (this.requiredFields[this.currentBookMeta.bookid]) {
         delete this.requiredFields[this.currentBookMeta.bookid].genres;
+        this.$forceUpdate();
       }
     },
 
