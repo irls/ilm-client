@@ -7182,7 +7182,7 @@ MediumEditor.extensions = {};
                         let editorContent = (element.parentNode.innerHTML || "");
                         let lineBreaks = /[\r\n]/.test(editorContent)
                         element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
-                        if (isVerse || nextElementEndingLinebreak || selection.indexOf(String.fromCharCode(160)) !== -1) {
+                        if (isVerse || nextElementEndingLinebreak || (selection.indexOf(String.fromCharCode(160)) !== -1 && !/\n$/.test(selection))) {
                           MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
                         } else {
                           MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length : selection.length + 1);
