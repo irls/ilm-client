@@ -2,19 +2,37 @@ import axios from 'axios';
 
 export default {
   namespaced: true,
-  state: {},
-  getters: {},
+  state: {
+    aligningBooks: []
+  },
+  getters: {
+    aligningAudiofiles: state => {
+      return state.aligningBooks.reduce((acc, alignBook) => {
+        return acc.concat(alignBook.audiofiles.filter(audiofile => {
+          return !alignBook.aligned_audiofiles.includes(audiofile);
+        }));
+      }, []);
+    }
+  },
+  mutations: {
+    setAligningBooks(state, books) {
+      state.aligningBooks = books;
+    }
+  },
   actions: {
-    cancelAlign({state, dispatch}, [bookid, blockid = null]) {
-      let api_url = `${state.API_URL}align_queue/${bookid}`;
+    cancelAlignment({state, dispatch, rootState}, [bookid, blockid = null, partIdx = null]) {
+      let api_url = `${rootState.API_URL}align_queue/${bookid}`;
       if (blockid) {
         api_url+= `/${blockid}`;
       }
+      if (partIdx !== null) {
+        api_url+= `/${partIdx}`;
+      }
 
-      axios.delete(api_url, {}, {}).then((response) => {
-        dispatch('getBookAlign');
+      return axios.delete(api_url, {}, {}).then((response) => {
+        return dispatch('getBookAlign', {}, {root: true});
       }).catch((err) => {
-        dispatch('getBookAlign');
+        return dispatch('getBookAlign', {}, {root: true});
       });
     },
     alignBook({dispatch, rootState}, data) {
@@ -97,6 +115,5 @@ export default {
         }
       }
     }
-  },
-  mutations: {}
+  }
 }

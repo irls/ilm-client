@@ -3411,7 +3411,8 @@ export const store = new Vuex.Store({
           .then(response => {
             if (response.status == 200) {
               let oldBlocks = state.aligningBlocks;
-              let blocks = response.data;
+              let blocks = response.data.blocks;
+              commit('alignActions/setAligningBooks', response.data.books);
               let checks = [];
               if (oldBlocks.length > 0) {
                 oldBlocks.forEach(b => {
@@ -3509,7 +3510,7 @@ export const store = new Vuex.Store({
                     dispatch('getAudioBook');
                     dispatch('getCurrentJobInfo');
                   }
-                  commit('set_aligning_blocks', response.data);
+                  commit('set_aligning_blocks', response.data.blocks);
                   if (checks.length > 0) {
                     dispatch('_setNotMarkedAsDoneBlocksCounter');
                     dispatch('recountApprovedInRange');
@@ -3546,22 +3547,6 @@ export const store = new Vuex.Store({
             }
           });
       }
-    },
-
-    cancelAlignment({state, dispatch}, [bookid, blockid = null, partIdx = null]) {
-      let api_url = `${state.API_URL}align_queue/${bookid}`;
-      if (blockid) {
-        api_url+= `/${blockid}`;
-      }
-      if (partIdx !== null) {
-        api_url+= `/${partIdx}`;
-      }
-
-      return axios.delete(api_url, {}, {}).then((response) => {
-        return dispatch('getBookAlign');
-      }).catch((err) => {
-        return dispatch('getBookAlign');
-      });
     },
 
     startAudiobookWatch({state, dispatch}) {
