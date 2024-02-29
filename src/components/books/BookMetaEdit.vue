@@ -1581,7 +1581,7 @@ export default {
 
           this.lockLanguage = false;
           if (Object.keys(update).includes('numbering')) {
-            this.$root.$emit('from-meta-edit:set-num', this.currentBookid, value);
+            this.$root.$emit('from-meta-edit:set-num', this.currentBookid, update.numbering);
           }
 
           if (Object.keys(update).includes('language')) {
