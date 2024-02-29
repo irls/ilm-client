@@ -138,7 +138,8 @@
                     'updated': isUpdated,
                     'checked': blockO.checked,
                     'playing': blockAudio.src,
-                    'hide-archive': isHideArchFlags
+                    'hide-archive': isHideArchFlags,
+                    '-end-linebreak': hasEndLinebreak
                   },
                     'part-' + blockPartIdx]"
                   :data-audiosrc="modeAudiosrc"
@@ -459,7 +460,8 @@ export default {
       startedRecording: null,
       recordingPauses: [],
       recordingPauseDelay: 0,
-      lastRecordingPausePlace: null
+      lastRecordingPausePlace: null,
+      hasEndLinebreak: false
     }
   },
   components: {
@@ -1099,6 +1101,7 @@ export default {
       }
       Vue.nextTick(() => {
         this.showPinnedInText();
+        this.setEndLinebreakClass();
       })
   },
   beforeDestroy: function () {
@@ -1605,6 +1608,7 @@ export default {
             if (this.$refs.blockContent) {
               this.addContentListeners();
             }
+            this.setEndLinebreakClass();
           });
 
           this.isChanged = false;
@@ -4149,6 +4153,28 @@ Join subblocks?`,
           if (replay) {
             this.audResume();
           }
+        }
+      },
+      setEndLinebreakClass() {
+        if (this.$refs.blockContent) {
+          if (this.isSplittedBlock && this.blockPartIdx < this.block.parts.length - 1) {
+            let hasWhitespaceStyle = (this.block && this.block.classes && ['verse', 'list', 'couplet'].includes(this.block.classes.whitespace) && /[\r\n]$/.test(this.blockPart.content));
+            if (/<br\s*\/?>|<\/ul>|<\/ol>$/.test(this.blockPart.content) || hasWhitespaceStyle) {
+              this.hasEndLinebreak = true;
+              if (hasWhitespaceStyle) {
+                let textNode = this.$refs.blockContent.lastChild;
+                let spacesRegex = /(\s+)\n$/;
+                if (textNode && textNode.nodeType === 3 && spacesRegex.test(textNode.nodeValue)) {
+                  // if whitespace style block ends with spaces
+                  textNode.nodeValue = textNode.nodeValue.replace(/\n$/, '');
+                  this.$refs.blockContent.appendChild(document.createElement('br'));
+                }
+                //this.$refs.blockContent.appendChild(document.createElement('span'));
+              }
+              return;
+            }
+          }
+          this.hasEndLinebreak = false;
         }
       }
 

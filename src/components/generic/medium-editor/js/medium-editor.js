@@ -1595,6 +1595,18 @@ MediumEditor.extensions = {};
             }
             node.parentNode.normalize();// merge neighbour text elements
             //console.log(rootNode);
+        },
+        
+        hasAfterPseudoclass(element, searchValue = false) {
+            if (element && element.nodeType === 1) {
+                let value = getComputedStyle(element, '::after').getPropertyValue('content');
+                if (!searchValue) {
+                    return value !== "none";
+                } else {
+                    return value === searchValue;
+                }
+            }
+            return false;
         }
     };
 
@@ -3145,6 +3157,79 @@ MediumEditor.extensions = {};
 
             if (MediumEditor.util.isKey(event, [MediumEditor.util.keyCode.DELETE, MediumEditor.util.keyCode.BACKSPACE])) {
                 return this.triggerCustomEvent('editableKeydownDelete', event, event.currentTarget);
+            }
+            if (event.code === 'ArrowRight' || event.keyCode === 39) {
+                // do not move cursor after end line break marker
+                let element = document.getSelection().anchorNode,
+                offset = document.getSelection().anchorOffset,
+                length = element.nodeValue ? element.nodeValue.length : 0,
+                afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
+                nextElement = element.nextSibling,
+                isMediumEditorElement = MediumEditor.util.isMediumEditorElement(element);
+                if (afterSelection.length === 0) {
+                    if (nextElement && nextElement.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(nextElement)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (isMediumEditorElement && element.lastChild && element.lastChild.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.lastChild)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (element.nodeType === 3 && element.parentElement && element.parentElement.nextSibling && element.parentElement.nextSibling.nodeType !== 3 && MediumEditor.util.hasAfterPseudoclass(element.parentElement.nextSibling)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (element.parentElement && element.parentElement.parentElement) {
+                        let parent = element.parentElement.parentElement;
+                        if (parent.nodeName === 'F' && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    if (element.nodeType === 1 && MediumEditor.util.hasAfterPseudoclass(element)) {
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+            if (event.code === 'ArrowDown' || event.keyCode === 40) {
+                let element = document.getSelection().anchorNode,
+                offset = document.getSelection().anchorOffset,
+                length = element.nodeValue ? element.nodeValue.length : 0,
+                afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
+                nextElement = element.nextSibling,
+                isMediumEditorElement = null,
+                parentElement = element.parentElement;
+                let checkParent = element;
+                while (checkParent && !isMediumEditorElement) {
+                    isMediumEditorElement = MediumEditor.util.isMediumEditorElement(checkParent);
+                    checkParent = checkParent.parentElement;
+                }
+                if (isMediumEditorElement) {
+                    // default behaviuor is to move cursor to the end of the line
+                    // when pressed arrow down at the end of the line.
+                    // check position of cursor and not move it to the end of the line
+                    let checkHeight = checkParent.offsetHeight;
+                    let elementHeight = 0;
+                    if (element.nodeType === 1) {
+                        elementHeight = element.offsetTop + element.offsetHeight;
+                    } else {
+                        elementHeight = parentElement.offsetTop + parentElement.offsetHeight;
+                    }
+                    if (elementHeight > checkHeight) {
+                        event.preventDefault();
+                        return false;
+                    }
+                    setTimeout(function() {
+                        let selectedElement = document.getSelection().anchorNode;
+                        if (MediumEditor.util.isMediumEditorElement(selectedElement)) {
+                          let lastElement = selectedElement.lastChild;
+                          if (lastElement && MediumEditor.util.hasAfterPseudoclass(lastElement)) {
+                            MediumEditor.selection.moveCursor(document, lastElement, 0);
+                          }
+                        }
+                    }, 20);
+                }
             }
         }
     };
@@ -7021,7 +7106,7 @@ MediumEditor.extensions = {};
     function handleKeypress(event) {
         if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER)) {
             let element = document.getSelection().anchorNode,
-            rootNode = element.parentNode,
+            rootNode = element !== this.elements[0] ? element.parentNode : element,
             isLiElement = element.nodeName === 'LI';
             while (rootNode.nodeName !== 'DIV') {
                 if (!isLiElement) {
@@ -7037,12 +7122,31 @@ MediumEditor.extensions = {};
             selection = length ? element.nodeValue.substring(0, offset) : '',
             afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
             mediumEditorElement = this.elements[0],
-            isVerse = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-wrap']);
+            isVerse = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-wrap']),
+            editingEndLinebreak = false,
+            nextElementEndingLinebreak = false;
+            if (isList && mediumEditorElement.classList.contains('-end-linebreak')) {
+             editingEndLinebreak = MediumEditor.util.hasAfterPseudoclass(parentNode) || MediumEditor.util.hasAfterPseudoclass(parentNode.parentNode, "\"¶\"");
+             nextElementEndingLinebreak = element !== mediumEditorElement ? MediumEditor.util.hasAfterPseudoclass(element.nextSibling) : false;
+            }
             if (afterSelection.trim().length === 0) {
                 selection+= afterSelection;
                 afterSelection = '';
             }
             if (isLiElement) {
+              // after pressing two Enter browser creates structure with div, which is not correct for block
+              setTimeout(() => {
+                if (mediumEditorElement.lastElementChild && mediumEditorElement.lastElementChild.nodeName === 'DIV') {
+                  let lastDiv = mediumEditorElement.lastElementChild;
+                  if (lastDiv.childNodes.length === 1 && lastDiv.lastElementChild.nodeName === 'BR') {
+                    let br = document.createElement('br');
+                    lastDiv.replaceWith(br);
+                    br.parentNode.insertBefore(document.createElement('br'), br);
+                    br.parentNode.insertBefore(document.createElement('br'), br);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, br, 0);
+                  }
+                }
+              }, 50);
                 return true;// keep default user agent's behaviour for lists
             } else if (element.nodeName === 'W') {
                 let partOne;
@@ -7055,21 +7159,34 @@ MediumEditor.extensions = {};
             } else if (element === mediumEditorElement) {
                 //console.log(document.getSelection());
                 let target = element.childNodes[document.getSelection().anchorOffset];
+                let partOne = document.createElement('br');
                 if (target) {
-                    let partOne = document.createElement('br');
                     element.insertBefore(partOne, target.nextSibling);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, partOne, 0);
                     //console.log('HERE7');
+                } else if (MediumEditor.util.hasAfterPseudoclass(element.lastElementChild)) {
+                    element.insertBefore(partOne, element.lastElementChild);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element.lastElementChild, 0);
                 }
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
-                    let editorContent = (element.parentNode.innerHTML || "");
-                    let lineBreaks = /[\r\n]/.test(editorContent)
-                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
-                    if (isVerse) {
-                      MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                    if (element.nodeName === 'BR') {
+                        parentNode.insertBefore(document.createElement('br'), element);
+                    } else if (element.nodeName === 'DIV' && element.childNodes.length === 1 && element.lastElementChild.nodeName === 'BR') {
+                        let br = document.createElement('br');
+                        element.replaceWith(br);
+                        br.parentNode.insertBefore(document.createElement('br'), br);
+                        br.parentNode.insertBefore(document.createElement('br'), br);
+                        MediumEditor.selection.moveCursor(this.options.ownerDocument, br, 0);
                     } else {
-                      MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length : selection.length + 1);
+                        let editorContent = (element.parentNode.innerHTML || "");
+                        let lineBreaks = /[\r\n]/.test(editorContent)
+                        element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
+                        if (isVerse || nextElementEndingLinebreak) {
+                          MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                        } else {
+                          MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 && !lineBreaks ? selection.length + 1 : afterSelection.length === 0 ? selection.length : selection.length + 1);
+                    }
                     }
                 } else {
                     if (element.nodeName === 'BR') {
@@ -7116,7 +7233,7 @@ MediumEditor.extensions = {};
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
                 } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
-                    if (!isList) {
+                    if (!isList || editingEndLinebreak) {
                         partTwo = document.createElement('br');
                     } else {
                         partTwo = document.createTextNode('\n');
@@ -7166,10 +7283,14 @@ MediumEditor.extensions = {};
                 } else {
                     if (containerTwo.childNodes.length === 0 || !containerTwo.innerHTML || !containerTwo.innerHTML.trim()) {
                         //console.log('HERE1', containerTwo);
-                        baseNode.replaceChild(partTwo, parentNode);
-                        lastNode = partOne;
-                        containerOne.appendChild(partOne);
-                        baseNode.insertBefore(containerOne, partTwo);
+                        if (editingEndLinebreak) {
+                          mediumEditorElement.appendChild(partTwo);
+                        } else {
+                          baseNode.replaceChild(partTwo, parentNode);
+                          lastNode = partOne;
+                          containerOne.appendChild(partOne);
+                          baseNode.insertBefore(containerOne, partTwo);
+                        }
                         for (let i = currentIndex - 1; i >=0; --i) {
                             let currentNode = allChildNodes[i];
                             containerOne.insertBefore(currentNode, lastNode);
@@ -7195,13 +7316,17 @@ MediumEditor.extensions = {};
                           moveTo = moveTo.childNodes[0];
                         }
                     } else {
+                      if (editingEndLinebreak) {
+                        moveTo = partTwo.previousSibling;
+                      } else {
                         moveTo = partTwo;
+                      }
                     }
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, moveTo, 0);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, moveTo, editingEndLinebreak ? 1 : 0);
                     //MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
                     //console.log('HERE5');// end of block + <br><br> - cursor not moved
                     //console.log(partOne, partTwo);
-                    if (!nextSibling) {
+                    if (!nextSibling && !editingEndLinebreak) {
                         let partThree = partTwo.cloneNode();
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
