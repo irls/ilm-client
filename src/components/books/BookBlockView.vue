@@ -1892,12 +1892,12 @@ Save or discard your changes to continue editing`,
               let coupletInfo = {};
               this.$modal.show(CoupletWarningPopup, {
                 coupletInfo: coupletInfo
-              }, 
+              },
               {
                 height: 'auto',
                 width: '440px',
                 clickToClose: false
-              }, 
+              },
               {
                 'closed': (e) => {
                   if (coupletInfo && coupletInfo.success) {
@@ -3503,10 +3503,10 @@ Save text changes and realign the Block?`,
           resizeable: false,
           clickToClose: false,
           height: "auto"
-        }, 
+        },
         {
           'closed': () => {
-            
+
           }
         });
       },
@@ -3845,7 +3845,7 @@ Save text changes and realign the Block?`,
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
         this.block.isSaving = true;
-        api.post(api_url, formData, {}).then((response) => {
+        return api.post(api_url, formData, {}).then((response) => {
           this.block.isSaving = false;
           if (response.status===200) {
             this.removeTempImg(this.block._id)
@@ -3870,10 +3870,7 @@ Save text changes and realign the Block?`,
             $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
               .removeAttr('data-placeholder');
-          } else {
-
           }
-
           //if (this.blockO.type !== this.block.type) {
             this.blockO.status = Object.assign(this.blockO.status, {
               marked: this.block.markedAsDone,
@@ -3886,19 +3883,22 @@ Save text changes and realign the Block?`,
               type: this.block.type,
               status: this.blockO.status
             }
-            this.putBlockO(upd).then(()=>{
-              this.putNumBlockO({
-                bookId: this.block.bookid,
-                rid: this.blockO.rid,
-                type: this.block.type,
-                secnum: '',
-                parnum: ''
-              }).then((blocks)=>{
-                //console.log('assembleBlock putNumBlockO', blocks[0]);
-                //this.storeListO.updBlockByRid(this.blockO.rid, {
-                //  type: this.block.type
-                //})
-              });
+            return this.putBlockO(upd).then(()=>{
+              return Promise.all[
+                this.putNumBlockO({
+                  bookId: this.block.bookid,
+                  rid: this.blockO.rid,
+                  type: this.block.type,
+                  secnum: '',
+                  parnum: ''
+                }).then((blocks)=>{
+                  //console.log('assembleBlock putNumBlockO', blocks[0]);
+                  //this.storeListO.updBlockByRid(this.blockO.rid, {
+                  //  type: this.block.type
+                  //})
+                }),
+                this.updateBookVersion({major: true})
+              ]
             });
           //}
         }).catch((err) => {
@@ -4524,7 +4524,7 @@ Save text changes and realign the Block?`,
         });
       },
       showChangeVoiceworkModal() {
-        this.$modal.show(ChangeVoiceworkModal, 
+        this.$modal.show(ChangeVoiceworkModal,
           {
             blockType: this.blockTypeLabel,
             voicework: this.blockVoiceworks[this.voiceworkChange],
