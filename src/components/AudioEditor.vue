@@ -2758,10 +2758,19 @@
           if (this.blockSelection && ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) && this.plEventEmitter) {
             let start = false;
             let end = false;
-            this.storeListO.getBlocksInRange(this.blockSelection.start._id, this.blockSelection.end._id).forEach(blkId => {
-              if (this.blockMap[blkId]) {
-                let _start = parseInt(this.blockMap[blkId][0])/1000;
-                let _end = parseInt(this.blockMap[blkId][1])/1000;
+            this.selectedBlocksData.forEach(block => {
+              let _start = null;
+              let _end = null;
+              if (block.audiocatalog_map) {
+                if (block.audiocatalog_map[this.audiofileId]) {
+                  _start = block.audiocatalog_map[this.audiofileId].start / 1000;
+                  _end = block.audiocatalog_map[this.audiofileId].end / 1000;
+                }
+              } else if (this.blockMap[block.blockid]) {
+                _start = parseInt(this.blockMap[block.blockid][0])/1000;
+                _end = parseInt(this.blockMap[block.blockid][1])/1000;
+              }
+              if (_start !== null || _end !== null) {
                 if (start === false || _start < start) {
                   start = _start;
                 }
@@ -3895,7 +3904,8 @@ Revert to original block audio?`,
           coupletSeparator: 'coupletSeparator',
           allowAlignBlocksLimit: 'allowAlignBlocksLimit',
           user: 'user',
-          audioFadeConfig: 'audioFadeConfig'
+          audioFadeConfig: 'audioFadeConfig',
+          selectedBlocksData: 'selectedBlocksData'
         })
       },
       watch: {

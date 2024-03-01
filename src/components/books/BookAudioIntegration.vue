@@ -3,7 +3,7 @@
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
-          <!-- <AlignAudioSpeed 
+          <!-- <AlignAudioSpeed
             :audio_type="'audio_file'"
             :is_catalog_active="activeTabIndex === 0 && isActive" /> -->
           <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
@@ -151,7 +151,7 @@
             0 blocks selected
           </template>
           <template v-else>
-            {{alignCounter.countTTS}} TTS block(s) in range 
+            {{alignCounter.countTTS}} TTS block(s) in range
             <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
             <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
           </template>
@@ -285,7 +285,9 @@
         filterFilename: '',
         highlightDuplicateId: '',
         split : false,
-        audioEditorIsOpeed : false
+        audioEditorIsOpeed : false,
+        audioSelectionTimers: {},
+        highlightedAudiofiles: []
       }
     },
     mixins: [task_controls, api_config, access],
@@ -417,9 +419,9 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       });
-      
+
       this.$root.$on('from-audioeditor:visible', this.splitRecalc);
-      
+
       /*this.$root.$on('for-audioeditor:load', this.resizeToc);
       this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
       this.$root.$on('from-audioeditor:close', this.resizeToc);
@@ -1244,17 +1246,6 @@
           //console.log(split)
         }
       },
-      isAudiofileHighlighted(audiofile) {
-        if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
-        if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap && !this.highlightDuplicateId) {
-          let hasMap = this.alignCounter.blocks.find(b => {
-            return typeof audiofile.blockMap[b.blockid] !== 'undefined';
-          });
-          return hasMap;
-        } else {
-          return false;
-        }
-      },
       isAudiofileAligned(audiofile) {
         if ('done' in audiofile && audiofile.done == true){
           return true;
@@ -1266,11 +1257,11 @@
       capitalizeFirst(text) {
         return _.upperFirst(text);
       },
-      
+
       goToBlock(id) {
         this.$emit('goToBlock', id);
       },
-      
+
       checkCatalogueScroll() {
         Vue.nextTick(() => {
           if ($('.file-catalogue-files-wrapper').is(':visible')) {// check if additional scroll appears
@@ -1282,7 +1273,7 @@
           }
         });
       },
-      
+
       checkTabOpen(ev) {// on tab open event component start slowly open, need to wait until full open
         if (ev.index === 0) {
           let containerHeight = this.getFileCatalogueContainerHeight();
@@ -1308,7 +1299,7 @@
           }*/
         }
       },
-      
+
       getFileCatalogueContainerHeight() {
         let containerHeight = 0;
         let container = document.querySelector('.sidebar');// main container for all section
@@ -1333,7 +1324,7 @@
       
       getAudiofileClass(audiofile) {
         return ['audiofile', {
-            '-selected': this.isAudiofileHighlighted(audiofile)
+            '-selected': this.highlightedAudiofiles.includes(audiofile.id)
           }, 
           {
             '-renaming': (this.renaming && (this.renaming.id == audiofile.id && !audiofile.duplicate))
@@ -1344,6 +1335,27 @@
           {
             '-aligning': this.isAudiofileAligning(audiofile.id)
           }];
+      },
+      setHighlightedAudiofiles() {
+        let highlightedAudiofiles = [];
+        this.selectedBlocksData.forEach(block => {
+          if (block.audiocatalog_map) {
+            Object.keys(block.audiocatalog_map).forEach(file_id => {
+              if (!highlightedAudiofiles.includes(file_id)) {
+                highlightedAudiofiles.push(file_id);
+              }
+            });
+          } else {
+            let hasMap = this.audiobook.importFiles.find(audiofile => {
+              return audiofile.blockMap && typeof audiofile.blockMap[b.blockid] !== 'undefined';
+            });
+            
+            if (hasMap) {
+              highlightedAudiofiles.push(audiofile.id);
+            }
+          }
+        });
+        this.highlightedAudiofiles = highlightedAudiofiles;
       },
 
       ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
@@ -1414,7 +1426,9 @@
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
-        alignBlocksLimitMessage: 'alignBlocksLimitMessage'}),
+        alignBlocksLimitMessage: 'alignBlocksLimitMessage',
+        selectedBlocksData: 'selectedBlocksData'
+      }),
       ...mapGetters('alignActions', ['aligningAudiofiles'])
     },
     watch: {
@@ -1522,6 +1536,7 @@
           if (!openAudio && openTTS) {
             this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
           }
+          this.setHighlightedAudiofiles();
         },
         deep: true
       },
