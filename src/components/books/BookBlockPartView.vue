@@ -4412,6 +4412,14 @@ Join subblocks?`,
           this.destroyEditor();
           this.initEditor(true);
         }
+      },
+      'block.classes': {
+        handler(val) {
+          Vue.nextTick(() => {
+            this.$parent.highlightSuspiciousWords();
+          });
+        },
+        deep: true
       }/*,
       'audioTasksQueue.running': {
         handler(val) {
