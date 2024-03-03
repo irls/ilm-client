@@ -3,20 +3,28 @@ import axios from 'axios';
 export default {
   namespaced: true,
   state: {
-    aligningBooks: []
+    aligningBooks: [],
+    aligningBlocks: []
   },
   getters: {
     aligningAudiofiles: state => {
-      return state.aligningBooks.reduce((acc, alignBook) => {
+      let aligningInBooks = state.aligningBooks.reduce((acc, alignBook) => {
         return acc.concat(alignBook.audiofiles.filter(audiofile => {
           return !alignBook.aligned_audiofiles.includes(audiofile);
         }));
       }, []);
+      let aligningInBlocks = state.aligningBlocks.reduce((acc, block) => {
+        return acc.concat(block.audiocatalog_map ? Object.keys(block.audiocatalog_map) : []);
+      }, []);
+      return aligningInBooks.concat(aligningInBlocks);
     }
   },
   mutations: {
     setAligningBooks(state, books) {
       state.aligningBooks = books;
+    },
+    setAligningBlocks(state, blocks) {
+      state.aligningBlocks = blocks;
     }
   },
   actions: {
