@@ -3430,6 +3430,7 @@ export const store = new Vuex.Store({
               let oldBlocks = state.aligningBlocks;
               let blocks = response.data.blocks;
               commit('alignActions/setAligningBooks', response.data.books);
+              commit('alignActions/setAligningBlocks', response.data.blocks);
               let checks = [];
               if (oldBlocks.length > 0) {
                 oldBlocks.forEach(b => {
