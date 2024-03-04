@@ -1060,6 +1060,11 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
+      if (this.block.getIsSplittedBlock()) {
+        if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0) {
+          this.blockPart.content = this.blockPart.content.replace(/<br[^>]*>$/, `\n`);
+        }
+      }
       this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
