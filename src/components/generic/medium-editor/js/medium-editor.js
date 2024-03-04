@@ -3158,7 +3158,7 @@ MediumEditor.extensions = {};
             if (MediumEditor.util.isKey(event, [MediumEditor.util.keyCode.DELETE, MediumEditor.util.keyCode.BACKSPACE])) {
                 return this.triggerCustomEvent('editableKeydownDelete', event, event.currentTarget);
             }
-            if (event.code === 'ArrowRight' || event.keyCode === 39) {
+            if (event.code === 'ArrowRight' || event.keyCode === 39 || event.code === 'End' || event.keyCode === 35) {
                 // do not move cursor after end line break marker
                 let element = document.getSelection().anchorNode,
                 offset = document.getSelection().anchorOffset,
