@@ -138,7 +138,8 @@
                     'updated': isUpdated,
                     'checked': blockO.checked,
                     'playing': blockAudio.src,
-                    'hide-archive': isHideArchFlags
+                    'hide-archive': isHideArchFlags,
+                    '-end-linebreak': hasEndLinebreak
                   },
                     'part-' + blockPartIdx]"
                   :data-audiosrc="modeAudiosrc"
@@ -459,7 +460,8 @@ export default {
       startedRecording: null,
       recordingPauses: [],
       recordingPauseDelay: 0,
-      lastRecordingPausePlace: null
+      lastRecordingPausePlace: null,
+      hasEndLinebreak: false
     }
   },
   components: {
@@ -1058,6 +1060,11 @@ export default {
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
+      if (this.block.getIsSplittedBlock()) {
+        if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0) {
+          this.blockPart.content = this.blockPart.content.replace(/<br[^>]*>$/, `\n`);
+        }
+      }
       this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
       if (!this.player && this.blockAudio.src) {
           this.initPlayer();
@@ -1099,6 +1106,7 @@ export default {
       }
       Vue.nextTick(() => {
         this.showPinnedInText();
+        this.setEndLinebreakClass();
       })
   },
   beforeDestroy: function () {
@@ -1605,6 +1613,7 @@ export default {
             if (this.$refs.blockContent) {
               this.addContentListeners();
             }
+            this.setEndLinebreakClass();
           });
 
           this.isChanged = false;
@@ -3129,7 +3138,7 @@ export default {
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
 
-        api.post(api_url, formData, {}).then((response) => {
+        return api.post(api_url, formData, {}).then((response) => {
           if (response.status===200) {
             if (this.isCompleted) {
               this.tc_loadBookTask();
@@ -3151,10 +3160,7 @@ export default {
             $('[id="' + this.block._id + '"] .illustration-block')
               .removeAttr('contenteditable')
               .removeAttr('data-placeholder');
-          } else {
-
           }
-
           //if (this.blockO.type !== this.block.type) {
             this.blockO.status = Object.assign(this.blockO.status, {
               marked: this.block.markedAsDone,
@@ -3167,19 +3173,22 @@ export default {
               type: this.block.type,
               status: this.blockO.status
             }
-            this.putBlockO(upd).then(()=>{
-              this.putNumBlockO({
-                bookId: this.block.bookid,
-                rid: this.blockO.rid,
-                type: this.block.type,
-                secnum: '',
-                parnum: ''
-              }).then((blocks)=>{
-                //console.log('assembleBlock putNumBlockO', blocks[0]);
-                //this.storeListO.updBlockByRid(this.blockO.rid, {
-                //  type: this.block.type
-                //})
-              });
+            return this.putBlockO(upd).then(()=>{
+              return Promise.all[
+                this.putNumBlockO({
+                  bookId: this.block.bookid,
+                  rid: this.blockO.rid,
+                  type: this.block.type,
+                  secnum: '',
+                  parnum: ''
+                }).then((blocks)=>{
+                  //console.log('assembleBlock putNumBlockO', blocks[0]);
+                  //this.storeListO.updBlockByRid(this.blockO.rid, {
+                  //  type: this.block.type
+                  //})
+                }),
+                this.updateBookVersion({major: true})
+              ]
             });
           //}
         }).catch((err) => {
@@ -4149,6 +4158,28 @@ Join subblocks?`,
           if (replay) {
             this.audResume();
           }
+        }
+      },
+      setEndLinebreakClass() {
+        if (this.$refs.blockContent) {
+          if (this.isSplittedBlock && this.blockPartIdx < this.block.parts.length - 1) {
+            let hasWhitespaceStyle = (this.block && this.block.classes && ['verse', 'list', 'couplet'].includes(this.block.classes.whitespace) && /[\r\n]$/.test(this.blockPart.content));
+            if (/<br\s*\/?>|<\/ul>|<\/ol>$/.test(this.blockPart.content) || hasWhitespaceStyle) {
+              this.hasEndLinebreak = true;
+              if (hasWhitespaceStyle) {
+                let textNode = this.$refs.blockContent.lastChild;
+                let spacesRegex = /(\s+)\n$/;
+                if (textNode && textNode.nodeType === 3 && spacesRegex.test(textNode.nodeValue)) {
+                  // if whitespace style block ends with spaces
+                  textNode.nodeValue = textNode.nodeValue.replace(/\n$/, '');
+                  this.$refs.blockContent.appendChild(document.createElement('br'));
+                }
+                //this.$refs.blockContent.appendChild(document.createElement('span'));
+              }
+              return;
+            }
+          }
+          this.hasEndLinebreak = false;
         }
       }
 

@@ -27,7 +27,7 @@
       cancelAlign() {
         return this.cancelAlignment([this.block.bookid, this.block.blockid, this.blockPartIdx])
       },
-      ...mapActions(['cancelAlignment'])
+      ...mapActions('alignActions', ['cancelAlignment'])
     }
   }
 </script>

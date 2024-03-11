@@ -3034,6 +3034,36 @@ export default {
         margin-top: 6px;
       }
     }
+    .-end-linebreak {
+      &>:not(br,ol,ul,div):last-child, &>ul:last-child li:last-child, &>div:last-child *:last-child {
+        &::after {
+          content: "\00B6";
+          display: inline-block;
+          top: -0.15em;
+          position: relative;
+          user-select: none;
+        };
+      }
+      &>br:last-child {
+        content: " ";
+        &::after {
+          content: "\00B6\000A";
+          white-space: pre;
+        }
+      }
+      /* if tag has line break marker then hide last br in it */
+      &>i:last-child, &>u:last-child,&>b:last-child {
+        &>br:last-child {
+          content: ""
+        }
+      }
+      &>sup:last-child {
+        &::after {
+          font-size: 16pt;
+          top: 0.2em;
+        }
+      }
+    }
   }
 
   .content-wrap-footn-preview {

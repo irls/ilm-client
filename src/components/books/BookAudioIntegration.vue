@@ -3,7 +3,7 @@
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
       <AccordionTab :header="'File audio catalogue'" v-bind:key="'file-audio-catalogue'" ref="panelAudiofile" class="panel-audio-catalogue">
         <div class="file-catalogue" id="file-catalogue">
-          <!-- <AlignAudioSpeed 
+          <!-- <AlignAudioSpeed
             :audio_type="'audio_file'"
             :is_catalog_active="activeTabIndex === 0 && isActive" /> -->
           <div v-html="alignBlocksLimitMessage" class="red-message align-blocks-limit" v-if="alignBlocksLimitMessage"></div>
@@ -50,7 +50,12 @@
               </button>
             </div>
             <div class="delete-audio">
-              <button class="btn btn-default btn-small" :disabled="selectionLength == 0" v-on:click="deleteAudio()" ><i class="fa fa-trash" style="color:red"></i><span v-if="selectionLength > 0" style="color:red">({{selectionLength}})</span></button>
+              <button class="btn btn-default btn-small" 
+                :disabled="selectionLength == 0" 
+                v-on:click="deleteAudio()" >
+                <i class="fa fa-trash"></i>
+                <span v-if="selectionLength > 0">({{selectionLength}})</span>
+              </button>
             </div>
             <div class="align-audio left-divider">
               <button class="btn btn-primary btn-small" :disabled="startAlignDisabled" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
@@ -61,7 +66,9 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable :options="{disabled : renaming}" v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())"   :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-renaming': (renaming && (renaming.id == audiofile.id && !audiofile.duplicate))}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
+              <div v-for="(audiofile, index) in audiobook.importFiles" 
+                v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())" 
+                :class="getAudiofileClass(audiofile)" >
                 <template v-if="(audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                   <template v-if="audiofile.status == 'processing' && (audiofile.title ? audiofile.title : audiofile.name).includes(filterFilename.trim())">
                     <div class="audiofile-info">
@@ -72,8 +79,10 @@
                     <div v-if="allowEditing"
                              class="audiofile-options">
                       <label class="checkbox-container">
-                        <input type="checkbox" :checked="selections.indexOf(audiofile.id) !== -1"
-                             v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"/>
+                        <input type="checkbox" 
+                        :checked="selections.indexOf(audiofile.id) !== -1"
+                         v-on:click="addSelection(audiofile.id, selections.indexOf(audiofile.id) === -1)"
+                         :disabled="isAudiofileAligning(audiofile.id)"/>
                         <span class="checkmark"></span>
                       </label>
                     </div>
@@ -89,15 +98,25 @@
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
                       <div class="audiofile-name" v-on:dblclick="renameAudiofile(audiofile.id)">
-                        <span v-if="audiofile.duplicate " @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)"><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" /><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
+                        <span v-if="audiofile.duplicate " 
+                          @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" 
+                          :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)">
+                          <img v-if="audiofile.quality" 
+                            :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />
+                            <i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i>
+                        </span>
                         <span v-if="!renaming || (renaming.id !== audiofile.id && !audiofile.duplicate)"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
-                              @click="audiofileClick(audiofile.id, false, $event)"  :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" ><img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                              @click="audiofileClick(audiofile.id, false, $event)"  
+                              :title="(audiofile.quality ? capitalizeFirst(audiofile.quality) + ' ' : '') + (audiofile.title ? audiofile.title : audiofile.name)" >
+                              <img v-if="audiofile.quality" :src="'/static/audio_quality/' + audiofile.quality + '-16.png'" />
+                              <span class="filename">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
+                        </span>
                         <input id="rename-input" type="text" v-model="audiofile.title" autocomplete="off"
                              class="audiofile-name-edit"
-                               @blur="renameAudiofileStop()"
-                               @keyup.enter="renameAudiofileStop()"
-                               @change="saveAudiobook()"
+                             @blur="renameAudiofileStop()"
+                             @keyup.enter="renameAudiofileStop()"
+                             @change="saveAudiobook()"
 
                              v-else-if="!audiofile.hasOwnProperty('duplicate') || audiofile.duplicate == false" />
                       </div>
@@ -132,7 +151,7 @@
             0 blocks selected
           </template>
           <template v-else>
-            {{alignCounter.countTTS}} TTS block(s) in range 
+            {{alignCounter.countTTS}} TTS block(s) in range
             <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
             <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
           </template>
@@ -266,7 +285,9 @@
         filterFilename: '',
         highlightDuplicateId: '',
         split : false,
-        audioEditorIsOpeed : false
+        audioEditorIsOpeed : false,
+        audioSelectionTimers: {},
+        highlightedAudiofiles: []
       }
     },
     mixins: [task_controls, api_config, access],
@@ -398,9 +419,9 @@
       this.$root.$on('stop-align', () => {
         this.alignProcess = false;
       });
-      
+
       this.$root.$on('from-audioeditor:visible', this.splitRecalc);
-      
+
       /*this.$root.$on('for-audioeditor:load', this.resizeToc);
       this.$root.$on('for-audioeditor:load-and-play', this.resizeToc);
       this.$root.$on('from-audioeditor:close', this.resizeToc);
@@ -529,9 +550,8 @@
         });
       },
       addSelection(id, value) {
-
         if (value === true) {
-          if (this.selections.indexOf(id) === -1) {
+          if (this.selections.indexOf(id) === -1 && !this.isAudiofileAligning(id)) {
             this.selections.push(id)
           }
         } else {
@@ -543,7 +563,7 @@
         }
       },
       audiofileClick:_.debounce(function(id, play, event) {
-        if (id === this.playing) {
+        if (id === this.playing || this.isAudiofileAligning(id)) {
           return false;
         }
         if (!this.audioOpening && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
@@ -869,6 +889,7 @@
             })
             .then((response) => {
               this.$root.$emit('stop-align');
+              this.selections = [];
               if (response.status===200) {
                 //self.$root.$emit('bookBlocksUpdates', response.data);
                 this.$emit('alignmentFinished');
@@ -1225,17 +1246,6 @@
           //console.log(split)
         }
       },
-      isAudiofileHighlighted(audiofile) {
-        if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
-        if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap && !this.highlightDuplicateId) {
-          let hasMap = this.alignCounter.blocks.find(b => {
-            return typeof audiofile.blockMap[b.blockid] !== 'undefined';
-          });
-          return hasMap;
-        } else {
-          return false;
-        }
-      },
       isAudiofileAligned(audiofile) {
         if ('done' in audiofile && audiofile.done == true){
           return true;
@@ -1247,11 +1257,11 @@
       capitalizeFirst(text) {
         return _.upperFirst(text);
       },
-      
+
       goToBlock(id) {
         this.$emit('goToBlock', id);
       },
-      
+
       checkCatalogueScroll() {
         Vue.nextTick(() => {
           if ($('.file-catalogue-files-wrapper').is(':visible')) {// check if additional scroll appears
@@ -1263,7 +1273,7 @@
           }
         });
       },
-      
+
       checkTabOpen(ev) {// on tab open event component start slowly open, need to wait until full open
         if (ev.index === 0) {
           let containerHeight = this.getFileCatalogueContainerHeight();
@@ -1289,7 +1299,7 @@
           }*/
         }
       },
-      
+
       getFileCatalogueContainerHeight() {
         let containerHeight = 0;
         let container = document.querySelector('.sidebar');// main container for all section
@@ -1307,9 +1317,49 @@
         }
         return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
+      
+      isAudiofileAligning(fileId) {
+        return this.aligningAudiofiles.includes(fileId);
+      },
+      
+      getAudiofileClass(audiofile) {
+        return ['audiofile', {
+            '-selected': this.highlightedAudiofiles.includes(audiofile.id)
+          }, 
+          {
+            '-renaming': (this.renaming && (this.renaming.id == audiofile.id && !audiofile.duplicate))
+          }, 
+          {
+            '-hidden': ((this.isAudiofileAligned(audiofile) && this.aad_filter == 'pending') || (!this.isAudiofileAligned(audiofile) && this.aad_filter == 'aligned'))
+          }, 
+          {
+            '-aligning': this.isAudiofileAligning(audiofile.id)
+          }];
+      },
+      setHighlightedAudiofiles() {
+        let highlightedAudiofiles = [];
+        this.selectedBlocksData.forEach(block => {
+          if (block.audiocatalog_map) {
+            Object.keys(block.audiocatalog_map).forEach(file_id => {
+              if (!highlightedAudiofiles.includes(file_id)) {
+                highlightedAudiofiles.push(file_id);
+              }
+            });
+          } else {
+            let hasMap = this.audiobook.importFiles.find(audiofile => {
+              return audiofile.blockMap && typeof audiofile.blockMap[b.blockid] !== 'undefined';
+            });
+            
+            if (hasMap) {
+              highlightedAudiofiles.push(audiofile.id);
+            }
+          }
+        });
+        this.highlightedAudiofiles = highlightedAudiofiles;
+      },
 
-      ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus', 'cancelAlignment']),
-      ...mapActions('alignActions', ['alignBook', 'alignTTS'])
+      ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
+      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -1376,7 +1426,10 @@
         currentJobInfo: 'currentJobInfo',
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
-        alignBlocksLimitMessage: 'alignBlocksLimitMessage'})
+        alignBlocksLimitMessage: 'alignBlocksLimitMessage',
+        selectedBlocksData: 'selectedBlocksData'
+      }),
+      ...mapGetters('alignActions', ['aligningAudiofiles'])
     },
     watch: {
       'audiobook': {
@@ -1483,6 +1536,7 @@
           if (!openAudio && openTTS) {
             this.$root.$emit('from-bookedit:set-voice-test', this.blockSelection.start, this.blockSelection.end)
           }
+          this.setHighlightedAudiofiles();
         },
         deep: true
       },
@@ -1555,8 +1609,10 @@
       &>div {
         display: inline-block;
         text-align: center;
-        &.delete-audio, &.upload-audio, &.unselect-audio {
-          /*width: 100px;*/
+        &.delete-audio {
+          i, span {
+            color: red;
+          }
         }
       }
       .btn {height: 34px;}
@@ -1624,11 +1680,16 @@
             overflow: hidden;
             vertical-align: sub;
             min-width: 60%;
+            color: #323130;
+            .filename {
+              padding: 0px;
+            }
           }
           .audiofile-duration {
             display: inline-block;
             overflow: hidden;
             vertical-align: sub;
+            color: #323130;
           }
           .audiofile-name-edit {
             img {
@@ -1643,7 +1704,9 @@
             }
           }*/
           &.done {
-              color: gray;
+            .audiofile-name .filename {
+              opacity: 0.5;
+            }
           }
         }
         .audiofile-options {
@@ -1693,6 +1756,25 @@
         input[disabled] {
             background-color: inherit;
             border: none;
+        }
+        &.-aligning {
+          .audiofile-name {
+            .filename {
+              opacity: 0.5;
+            }
+          }
+          .audiofile-duration {
+            opacity: 0.5;
+          }
+          .checkbox-container {
+            .checkmark {
+              background-color: #BFBCBD;
+              opacity: 0.5;
+              &:after {
+                display: block;
+              }
+            }
+          }
         }
       }
     }
