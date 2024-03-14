@@ -4164,7 +4164,7 @@ Join subblocks?`,
         if (this.$refs.blockContent) {
           if (this.isSplittedBlock && this.blockPartIdx < this.block.parts.length - 1) {
             let hasWhitespaceStyle = (this.block && this.block.classes && ['verse', 'list', 'couplet'].includes(this.block.classes.whitespace) && /[\r\n]$/.test(this.blockPart.content));
-            if (/<br\s*\/?>|<\/ul>|<\/ol>$/.test(this.blockPart.content) || hasWhitespaceStyle) {
+            if (/<br\s*\/?>$|<\/ul>$|<\/ol>$/.test(this.blockPart.content) || hasWhitespaceStyle) {
               this.hasEndLinebreak = true;
               if (hasWhitespaceStyle) {
                 let textNode = this.$refs.blockContent.lastChild;
