@@ -2072,6 +2072,11 @@ export default {
             endRange = this._getClosestAligned(endElement, 1)
           }
 
+          if (!startRange[0] || !endRange[0] || !endRange[1]) {
+            this.$refs.blockCntx.close();
+            return;
+          }
+
           this.player.playRange('content-' + this.block.blockid + '-part-' + this.blockPartIdx, startRange[0], endRange[0] + endRange[1]);
           this.isAudStarted = true;
           this.isAudPartStarted = true;
@@ -3094,9 +3099,12 @@ export default {
         }
         let sibling = false;
         if (direction > 0) {
-          sibling = node.nextSibling ? node.nextSibling : null;
+          sibling = node.nextSibling || node.parentNode;
         } else {
-          sibling = node.previousSibling ? node.previousSibling : null;
+          sibling = node.previousSibling || node.parentNode;
+        }
+        if (!sibling || (sibling.dataset && sibling.dataset.iseditor)) {
+          return null;
         }
         while (sibling) {
           if (sibling.dataset && sibling.dataset.map) {
@@ -3108,9 +3116,12 @@ export default {
             }
           }
           if (direction > 0) {
-            sibling = sibling.nextSibling ? sibling.nextSibling : null;
+            sibling = sibling.nextSibling || node.parentNode;
           } else {
-            sibling = sibling.previousSibling ? sibling.previousSibling : null;
+            sibling = sibling.previousSibling || node.parentNode;
+          }
+          if (!sibling || (sibling.dataset && sibling.dataset.iseditor)) {
+            return null;
           }
         }
         return null;
