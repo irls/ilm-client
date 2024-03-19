@@ -454,6 +454,7 @@
               handler: () => {
                 this.$root.$emit('hide-modal');
               },
+              class: 'btn btn-primary'
             },
           ],
           class: ['align-modal']
