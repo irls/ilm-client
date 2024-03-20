@@ -20,10 +20,10 @@ export default {
     }
   },
   mutations: {
-    setAligningBooks(state, books) {
+    setAligningBooks(state, books = []) {
       state.aligningBooks = books;
     },
-    setAligningBlocks(state, blocks) {
+    setAligningBlocks(state, blocks = []) {
       state.aligningBlocks = blocks;
     }
   },
