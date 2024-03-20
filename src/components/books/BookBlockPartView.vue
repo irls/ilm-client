@@ -3116,9 +3116,9 @@ export default {
             }
           }
           if (direction > 0) {
-            sibling = sibling.nextSibling || node.parentNode;
+            sibling = sibling.nextSibling || sibling.parentNode;
           } else {
-            sibling = sibling.previousSibling || node.parentNode;
+            sibling = sibling.previousSibling || sibling.parentNode;
           }
           if (!sibling || (sibling.dataset && sibling.dataset.iseditor)) {
             return null;
