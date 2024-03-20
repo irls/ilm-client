@@ -655,7 +655,7 @@ export const store = new Vuex.Store({
         return res;
       } else return false;
     },
-    
+
     selectionRecount: state => state.selectionRecount,
     isBookReaderCategory: (state, getters) => {
       if (!state.currentBookMeta) {
@@ -1187,7 +1187,7 @@ export const store = new Vuex.Store({
         }
       }
     },
-    set_aligning_blocks(state, blocks) {
+    set_aligning_blocks(state, blocks = []) {
       state.aligningBlocks = [];
       if (blocks.length) blocks.forEach(b => {
         state.aligningBlocks.push({_id: b.blockid ? b.blockid : b._id, partIdx: b.partIdx, split_pending: b.split_pending ? true : false, voicework: b.voicework});
@@ -2160,7 +2160,7 @@ export const store = new Vuex.Store({
       //commit('SET_CURRENTBOOK_META', newMeta);
       //console.log('update', update);
       //return Promise.resolve('No data updated');
-      
+
       if (!state.currentBookMeta.genres_manual) {
         let updateGenres = Object.keys(update).find(updateField => {
           return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
@@ -3524,7 +3524,7 @@ export const store = new Vuex.Store({
               }
               return Promise.all(checks)
                 .then(() => {
-                  if (oldBlocks.length != blocks.length) {
+                  if (blocks && (oldBlocks.length != blocks.length)) {
                     dispatch('getAudioBook');
                     dispatch('getCurrentJobInfo');
                   }
@@ -5421,7 +5421,7 @@ export const store = new Vuex.Store({
       }
       //state.reqSignals[signalName] = new AbortController();
     },
-    
+
     loadSilenceSample({state}) {
       return axios.get(state.API_URL + 'get_silence_sample', {
         responseType: 'arraybuffer'
@@ -5430,7 +5430,7 @@ export const store = new Vuex.Store({
           return response.data;
         })
     },
-    
+
     uploadBook({state, dispatch}, [data, config]) {
       return axios.post(`${state.API_URL}books`, data, config)
         .then(response => {

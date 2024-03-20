@@ -2011,7 +2011,7 @@ export default {
             endRange = this._getClosestAligned(endElement, 1)
           }
 
-          if (!startRange[0] || !endRange[0] || !endRange[1]) {
+          if (!startRange || !endRange) {
             this.$refs.blockCntx.close();
             return;
           }
