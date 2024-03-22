@@ -3227,23 +3227,26 @@ export default {
           //console.log(this.range, window.getSelection(), range)
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
-          let startRange = this._getClosestAligned(startElement, 1);
-          if (!startRange) {
-            startRange = [0, 0];
+          let checkEmptySugg = false;
+          if (startElement && startElement == endElement && startElement.dataset) {
+            checkEmptySugg = (startElement.dataset.hasOwnProperty('sugg') && startElement.dataset.sugg === '') || false;
           }
-          let endRange = this._getClosestAligned(endElement, 0);
-          if (!endRange) {
-            endRange = this._getClosestAligned(endElement, 1)
-          }
-          if (startRange && endRange && this.isAudioEditing) {
-            //console.log(startRange[0], endRange[0] + endRange[1])
-            let startElementIndex = null;
-            if (this.$refs.blockContent) {
-              startElementIndex = Array.prototype.indexOf.call(this.$refs.blockContent.querySelectorAll('w[data-map]:not([data-map=""])'), startElement);
+          if (!checkEmptySugg) {
+            let startRange = this._getClosestAligned(startElement, 1);
+            let endRange = this._getClosestAligned(endElement, 0);
+            if (!endRange) {
+              endRange = this._getClosestAligned(endElement, 1)
             }
-            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null, startElementIndex);
+            if (startRange && endRange && this.isAudioEditing) {
+              //console.log(startRange[0], endRange[0] + endRange[1])
+              let startElementIndex = null;
+              if (this.$refs.blockContent) {
+                startElementIndex = Array.prototype.indexOf.call(this.$refs.blockContent.querySelectorAll('w[data-map]:not([data-map=""])'), startElement);
+              }
+              this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null, startElementIndex);
+            }
+            //console.log(startElement, endElement, startRange, endRange)
           }
-          //console.log(startElement, endElement, startRange, endRange)
         }
 
         if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
