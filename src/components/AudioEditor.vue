@@ -2581,7 +2581,7 @@
             let word = match[2];
             if (currentLength < match.index) {
               let addPart = text.substr(currentLength, match.index - currentLength);
-              if (closeBracketsRegex.test(addPart) || closeQuotesRegex.test(addPart)) {
+              if ((closeBracketsRegex.test(addPart) || closeQuotesRegex.test(addPart)) && annotations.length > 0) {
                 annotations[annotations.length - 1].id+= unescape(addPart.replace(/<\/?[^>]+?>/img, ''));
               } else {
                 word = addPart + word;
