@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="publish">
+  <fieldset class="publish publish-book">
     <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
@@ -64,6 +64,19 @@
 
       <span v-if="isPublishing" class="align-preloader -small"></span>
     </section>
+    <div class="publish-html-validation" v-if="publicationErrorsCount > 0" v-bind:key="'errors' + currentBookMeta.bookid">
+      <Accordion ref="publicationErrorsAccordion">
+        <AccordionTab :header="'Publication errors (' + publicationErrorsCount + ')'">
+          <div v-for="publication_error in publicationErrors" class="publication-error">
+            <div class="publication-error-blockid">
+              <a v-on:click="goToBlock(publication_error.blockid)" v-if="publication_error.blockid">{{ shortId(publication_error.blockid) }}</a>
+            </div>
+            <div class="publication-error-message">{{ publication_error.message }}</div>
+            <div class="publication-error-info">{{ publication_error.info }}, line {{ publication_error.line }}, col {{ publication_error.col }}</div>
+          </div>
+        </AccordionTab>
+      </Accordion>
+    </div>
   </fieldset>
 </template>
 <script>
@@ -72,6 +85,8 @@
   import axios from 'axios';
   import BlocksDisable from './BlocksDisable';
   import access from '../../../mixins/access.js';
+  import Accordion from 'primevue/accordion';
+  import AccordionTab from 'primevue/accordiontab';
   export default {
     name: 'BookPublish',
     data() {
@@ -83,7 +98,7 @@
       }
     },
     mixins: [api_config, access],
-    components: {BlocksDisable},
+    components: {BlocksDisable, Accordion, AccordionTab},
     methods: {
       checkPublish(successCallback = null) {
         this.$emit('checkPublish');
@@ -279,6 +294,7 @@
           .then(resp => {
             if (resp.status == 200 && resp.data.ok) {
               this.currentBookMeta.isInTheQueueOfPublication = true;
+              this.currentBookMeta.publication_errors = {};
             }
           });
       },
@@ -305,6 +321,15 @@
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
+      },
+      shortId(blockid) {
+        const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
+        let _id_short = blockIdRgx.exec(blockid);
+        _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : blockid;
+        if (_id_short.length > 7) {
+          _id_short = _id_short.substr(0, 4) + '...' + _id_short.substr(_id_short.length - 4, 4);
+        }
+        return _id_short;
       },
       ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
     },
@@ -378,6 +403,29 @@
           return 'Published:';
         }
       },
+      publicationErrorsCount: {
+        get() {
+          return this.publicationErrors.length;
+        },
+        cache: false
+      },
+      publicationErrors: {
+        get() {
+          let errors = [];
+          if (this.currentBookMeta.publication_errors) {
+            if (Array.isArray(this.currentBookMeta.publication_errors.blocks) && this.currentBookMeta.publication_errors.blocks.length > 0) {
+              errors = this.currentBookMeta.publication_errors.blocks;
+            } else if (this.currentBookMeta.publication_errors.book && this.currentBookMeta.publication_errors.book.message) {
+              errors.push({
+                message: this.currentBookMeta.publication_errors.book.message,
+                info: this.currentBookMeta.publication_errors.book.info
+              });
+            }
+          }
+          return errors;
+        },
+        cache: false
+      },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
@@ -425,6 +473,9 @@
   }
 </script>
 <style lang="less">
+  fieldset.publish-book {
+    padding-bottom: 0px !important;
+  }
   .preloader-spinner {
     width: 100%;
     height: 50px;
@@ -443,6 +494,63 @@
       &.disabled {
         cursor: not-allowed;
         opacity: 0.8;
+      }
+    }
+  }
+  .publish-html-validation {
+    white-space: pre-wrap;
+    margin: 10px -6px 0px -6px;
+    line-height: 0px;
+
+    .p-accordion {
+      .p-accordion-header {
+        &:focus {
+          border: 1px solid #a19f9d !important;
+          box-shadow: none !important;
+        }
+        .p-accordion-header-link {
+          text-decoration: none;
+          font-weight: normal;
+          &:focus {
+            border: 1px solid #a19f9d !important;
+            box-shadow: none !important;
+          }
+          .p-accordion-header-text {
+            font-weight: normal;
+          }
+        }
+      }
+      .p-accordion-tab {
+        margin-bottom: 0px;
+        .p-accordion-content {
+          padding: 0px;
+        }
+      }
+    }
+    .publication-error {
+      line-height: 20px;
+      padding: 3px 5px;
+      &:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      div {
+        display: inline-block;
+        vertical-align: top;
+        &.publication-error-blockid {
+          width: 10%;
+          max-width: 10%;
+          padding: 0px 5px;
+          a {
+            text-decoration: underline;
+            cursor: pointer;
+          }
+        }
+        &.publication-error-message {
+          max-width: 85%;
+        }
+        &.publication-error-info {
+          padding: 0px 5px;
+        }
       }
     }
   }
