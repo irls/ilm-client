@@ -4888,7 +4888,7 @@ MediumEditor.extensions = {};
 
         /* KeyboardCommands Options */
 
-        /* commands: [Array]
+        /* defaultCommands: [Array]
          * Array of objects describing each command and the combination of keys that will trigger it
          * Required for each object:
          *   command [String] (argument passed to editor.execAction())
@@ -4897,7 +4897,7 @@ MediumEditor.extensions = {};
          *   shift [boolean] (whether the shift key has to be active or inactive)
          *   alt [boolean] (whether the alt key has to be active or inactive)
          */
-        commands: [
+        defaultCommands: [
             {
                 command: 'bold',
                 key: 'B',
@@ -4921,13 +4921,29 @@ MediumEditor.extensions = {};
             }
         ],
 
+        convertCharCodes: {
+          '.': 190,
+          ',': 188
+        },
+
         init: function () {
             MediumEditor.Extension.prototype.init.apply(this, arguments);
+            if (this.commands) {
+              var defaultCommands =this.defaultCommands.filter((dComm)=>{
+                return !this.commands.find((comm)=>{
+                  return comm.command === dComm.command && comm.key === dComm.key;
+                })
+              });
+              this.commands = [...defaultCommands, ...this.commands];
+            } else {
+              this.commands = this.defaultCommands;
+            }
 
-            this.subscribe('editableKeydown', this.handleKeydown.bind(this));
+            this.subscribe('editableKeydown', this.handleKeyboardCommandKeydown.bind(this));
+
             this.keys = {};
             this.commands.forEach(function (command) {
-                var keyCode = command.key.charCodeAt(0);
+                var keyCode = this.convertCharCodes[command.key] || command.key.charCodeAt(0);
                 if (!this.keys[keyCode]) {
                     this.keys[keyCode] = [];
                 }
@@ -4935,8 +4951,10 @@ MediumEditor.extensions = {};
             }, this);
         },
 
-        handleKeydown: function (event) {
+        handleKeyboardCommandKeydown: function (event) {
+            console.log('handleKeyboardCommandKeydown')
             var keyCode = MediumEditor.util.getKeyCode(event);
+            console.log('keyCode', keyCode)
             if (keyCode === MediumEditor.util.keyCode.DELETE) {
                 let selection = document.getSelection(),
                 element = selection.anchorNode,

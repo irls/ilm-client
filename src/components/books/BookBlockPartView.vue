@@ -1293,6 +1293,7 @@ export default {
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
+          let keyboardCommands = false;
           if (this.allowEditing && this.mode === 'edit') {
             extensions = {
                 'quoteButton': new QuoteButton(),
@@ -1309,6 +1310,25 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
+
+            keyboardCommands = {
+              commands : [
+                {
+                  command: 'superscript',
+                  key: '.',
+                  meta: true,
+                  shift: false,
+                  alt: false
+                },
+                {
+                  command: 'subscript',
+                  key: ',',
+                  meta: true,
+                  shift: false,
+                  alt: false
+                },
+              ]
+            };
 
             let blockLang = this.getBlockLang;
             /*if (this.block.language === 'fa'){
@@ -1329,7 +1349,8 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
-                spellcheck: false
+                spellcheck: false,
+                keyboardCommands: keyboardCommands
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log(event, target);
@@ -1391,7 +1412,8 @@ export default {
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: true,
-                imageDragging: false
+                imageDragging: false,
+                keyboardCommands: keyboardCommands
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
