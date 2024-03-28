@@ -4063,6 +4063,9 @@ export const store = new Vuex.Store({
               }
             }
           }
+          if (!state.currentJobInfo.text_cleanup) {
+            dispatch('tc_loadBookTask', state.currentBookid);
+          }
           return dispatch('getBookAlign')
             .then(() => {
               return dispatch('checkResponse', response);
