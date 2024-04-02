@@ -975,96 +975,117 @@ const formatSup = function () {
     }
   } else {
     if (!isAlreadyApplied) {
-      const _range = selection.getRangeAt(0);
-      const documentFragment = _range.extractContents();
+
+      console.log(`!isAlreadyApplied::!isCollapsed`);
+
+      const range = document.getSelection().getRangeAt(0);
+      const newNode = document.createElement(nodeName);
+      const docFragment = range.cloneContents();
+
+      let prevSibling, nextSibling;
+
+      range.deleteContents();
+      newNode.appendChild(docFragment);
+      range.insertNode(newNode);
 
 
-      const newNode = document.createElement("sup");
-
-      newNode.appendChild(documentFragment);
-      _range.insertNode(newNode);
-
-      console.log(`newNode.prev::: `, newNode.previousSibling);
-      const checkIfEmptyPrevSibling = newNode.previousSibling;
-      if (checkIfEmptyPrevSibling) {
-        if (checkIfEmptyPrevSibling.textContent.trim().length === 0) {
-          checkIfEmptyPrevSibling.remove()
-        } else {
-          const firstStartNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === 'w');
-          if (firstStartNode) {
-            const firstStartNodeId = firstStartNode.getAttribute('id');
-            const checkIfEmptyFirstSibling = newNode.querySelector(`w`);
-            if (checkIfEmptyFirstSibling && checkIfEmptyFirstSibling.getAttribute('id') === firstStartNode.getAttribute('id')) {
-              checkIfEmptyFirstSibling.replaceWith(checkIfEmptyFirstSibling.innerHTML);
+      prevSibling = newNode.previousSibling;
+      if (prevSibling) {
+        if (prevSibling.textContent && prevSibling.textContent.trim().length == 0) {
+          prevSibling.remove()
+        } else if (prevSibling.nodeName.toLowerCase() === 'w') {
+          const wordId = prevSibling.getAttribute('id');
+          const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${wordId}"]`);
+          let isFirstApplyed = false;
+          for (const foundNode of Array.from(wordWrappers)) {
+            if (foundNode.textContent.trim().length == 0) {
+              foundNode.remove();
+            } else if (isFirstApplyed) {
+              foundNode.removeAttribute('id');
+            } else {
+              isFirstApplyed = true;
             }
-
           }
         }
       }
 
-      const checkIfEmptyNextSibling = newNode.nextSibling;
-      if (checkIfEmptyNextSibling) {
-        if (checkIfEmptyNextSibling.textContent.trim().length === 0) {
-          const textNode = document.createTextNode(checkIfEmptyNextSibling.textContent);
-          checkIfEmptyNextSibling.replaceWith(textNode);
-        } else if (checkIfEmptyNextSibling.removeAttribute) {
-          checkIfEmptyNextSibling.removeAttribute('id');
+      nextSibling = newNode.nextSibling;
+      if (nextSibling) {
+        if (nextSibling.textContent && nextSibling.textContent.trim().length == 0) {
+          nextSibling.replaceWith(document.createTextNode(nextSibling.textContent));
+        } else if (nextSibling.nodeName.toLowerCase() === 'w') {
+          const wordId = nextSibling.getAttribute('id');
+          const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${wordId}"]`);
+          let isFirstApplyed = false;
+          for (const foundNode of Array.from(wordWrappers)) {
+            if (foundNode.textContent.trim().length == 0) {
+              foundNode.replaceWith(document.createTextNode(foundNode.textContent));
+            } else if (isFirstApplyed) {
+              foundNode.removeAttribute('id');
+            } else {
+              isFirstApplyed = true;
+            }
+          }
         }
       }
 
-      let range = new Range();
       range.setStart(newNode, 0);
       range.setEnd(newNode, newNode.childNodes.length);
-      console.log(`new Range();::: `, range);
       document.getSelection().removeAllRanges();
       document.getSelection().addRange(range);
 
     } else {
 
+      console.log(`isAlreadyApplied::!isCollapsed`);
+
       const endTagNode = endParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
       const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
 
-      let range, docFragment, cleanupNode, cleanupSelection;
+      let docFragment, cleanupNode, cleanupSelection, startCheckNode, endCheckNode;
 
-      const restoreRange = document.getSelection().getRangeAt(0);
-
-      range = new Range();
+      const range = selection.getRangeAt(0);
 
       if (endTagNode) {
-        range.setStart(selection.extentNode, selection.extentOffset);
-        range.setEnd(endTagNode, endTagNode.childNodes.length);
+        const endTagRange = new Range();
+        endTagRange.setStart(selection.extentNode, selection.extentOffset);
+        endTagRange.setEnd(endTagNode, endTagNode.childNodes.length);
 
-        docFragment = range.cloneContents();
-        range.deleteContents();
+        docFragment = endTagRange.cloneContents();
 
         cleanupNode = document.createElement(nodeName);
         cleanupNode.appendChild(docFragment);
         cleanupNode.innerHTML = cleanupNode.innerHTML.replace(new RegExp(`<\\/*${nodeName}[^>]*>`,'g'), '');
 
-        range.setStartAfter(endTagNode);
-        range.insertNode(cleanupNode);
+        if (cleanupNode.textContent.trim().length) {
+          endTagRange.deleteContents();
+          endTagRange.setStartAfter(endTagNode);
+          endTagRange.insertNode(cleanupNode);
+        }
 
-        restoreRange.setEndBefore(cleanupNode);
+        range.setEndAfter(endTagNode);
       }
 
       if (startTagNode) {
-        range.setStart(startTagNode, 0);
-        range.setEnd(selection.baseNode, selection.baseOffset);
+        const startTagRange = new Range();
+        startTagRange.setStart(startTagNode, 0);
+        startTagRange.setEnd(selection.baseNode, selection.baseOffset);
 
-        docFragment = range.cloneContents();
-        range.deleteContents();
+        docFragment = startTagRange.cloneContents();
 
         cleanupNode = document.createElement(nodeName);
         cleanupNode.appendChild(docFragment);
         cleanupNode.innerHTML = cleanupNode.innerHTML.replace(new RegExp(`<\\/*${nodeName}[^>]*>`,'g'), '');
 
-        range.setStartBefore(startTagNode);
-        range.insertNode(cleanupNode);
+        if (cleanupNode.textContent.trim().length) {
+          startTagRange.deleteContents();
+          startTagRange.setStartBefore(startTagNode);
+          startTagRange.insertNode(cleanupNode);
+        }
 
-        restoreRange.setStartAfter(cleanupNode);
+        range.setStartBefore(startTagNode);
+
       }
 
-      range = document.getSelection().getRangeAt(0);
       docFragment = range.cloneContents();
       range.deleteContents();
 
@@ -1079,7 +1100,7 @@ const formatSup = function () {
 
       range.insertNode(docFragment);
 
-      const startCheckNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === 'w');
+      startCheckNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === 'w');
       if (startCheckNode && startCheckNode.id) {
         const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${startCheckNode.id}"]`);
         let isFirstApplyed = false;
@@ -1089,7 +1110,7 @@ const formatSup = function () {
           while (checkIfEmpty.parentNode && checkIfEmpty.parentNode.nodeName.toLowerCase() !== 'div') {
             checkIfEmpty = checkIfEmpty.parentNode;
           }
-          if (checkIfEmpty.textContent.trim() == 0) {
+          if (checkIfEmpty.textContent.trim().length == 0) {
             checkIfEmpty.remove();
           } else if (isFirstApplyed) {
             foundNode.removeAttribute('id');
@@ -1099,13 +1120,15 @@ const formatSup = function () {
         }
       }
 
-      document.getSelection().removeAllRanges();
-      document.getSelection().addRange(restoreRange);
+      endCheckNode = endParentNodes.find((node)=>node.nodeName.toLowerCase() === 'w');
+      if (endCheckNode && endCheckNode.id) {
+        const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${endCheckNode.id}"]`);
+        for (const foundNode of Array.from(wordWrappers)) {
+          delete foundNode.dataset.sugg;
+        }
+      }
     }
   }
-
-  //const wordWrappers = this.base.getFocusedElement().querySelectorAll('w[id]');
-  //console.log(`${__filename.substr(-30)}::wordWrappers: `, wordWrappers);
 
   var e = document.createEvent('HTMLEvents');
   e.initEvent('input', false, true);
