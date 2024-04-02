@@ -906,15 +906,9 @@ const SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
 });
 
 const formatSup = function () {
-  //console.log(`formatSup:this.base.options:: `, this.base.options);
-  //console.log(`formatSup:this.base:: `, this.base);
+
   const selection = document.getSelection();
-  const element = selection.anchorNode;
   const nodeName = 'sup';
-  let rootNode = element.parentNode;
-  while (rootNode.nodeName.toLowerCase() !== 'div') {
-    rootNode = rootNode.parentNode;
-  }
 
   const isCollapsed = selection.isCollapsed;
   let isAlreadyApplied = false;
@@ -940,25 +934,23 @@ const formatSup = function () {
   isAlreadyApplied = isAlreadyApplied || endParentNodes.some((node)=>node.nodeName.toLowerCase() === nodeName);
 
   console.log(`:endParentNodes: `, endParentNodes, endParentNodeOffset);
-  console.log(`isAlreadyApplied::: `, isAlreadyApplied);
 
   if (isCollapsed) {
     if (!isAlreadyApplied) {
+      console.log(`isCollapsed::!isAlreadyApplied`);
       document.execCommand('superscript');
     } else {
-      const firstStartNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
+      console.log(`isCollapsed::isAlreadyApplied`);
+      const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
       let range = new Range();
-      range.setStart(firstStartNode, 0);
+      range.setStart(startTagNode, 0);
       range.setEnd(selection.extentNode, endParentNodeOffset);
-      let documentFragment = range.cloneContents();
+      const docFragment = range.cloneContents();
 
       const newNode = document.createElement(nodeName);
-      newNode.appendChild(documentFragment);
+      newNode.appendChild(docFragment);
 
-      console.log(`isCollapsed.selection.extentNode::: `, selection.extentNode);
-      //const _range = selection.getRangeAt(0);
-
-      range.setStartBefore(firstStartNode);
+      range.setStartBefore(startTagNode);
       range.deleteContents();
       range.insertNode(newNode);
 
@@ -974,11 +966,12 @@ const formatSup = function () {
 
     }
   } else {
+
     if (!isAlreadyApplied) {
 
       console.log(`!isAlreadyApplied::!isCollapsed`);
 
-      const range = document.getSelection().getRangeAt(0);
+      const range = selection.getRangeAt(0);
       const newNode = document.createElement(nodeName);
       const docFragment = range.cloneContents();
 
