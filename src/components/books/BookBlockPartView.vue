@@ -366,7 +366,8 @@ import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
-          SuggestButton, SuggestPreview, MediumEditor
+          SuggestButton, SuggestPreview, MediumEditor,
+          formatSup, formatSub
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
@@ -1314,7 +1315,7 @@ export default {
             keyboardCommands = {
               commands : [
                 {
-                  command: 'superscript',
+                  command: formatSup,
                   key: '.',
                   meta: true,
                   shift: false,

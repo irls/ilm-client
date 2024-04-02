@@ -2,7 +2,7 @@ import MediumEditor from './medium-editor/js/medium-editor.js';
 require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
 
-let QuoteButton = MediumEditor.Extension.extend({
+const QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
   quoteForm: false,
   quoteFormInput: false,
@@ -433,7 +433,7 @@ let QuoteButton = MediumEditor.Extension.extend({
 
 });
 
-let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
+const QuotePreview = MediumEditor.extensions.anchorPreview.extend({
   name: 'quote-preview',
   init: function () {
     MediumEditor.extensions.anchorPreview.prototype.init.apply(this, arguments);
@@ -543,7 +543,7 @@ let QuotePreview = MediumEditor.extensions.anchorPreview.extend({
   }
 });
 
-let SuggestButton = MediumEditor.Extension.extend({
+const SuggestButton = MediumEditor.Extension.extend({
   name: 'suggestButton',
   suggestForm: false,
   suggestFormInput: false,
@@ -810,7 +810,7 @@ let SuggestButton = MediumEditor.Extension.extend({
 
 });
 
-let SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
+const SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
   name: 'suggest-preview',
   init: function () {
     MediumEditor.extensions.anchorPreview.prototype.init.apply(this, arguments);
@@ -905,10 +905,224 @@ let SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
   }
 });
 
+const formatSup = function () {
+  //console.log(`formatSup:this.base.options:: `, this.base.options);
+  //console.log(`formatSup:this.base:: `, this.base);
+  const selection = document.getSelection();
+  const element = selection.anchorNode;
+  const nodeName = 'sup';
+  let rootNode = element.parentNode;
+  while (rootNode.nodeName.toLowerCase() !== 'div') {
+    rootNode = rootNode.parentNode;
+  }
+
+  const isCollapsed = selection.isCollapsed;
+  let isAlreadyApplied = false;
+
+  const startParentNodeOffset = selection.baseOffset;
+  let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+  const startParentNodes = [startParentNode];
+  while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
+    startParentNode = startParentNode.parentNode;
+    startParentNodes.push(startParentNode);
+  }
+  isAlreadyApplied = startParentNodes.some((node)=>node.nodeName.toLowerCase() === nodeName);
+
+  console.log(`:startParentNodes: `, startParentNodes, startParentNodeOffset);
+
+  const endParentNodeOffset = selection.extentOffset;
+  let endParentNode = selection.extentNode; // sel.extentNode === sel.focusNode
+  const endParentNodes = [endParentNode];
+  while (endParentNode.parentNode && endParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
+    endParentNode = endParentNode.parentNode;
+    endParentNodes.push(endParentNode)
+  }
+  isAlreadyApplied = isAlreadyApplied || endParentNodes.some((node)=>node.nodeName.toLowerCase() === nodeName);
+
+  console.log(`:endParentNodes: `, endParentNodes, endParentNodeOffset);
+  console.log(`isAlreadyApplied::: `, isAlreadyApplied);
+
+  if (isCollapsed) {
+    if (!isAlreadyApplied) {
+      document.execCommand('superscript');
+    } else {
+      const firstStartNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
+      let range = new Range();
+      range.setStart(firstStartNode, 0);
+      range.setEnd(selection.extentNode, endParentNodeOffset);
+      let documentFragment = range.cloneContents();
+
+      const newNode = document.createElement(nodeName);
+      newNode.appendChild(documentFragment);
+
+      console.log(`isCollapsed.selection.extentNode::: `, selection.extentNode);
+      //const _range = selection.getRangeAt(0);
+
+      range.setStartBefore(firstStartNode);
+      range.deleteContents();
+      range.insertNode(newNode);
+
+      var emptyElement = document.createTextNode('\u200B');
+      newNode.after(emptyElement)
+
+      range.setStart(emptyElement, 1);
+      range.setEnd(emptyElement, 1);
+      range.collapse();
+
+      document.getSelection().removeAllRanges();
+      document.getSelection().addRange(range);
+
+    }
+  } else {
+    if (!isAlreadyApplied) {
+      const _range = selection.getRangeAt(0);
+      const documentFragment = _range.extractContents();
+
+
+      const newNode = document.createElement("sup");
+
+      newNode.appendChild(documentFragment);
+      _range.insertNode(newNode);
+
+      console.log(`newNode.prev::: `, newNode.previousSibling);
+      const checkIfEmptyPrevSibling = newNode.previousSibling;
+      if (checkIfEmptyPrevSibling) {
+        if (checkIfEmptyPrevSibling.textContent.trim().length === 0) {
+          checkIfEmptyPrevSibling.remove()
+        } else {
+          const firstStartNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === 'w');
+          if (firstStartNode) {
+            const firstStartNodeId = firstStartNode.getAttribute('id');
+            const checkIfEmptyFirstSibling = newNode.querySelector(`w`);
+            if (checkIfEmptyFirstSibling && checkIfEmptyFirstSibling.getAttribute('id') === firstStartNode.getAttribute('id')) {
+              checkIfEmptyFirstSibling.replaceWith(checkIfEmptyFirstSibling.innerHTML);
+            }
+
+          }
+        }
+      }
+
+      const checkIfEmptyNextSibling = newNode.nextSibling;
+      if (checkIfEmptyNextSibling) {
+        if (checkIfEmptyNextSibling.textContent.trim().length === 0) {
+          const textNode = document.createTextNode(checkIfEmptyNextSibling.textContent);
+          checkIfEmptyNextSibling.replaceWith(textNode);
+        } else if (checkIfEmptyNextSibling.removeAttribute) {
+          checkIfEmptyNextSibling.removeAttribute('id');
+        }
+      }
+
+      let range = new Range();
+      range.setStart(newNode, 0);
+      range.setEnd(newNode, newNode.childNodes.length);
+      console.log(`new Range();::: `, range);
+      document.getSelection().removeAllRanges();
+      document.getSelection().addRange(range);
+
+    } else {
+
+      const endTagNode = endParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
+      const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
+
+      let range, docFragment, cleanupNode, cleanupSelection;
+
+      const restoreRange = document.getSelection().getRangeAt(0);
+
+      range = new Range();
+
+      if (endTagNode) {
+        range.setStart(selection.extentNode, selection.extentOffset);
+        range.setEnd(endTagNode, endTagNode.childNodes.length);
+
+        docFragment = range.cloneContents();
+        range.deleteContents();
+
+        cleanupNode = document.createElement(nodeName);
+        cleanupNode.appendChild(docFragment);
+        cleanupNode.innerHTML = cleanupNode.innerHTML.replace(new RegExp(`<\\/*${nodeName}[^>]*>`,'g'), '');
+
+        range.setStartAfter(endTagNode);
+        range.insertNode(cleanupNode);
+
+        restoreRange.setEndBefore(cleanupNode);
+      }
+
+      if (startTagNode) {
+        range.setStart(startTagNode, 0);
+        range.setEnd(selection.baseNode, selection.baseOffset);
+
+        docFragment = range.cloneContents();
+        range.deleteContents();
+
+        cleanupNode = document.createElement(nodeName);
+        cleanupNode.appendChild(docFragment);
+        cleanupNode.innerHTML = cleanupNode.innerHTML.replace(new RegExp(`<\\/*${nodeName}[^>]*>`,'g'), '');
+
+        range.setStartBefore(startTagNode);
+        range.insertNode(cleanupNode);
+
+        restoreRange.setStartAfter(cleanupNode);
+      }
+
+      range = document.getSelection().getRangeAt(0);
+      docFragment = range.cloneContents();
+      range.deleteContents();
+
+      cleanupNode = document.createElement(nodeName);
+      cleanupNode.appendChild(docFragment);
+      cleanupNode.innerHTML = cleanupNode.innerHTML.replace(new RegExp(`<\\/*${nodeName}[^>]*>`,'g'), '');
+
+      docFragment = new DocumentFragment();
+      for (const childNode of Array.from(cleanupNode.childNodes)) {
+        docFragment.append(childNode)
+      }
+
+      range.insertNode(docFragment);
+
+      const startCheckNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === 'w');
+      if (startCheckNode && startCheckNode.id) {
+        const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${startCheckNode.id}"]`);
+        let isFirstApplyed = false;
+        for (const foundNode of Array.from(wordWrappers)) {
+          delete foundNode.dataset.sugg;
+          let checkIfEmpty = foundNode;
+          while (checkIfEmpty.parentNode && checkIfEmpty.parentNode.nodeName.toLowerCase() !== 'div') {
+            checkIfEmpty = checkIfEmpty.parentNode;
+          }
+          if (checkIfEmpty.textContent.trim() == 0) {
+            checkIfEmpty.remove();
+          } else if (isFirstApplyed) {
+            foundNode.removeAttribute('id');
+          } else {
+            isFirstApplyed = true;
+          }
+        }
+      }
+
+      document.getSelection().removeAllRanges();
+      document.getSelection().addRange(restoreRange);
+    }
+  }
+
+  //const wordWrappers = this.base.getFocusedElement().querySelectorAll('w[id]');
+  //console.log(`${__filename.substr(-30)}::wordWrappers: `, wordWrappers);
+
+  var e = document.createEvent('HTMLEvents');
+  e.initEvent('input', false, true);
+  this.base.getFocusedElement().dispatchEvent(e);
+
+};
+
+const formatSub = function (mediumEditorInstance) {
+
+};
+
 export {
   QuoteButton,
   QuotePreview,
   SuggestButton,
   SuggestPreview,
-  MediumEditor
+  MediumEditor,
+  formatSup,
+  formatSub
 }

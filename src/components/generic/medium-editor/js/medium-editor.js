@@ -1596,7 +1596,7 @@ MediumEditor.extensions = {};
             node.parentNode.normalize();// merge neighbour text elements
             //console.log(rootNode);
         },
-        
+
         hasAfterPseudoclass(element, searchValue = false) {
             if (element && element.nodeType === 1) {
                 let value = getComputedStyle(element, '::after').getPropertyValue('content');
@@ -4952,9 +4952,7 @@ MediumEditor.extensions = {};
         },
 
         handleKeyboardCommandKeydown: function (event) {
-            console.log('handleKeyboardCommandKeydown')
             var keyCode = MediumEditor.util.getKeyCode(event);
-            console.log('keyCode', keyCode)
             if (keyCode === MediumEditor.util.keyCode.DELETE) {
                 let selection = document.getSelection(),
                 element = selection.anchorNode,
@@ -5086,23 +5084,24 @@ MediumEditor.extensions = {};
                 isShift = !!event.shiftKey,
                 isAlt = !!event.altKey;
 
-            this.keys[keyCode].forEach(function (data) {
-                if (data.meta === isMeta &&
-                    data.shift === isShift &&
-                    (data.alt === isAlt ||
-                     undefined === data.alt)) { // TODO deprecated: remove check for undefined === data.alt when jumping to 6.0.0
-                    event.preventDefault();
-                    event.stopPropagation();
+            console.log(`isMeta:isShift:isAlt: `, isMeta,isShift,isAlt);
 
-                    // command can be a function to execute
-                    if (typeof data.command === 'function') {
-                        data.command.apply(this);
-                    }
-                    // command can be false so the shortcut is just disabled
-                    else if (false !== data.command) {
-                        this.execAction(data.command);
-                    }
-                }
+            this.keys[keyCode].forEach(function (data) {
+              if (data.meta === isMeta
+                && data.shift === isShift
+                && data.alt === isAlt) {
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  // command can be a function to execute
+                  if (typeof data.command === 'function') {
+                    data.command.apply(this);
+                  }
+                  // command can be false so the shortcut is just disabled
+                  else if (false !== data.command) {
+                    this.execAction(data.command);
+                  }
+              }
             }, this);
         }
     });
