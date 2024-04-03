@@ -1322,7 +1322,7 @@ export default {
                   alt: false
                 },
                 {
-                  command: 'subscript',
+                  command: formatSub,
                   key: ',',
                   meta: true,
                   shift: false,

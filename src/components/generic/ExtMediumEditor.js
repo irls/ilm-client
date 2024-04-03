@@ -905,9 +905,8 @@ const SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
   }
 });
 
-const formatSup = function () {
+const applyCustomTag = function (nodeName = 'sup') {
 
-  const nodeName = 'sup';
   let selection = document.getSelection();
 
   let position = selection.anchorNode.compareDocumentPosition(selection.focusNode),
@@ -966,7 +965,16 @@ const formatSup = function () {
   if (isCollapsed) {
     if (!isAlreadyApplied) {
       console.log(`isCollapsed::!isAlreadyApplied`);
-      document.execCommand('superscript');
+      let command = 'superscript';
+      switch(nodeName) {
+        case 'sup' : {
+          command = 'superscript';
+        } break;
+        case 'sub' : {
+          command = 'subscript';
+        } break;
+      };
+      document.execCommand(command);
     } else {
       console.log(`isCollapsed::isAlreadyApplied`);
       const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
@@ -1155,8 +1163,12 @@ const formatSup = function () {
 
 };
 
-const formatSub = function (mediumEditorInstance) {
+const formatSup = function () {
+  applyCustomTag.call(this, 'sup');
+};
 
+const formatSub = function () {
+  applyCustomTag.call(this, 'sub');
 };
 
 export {

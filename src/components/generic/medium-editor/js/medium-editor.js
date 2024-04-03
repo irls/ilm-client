@@ -5084,7 +5084,7 @@ MediumEditor.extensions = {};
                 isShift = !!event.shiftKey,
                 isAlt = !!event.altKey;
 
-            console.log(`isMeta:isShift:isAlt: `, isMeta,isShift,isAlt);
+            //console.log(`isMeta:isShift:isAlt: `, isMeta,isShift,isAlt);
 
             this.keys[keyCode].forEach(function (data) {
               if (data.meta === isMeta
