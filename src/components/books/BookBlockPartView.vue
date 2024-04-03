@@ -366,7 +366,8 @@ import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
-          SuggestButton, SuggestPreview, MediumEditor
+          SuggestButton, SuggestPreview, MediumEditor,
+          formatSup, formatSub
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
@@ -1293,6 +1294,7 @@ export default {
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
+          let keyboardCommands = false;
           if (this.allowEditing && this.mode === 'edit') {
             extensions = {
                 'quoteButton': new QuoteButton(),
@@ -1309,6 +1311,25 @@ export default {
                   'quoteButton', 'suggestButton'
                 ]
               };
+
+            keyboardCommands = {
+              commands : [
+                {
+                  command: formatSup,
+                  key: '.',
+                  meta: true,
+                  shift: false,
+                  alt: false
+                },
+                {
+                  command: formatSub,
+                  key: ',',
+                  meta: true,
+                  shift: false,
+                  alt: false
+                },
+              ]
+            };
 
             let blockLang = this.getBlockLang;
             /*if (this.block.language === 'fa'){
@@ -1329,7 +1350,8 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
-                spellcheck: false
+                spellcheck: false,
+                keyboardCommands: keyboardCommands
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log(event, target);
@@ -1391,7 +1413,8 @@ export default {
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: true,
-                imageDragging: false
+                imageDragging: false,
+                keyboardCommands: keyboardCommands
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
