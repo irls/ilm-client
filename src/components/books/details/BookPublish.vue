@@ -539,7 +539,7 @@
         .p-accordion-content {
           padding: 0px;
           max-height: 300px;
-          overflow-y: scroll;
+          overflow-y: auto;
           width: 425px;
           max-width: 425px;
           overflow-x: hidden;
