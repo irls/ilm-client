@@ -367,7 +367,7 @@ import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
           SuggestButton, SuggestPreview, MediumEditor,
-          formatSup, formatSub
+          formatSup, formatSub, SuperScriptButton, SubScriptButton
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
@@ -1300,12 +1300,15 @@ export default {
                 'quoteButton': new QuoteButton(),
                 'quotePreview': new QuotePreview(),
                 'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
+                'suggestPreview': new SuggestPreview(),
+                'superScriptButton': new SuperScriptButton(),
+                'subScriptButton': new SubScriptButton()
               };
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  'superscript', 'subscript',//'orderedlist',
+                  'superScriptButton', 'subScriptButton',
+                  //'superscript', 'subscript', 'orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'

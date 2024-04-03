@@ -1154,12 +1154,13 @@ const applyCustomTag = function (nodeName = 'sup') {
           delete foundNode.dataset.sugg;
         }
       }
+
+      var e = document.createEvent('HTMLEvents');
+      e.initEvent('input', false, true);
+      this.base.getFocusedElement().dispatchEvent(e);
     }
   }
 
-  var e = document.createEvent('HTMLEvents');
-  e.initEvent('input', false, true);
-  this.base.getFocusedElement().dispatchEvent(e);
 
 };
 
@@ -1171,6 +1172,76 @@ const formatSub = function () {
   applyCustomTag.call(this, 'sub');
 };
 
+const SuperScriptButton = MediumEditor.extensions.button.extend({
+    name: 'superScriptButton',
+    tagNames: ['sup'],
+    contentDefault: '<b>x<sup>1</sup></b>',
+    contentFA: '<i class="fa fa-superscript"></i>',
+    aria: 'Superscript Ctrl+.',
+    action: 'customSupScript',
+
+    init: function () {
+      MediumEditor.extensions.button.prototype.init.call(this);
+    },
+
+    handleClick: function (event) {
+        formatSup.call(this);
+        this.base.checkSelection();
+
+        // Ensure the editor knows about an html change so watchers are notified
+        // ie: <textarea> elements depend on the editableInput event to stay synchronized
+        // this.base.checkContentChanged();
+    },
+
+    isAlreadyApplied: function () {
+      const selection = document.getSelection();
+      let isAlreadyApplied = false;
+      const wordWrappers = this.base.getFocusedElement().querySelectorAll(this.tagNames[0]);
+      for (const searchNode of Array.from(wordWrappers)) {
+        if (selection.containsNode(searchNode, true)) {
+          isAlreadyApplied = true;
+          break;
+        }
+      }
+      return isAlreadyApplied;
+    }
+});
+
+const SubScriptButton = MediumEditor.extensions.button.extend({
+    name: 'subScriptButton',
+    tagNames: ['sub'],
+    contentDefault: '<b>x<sub>1</sub></b>',
+    contentFA: '<i class="fa fa-subscript"></i>',
+    aria: 'Subscript Ctrl+,',
+    action: 'customSubScript',
+
+    init: function () {
+      MediumEditor.extensions.button.prototype.init.call(this);
+    },
+
+    handleClick: function (event) {
+        formatSub.call(this)
+        this.base.checkSelection();
+
+        // Ensure the editor knows about an html change so watchers are notified
+        // ie: <textarea> elements depend on the editableInput event to stay synchronized
+        // this.base.checkContentChanged();
+    },
+
+    isAlreadyApplied: function () {
+      const selection = document.getSelection();
+      let isAlreadyApplied = false;
+      const wordWrappers = this.base.getFocusedElement().querySelectorAll(this.tagNames[0]);
+      for (const searchNode of Array.from(wordWrappers)) {
+        if (selection.containsNode(searchNode, true)) {
+          isAlreadyApplied = true;
+          break;
+        }
+      }
+      return isAlreadyApplied;
+    }
+});
+
 export {
   QuoteButton,
   QuotePreview,
@@ -1178,5 +1249,7 @@ export {
   SuggestPreview,
   MediumEditor,
   formatSup,
-  formatSub
+  formatSub,
+  SuperScriptButton,
+  SubScriptButton
 }
