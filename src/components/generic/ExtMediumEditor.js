@@ -907,13 +907,30 @@ const SuggestPreview = MediumEditor.extensions.anchorPreview.extend({
 
 const formatSup = function () {
 
-  const selection = document.getSelection();
   const nodeName = 'sup';
+  let selection = document.getSelection();
+
+  let position = selection.anchorNode.compareDocumentPosition(selection.focusNode),
+      isBackward = false;
+  // position == 0 if nodes are the same
+  if (!position && selection.anchorOffset > selection.focusOffset
+    || position === Node.DOCUMENT_POSITION_PRECEDING)
+    isBackward = true;
+
+  if (isBackward) {
+    const _range = new Range();
+    _range.setStart(selection.extentNode, selection.extentOffset);
+    _range.setEnd(selection.baseNode, selection.baseOffset);
+    document.getSelection().removeAllRanges();
+    document.getSelection().addRange(_range);
+    selection = document.getSelection();
+  }
 
   const isCollapsed = selection.isCollapsed;
   let isAlreadyApplied = false;
 
   const startParentNodeOffset = selection.baseOffset;
+
   let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
   const startParentNodes = [startParentNode];
   while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
@@ -922,9 +939,10 @@ const formatSup = function () {
   }
   isAlreadyApplied = startParentNodes.some((node)=>node.nodeName.toLowerCase() === nodeName);
 
-  console.log(`:startParentNodes: `, startParentNodes, startParentNodeOffset);
+  //console.log(`:startParentNodes: `, startParentNodes, startParentNodeOffset);
 
   const endParentNodeOffset = selection.extentOffset;
+
   let endParentNode = selection.extentNode; // sel.extentNode === sel.focusNode
   const endParentNodes = [endParentNode];
   while (endParentNode.parentNode && endParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
@@ -933,7 +951,17 @@ const formatSup = function () {
   }
   isAlreadyApplied = isAlreadyApplied || endParentNodes.some((node)=>node.nodeName.toLowerCase() === nodeName);
 
-  console.log(`:endParentNodes: `, endParentNodes, endParentNodeOffset);
+  if (!isAlreadyApplied) {
+    const wordWrappers = this.base.getFocusedElement().querySelectorAll(nodeName);
+    for (const searchNode of Array.from(wordWrappers)) {
+      if (selection.containsNode(searchNode, true)) {
+        isAlreadyApplied = true;
+        break;
+      }
+    }
+  }
+
+  //console.log(`:endParentNodes: `, endParentNodes, endParentNodeOffset);
 
   if (isCollapsed) {
     if (!isAlreadyApplied) {
@@ -968,7 +996,6 @@ const formatSup = function () {
   } else {
 
     if (!isAlreadyApplied) {
-
       console.log(`!isAlreadyApplied::!isCollapsed`);
 
       const range = selection.getRangeAt(0);
@@ -1028,11 +1055,10 @@ const formatSup = function () {
       document.getSelection().addRange(range);
 
     } else {
-
       console.log(`isAlreadyApplied::!isCollapsed`);
 
-      const endTagNode = endParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
       const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
+      const endTagNode = endParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
 
       let docFragment, cleanupNode, cleanupSelection, startCheckNode, endCheckNode;
 
