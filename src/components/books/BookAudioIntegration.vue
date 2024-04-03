@@ -1346,9 +1346,9 @@
               }
             });
           } else {
-            let hasMap = this.audiobook.importFiles.find(audiofile => {
+            let hasMap = this.audiobook.importFiles ? this.audiobook.importFiles.find(audiofile => {
               return audiofile.blockMap && typeof audiofile.blockMap[block.blockid] !== 'undefined';
-            });
+            }) : false;
             
             if (hasMap) {
               highlightedAudiofiles.push(hasMap.id);
