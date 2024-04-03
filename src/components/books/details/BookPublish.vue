@@ -64,15 +64,15 @@
 
       <span v-if="isPublishing" class="align-preloader -small"></span>
     </section>
-    <div class="publish-html-validation" v-if="publicationErrorsCount > 0" v-bind:key="'errors' + currentBookMeta.bookid">
-      <Accordion ref="publicationErrorsAccordion">
+    <div class="publish-html-validation" v-if="showPublicationErrors" v-bind:key="'errors' + currentBookMeta.bookid">
+      <Accordion ref="publicationErrorsAccordion" v-on:tab-open="publicationErrorTabOpen">
         <AccordionTab :header="'Publication errors (' + publicationErrorsCount + ')'">
           <div v-for="publication_error in publicationErrors" class="publication-error">
-            <div class="publication-error-blockid">
-              <a v-on:click="goToBlock(publication_error.blockid)" v-if="publication_error.blockid">{{ shortId(publication_error.blockid) }}</a>
+            <div class="publication-error-blockid" v-if="publication_error.blockid">
+              <a v-on:click="goToBlock(publication_error.blockid)">{{ shortId(publication_error.blockid) }}</a>
             </div>
             <div class="publication-error-message">{{ publication_error.message }}</div>
-            <div class="publication-error-info">{{ publication_error.info }}, line {{ publication_error.line }}, col {{ publication_error.col }}</div>
+            <div class="publication-error-info">{{ publication_error.info }}<template v-if="publication_error.line && publication_error.col">, line {{ publication_error.line }}, col {{ publication_error.col }}</template></div>
           </div>
         </AccordionTab>
       </Accordion>
@@ -331,6 +331,13 @@
         }
         return _id_short;
       },
+      publicationErrorTabOpen() {
+        setTimeout(() => {
+          this.$refs.publicationErrorsAccordion.$el.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }, 300);
+      },
       ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
     },
     computed: {
@@ -423,6 +430,12 @@
             }
           }
           return errors;
+        },
+        cache: false
+      },
+      showPublicationErrors: {
+        get() {
+          return this.adminOrLibrarian && this.publicationErrorsCount > 0;
         },
         cache: false
       },
@@ -524,7 +537,7 @@
         margin-bottom: 0px;
         .p-accordion-content {
           padding: 0px;
-          max-height: 200px;
+          max-height: 300px;
           overflow-y: scroll;
           width: 425px;
           max-width: 425px;
