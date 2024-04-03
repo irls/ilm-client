@@ -1154,12 +1154,13 @@ const applyCustomTag = function (nodeName = 'sup') {
           delete foundNode.dataset.sugg;
         }
       }
+
+      var e = document.createEvent('HTMLEvents');
+      e.initEvent('input', false, true);
+      this.base.getFocusedElement().dispatchEvent(e);
     }
   }
 
-  var e = document.createEvent('HTMLEvents');
-  e.initEvent('input', false, true);
-  this.base.getFocusedElement().dispatchEvent(e);
 
 };
 
