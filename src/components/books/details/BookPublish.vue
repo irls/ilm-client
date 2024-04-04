@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="publish publish-book">
+  <fieldset :class="['publish publish-book', {'-has-error': showPublicationErrors}]">
     <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
@@ -487,7 +487,9 @@
 </script>
 <style lang="less">
   fieldset.publish-book {
-    padding-bottom: 0px !important;
+    &.-has-error {
+      padding-bottom: 0px !important;
+    }
   }
   .preloader-spinner {
     width: 100%;
