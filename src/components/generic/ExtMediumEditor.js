@@ -1194,7 +1194,9 @@ const SuperScriptButton = MediumEditor.extensions.button.extend({
     isAlreadyApplied: function () {
       const selection = document.getSelection();
       let isAlreadyApplied = false;
-      const wordWrappers = this.base.getFocusedElement().querySelectorAll(this.tagNames[0]);
+      const editorElement = this.base.elements[0];
+      if (!editorElement) return false;
+      const wordWrappers = editorElement.querySelectorAll(this.tagNames[0]);
       for (const searchNode of Array.from(wordWrappers)) {
         if (selection.containsNode(searchNode, true)) {
           isAlreadyApplied = true;
@@ -1229,7 +1231,9 @@ const SubScriptButton = MediumEditor.extensions.button.extend({
     isAlreadyApplied: function () {
       const selection = document.getSelection();
       let isAlreadyApplied = false;
-      const wordWrappers = this.base.getFocusedElement().querySelectorAll(this.tagNames[0]);
+      const editorElement = this.base.elements[0];
+      if (!editorElement) return false;
+      const wordWrappers = editorElement.querySelectorAll(this.tagNames[0]);
       for (const searchNode of Array.from(wordWrappers)) {
         if (selection.containsNode(searchNode, true)) {
           isAlreadyApplied = true;
