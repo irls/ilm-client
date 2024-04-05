@@ -87,6 +87,7 @@
   import access from '../../../mixins/access.js';
   import Accordion from 'primevue/accordion';
   import AccordionTab from 'primevue/accordiontab';
+  import Vue from 'vue';
   export default {
     name: 'BookPublish',
     data() {
@@ -332,11 +333,65 @@
         return _id_short;
       },
       publicationErrorTabOpen() {
-        setTimeout(() => {
-          this.$refs.publicationErrorsAccordion.$el.scrollIntoView({
-            behavior: 'smooth'
-          });
-        }, 300);
+        //setTimeout(() => {
+          //this.$refs.publicationErrorsAccordion.$el.scrollIntoView({
+            //behavior: 'smooth',
+            //block: "end",
+            //inline: "nearest"
+          //});
+        //}, 1000);
+        let publishErrorsContainer = document.querySelector('.publish-html-validation');
+        let sidebar = document.querySelector('.sidebar');
+        let errorsContainer = document.querySelector('.publish-html-validation .p-toggleable-content');
+        let tabsContainer = document.querySelector('.nav-tabs-navigation');
+        if (publishErrorsContainer && sidebar && errorsContainer) {
+          let lastTop = null;
+          let scrolled = 0;
+          let scrollToInterval = setInterval(() => {
+            let y = publishErrorsContainer.getBoundingClientRect().top + sidebar.scrollTop/* + parseInt(errorsContainer.style['max-height'])*/;
+            if (tabsContainer) {
+              y-= tabsContainer.offsetHeight * 2;
+            }
+            //console.log(`scroll ${y}, ${sidebar.scrollHeight}`);
+            sidebar.scrollTo({
+              top: y,
+              behavior: "smooth"
+            });
+            if ((lastTop && Math.abs(y - lastTop) <= 10 || scrolled >= 10) && errorsContainer.className.indexOf(`p-toggleable-content-enter-active`) === -1) {
+              clearInterval(scrollToInterval);
+              //console.log(errorsContainer.className);
+            }
+            lastTop = y;
+            ++scrolled;
+          }, 10);
+        }
+      },
+      calculatePublishErrorsContainerHeight() {
+        let containerHeight = 0;
+        let container = document.querySelector('.sidebar');// main container for all section
+        if (container) {
+          containerHeight = container.offsetHeight;
+          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          if (tabs) {
+            containerHeight-= tabs.offsetHeight;
+          }
+          let header = document.querySelector('.publish-html-validation .p-accordion-header');// headers in accordion
+          if (header) {
+            containerHeight-= header.offsetHeight;
+          }
+          //containerHeight-= 135;// height for file catalogue buttons
+          containerHeight-= 40;
+        }
+        return containerHeight && containerHeight > 0 ? containerHeight : null;
+      },
+      setPublishErrorsContainerHeight() {
+        let height = this.calculatePublishErrorsContainerHeight();
+        if (height) {
+          let container = document.querySelector(`.publish-html-validation .p-accordion-content`);
+          if (container) {
+            container.style['max-height'] = `${height}px`;
+          }
+        }
       },
       ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
     },
@@ -453,6 +508,10 @@
       this.$root.$on('book-reimported', this.getDisabledBlocks);
       //console.log(`this.currentBookMeta: `, this.currentBookMeta);
       //console.log(`publishButtonStatus: `, this.publishButtonStatus);
+      Vue.nextTick(() => {
+        this.setPublishErrorsContainerHeight();
+      });
+      window.addEventListener('resize', this.setPublishErrorsContainerHeight);
     },
     beforeDestroy() {
       this.$root.$off('book-reimported', this.getDisabledBlocks);
@@ -529,6 +588,7 @@
           &:focus {
             border: 1px solid #a19f9d !important;
             box-shadow: none !important;
+            z-index: 0;
           }
           .p-accordion-header-text {
             font-weight: normal;
