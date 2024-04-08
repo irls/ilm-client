@@ -1339,19 +1339,19 @@
       setHighlightedAudiofiles() {
         let highlightedAudiofiles = [];
         this.selectedBlocksData.forEach(block => {
-          if (block.audiocatalog_map) {
+          if (block.audiocatalog_map instanceof Object && Object.keys(block.audiocatalog_map).length > 0) {
             Object.keys(block.audiocatalog_map).forEach(file_id => {
               if (!highlightedAudiofiles.includes(file_id)) {
                 highlightedAudiofiles.push(file_id);
               }
             });
           } else {
-            let hasMap = this.audiobook.importFiles.find(audiofile => {
-              return audiofile.blockMap && typeof audiofile.blockMap[b.blockid] !== 'undefined';
-            });
+            let hasMap = this.audiobook.importFiles ? this.audiobook.importFiles.find(audiofile => {
+              return audiofile.blockMap && typeof audiofile.blockMap[block.blockid] !== 'undefined';
+            }) : false;
             
             if (hasMap) {
-              highlightedAudiofiles.push(audiofile.id);
+              highlightedAudiofiles.push(hasMap.id);
             }
           }
         });
