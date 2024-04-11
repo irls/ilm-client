@@ -1431,15 +1431,15 @@ export default {
           let toolbar = {buttons: []};
           if (this.allowEditing) {
             extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview()
+                //'quoteButton': new QuoteButton(),
+                //'quotePreview': new QuotePreview()
               };
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
-                  'unorderedlist',
-                  'quoteButton', 'suggestButton'
+                  //'superscript', 'subscript',
+                  //'unorderedlist',
+                  //'quoteButton', 'suggestButton'
                 ]
               };
           };

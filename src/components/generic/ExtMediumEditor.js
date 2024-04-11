@@ -964,7 +964,8 @@ const applyCustomTag = function (nodeName = 'sup') {
 
   if (isCollapsed) {
     if (!isAlreadyApplied) {
-      console.log(`isCollapsed::!isAlreadyApplied`);
+      //console.log(`isCollapsed::!isAlreadyApplied`);
+
       let command = 'superscript';
       switch(nodeName) {
         case 'sup' : {
@@ -976,7 +977,8 @@ const applyCustomTag = function (nodeName = 'sup') {
       };
       document.execCommand(command);
     } else {
-      console.log(`isCollapsed::isAlreadyApplied`);
+      //console.log(`isCollapsed::isAlreadyApplied`);
+
       const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
       let range = new Range();
       range.setStart(startTagNode, 0);
@@ -1004,7 +1006,7 @@ const applyCustomTag = function (nodeName = 'sup') {
   } else {
 
     if (!isAlreadyApplied) {
-      console.log(`!isAlreadyApplied::!isCollapsed`);
+      //console.log(`!isAlreadyApplied::!isCollapsed`);
 
       const range = selection.getRangeAt(0);
       const newNode = document.createElement(nodeName);
@@ -1023,6 +1025,10 @@ const applyCustomTag = function (nodeName = 'sup') {
           prevSibling.remove()
         } else if (prevSibling.nodeName.toLowerCase() === 'w') {
           const wordId = prevSibling.getAttribute('id');
+          const lostSpace = /^\s+/.test(newNode.textContent);
+          if (lostSpace) { //restore captured space in previous node
+            prevSibling.innerHTML = prevSibling.innerHTML + ' ';
+          }
           const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${wordId}"]`);
           let isFirstApplyed = false;
           for (const foundNode of Array.from(wordWrappers)) {
@@ -1063,7 +1069,7 @@ const applyCustomTag = function (nodeName = 'sup') {
       document.getSelection().addRange(range);
 
     } else {
-      console.log(`isAlreadyApplied::!isCollapsed`);
+      //console.log(`isAlreadyApplied::!isCollapsed`);
 
       const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
       const endTagNode = endParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
