@@ -2068,11 +2068,27 @@ export default {
         if (this.editingLocked) return false;
         let container = this.range.commonAncestorContainer;
         if (typeof container.length == 'undefined') return false;
+
+        // check for <sup> and <sub>
+        const selection = document.getSelection();
+        let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+        const startParentNodes = [startParentNode];
+        while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
+          startParentNode = startParentNode.parentNode;
+          startParentNodes.push(startParentNode);
+        }
+        const checkStartTagNode = startParentNodes.find((node)=>(
+             node.nodeName.toLowerCase() === 'sup'
+          || node.nodeName.toLowerCase() === 'sub'
+        ));
+        if (checkStartTagNode) return false;
+
         if (this.range.endOffset >= container.length) return true;
         let checkRange = document.createRange();
         //console.log(container, container.length, this.range.endOffset);
         checkRange.setStart( container, this.range.startOffset );
         checkRange.setEnd( container, this.range.endOffset+1 );
+
         let regexp = /^[\.\s]+$/i;
         return regexp.test(checkRange.toString());
       },
