@@ -5541,6 +5541,10 @@ Save text changes and realign the Block?`,
         );
       }
 
+      sup w:not([data-map]):not([data-sugg]) {
+        background: inherit;
+      }
+
       [data-idx], [data-pg] {
         w:not([data-map]) {
           background: none;
