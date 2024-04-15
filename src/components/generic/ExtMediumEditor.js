@@ -909,6 +909,16 @@ const applyCustomTag = function (nodeName = 'sup') {
 
   let selection = document.getSelection();
 
+  const editorElement = this.base.elements[0];
+  if (!editorElement) return false;
+  const ftnMarkers = editorElement.querySelectorAll('sup[data-idx]');
+  const pgMarkers = editorElement.querySelectorAll('sup[data-pg]');
+  for (const searchNode of [...Array.from(ftnMarkers), ...Array.from(pgMarkers)]) {
+    if (selection.containsNode(searchNode, true)) {
+      return;
+    }
+  }
+
   let position = selection.anchorNode.compareDocumentPosition(selection.focusNode),
       isBackward = false;
   // position == 0 if nodes are the same
@@ -1183,18 +1193,21 @@ const SuperScriptButton = MediumEditor.extensions.button.extend({
     contentFA: '<i class="fa fa-superscript"></i>',
     aria: 'Superscript Ctrl+.',
     action: 'customSupScript',
+    disabledButtonClass: 'medium-editor-button-disable',
 
     init: function () {
       MediumEditor.extensions.button.prototype.init.call(this);
     },
 
     handleClick: function (event) {
+      if (this.isEnabled()) {
         formatSup.call(this);
         this.base.checkSelection();
+      }
 
-        // Ensure the editor knows about an html change so watchers are notified
-        // ie: <textarea> elements depend on the editableInput event to stay synchronized
-        // this.base.checkContentChanged();
+      // Ensure the editor knows about an html change so watchers are notified
+      // ie: <textarea> elements depend on the editableInput event to stay synchronized
+      // this.base.checkContentChanged();
     },
 
     isAlreadyApplied: function () {
@@ -1203,6 +1216,17 @@ const SuperScriptButton = MediumEditor.extensions.button.extend({
       const editorElement = this.base.elements[0];
       if (!editorElement) return false;
       const wordWrappers = editorElement.querySelectorAll(this.tagNames[0]);
+      const ftnMarkers = editorElement.querySelectorAll('sup[data-idx]');
+      const pgMarkers = editorElement.querySelectorAll('sup[data-pg]');
+      for (const searchNode of [...Array.from(ftnMarkers), ...Array.from(pgMarkers)]) {
+        if (selection.containsNode(searchNode, true)) {
+          this.setDisabled();
+          return false;
+        }
+      }
+      if (!this.isEnabled()) {
+        this.setEnabled();
+      }
       for (const searchNode of Array.from(wordWrappers)) {
         if (selection.containsNode(searchNode, true)) {
           isAlreadyApplied = true;
@@ -1210,7 +1234,19 @@ const SuperScriptButton = MediumEditor.extensions.button.extend({
         }
       }
       return isAlreadyApplied;
-    }
+    },
+
+    isEnabled: function () {
+      return !this.button.classList.contains(this.disabledButtonClass);
+    },
+
+    setDisabled: function () {
+      this.button.classList.add(this.disabledButtonClass);
+    },
+
+    setEnabled: function () {
+      this.button.classList.remove(this.disabledButtonClass);
+    },
 });
 
 const SubScriptButton = MediumEditor.extensions.button.extend({
@@ -1220,18 +1256,21 @@ const SubScriptButton = MediumEditor.extensions.button.extend({
     contentFA: '<i class="fa fa-subscript"></i>',
     aria: 'Subscript Ctrl+,',
     action: 'customSubScript',
+    disabledButtonClass: 'medium-editor-button-disable',
 
     init: function () {
       MediumEditor.extensions.button.prototype.init.call(this);
     },
 
     handleClick: function (event) {
+      if (this.isEnabled()) {
         formatSub.call(this)
         this.base.checkSelection();
+      }
 
-        // Ensure the editor knows about an html change so watchers are notified
-        // ie: <textarea> elements depend on the editableInput event to stay synchronized
-        // this.base.checkContentChanged();
+      // Ensure the editor knows about an html change so watchers are notified
+      // ie: <textarea> elements depend on the editableInput event to stay synchronized
+      // this.base.checkContentChanged();
     },
 
     isAlreadyApplied: function () {
@@ -1240,6 +1279,17 @@ const SubScriptButton = MediumEditor.extensions.button.extend({
       const editorElement = this.base.elements[0];
       if (!editorElement) return false;
       const wordWrappers = editorElement.querySelectorAll(this.tagNames[0]);
+      const ftnMarkers = editorElement.querySelectorAll('sup[data-idx]');
+      const pgMarkers = editorElement.querySelectorAll('sup[data-pg]');
+      for (const searchNode of [...Array.from(ftnMarkers), ...Array.from(pgMarkers)]) {
+        if (selection.containsNode(searchNode, true)) {
+          this.setDisabled();
+          return false;
+        }
+      }
+      if (!this.isEnabled()) {
+        this.setEnabled();
+      }
       for (const searchNode of Array.from(wordWrappers)) {
         if (selection.containsNode(searchNode, true)) {
           isAlreadyApplied = true;
@@ -1247,7 +1297,18 @@ const SubScriptButton = MediumEditor.extensions.button.extend({
         }
       }
       return isAlreadyApplied;
-    }
+    },
+    isEnabled: function () {
+      return !this.button.classList.contains(this.disabledButtonClass);
+    },
+
+    setDisabled: function () {
+      this.button.classList.add(this.disabledButtonClass);
+    },
+
+    setEnabled: function () {
+      this.button.classList.remove(this.disabledButtonClass);
+    },
 });
 
 export {
