@@ -26,7 +26,7 @@ let removeNonHtmlSpaceMarkers = function () {
 
 let removeInTextFormatting = function () {
 
-    let InTextFormattingShouldBeVisible = ['ol','ul','li','u','br','i','b', 'sg'].join('|');
+    let InTextFormattingShouldBeVisible = ['ol','ul','li','u','br','i','b', 'sg', 'sup', 'sub'].join('|');
     const regex = new RegExp(`(<\/?(?:${InTextFormattingShouldBeVisible})[^>]*>)|<[^>]+>`,'img');
     content = content.replace(regex, '$1');
 
@@ -37,16 +37,13 @@ let prepare = function ( getBlockLang) {
     return false;
   }
 
-  // let content = blockPartcontent.replace(/<sup[^>]*>.*?<\/sup>/img, '');
-  superScriptRemove();
+  // superScriptRemove();
 
-  // content = content.replace(/<br[^>]*>\s*$/, '')
   removeBrAtTheEndOfTheBlock();
 
-  // content = content.replace(/[\r\n]\s*$/, '');//remove <br> at the end of the block
+  //remove <br> at the end of the block
   removeNonHtmlSpaceMarkers();
 
-  // content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
   removeInTextFormatting();
 
   content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
