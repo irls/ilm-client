@@ -1154,6 +1154,11 @@ const applyCustomTag = function (nodeName = 'sup') {
             checkIfEmpty = checkIfEmpty.parentNode;
           }
           if (checkIfEmpty.textContent.trim().length == 0) {
+            const lostSpace = /^\s+/.test(checkIfEmpty.textContent);
+            if (lostSpace && checkIfEmpty.previousSibling) { //restore captured space in previous node
+              const prevSibling = checkIfEmpty.previousSibling;
+              prevSibling.innerHTML = prevSibling.innerHTML + ' ';
+            }
             checkIfEmpty.remove();
           } else if (isFirstApplyed) {
             foundNode.removeAttribute('id');
