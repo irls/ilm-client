@@ -7246,7 +7246,7 @@ MediumEditor.extensions = {};
                 MediumEditor.util.copyAttributes(containerTwo, parentNode, !selection && afterSelection ? [] : ['id']);
                 //console.log(element.parentNode);
                 //return false;
-                let partTwo;
+                let partTwo = document.createElement('br');
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
                 } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
