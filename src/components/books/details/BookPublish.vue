@@ -538,6 +538,9 @@
         handler(val) {
           if (val) {
             this.getDisabledBlocks();
+            Vue.nextTick(() => {
+              this.setPublishErrorsContainerHeight();
+            });
           }
         }
       }
