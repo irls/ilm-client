@@ -1028,28 +1028,29 @@ const applyCustomTag = function (nodeName = 'sup') {
       newNode.appendChild(docFragment);
       range.insertNode(newNode);
 
-
       prevSibling = newNode.previousSibling;
       if (prevSibling) {
-        if (prevSibling.textContent && prevSibling.textContent.trim().length == 0) {
+
+        const lostSpace = newNode.textContent.match(/^\s+/);
+        if (lostSpace && lostSpace[0]) { //restore captured space in previous node
+          prevSibling.innerHTML = prevSibling.innerHTML + lostSpace[0];
+        }
+
+        if (prevSibling.textContent && prevSibling.textContent.length == 0) {
           prevSibling.remove()
         } else if (prevSibling.nodeName.toLowerCase() === 'w') {
-          const wordId = prevSibling.getAttribute('id');
-          const lostSpace = /^\s+/.test(newNode.textContent);
-          if (lostSpace) { //restore captured space in previous node
-            prevSibling.innerHTML = prevSibling.innerHTML + ' ';
-          }
-          const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${wordId}"]`);
-          let isFirstApplyed = false;
-          for (const foundNode of Array.from(wordWrappers)) {
-            if (foundNode.textContent.trim().length == 0) {
-              foundNode.remove();
-            } else if (isFirstApplyed) {
-              foundNode.removeAttribute('id');
-            } else {
-              isFirstApplyed = true;
+            const wordId = prevSibling.getAttribute('id');
+            const wordWrappers = this.base.getFocusedElement().querySelectorAll(`w[id="${wordId}"]`);
+            let isFirstApplyed = false;
+            for (const foundNode of Array.from(wordWrappers)) {
+              if (foundNode.textContent.trim().length == 0) {
+                foundNode.remove();
+              } else if (isFirstApplyed) {
+                foundNode.removeAttribute('id');
+              } else {
+                isFirstApplyed = true;
+              }
             }
-          }
         }
       }
 
@@ -1154,10 +1155,10 @@ const applyCustomTag = function (nodeName = 'sup') {
             checkIfEmpty = checkIfEmpty.parentNode;
           }
           if (checkIfEmpty.textContent.trim().length == 0) {
-            const lostSpace = /^\s+/.test(checkIfEmpty.textContent);
-            if (lostSpace && checkIfEmpty.previousSibling) { //restore captured space in previous node
+            const lostSpace = checkIfEmpty.textContent.match(/^\s+/);
+            if (lostSpace && lostSpace[0] && checkIfEmpty.previousSibling) { //restore captured space in previous node
               const prevSibling = checkIfEmpty.previousSibling;
-              prevSibling.innerHTML = prevSibling.innerHTML + ' ';
+              prevSibling.innerHTML = prevSibling.innerHTML + lostSpace[0];
             }
             checkIfEmpty.remove();
           } else if (isFirstApplyed) {
