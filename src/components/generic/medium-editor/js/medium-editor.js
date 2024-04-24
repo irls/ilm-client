@@ -3181,7 +3181,10 @@ MediumEditor.extensions = {};
                     }
                     if (element.parentElement && element.parentElement.parentElement) {
                         let parent = element.parentElement.parentElement;
-                        if (parent.nodeName === 'F' && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
+                        if (parent.nodeName === 'SG' && parent.parentElement && parent.parentElement.nodeName === 'SUP') {
+                            parent = parent.parentElement;
+                        }
+                        if (['F', 'SUP'].includes(parent.nodeName) && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
                             event.preventDefault();
                             return;
                         }
@@ -7325,6 +7328,10 @@ MediumEditor.extensions = {};
                     //console.log(partTwo, nextSibling);
                     if ((!nextSibling || nextSibling.nodeType === 3) && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling && parentNode.nodeName !== 'U') {
                         nextSibling = partTwo.parentNode.nextSibling;
+                    }
+                    // ILM-6475: click at the end of the block after superscript with suggestion
+                    if (!nextSibling && partTwo.parentNode && partTwo.parentNode.nodeName === 'SG' && partTwo.parentNode.parentNode && partTwo.parentNode.parentNode.nodeName === 'SUP') {
+                        nextSibling = partTwo.parentNode.parentNode.nextSibling;
                     }
                     let moveTo;
                     if (nextSibling) {
