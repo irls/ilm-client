@@ -44,7 +44,10 @@ export default {
       });
     },
     alignBook({dispatch, rootState}, data) {
-      data.wpm_settings = rootState.user.alignWpmSettings[rootState.currentBookid]['audio_file'];
+      data.wpm_settings = {};
+      if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
+        data.wpm_settings = rootState.user.alignWpmSettings[rootState.currentBookid]['audio_file'];
+      }
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/selection_alignment`, data, {
         validateStatus: function (status) {
           return status === 200 || status === 504;
