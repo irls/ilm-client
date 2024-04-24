@@ -774,7 +774,22 @@ export default {
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
           if (!startElement || !endElement) return false;
-          return !(startElement == endElement && !startElement.dataset.map);
+          if (startElement == endElement && !startElement.dataset.map) return false;
+
+          if (startElement && endElement) {
+            let checkElement = startElement;
+            let hasDataMap = !!(endElement.dataset && endElement.dataset.map);
+            while (!hasDataMap && checkElement !== endElement) {
+              if (checkElement.nextSibling) {
+                checkElement = checkElement.nextSibling;
+              } else {
+                checkElement = checkElement.parentElement;
+              }
+              hasDataMap = checkElement.dataset && checkElement.dataset.map;
+            }
+            return !!hasDataMap;
+          }
+          return true;
         },
         cache: true
       },
