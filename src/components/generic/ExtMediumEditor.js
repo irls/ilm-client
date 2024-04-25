@@ -1185,10 +1185,24 @@ const applyCustomTag = function (nodeName = 'sup') {
 };
 
 const formatSup = function () {
+  const selection = document.getSelection();
+  const wordWrappers = this.base.getFocusedElement().querySelectorAll('sub');
+  for (const searchNode of Array.from(wordWrappers)) {
+    if (selection.containsNode(searchNode, true)) {
+      applyCustomTag.call(this, searchNode.nodeName.toLowerCase());
+    }
+  }
   applyCustomTag.call(this, 'sup');
 };
 
 const formatSub = function () {
+  const selection = document.getSelection();
+  const wordWrappers = this.base.getFocusedElement().querySelectorAll('sup');
+  for (const searchNode of Array.from(wordWrappers)) {
+    if (selection.containsNode(searchNode, true)) {
+      applyCustomTag.call(this, searchNode.nodeName.toLowerCase());
+    }
+  }
   applyCustomTag.call(this, 'sub');
 };
 
