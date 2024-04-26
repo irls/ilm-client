@@ -771,8 +771,8 @@ export default {
       canPlayFromSelected: {
         get() {
           if (!this.range) return false;
-          let startElement = this._getParent(this.range.startContainer, 'w');
-          let endElement = this._getParent(this.range.endContainer, 'w');
+          let startElement = this._getParent(this.range.startContainer, 'w') || this.range.startContainer;
+          let endElement = this._getParent(this.range.endContainer, 'w') || this.range.endContainer;
           //if (!startElement || !endElement) return false;
           if (startElement == endElement && !startElement.dataset.map) return false;
 
