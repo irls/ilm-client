@@ -2105,7 +2105,7 @@ export default {
           if (supBeforeRegExp.test(parentW.innerHTML)) {
             parentW.innerHTML = parentW.innerHTML.replace(supBeforeRegExp, '$1 $3 ');
           } else if (supAfterRegExp.test(parentW.innerHTML)) {
-            parentW.innerHTML = parentW.innerHTML.replace(supAfterRegExp, '$1 $3 ');
+            parentW.innerHTML = parentW.innerHTML.replace(supAfterRegExp, '$1 $3');
           } else {
             const supRegExp = new RegExp(`(\\s+)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
             parentW.innerHTML = parentW.innerHTML.replace(supRegExp, '$2$1');
