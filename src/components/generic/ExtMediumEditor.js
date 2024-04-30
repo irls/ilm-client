@@ -1026,7 +1026,10 @@ const applyCustomTag = function (nodeName = 'sup') {
 
       range.deleteContents();
       newNode.appendChild(docFragment);
+      newNode.textContent = newNode.textContent.replace(/\s+$/, '');
       range.insertNode(newNode);
+      // add space after element to have possibility to set cursor ahead with normal text
+      newNode.insertAdjacentHTML('afterend', ' ');
 
       prevSibling = newNode.previousSibling;
       if (prevSibling) {
