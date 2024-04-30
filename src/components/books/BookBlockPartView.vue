@@ -2129,29 +2129,25 @@ export default {
         return regexp.test(checkRange.toString());
       },
       addFootnote: function() {
-        //console.log('this.range', this.range);
-        let el = document.createElement('SUP');
-        el.setAttribute('data-idx', this.block.footnotes.length + 1);
+        const el = document.createElement('SUP');
+        const idx = this.block.footnotes.length + 1;
+        el.setAttribute('data-idx', idx);
         this.range.insertNode(el);
-        /*this.block.footnotes.forEach((ftn, ftnIdx) => {
-          let ref = this.$refs['footnoteContent_' + ftnIdx]
-          if (ref && ref[0]) {
-            this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
+        const parentW = el.parentNode;
+        if (parentW && parentW.innerHTML) { // rearrange spaces
+          const supBeforeRegExp = new RegExp(`(<\\/(?:sup|sub)>)(\\s*?)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
+          const supAfterRegExp = new RegExp(`(<sup data-idx="${idx}"><\\/sup>)(\s*?)(<(?:sup|sub))`, 'i');
+          if (supBeforeRegExp.test(parentW.innerHTML)) {
+            parentW.innerHTML = parentW.innerHTML.replace(supBeforeRegExp, '$1 $3 ');
+          } else if (supAfterRegExp.test(parentW.innerHTML)) {
+            parentW.innerHTML = parentW.innerHTML.replace(supAfterRegExp, '$1 $3');
+          } else {
+            const supRegExp = new RegExp(`(\\s+)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
+            parentW.innerHTML = parentW.innerHTML.replace(supRegExp, '$2$1');
+            const inWRegExp = new RegExp(`(<sup data-idx="${idx}"><\\/sup>)(?!\\s+)`, 'i');
+            parentW.innerHTML = parentW.innerHTML.replace(inWRegExp, '$1 ');
           }
-        });
-        let pos = this.updFootnotes(this.block.footnotes.length + 1);
-        this.block.footnotes.splice(pos, 0, new FootNote({}));
-        this.$forceUpdate();
-        //this.isChanged = true;
-        let ref = this.$refs['footnoteContent_' + pos];
-        if (ref && ref[0]) {
-          ref[0].innerHTML = this.block.footnotes[pos].content;
-        }*/
-        //this.pushChange('footnotes');
-        /*Vue.nextTick(() => {
-          //this.destroyEditor();
-          this.initFtnEditor(true);
-        });*/
+        }
         if (this.block.getIsSplittedBlock()) {
           this.block.parts[this.blockPartIdx].footnote_added = true;// temporary flag
         }
