@@ -82,6 +82,10 @@ export default {
       });
       return waitAudioSpeedUpdate
         .then(() => {
+          let wpm_settings = {};
+          if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
+            wpm_settings = rootState.user.alignWpmSettings[rootState.currentBookid]['tts'];
+          }
           return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/selection_alignment`, {
             start: rootState.blockSelection.start._id,
             end: rootState.blockSelection.end._id,
@@ -89,7 +93,7 @@ export default {
             realign: true,
             voicework: 'all_with_tts',
             voices: rootState.currentBookMeta.voices,
-            wpm_settings: rootState.user.alignWpmSettings[rootState.currentBookid]['tts']
+            wpm_settings: wpm_settings
           }, {
             validateStatus: function (status) {
               return status == 200 || status == 504;
