@@ -1214,7 +1214,7 @@ const SuperScriptButton = MediumEditor.extensions.button.extend({
     tagNames: ['sup'],
     contentDefault: '<b>x<sup>1</sup></b>',
     contentFA: '<i class="fa fa-superscript"></i>',
-    aria: 'Superscript Ctrl+.',
+    aria: 'Superscript Ctrl/⌘+.',
     action: 'customSupScript',
     disabledButtonClass: 'medium-editor-button-disable',
 
@@ -1277,7 +1277,7 @@ const SubScriptButton = MediumEditor.extensions.button.extend({
     tagNames: ['sub'],
     contentDefault: '<b>x<sub>1</sub></b>',
     contentFA: '<i class="fa fa-subscript"></i>',
-    aria: 'Subscript Ctrl+,',
+    aria: 'Subscript Ctrl/⌘+,',
     action: 'customSubScript',
     disabledButtonClass: 'medium-editor-button-disable',
 
