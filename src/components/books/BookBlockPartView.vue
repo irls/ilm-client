@@ -774,7 +774,7 @@ export default {
           let startElement = this._getParent(this.range.startContainer, 'w') || this.range.startContainer;
           let endElement = this._getParent(this.range.endContainer, 'w') || this.range.endContainer;
           //if (!startElement || !endElement) return false;
-          if (startElement == endElement && !startElement.dataset.map) return false;
+          if (startElement == endElement && (startElement.dataset && !startElement.dataset.map)) return false;
 
           if (startElement && endElement) {
             let checkElement = startElement;
