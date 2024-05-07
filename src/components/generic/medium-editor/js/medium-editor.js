@@ -7229,6 +7229,25 @@ MediumEditor.extensions = {};
                 MediumEditor.util.copyAttributes(containerTwo, parentNode, !selection && afterSelection ? [] : ['id']);
                 //console.log(element.parentNode);
                 //return false;
+                let allChildNodes = Array.from(parentNode.childNodes),
+                currentIndex = allChildNodes.indexOf(element),
+                startIndex = currentIndex + 1,
+                noTextElement = null;
+                if (element.nodeType === 3) {
+                    while (startIndex < allChildNodes.length && !noTextElement) {
+                        if (allChildNodes[startIndex].nodeType === 3) {
+                            afterSelection+= allChildNodes[startIndex].data;
+                            allChildNodes[startIndex] = null;
+                        } else {
+                            noTextElement = allChildNodes[startIndex];
+                        }
+                        ++startIndex;
+                    }
+                    allChildNodes = allChildNodes.filter(childNode => {
+                        return childNode !== null;
+                    });
+                    currentIndex = allChildNodes.indexOf(element);
+                }
                 let partTwo;
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
@@ -7239,9 +7258,7 @@ MediumEditor.extensions = {};
                         partTwo = document.createTextNode('\n');
                     }
                 }
-                let allChildNodes = Array.from(parentNode.childNodes),
-                currentIndex = allChildNodes.indexOf(element),
-                lastNode = null;
+                let lastNode = null;
                 for (let i = allChildNodes.length - 1; i > currentIndex; --i) {
                     let currentNode = allChildNodes[i];
                     if (!lastNode) {
