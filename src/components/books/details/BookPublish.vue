@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="publish">
+  <fieldset :class="['publish publish-book', {'-has-error': showPublicationErrors}]">
     <!-- Fieldset Legend -->
     <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
@@ -64,6 +64,19 @@
 
       <span v-if="isPublishing" class="align-preloader -small"></span>
     </section>
+    <div class="publish-html-validation" v-if="showPublicationErrors" v-bind:key="'errors' + currentBookMeta.bookid">
+      <Accordion ref="publicationErrorsAccordion" v-on:tab-open="publicationErrorTabOpen">
+        <AccordionTab :header="'Publication errors (' + publicationErrorsCount + ')'">
+          <div v-for="publication_error in publicationErrors" class="publication-error">
+            <div class="publication-error-blockid" v-if="publication_error.blockid">
+              <a v-on:click="goToBlock(publication_error.blockid)">{{ shortId(publication_error.blockid) }}</a>
+            </div>
+            <div class="publication-error-message">{{ publication_error.message }}</div>
+            <div class="publication-error-info">{{ publication_error.info }}<template v-if="publication_error.line && publication_error.col">, line {{ publication_error.line }}, col {{ publication_error.col }}</template></div>
+          </div>
+        </AccordionTab>
+      </Accordion>
+    </div>
   </fieldset>
 </template>
 <script>
@@ -72,6 +85,9 @@
   import axios from 'axios';
   import BlocksDisable from './BlocksDisable';
   import access from '../../../mixins/access.js';
+  import Accordion from 'primevue/accordion';
+  import AccordionTab from 'primevue/accordiontab';
+  import Vue from 'vue';
   export default {
     name: 'BookPublish',
     data() {
@@ -83,7 +99,7 @@
       }
     },
     mixins: [api_config, access],
-    components: {BlocksDisable},
+    components: {BlocksDisable, Accordion, AccordionTab},
     methods: {
       checkPublish(successCallback = null) {
         this.$emit('checkPublish');
@@ -279,6 +295,7 @@
           .then(resp => {
             if (resp.status == 200 && resp.data.ok) {
               this.currentBookMeta.isInTheQueueOfPublication = true;
+              this.currentBookMeta.publication_errors = {};
             }
           });
       },
@@ -305,6 +322,76 @@
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
+      },
+      shortId(blockid) {
+        const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
+        let _id_short = blockIdRgx.exec(blockid);
+        _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : blockid;
+        if (_id_short.length > 7) {
+          _id_short = _id_short.substr(0, 2) + '...' + _id_short.substr(_id_short.length - 2, 2);
+        }
+        return _id_short;
+      },
+      publicationErrorTabOpen() {
+        //setTimeout(() => {
+          //this.$refs.publicationErrorsAccordion.$el.scrollIntoView({
+            //behavior: 'smooth',
+            //block: "end",
+            //inline: "nearest"
+          //});
+        //}, 1000);
+        let publishErrorsContainer = document.querySelector('.publish-html-validation');
+        let sidebar = document.querySelector('.sidebar');
+        let errorsContainer = document.querySelector('.publish-html-validation .p-toggleable-content');
+        let tabsContainer = document.querySelector('.nav-tabs-navigation');
+        if (publishErrorsContainer && sidebar && errorsContainer) {
+          let lastTop = null;
+          let scrolled = 0;
+          let scrollToInterval = setInterval(() => {
+            let y = publishErrorsContainer.getBoundingClientRect().top + sidebar.scrollTop/* + parseInt(errorsContainer.style['max-height'])*/;
+            if (tabsContainer) {
+              y-= tabsContainer.offsetHeight * 2;
+            }
+            //console.log(`scroll ${y}, ${sidebar.scrollHeight}`);
+            sidebar.scrollTo({
+              top: y,
+              behavior: "smooth"
+            });
+            if ((lastTop && Math.abs(y - lastTop) <= 10 || scrolled >= 10) && errorsContainer.className.indexOf(`p-toggleable-content-enter-active`) === -1) {
+              clearInterval(scrollToInterval);
+              //console.log(errorsContainer.className);
+            }
+            lastTop = y;
+            ++scrolled;
+          }, 10);
+        }
+      },
+      calculatePublishErrorsContainerHeight() {
+        let containerHeight = 0;
+        let container = document.querySelector('.sidebar');// main container for all section
+        if (container) {
+          containerHeight = container.offsetHeight;
+          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          if (tabs) {
+            containerHeight-= tabs.offsetHeight;
+          }
+          let header = document.querySelector('.publish-html-validation .p-accordion-header');// headers in accordion
+          if (header) {
+            containerHeight-= header.offsetHeight;
+          }
+          //containerHeight-= 135;// height for file catalogue buttons
+          containerHeight-= 40;
+        }
+        return containerHeight && containerHeight > 0 ? containerHeight : null;
+      },
+      setPublishErrorsContainerHeight() {
+        let height = this.calculatePublishErrorsContainerHeight();
+        if (height) {
+          let container = document.querySelector(`.publish-html-validation .p-accordion-content`);
+          if (container) {
+            container.style['max-height'] = `${height}px`;
+          }
+        }
       },
       ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
     },
@@ -378,6 +465,35 @@
           return 'Published:';
         }
       },
+      publicationErrorsCount: {
+        get() {
+          return this.publicationErrors.length;
+        },
+        cache: false
+      },
+      publicationErrors: {
+        get() {
+          let errors = [];
+          if (this.currentBookMeta.publication_errors) {
+            if (Array.isArray(this.currentBookMeta.publication_errors.blocks) && this.currentBookMeta.publication_errors.blocks.length > 0) {
+              errors = this.currentBookMeta.publication_errors.blocks;
+            } else if (this.currentBookMeta.publication_errors.book && this.currentBookMeta.publication_errors.book.message) {
+              errors.push({
+                message: this.currentBookMeta.publication_errors.book.message,
+                info: this.currentBookMeta.publication_errors.book.info
+              });
+            }
+          }
+          return errors;
+        },
+        cache: false
+      },
+      showPublicationErrors: {
+        get() {
+          return this.adminOrLibrarian && this.publicationErrorsCount > 0;
+        },
+        cache: false
+      },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
     },
@@ -392,6 +508,10 @@
       this.$root.$on('book-reimported', this.getDisabledBlocks);
       //console.log(`this.currentBookMeta: `, this.currentBookMeta);
       //console.log(`publishButtonStatus: `, this.publishButtonStatus);
+      Vue.nextTick(() => {
+        this.setPublishErrorsContainerHeight();
+      });
+      window.addEventListener('resize', this.setPublishErrorsContainerHeight);
     },
     beforeDestroy() {
       this.$root.$off('book-reimported', this.getDisabledBlocks);
@@ -417,6 +537,9 @@
         handler(val) {
           if (val) {
             this.getDisabledBlocks();
+            Vue.nextTick(() => {
+              this.setPublishErrorsContainerHeight();
+            });
           }
         }
       }
@@ -425,6 +548,11 @@
   }
 </script>
 <style lang="less">
+  fieldset.publish-book {
+    &.-has-error {
+      padding-bottom: 0px !important;
+    }
+  }
   .preloader-spinner {
     width: 100%;
     height: 50px;
@@ -443,6 +571,85 @@
       &.disabled {
         cursor: not-allowed;
         opacity: 0.8;
+      }
+    }
+  }
+  .publish-html-validation {
+    white-space: pre-wrap;
+    margin: 10px -6px 0px -6px;
+    line-height: 0px;
+
+    .p-accordion {
+      .p-accordion-header {
+        &:focus {
+          border: 1px solid #a19f9d !important;
+          box-shadow: none !important;
+        }
+        .p-accordion-header-link {
+          text-decoration: none;
+          font-weight: normal;
+          &:focus {
+            border: 1px solid #a19f9d !important;
+            box-shadow: none !important;
+            z-index: 0;
+          }
+          .p-accordion-header-text {
+            font-weight: normal;
+          }
+        }
+      }
+      .p-accordion-tab {
+        margin-bottom: 0px;
+        .p-accordion-content {
+          padding: 0px;
+          max-height: 300px;
+          overflow-y: auto;
+          width: 425px;
+          max-width: 425px;
+          overflow-x: hidden;
+        }
+        .p-accordion-content::-webkit-scrollbar-track {
+          -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+          border-radius: 10px;
+          background-color: #F5F5F5;
+        }
+        .p-accordion-content::-webkit-scrollbar {
+          width: 12px;
+          background-color: #F5F5F5;
+        }
+        .p-accordion-content::-webkit-scrollbar-thumb {
+          border-radius: 10px;
+          -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+          background-color: #555;
+        }
+      }
+    }
+    .publication-error {
+      line-height: 20px;
+      padding: 3px 5px;
+      &:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      div {
+        display: inline-block;
+        vertical-align: top;
+        &.publication-error-blockid {
+          width: 12%;
+          max-width: 12%;
+          padding: 0px 5px;
+          a {
+            text-decoration: underline;
+            cursor: pointer;
+          }
+        }
+        &.publication-error-message {
+          max-width: 85%;
+        }
+        &.publication-error-info {
+          padding: 0px 5px;
+          white-space: pre;
+          display: block;
+        }
       }
     }
   }
