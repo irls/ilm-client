@@ -1596,7 +1596,7 @@ MediumEditor.extensions = {};
             node.parentNode.normalize();// merge neighbour text elements
             //console.log(rootNode);
         },
-        
+
         hasAfterPseudoclass(element, searchValue = false) {
             if (element && element.nodeType === 1) {
                 let value = getComputedStyle(element, '::after').getPropertyValue('content');
@@ -4888,7 +4888,7 @@ MediumEditor.extensions = {};
 
         /* KeyboardCommands Options */
 
-        /* commands: [Array]
+        /* defaultCommands: [Array]
          * Array of objects describing each command and the combination of keys that will trigger it
          * Required for each object:
          *   command [String] (argument passed to editor.execAction())
@@ -4897,7 +4897,7 @@ MediumEditor.extensions = {};
          *   shift [boolean] (whether the shift key has to be active or inactive)
          *   alt [boolean] (whether the alt key has to be active or inactive)
          */
-        commands: [
+        defaultCommands: [
             {
                 command: 'bold',
                 key: 'B',
@@ -4921,13 +4921,29 @@ MediumEditor.extensions = {};
             }
         ],
 
+        convertCharCodes: {
+          '.': 190,
+          ',': 188
+        },
+
         init: function () {
             MediumEditor.Extension.prototype.init.apply(this, arguments);
+            if (this.commands) {
+              var defaultCommands =this.defaultCommands.filter((dComm)=>{
+                return !this.commands.find((comm)=>{
+                  return comm.command === dComm.command && comm.key === dComm.key;
+                })
+              });
+              this.commands = [...defaultCommands, ...this.commands];
+            } else {
+              this.commands = this.defaultCommands;
+            }
 
-            this.subscribe('editableKeydown', this.handleKeydown.bind(this));
+            this.subscribe('editableKeydown', this.handleKeyboardCommandKeydown.bind(this));
+
             this.keys = {};
             this.commands.forEach(function (command) {
-                var keyCode = command.key.charCodeAt(0);
+                var keyCode = this.convertCharCodes[command.key] || command.key.charCodeAt(0);
                 if (!this.keys[keyCode]) {
                     this.keys[keyCode] = [];
                 }
@@ -4935,7 +4951,7 @@ MediumEditor.extensions = {};
             }, this);
         },
 
-        handleKeydown: function (event) {
+        handleKeyboardCommandKeydown: function (event) {
             var keyCode = MediumEditor.util.getKeyCode(event);
             if (keyCode === MediumEditor.util.keyCode.DELETE) {
                 let selection = document.getSelection(),
@@ -5068,23 +5084,24 @@ MediumEditor.extensions = {};
                 isShift = !!event.shiftKey,
                 isAlt = !!event.altKey;
 
-            this.keys[keyCode].forEach(function (data) {
-                if (data.meta === isMeta &&
-                    data.shift === isShift &&
-                    (data.alt === isAlt ||
-                     undefined === data.alt)) { // TODO deprecated: remove check for undefined === data.alt when jumping to 6.0.0
-                    event.preventDefault();
-                    event.stopPropagation();
+            //console.log(`isMeta:isShift:isAlt: `, isMeta,isShift,isAlt);
 
-                    // command can be a function to execute
-                    if (typeof data.command === 'function') {
-                        data.command.apply(this);
-                    }
-                    // command can be false so the shortcut is just disabled
-                    else if (false !== data.command) {
-                        this.execAction(data.command);
-                    }
-                }
+            this.keys[keyCode].forEach(function (data) {
+              if (data.meta === isMeta
+                && data.shift === isShift
+                && data.alt === isAlt) {
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  // command can be a function to execute
+                  if (typeof data.command === 'function') {
+                    data.command.apply(this);
+                  }
+                  // command can be false so the shortcut is just disabled
+                  else if (false !== data.command) {
+                    this.execAction(data.command);
+                  }
+              }
             }, this);
         }
     });

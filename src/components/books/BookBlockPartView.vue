@@ -366,7 +366,8 @@ import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
-          SuggestButton, SuggestPreview, MediumEditor
+          SuggestButton, SuggestPreview, MediumEditor,
+          formatSup, formatSub, SuperScriptButton, SubScriptButton
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
@@ -764,93 +765,6 @@ export default {
           narrationBlockContent.setClasses( this.block.classes);
           narrationBlockContent.prepare( this.getBlockLang);
           return narrationBlockContent.getContent();
-          // let content = this.blockPart.content.replace(/<sup[^>]*>.*?<\/sup>/img, '');
-          // //content = $(`<div>${content}</div>`).text();
-          // /*let replaceHTMLRg = new RegExp(`<(?!\/|ol|ul|li|u)[^>]*>([^<]+?)<\/[^>]+>`, 'mg');
-          // while (content.match(replaceHTMLRg)) {
-          //   content = content.replace(replaceHTMLRg, '$1');
-          // }*/
-          // content = content.replace(/<br[^>]*>\s*$/, '').replace(/[\r\n]\s*$/, '');//remove <br> at the end of the block
-          // content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
-          // content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
-          // let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
-          // if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
-          //   content = content.replace(/[\r\n]/mg, '<br>');
-          //   is_list = true;
-          // }
-          // let separator = '<div class="part-separator"></div>'
-          // let joinBy = is_list ? '<split/>' : `<split/><split/>`;
-          // /*let rg = new RegExp('((?<!St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|(?=\\b)cf|(?=\\b)Cap|(?=\\b)ca|(?=\\b)cca|(?=\\b)fl|(?=\\b)gen|(?=\\b)gov|(?=\\b)vs|(?=\\b)v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|(?=\\b)scil|(?=\\b)ed|(?=\\b)p|(?=\\b)viz|\\W[A-Z]))([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])', 'img');
-          // content = content.replace(rg, '$1$2<br><br>');*/
-          // let parts = [];
-          // let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
-          // let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>|<\/[^>]+>)(?![\\W]*[a-z])`, 'mg')
-          // let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
-          // let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
-          // if (this.getBlockLang !== 'en') {
-          //   regEx = new RegExp(`[\.\!\?\…\.\!\…\؟] `, 'mg');
-          //   regExColon = new RegExp(`[\:\;\؛] `, 'mg');
-          // }
-          // let regExLetters = new RegExp(`[${lettersPattern}]`);
-          // let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
-          // let regExNewlineSpace = new RegExp(`[^\.\!\?\…\؟]\s+<br[^>]*>[^${lettersPattern}]*$`);
-          // //var regExLower = new RegExp('$([\\.\\!\\?\\…\\؟]+)(?!\\W*[a-z])')
-          // let match;
-          // let shift = 0;
-          // while ((match = regEx.exec(content))) {
-          //   //console.log(match)
-          //   let pos = match.index + match[0].length;
-          //   let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
-          //   //var substrLower = str.substring(match.index);
-          //   //console.log(`CHECK "${substr}"`);
-          //   //console.log('MATCH: ', substr.match(regExAbbr))
-          //   if (!substr.match(regExAbbr) && substr.match(regExLetters) && (!substr.match(regExNewline) || !substr.match(regExNewlineSpace))) {
-          //     parts.push(substr);
-          //     shift = pos;
-          //   }
-          // }
-          // if (parts.length > 0) {
-          //   if (shift < content.length) {
-          //     let substr = content.substring(shift);
-          //     if (substr.match(regExLetters) && !substr.match(regExNewline)) {
-          //       parts.push(substr);
-          //     } else {
-          //       parts[parts.length - 1]+=substr;
-          //     }
-          //   }
-          //   content = parts.join(joinBy);
-          // }
-          // parts = [];
-          // shift = 0;
-          // while ((match = regExColon.exec(content))) {
-          //   let pos = match.index + match[0].length;
-          //   let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
-          //   if (substr.match(regExLetters)) {
-          //     parts.push(substr);
-          //     shift = pos;
-          //   }
-          // }
-          // if (parts.length > 0) {
-          //   if (shift < content.length) {
-          //     let substr = content.substring(shift);
-          //     if (substr.match(regExLetters)) {
-          //       parts.push(substr);
-          //     } else {
-          //       parts[parts.length - 1]+=substr;
-          //     }
-          //   }
-          //   content = parts.join('<split/>');
-          // }
-          // try {
-          //   content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
-          // } catch (e) {// Firefox does not support negative lookbehind
-          //
-          // }
-          // content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
-          // content = content.replace(/<br><br><br>/gm, '<br><br>');
-          // content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
-          // //content = content.replace(, '$1<br>');
-          // return content;
         },
         cache: false
       },
@@ -1293,22 +1207,45 @@ export default {
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
+          let keyboardCommands = false;
           if (this.allowEditing && this.mode === 'edit') {
             extensions = {
                 'quoteButton': new QuoteButton(),
                 'quotePreview': new QuotePreview(),
                 'suggestButton': new SuggestButton(),
-                'suggestPreview': new SuggestPreview()
+                'suggestPreview': new SuggestPreview(),
+                'superScriptButton': new SuperScriptButton(),
+                'subScriptButton': new SubScriptButton()
               };
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  'superscript', 'subscript',//'orderedlist',
+                  'superScriptButton', 'subScriptButton',
+                  //'superscript', 'subscript', 'orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
                 ]
               };
+
+            keyboardCommands = {
+              commands : [
+                {
+                  command: formatSup,
+                  key: '.',
+                  meta: true,
+                  shift: false,
+                  alt: false
+                },
+                {
+                  command: formatSub,
+                  key: ',',
+                  meta: true,
+                  shift: false,
+                  alt: false
+                },
+              ]
+            };
 
             let blockLang = this.getBlockLang;
             /*if (this.block.language === 'fa'){
@@ -1329,7 +1266,8 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
-                spellcheck: false
+                spellcheck: false,
+                keyboardCommands: keyboardCommands
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log(event, target);
@@ -1391,7 +1329,8 @@ export default {
                 suggestEl: this.suggestEl,
                 extensions: extensions,
                 disableEditing: true,
-                imageDragging: false
+                imageDragging: false,
+                keyboardCommands: keyboardCommands
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -1405,15 +1344,15 @@ export default {
           let toolbar = {buttons: []};
           if (this.allowEditing) {
             extensions = {
-                'quoteButton': new QuoteButton(),
-                'quotePreview': new QuotePreview()
+                //'quoteButton': new QuoteButton(),
+                //'quotePreview': new QuotePreview()
               };
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  'superscript', 'subscript',
-                  'unorderedlist',
-                  'quoteButton', 'suggestButton'
+                  //'superscript', 'subscript',
+                  //'unorderedlist',
+                  //'quoteButton', 'suggestButton'
                 ]
               };
           };
@@ -2129,38 +2068,51 @@ export default {
         if (this.editingLocked) return false;
         let container = this.range.commonAncestorContainer;
         if (typeof container.length == 'undefined') return false;
+
+        // check for <sup> and <sub>
+        const selection = document.getSelection();
+        let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+        if (!startParentNode) return false;
+        const startParentNodes = [startParentNode];
+        while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
+          startParentNode = startParentNode.parentNode;
+          startParentNodes.push(startParentNode);
+        }
+        const checkStartTagNode = startParentNodes.find((node)=>(
+             node.nodeName.toLowerCase() === 'sup'
+          || node.nodeName.toLowerCase() === 'sub'
+        ));
+        if (checkStartTagNode) return false;
+
         if (this.range.endOffset >= container.length) return true;
         let checkRange = document.createRange();
         //console.log(container, container.length, this.range.endOffset);
         checkRange.setStart( container, this.range.startOffset );
         checkRange.setEnd( container, this.range.endOffset+1 );
+
         let regexp = /^[\.\s]+$/i;
         return regexp.test(checkRange.toString());
       },
       addFootnote: function() {
-        //console.log('this.range', this.range);
-        let el = document.createElement('SUP');
-        el.setAttribute('data-idx', this.block.footnotes.length + 1);
+        const el = document.createElement('SUP');
+        const idx = this.block.footnotes.length + 1;
+        el.setAttribute('data-idx', idx);
         this.range.insertNode(el);
-        /*this.block.footnotes.forEach((ftn, ftnIdx) => {
-          let ref = this.$refs['footnoteContent_' + ftnIdx]
-          if (ref && ref[0]) {
-            this.block.setContentFootnote(ftnIdx, ref[0].innerHTML);
+        const parentW = el.parentNode;
+        if (parentW && parentW.innerHTML) { // rearrange spaces
+          const supBeforeRegExp = new RegExp(`(<\\/(?:sup|sub)>)(\\s*?)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
+          const supAfterRegExp = new RegExp(`(<sup data-idx="${idx}"><\\/sup>)(\s*?)(<(?:sup|sub))`, 'i');
+          if (supBeforeRegExp.test(parentW.innerHTML)) {
+            parentW.innerHTML = parentW.innerHTML.replace(supBeforeRegExp, '$1 $3 ');
+          } else if (supAfterRegExp.test(parentW.innerHTML)) {
+            parentW.innerHTML = parentW.innerHTML.replace(supAfterRegExp, '$1 $3');
+          } else {
+            const supRegExp = new RegExp(`(\\s+)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
+            parentW.innerHTML = parentW.innerHTML.replace(supRegExp, '$2$1');
+            const inWRegExp = new RegExp(`(<sup data-idx="${idx}"><\\/sup>)(?!\\s+)`, 'i');
+            parentW.innerHTML = parentW.innerHTML.replace(inWRegExp, '$1 ');
           }
-        });
-        let pos = this.updFootnotes(this.block.footnotes.length + 1);
-        this.block.footnotes.splice(pos, 0, new FootNote({}));
-        this.$forceUpdate();
-        //this.isChanged = true;
-        let ref = this.$refs['footnoteContent_' + pos];
-        if (ref && ref[0]) {
-          ref[0].innerHTML = this.block.footnotes[pos].content;
-        }*/
-        //this.pushChange('footnotes');
-        /*Vue.nextTick(() => {
-          //this.destroyEditor();
-          this.initFtnEditor(true);
-        });*/
+        }
         if (this.block.getIsSplittedBlock()) {
           this.block.parts[this.blockPartIdx].footnote_added = true;// temporary flag
         }

@@ -2381,13 +2381,13 @@ export default {
       searchInBlocks(bookSearch) {
         if(bookSearch.string && bookSearch.string.trim().length > 2) {
           this.searchResultArray = [];
-          console.time('Search');
+          //console.time('Search');
           let parserSearchArr = prepareForFilter(bookSearch.string, true).split(' ');
           parserSearchArr = parserSearchArr.filter((sEl)=>{
             return sEl.trim().length > 0;
           })
           let filterSearchArr = prepareForFilter(bookSearch.string, false)
-          console.log(`parserSearchArr: `, parserSearchArr);
+          //console.log(`parserSearchArr: `, parserSearchArr);
           //console.log(`filterSearchArr: `, filterSearchArr);
 
           //let stop = 3;
@@ -2400,10 +2400,15 @@ export default {
               fullPhrase : true
             });
             if (result) this.searchResultArray.push(blockId);
+            // add search by blockId
+            const blockIdRx = new RegExp(`-${bookSearch.string.trim()}$`);
+            if (blockIdRx.test(blockId)) {
+              this.searchResultArray.push(blockId);
+            }
           }
 
           //console.log(`this.searchResultArray: `, this.searchResultArray);
-          console.timeEnd('Search');
+          //console.timeEnd('Search');
         } else {
           this.$refs.blocks.forEach(blkRef => {// force update cleared search results
             if (blkRef.block && this.searchResultArray.includes(blkRef.block.blockid)) {
@@ -2445,8 +2450,8 @@ export default {
           if (this.searchResultArray.length == 1) {
             this.scrollToBlock(this.searchResultArray[0]);
           }
-          console.log(`startId: `, this.startId);
-          console.log(`scrollSearchDown: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+          //console.log(`startId: `, this.startId);
+          //console.log(`scrollSearchDown: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       },
 
@@ -2459,8 +2464,8 @@ export default {
           if (this.searchResultArray.length == 1) {
             this.scrollToBlock(this.searchResultArray[0]);
           }
-          console.log(`startId: `, this.startId);
-          console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
+          //console.log(`startId: `, this.startId);
+          //console.log(`scrollSearchUp: `, this.bookSearch.searchPointer, this.searchResultArray[this.bookSearch.searchPointer]);
         }
       },
 
