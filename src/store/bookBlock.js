@@ -1053,7 +1053,7 @@ class BookBlock {
   setPauseBefore(val) {
     this.pause_before = val;
   }
-  
+
   setPauseAfter(val) {
     this.pause_after = val;
   }
@@ -1153,7 +1153,7 @@ class BookBlock {
         const firstSeWoLen = searchStrArr[0].length;
         while (wordIdx < contentArr.length) {
           const content = contentArr[wordIdx];
-          let hasWord = wordRedExp.test(content[1]);
+          let hasWord = wordRedExp.test(prepareForFilter(content[1]));
 
           //console.log(`hasWord: `, hasWord, searchStrArr[0], content[1]);
 
@@ -1298,7 +1298,7 @@ class BookBlock {
     }
     return isFound || (foundContent ? true : false);
   }
-  
+
   // when changes are not saved, content can not be wrapped with <w></w> yet
   prepareUnsavedContent(content) {
     if (content && !/<w[^>]*>/.test(content)) {
@@ -1321,23 +1321,23 @@ class BookBlock {
       }
     }
   }
-  
+
   getModeAudiosrc(partIdx, mode, config = {}) {
     return this.getPartAudiosrc(partIdx, this.getModeAudiosrcVer(partIdx, mode, config));
   }
-  
+
   getModeAudiosrcVer(partIdx, mode, config = {}) {
-    
+
     let ver = '';
     if (this.audiosrc_config && this.audiosrc_config[partIdx] && this.audiosrc_config[partIdx][mode]) {
       ver = this.audiosrc_config[partIdx][mode];
     } else if (config && config[mode]) {
       ver = config[mode];
     }
-    
+
     return ver;
   }
-  
+
   setAudiosrcConfig(partIdx, mode, value, config = {}) {
     if (!this.audiosrc_config[partIdx]) {
       this.audiosrc_config[partIdx] = {};
@@ -1350,11 +1350,11 @@ class BookBlock {
       this.audiosrc_config[partIdx][mode] = value;
     }
   }
-  
+
   resetAudiosrcConfig() {
     this.audiosrc_config = {};
   }
-  
+
   getPartRecordingPauses(partIdx) {
     if (
       !(
