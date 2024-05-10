@@ -5531,7 +5531,7 @@ Save text changes and realign the Block?`,
         /*cursor: pointer*/
       }
 
-      w:not([data-map]), w.alignment-changed {
+      w:not([data-map]):not([data-sugg=""]), w.alignment-changed {
         background: linear-gradient(
             transparent,
             transparent 30%,
@@ -5539,6 +5539,10 @@ Save text changes and realign the Block?`,
             transparent 80%,
             transparent
         );
+      }
+
+      sup w:not([data-map]):not([data-sugg]) {
+        background: inherit;
       }
 
       [data-idx], [data-pg] {
