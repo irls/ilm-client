@@ -293,7 +293,7 @@
                       <i class="fa fa-flag icon-menu -add-flag"></i>Flag for Narration
                     </li>
                   </template>
-                  <template v-if="range.collapsed && blockAudio.src">
+                  <template v-if="range.collapsed && blockAudio.src && canPlayFromSelected">
                     <li class="separator"></li>
                     <li class="icon-menu-item" v-if="isUncompressedAudioSet" v-on:click="setListenCompressed()">
                       <i class="icon-menu -listen-compressed"></i>Listen compressed
@@ -302,7 +302,7 @@
                       <i class="icon-menu -listen-uncompressed"></i>Listen uncompressed
                     </li>
                   </template>
-                  <template v-if="blockAudio.src">
+                  <template v-if="blockAudio.src && canPlayFromSelected">
                     <li class="separator"></li>
                     <li @click.stop="audPlayFromSelection()" class="icon-menu-item">
                       <i class="fa fa-play-circle-o icon-menu -play-from"></i>Play from here
@@ -767,6 +767,31 @@ export default {
           return narrationBlockContent.getContent();
         },
         cache: false
+      },
+      canPlayFromSelected: {
+        get() {
+          if (!this.range) return false;
+          let startElement = this._getParent(this.range.startContainer, 'w') || this.range.startContainer;
+          let endElement = this._getParent(this.range.endContainer, 'w') || this.range.endContainer;
+          //if (!startElement || !endElement) return false;
+          if (startElement == endElement && (startElement.dataset && !startElement.dataset.map)) return false;
+
+          if (startElement && endElement) {
+            let checkElement = startElement;
+            let hasDataMap = !!(endElement.dataset && endElement.dataset.map);
+            while (!hasDataMap && checkElement !== endElement) {
+              if (checkElement.nextSibling) {
+                checkElement = checkElement.nextSibling;
+              } else {
+                checkElement = checkElement.parentElement;
+              }
+              hasDataMap = checkElement.dataset && checkElement.dataset.map;
+            }
+            return !!hasDataMap;
+          }
+          return true;
+        },
+        cache: true
       },
       ...mapGetters({
           auth: 'auth',
@@ -1989,7 +2014,12 @@ export default {
           this.isAudPartStarted = false;
           this.player.loadBlock(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
-          if (startElement) {
+          let endElement = this._getParent(this.range.endContainer, 'w');
+          if (startElement !== endElement && !startElement.dataset.map) { //empty sugg in front of selection
+            let startRange = this._getClosestAligned(startElement, 1);
+            startElement = this.$refs.blockContent.querySelector(`[data-map="${startRange.join(',')}"]`)
+          }
+          if (startElement && startElement.dataset.map) {
             this.isAudStarted = true;
             this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
           }
@@ -2009,6 +2039,11 @@ export default {
           let endRange = this._getClosestAligned(endElement, 0);
           if (!endRange) {
             endRange = this._getClosestAligned(endElement, 1)
+          }
+
+          if (!startRange || !endRange) {
+            this.$refs.blockCntx.close();
+            return;
           }
 
           this.player.playRange('content-' + this.block.blockid + '-part-' + this.blockPartIdx, startRange[0], endRange[0] + endRange[1]);
@@ -3046,9 +3081,12 @@ export default {
         }
         let sibling = false;
         if (direction > 0) {
-          sibling = node.nextSibling ? node.nextSibling : null;
+          sibling = node.nextSibling || node.parentNode;
         } else {
-          sibling = node.previousSibling ? node.previousSibling : null;
+          sibling = node.previousSibling || node.parentNode;
+        }
+        if (!sibling || (sibling.dataset && sibling.dataset.iseditor)) {
+          return null;
         }
         while (sibling) {
           if (sibling.dataset && sibling.dataset.map) {
@@ -3060,9 +3098,12 @@ export default {
             }
           }
           if (direction > 0) {
-            sibling = sibling.nextSibling ? sibling.nextSibling : null;
+            sibling = sibling.nextSibling || sibling.parentNode;
           } else {
-            sibling = sibling.previousSibling ? sibling.previousSibling : null;
+            sibling = sibling.previousSibling || sibling.parentNode;
+          }
+          if (!sibling || (sibling.dataset && sibling.dataset.iseditor)) {
+            return null;
           }
         }
         return null;
@@ -3210,26 +3251,29 @@ export default {
         if (window.getSelection) {
           //let content = this.range.extractContents();
           this.range = window.getSelection().getRangeAt(0).cloneRange();
-          //console.log(this.range, window.getSelection(), range)
+          //console.log(this.range, window.getSelection())
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
-          let startRange = this._getClosestAligned(startElement, 1);
-          if (!startRange) {
-            startRange = [0, 0];
+          let checkEmptySugg = false;
+          if (startElement && startElement == endElement && startElement.dataset) {
+            checkEmptySugg = (startElement.dataset.hasOwnProperty('sugg') && startElement.dataset.sugg === '') || false;
           }
-          let endRange = this._getClosestAligned(endElement, 0);
-          if (!endRange) {
-            endRange = this._getClosestAligned(endElement, 1)
-          }
-          if (startRange && endRange && this.isAudioEditing) {
-            //console.log(startRange[0], endRange[0] + endRange[1])
-            let startElementIndex = null;
-            if (this.$refs.blockContent) {
-              startElementIndex = Array.prototype.indexOf.call(this.$refs.blockContent.querySelectorAll('w[data-map]:not([data-map=""])'), startElement);
+          if (!checkEmptySugg) {
+            let startRange = this._getClosestAligned(startElement, 1);
+            let endRange = this._getClosestAligned(endElement, 0);
+            if (!endRange) {
+              endRange = this._getClosestAligned(endElement, 1)
             }
-            this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null, startElementIndex);
+            if (startRange && endRange && this.isAudioEditing) {
+              //console.log(startRange[0], endRange[0] + endRange[1])
+              let startElementIndex = null;
+              if (this.$refs.blockContent) {
+                startElementIndex = Array.prototype.indexOf.call(this.$refs.blockContent.querySelectorAll('w[data-map]:not([data-map=""])'), startElement);
+              }
+              this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null, startElementIndex);
+            }
+            //console.log(startElement, endElement, startRange, endRange)
           }
-          //console.log(startElement, endElement, startRange, endRange)
         }
 
         if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
