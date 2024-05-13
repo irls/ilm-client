@@ -3181,7 +3181,10 @@ MediumEditor.extensions = {};
                     }
                     if (element.parentElement && element.parentElement.parentElement) {
                         let parent = element.parentElement.parentElement;
-                        if (parent.nodeName === 'F' && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
+                        if (parent.nodeName === 'SG' && parent.parentElement && parent.parentElement.nodeName === 'SUP') {
+                            parent = parent.parentElement;
+                        }
+                        if (['F', 'SUP'].includes(parent.nodeName) && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
                             event.preventDefault();
                             return;
                         }
@@ -7235,9 +7238,9 @@ MediumEditor.extensions = {};
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
                 //console.log(element.parentNode.nodeName);
-                if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
-                    selection = parentNode.innerText;
-                }
+                //if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
+                    //selection = parentNode.innerText;
+                //}
                 let baseNode = parentNode.parentNode,
                 partOne = document.createTextNode(selection),
                 containerOne = document.createElement(parentNode.nodeName),
@@ -7246,7 +7249,7 @@ MediumEditor.extensions = {};
                 MediumEditor.util.copyAttributes(containerTwo, parentNode, !selection && afterSelection ? [] : ['id']);
                 //console.log(element.parentNode);
                 //return false;
-                let partTwo;
+                let partTwo = document.createElement('br');
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
                 } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
@@ -7325,6 +7328,10 @@ MediumEditor.extensions = {};
                     //console.log(partTwo, nextSibling);
                     if ((!nextSibling || nextSibling.nodeType === 3) && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling && parentNode.nodeName !== 'U') {
                         nextSibling = partTwo.parentNode.nextSibling;
+                    }
+                    // ILM-6475: click at the end of the block after superscript with suggestion
+                    if (!nextSibling && partTwo.parentNode && partTwo.parentNode.nodeName === 'SG' && partTwo.parentNode.parentNode && partTwo.parentNode.parentNode.nodeName === 'SUP') {
+                        nextSibling = partTwo.parentNode.parentNode.nextSibling;
                     }
                     let moveTo;
                     if (nextSibling) {

@@ -177,7 +177,6 @@
   import BlockContextMenu from './generic/BlockContextMenu';
   import {mapActions, mapGetters} from 'vuex'
   import _ from 'lodash';
-  import unescape from 'lodash/unescape';
   //import Peaks from 'peaks.js';
   import WaveformPlaylist from 'waveform-playlist';
   var Draggable = require ('draggable')
@@ -2576,18 +2575,18 @@
               text = text.replace(sg.toString(), '');
             }
           });
-          text = $('<textarea/>').html(text).text();// remove html entities
+          //text = $('<textarea/>').html(text).text();// remove html entities
           while((match = textRg.exec(text))) {
             let word = match[2];
             if (currentLength < match.index) {
               let addPart = text.substr(currentLength, match.index - currentLength);
               if ((closeBracketsRegex.test(addPart) || closeQuotesRegex.test(addPart)) && annotations.length > 0) {
-                annotations[annotations.length - 1].id+= unescape(addPart.replace(/<\/?[^>]+?>/img, ''));
+                annotations[annotations.length - 1].id+= $('<textarea/>').html(addPart.replace(/<\/?[^>]+?>/img, '')).text();
               } else {
                 word = addPart + word;
               }
             }
-            word = unescape(word.replace(/<[^>]+?>/img, '')).replace(this.coupletSeparator, '');
+            word = $('<textarea/>').html(word.replace(/<[^>]+?>/img, '')).text().replace(this.coupletSeparator, '');
             currentLength = match.index + match[0].length;
             let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
             map[0] = this._round(parseInt(map[0]) / 1000, 2);
@@ -2678,7 +2677,8 @@
             if (this.audiosourceEditor.annotationList.annotations.length > 0) {
               $('.annotation-box').each(function(i, el) {
                 if(typeof annotations[i] !== 'undefined') {
-                  $(el).find('span.id').html(annotations[i].id);// workaround, waveform editor does not update text in annotations by annotations change
+                  // workaround, waveform editor does not update text in annotations by annotations change
+                  el.querySelector('span.id').innerText = annotations[i].id;
                 }
               });
               //$('.channel-wrapper.block-audio').scroll();
