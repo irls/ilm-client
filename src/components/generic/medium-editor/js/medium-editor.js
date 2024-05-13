@@ -7250,6 +7250,25 @@ MediumEditor.extensions = {};
                 //console.log(element.parentNode);
                 //return false;
                 let partTwo = document.createElement('br');
+                let allChildNodes = Array.from(parentNode.childNodes),
+                currentIndex = allChildNodes.indexOf(element),
+                startIndex = currentIndex + 1,
+                noTextElement = null;
+                if (element.nodeType === 3) {
+                    while (startIndex < allChildNodes.length && !noTextElement) {
+                        if (allChildNodes[startIndex].nodeType === 3) {
+                            afterSelection+= allChildNodes[startIndex].data;
+                            allChildNodes[startIndex] = null;
+                        } else {
+                            noTextElement = allChildNodes[startIndex];
+                        }
+                        ++startIndex;
+                    }
+                    allChildNodes = allChildNodes.filter(childNode => {
+                        return childNode !== null;
+                    });
+                    currentIndex = allChildNodes.indexOf(element);
+                }
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
                 } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
@@ -7259,9 +7278,7 @@ MediumEditor.extensions = {};
                         partTwo = document.createTextNode('\n');
                     }
                 }
-                let allChildNodes = Array.from(parentNode.childNodes),
-                currentIndex = allChildNodes.indexOf(element),
-                lastNode = null;
+                let lastNode = null;
                 for (let i = allChildNodes.length - 1; i > currentIndex; --i) {
                     let currentNode = allChildNodes[i];
                     if (!lastNode) {
