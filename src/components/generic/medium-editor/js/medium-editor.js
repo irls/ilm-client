@@ -7238,9 +7238,9 @@ MediumEditor.extensions = {};
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
                 //console.log(element.parentNode.nodeName);
-                if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
-                    selection = parentNode.innerText;
-                }
+                //if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
+                    //selection = parentNode.innerText;
+                //}
                 let baseNode = parentNode.parentNode,
                 partOne = document.createTextNode(selection),
                 containerOne = document.createElement(parentNode.nodeName),
