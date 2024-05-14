@@ -1270,7 +1270,7 @@ export default {
                 keyboardCommands: keyboardCommands
             });
             this.editor.subscribe('editableInput', (event, target) => {
-              //console.log(event, target);
+              //console.log('editableInput', event, target);
               if (event.inputType === 'formatItalic') {
                 if (this.$refs.blockContent.innerHTML.indexOf(`<span class="pin">`) !== -1) {
                   let currentSelection = window.getSelection().getRangeAt(0).cloneRange();
@@ -1481,8 +1481,15 @@ export default {
         this.isChanged = true;
         this.pushChange('content');
 
-        $(ev.target).find("span[style]").contents().unwrap();
-        ev.target.focus();
+        const _span = ev.target.querySelector('span[style]');
+        if (_span) {
+          const range = document.getSelection().getRangeAt(0);
+          const textNode = document.createTextNode(_span.textContent);
+          _span.replaceWith(textNode);
+          range.setStartAfter(textNode);
+        }
+
+        //ev.target.focus();
         // emit for virtual scroll correction
         this.$root.$emit('from-block-part-view:on-input', this.block.blockid);
       },
