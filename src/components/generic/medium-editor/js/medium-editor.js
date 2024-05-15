@@ -1596,7 +1596,7 @@ MediumEditor.extensions = {};
             node.parentNode.normalize();// merge neighbour text elements
             //console.log(rootNode);
         },
-        
+
         hasAfterPseudoclass(element, searchValue = false) {
             if (element && element.nodeType === 1) {
                 let value = getComputedStyle(element, '::after').getPropertyValue('content');
@@ -3181,7 +3181,10 @@ MediumEditor.extensions = {};
                     }
                     if (element.parentElement && element.parentElement.parentElement) {
                         let parent = element.parentElement.parentElement;
-                        if (parent.nodeName === 'F' && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
+                        if (parent.nodeName === 'SG' && parent.parentElement && parent.parentElement.nodeName === 'SUP') {
+                            parent = parent.parentElement;
+                        }
+                        if (['F', 'SUP'].includes(parent.nodeName) && parent.nextSibling && MediumEditor.util.hasAfterPseudoclass(parent.nextSibling)) {
                             event.preventDefault();
                             return;
                         }
@@ -4888,7 +4891,7 @@ MediumEditor.extensions = {};
 
         /* KeyboardCommands Options */
 
-        /* commands: [Array]
+        /* defaultCommands: [Array]
          * Array of objects describing each command and the combination of keys that will trigger it
          * Required for each object:
          *   command [String] (argument passed to editor.execAction())
@@ -4897,7 +4900,7 @@ MediumEditor.extensions = {};
          *   shift [boolean] (whether the shift key has to be active or inactive)
          *   alt [boolean] (whether the alt key has to be active or inactive)
          */
-        commands: [
+        defaultCommands: [
             {
                 command: 'bold',
                 key: 'B',
@@ -4921,13 +4924,29 @@ MediumEditor.extensions = {};
             }
         ],
 
+        convertCharCodes: {
+          '.': 190,
+          ',': 188
+        },
+
         init: function () {
             MediumEditor.Extension.prototype.init.apply(this, arguments);
+            if (this.commands) {
+              var defaultCommands =this.defaultCommands.filter((dComm)=>{
+                return !this.commands.find((comm)=>{
+                  return comm.command === dComm.command && comm.key === dComm.key;
+                })
+              });
+              this.commands = [...defaultCommands, ...this.commands];
+            } else {
+              this.commands = this.defaultCommands;
+            }
 
-            this.subscribe('editableKeydown', this.handleKeydown.bind(this));
+            this.subscribe('editableKeydown', this.handleKeyboardCommandKeydown.bind(this));
+
             this.keys = {};
             this.commands.forEach(function (command) {
-                var keyCode = command.key.charCodeAt(0);
+                var keyCode = this.convertCharCodes[command.key] || command.key.charCodeAt(0);
                 if (!this.keys[keyCode]) {
                     this.keys[keyCode] = [];
                 }
@@ -4935,7 +4954,7 @@ MediumEditor.extensions = {};
             }, this);
         },
 
-        handleKeydown: function (event) {
+        handleKeyboardCommandKeydown: function (event) {
             var keyCode = MediumEditor.util.getKeyCode(event);
             if (keyCode === MediumEditor.util.keyCode.DELETE) {
                 let selection = document.getSelection(),
@@ -5068,23 +5087,24 @@ MediumEditor.extensions = {};
                 isShift = !!event.shiftKey,
                 isAlt = !!event.altKey;
 
-            this.keys[keyCode].forEach(function (data) {
-                if (data.meta === isMeta &&
-                    data.shift === isShift &&
-                    (data.alt === isAlt ||
-                     undefined === data.alt)) { // TODO deprecated: remove check for undefined === data.alt when jumping to 6.0.0
-                    event.preventDefault();
-                    event.stopPropagation();
+            //console.log(`isMeta:isShift:isAlt: `, isMeta,isShift,isAlt);
 
-                    // command can be a function to execute
-                    if (typeof data.command === 'function') {
-                        data.command.apply(this);
-                    }
-                    // command can be false so the shortcut is just disabled
-                    else if (false !== data.command) {
-                        this.execAction(data.command);
-                    }
-                }
+            this.keys[keyCode].forEach(function (data) {
+              if (data.meta === isMeta
+                && data.shift === isShift
+                && data.alt === isAlt) {
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  // command can be a function to execute
+                  if (typeof data.command === 'function') {
+                    data.command.apply(this);
+                  }
+                  // command can be false so the shortcut is just disabled
+                  else if (false !== data.command) {
+                    this.execAction(data.command);
+                  }
+              }
             }, this);
         }
     });
@@ -7218,9 +7238,9 @@ MediumEditor.extensions = {};
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
                 //console.log(element.parentNode.nodeName);
-                if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
-                    selection = parentNode.innerText;
-                }
+                //if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
+                    //selection = parentNode.innerText;
+                //}
                 let baseNode = parentNode.parentNode,
                 partOne = document.createTextNode(selection),
                 containerOne = document.createElement(parentNode.nodeName),
@@ -7229,7 +7249,26 @@ MediumEditor.extensions = {};
                 MediumEditor.util.copyAttributes(containerTwo, parentNode, !selection && afterSelection ? [] : ['id']);
                 //console.log(element.parentNode);
                 //return false;
-                let partTwo;
+                let partTwo = document.createElement('br');
+                let allChildNodes = Array.from(parentNode.childNodes),
+                currentIndex = allChildNodes.indexOf(element),
+                startIndex = currentIndex + 1,
+                noTextElement = null;
+                if (element.nodeType === 3) {
+                    while (startIndex < allChildNodes.length && !noTextElement) {
+                        if (allChildNodes[startIndex].nodeType === 3) {
+                            afterSelection+= allChildNodes[startIndex].data;
+                            allChildNodes[startIndex] = null;
+                        } else {
+                            noTextElement = allChildNodes[startIndex];
+                        }
+                        ++startIndex;
+                    }
+                    allChildNodes = allChildNodes.filter(childNode => {
+                        return childNode !== null;
+                    });
+                    currentIndex = allChildNodes.indexOf(element);
+                }
                 if (['LI'].indexOf(parentNode.nodeName) !== -1) {
                     partTwo = document.createElement('li');
                 } else if (['P', 'DIV'].indexOf(parentNode.nodeName) === -1) {
@@ -7239,9 +7278,7 @@ MediumEditor.extensions = {};
                         partTwo = document.createTextNode('\n');
                     }
                 }
-                let allChildNodes = Array.from(parentNode.childNodes),
-                currentIndex = allChildNodes.indexOf(element),
-                lastNode = null;
+                let lastNode = null;
                 for (let i = allChildNodes.length - 1; i > currentIndex; --i) {
                     let currentNode = allChildNodes[i];
                     if (!lastNode) {
@@ -7308,6 +7345,10 @@ MediumEditor.extensions = {};
                     //console.log(partTwo, nextSibling);
                     if ((!nextSibling || nextSibling.nodeType === 3) && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling && parentNode.nodeName !== 'U') {
                         nextSibling = partTwo.parentNode.nextSibling;
+                    }
+                    // ILM-6475: click at the end of the block after superscript with suggestion
+                    if (!nextSibling && partTwo.parentNode && partTwo.parentNode.nodeName === 'SG' && partTwo.parentNode.parentNode && partTwo.parentNode.parentNode.nodeName === 'SUP') {
+                        nextSibling = partTwo.parentNode.parentNode.nextSibling;
                     }
                     let moveTo;
                     if (nextSibling) {

@@ -523,7 +523,8 @@ import Vue from 'vue'
 import moment from 'moment'
 import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
-          SuggestButton, SuggestPreview, MediumEditor
+          SuggestButton, SuggestPreview, MediumEditor,
+          formatSup, formatSub, SuperScriptButton, SubScriptButton
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
@@ -1588,21 +1589,42 @@ Save or discard your changes to continue editing`,
             if (footnote) {
               let extensions = {};
               let toolbar = {buttons: []};
+              let keyboardCommands = false;
               if (this.allowEditing) {
                 extensions = {
-                    'quoteButton': new QuoteButton(),
-                    'quotePreview': new QuotePreview(),
-                    'suggestButton': new SuggestButton(),
-                    'suggestPreview': new SuggestPreview()
-                  };
+                  'quoteButton': new QuoteButton(),
+                  'quotePreview': new QuotePreview(),
+                  'suggestButton': new SuggestButton(),
+                  'suggestPreview': new SuggestPreview(),
+                  'superScriptButton': new SuperScriptButton(),
+                  'subScriptButton': new SubScriptButton()
+                };
                 toolbar = {
-                    buttons: [
-                      'bold', 'italic', 'underline',
-                      'superscript', 'subscript',
-                      'unorderedlist',
-                      'quoteButton', 'suggestButton'
-                    ]
-                  };
+                  buttons: [
+                    'bold', 'italic', 'underline',
+                    'superScriptButton', 'subScriptButton',
+                    'unorderedlist',
+                    'quoteButton', 'suggestButton'
+                  ]
+                };
+                keyboardCommands = {
+                  commands : [
+                    {
+                      command: formatSup,
+                      key: '.',
+                      meta: true,
+                      shift: false,
+                      alt: false
+                    },
+                    {
+                      command: formatSub,
+                      key: ',',
+                      meta: true,
+                      shift: false,
+                      alt: false
+                    },
+                  ]
+                };
               };
               toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
               this.editorFootnRtl = new MediumEditor(`[id="${this.block.blockid}"] .-langftn-fa.content-wrap-footn, [id="${this.block.blockid}"] .-langftn-ar.content-wrap-footn` , {
@@ -1614,7 +1636,8 @@ Save or discard your changes to continue editing`,
                   suggestEl: this.suggestEl,
                   extensions: extensions,
                   disableEditing: !this.allowEditing || this.editingLocked,
-                  imageDragging: false
+                  imageDragging: false,
+                  keyboardCommands: keyboardCommands
               });
             }
           }
@@ -1626,22 +1649,43 @@ Save or discard your changes to continue editing`,
             if (footnote) {
               let extensions = {};
               let toolbar = {buttons: []};
+              let keyboardCommands = false;
               if (this.allowEditing) {
                 extensions = {
-                    'quoteButton': new QuoteButton(),
-                    'quotePreview': new QuotePreview(),
-                    'suggestButton': new SuggestButton(),
-                    'suggestPreview': new SuggestPreview()
+                  'quoteButton': new QuoteButton(),
+                  'quotePreview': new QuotePreview(),
+                  'suggestButton': new SuggestButton(),
+                  'suggestPreview': new SuggestPreview(),
+                  'superScriptButton': new SuperScriptButton(),
+                  'subScriptButton': new SubScriptButton()
                   };
                 toolbar = {
-                    buttons: [
-                      'bold', 'italic', 'underline',
-                      'superscript', 'subscript',
-                      'unorderedlist',
-                      'quoteButton', 'suggestButton'
-                    ]
-                  };
-              }
+                  buttons: [
+                    'bold', 'italic', 'underline',
+                    'superScriptButton', 'subScriptButton',
+                    'unorderedlist',
+                    'quoteButton', 'suggestButton'
+                  ]
+                };
+                keyboardCommands = {
+                  commands : [
+                    {
+                      command: formatSup,
+                      key: '.',
+                      meta: true,
+                      shift: false,
+                      alt: false
+                    },
+                    {
+                      command: formatSub,
+                      key: ',',
+                      meta: true,
+                      shift: false,
+                      alt: false
+                    },
+                  ]
+                };
+              };
               toolbar.relativeContainer = document.getElementById('s-'+this.block.blockid);
               this.editorFootnLtr = new MediumEditor(`[id="${this.block.blockid}"] :not(.-langftn-fa):not(.-langftn-ar).content-wrap-footn` , {
                   toolbar: toolbar,
@@ -1652,10 +1696,11 @@ Save or discard your changes to continue editing`,
                   suggestEl: this.suggestEl,
                   extensions: extensions,
                   disableEditing: !this.allowEditing || this.editingLocked,
-                  imageDragging: false
+                  imageDragging: false,
+                  keyboardCommands: keyboardCommands
               });
             }
-          }
+        }
 
         } else {
           if (this.editorFootnLtr) {
@@ -2828,6 +2873,22 @@ Save text changes and realign the Block?`,
         if (!this.range) return false;
         let container = this.range.commonAncestorContainer;
         if (typeof container.length == 'undefined') return false;
+
+        // check for <sup> and <sub>
+        const selection = document.getSelection();
+        let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+        if (!startParentNode) return false;
+        const startParentNodes = [startParentNode];
+        while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
+          startParentNode = startParentNode.parentNode;
+          startParentNodes.push(startParentNode);
+        }
+        const checkStartTagNode = startParentNodes.find((node)=>(
+             node.nodeName.toLowerCase() === 'sup'
+          || node.nodeName.toLowerCase() === 'sub'
+        ));
+        if (checkStartTagNode) return false;
+
         if (this.range.endOffset >= container.length) return true;
         let checkRange = document.createRange();
         //console.log(container, container.length, this.range.endOffset);
@@ -5531,7 +5592,7 @@ Save text changes and realign the Block?`,
         /*cursor: pointer*/
       }
 
-      w:not([data-map]), w.alignment-changed {
+      w:not([data-map]):not([data-sugg=""]), w.alignment-changed {
         background: linear-gradient(
             transparent,
             transparent 30%,
@@ -5539,6 +5600,10 @@ Save text changes and realign the Block?`,
             transparent 80%,
             transparent
         );
+      }
+
+      sup w:not([data-map]):not([data-sugg]) {
+        background: inherit;
       }
 
       [data-idx], [data-pg] {
@@ -5982,6 +6047,14 @@ div.-content.editing  div.content-wrap {
       font-weight: bolder;
       left: -80px;
       top: -0.4em;
+    }
+  }
+}
+.medium-editor-toolbar {
+  button.medium-editor-button-disable, button.medium-editor-button-disable:hover {
+    background-color: #346a3f;
+    .fa {
+      color: gray;
     }
   }
 }

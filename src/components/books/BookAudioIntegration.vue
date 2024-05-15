@@ -1704,7 +1704,7 @@
             }
           }*/
           &.done {
-            .audiofile-name .filename {
+            .audiofile-name .filename, .audiofile-duration {
               opacity: 0.5;
             }
           }

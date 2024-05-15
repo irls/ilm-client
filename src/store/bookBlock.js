@@ -444,7 +444,8 @@ class BookBlock {
       .replace(/(<w[^>]+)(selected)/g, '$1')
       .replace(/(<w[^>]+)(audio-highlight)/g, '$1')
       .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/gi, '') // remove suggestions without text
-      .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/gi, ''); // remove quotes without text
+      .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/gi, '') // remove quotes without text
+      .replace(/(\u200B)/gi, ''); // remove &ZeroWidthSpace; after superscript
     return _.pick(this, defBlock); //<(qq*)\s*[^\/>]*>\s*<\/\1>
   }
 
@@ -1053,7 +1054,7 @@ class BookBlock {
   setPauseBefore(val) {
     this.pause_before = val;
   }
-  
+
   setPauseAfter(val) {
     this.pause_after = val;
   }
@@ -1293,7 +1294,7 @@ class BookBlock {
     }
     return isFound || (foundContent ? true : false);
   }
-  
+
   // when changes are not saved, content can not be wrapped with <w></w> yet
   prepareUnsavedContent(content) {
     if (content && !/<w[^>]*>/.test(content)) {
@@ -1316,23 +1317,23 @@ class BookBlock {
       }
     }
   }
-  
+
   getModeAudiosrc(partIdx, mode, config = {}) {
     return this.getPartAudiosrc(partIdx, this.getModeAudiosrcVer(partIdx, mode, config));
   }
-  
+
   getModeAudiosrcVer(partIdx, mode, config = {}) {
-    
+
     let ver = '';
     if (this.audiosrc_config && this.audiosrc_config[partIdx] && this.audiosrc_config[partIdx][mode]) {
       ver = this.audiosrc_config[partIdx][mode];
     } else if (config && config[mode]) {
       ver = config[mode];
     }
-    
+
     return ver;
   }
-  
+
   setAudiosrcConfig(partIdx, mode, value, config = {}) {
     if (!this.audiosrc_config[partIdx]) {
       this.audiosrc_config[partIdx] = {};
@@ -1345,11 +1346,11 @@ class BookBlock {
       this.audiosrc_config[partIdx][mode] = value;
     }
   }
-  
+
   resetAudiosrcConfig() {
     this.audiosrc_config = {};
   }
-  
+
   getPartRecordingPauses(partIdx) {
     if (
       !(
