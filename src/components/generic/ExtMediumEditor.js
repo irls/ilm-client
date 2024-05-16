@@ -42,7 +42,7 @@ const QuoteButton = MediumEditor.Extension.extend({
   isAlreadyApplied: function (node) {
     if (this.quoteForm) this.destroy();
     //-- A trick to keep right selection for Mozilla -- { --//
-    if (window.getSelection && !window.getSelection().extentNode) {
+    if (window.getSelection && !window.getSelection().focusNode) {
       this.base.saveSelection();
       this.base.restoreSelection();
     }
@@ -581,7 +581,7 @@ const SuggestButton = MediumEditor.Extension.extend({
   isAlreadyApplied: function (node) {
     if (this.suggestForm) this.destroy();
     //-- A trick to keep right selection for Mozilla -- { --//
-    if (window.getSelection && !window.getSelection().extentNode) {
+    if (window.getSelection && !window.getSelection().focusNode) {
       this.base.saveSelection();
       this.base.restoreSelection();
     }
@@ -928,8 +928,8 @@ const applyCustomTag = function (nodeName = 'sup') {
 
   if (isBackward) {
     const _range = new Range();
-    _range.setStart(selection.extentNode, selection.extentOffset);
-    _range.setEnd(selection.baseNode, selection.baseOffset);
+    _range.setStart(selection.focusNode, selection.extentOffset);
+    _range.setEnd(selection.anchorNode, selection.baseOffset);
     document.getSelection().removeAllRanges();
     document.getSelection().addRange(_range);
     selection = document.getSelection();
@@ -940,7 +940,7 @@ const applyCustomTag = function (nodeName = 'sup') {
 
   const startParentNodeOffset = selection.baseOffset;
 
-  let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+  let startParentNode = selection.anchorNode; // sel.baseNode === sel.anchorNode
   const startParentNodes = [startParentNode];
   while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
     startParentNode = startParentNode.parentNode;
@@ -952,7 +952,7 @@ const applyCustomTag = function (nodeName = 'sup') {
 
   const endParentNodeOffset = selection.extentOffset;
 
-  let endParentNode = selection.extentNode; // sel.extentNode === sel.focusNode
+  let endParentNode = selection.focusNode; // sel.extentNode === sel.focusNode
   const endParentNodes = [endParentNode];
   while (endParentNode.parentNode && endParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
     endParentNode = endParentNode.parentNode;
@@ -992,7 +992,7 @@ const applyCustomTag = function (nodeName = 'sup') {
       const startTagNode = startParentNodes.find((node)=>node.nodeName.toLowerCase() === nodeName);
       let range = new Range();
       range.setStart(startTagNode, 0);
-      range.setEnd(selection.extentNode, endParentNodeOffset);
+      range.setEnd(selection.focusNode, endParentNodeOffset);
       const docFragment = range.cloneContents();
 
       const newNode = document.createElement(nodeName);
@@ -1094,7 +1094,7 @@ const applyCustomTag = function (nodeName = 'sup') {
 
       if (endTagNode) {
         const endTagRange = new Range();
-        endTagRange.setStart(selection.extentNode, selection.extentOffset);
+        endTagRange.setStart(selection.focusNode, selection.extentOffset);
         endTagRange.setEnd(endTagNode, endTagNode.childNodes.length);
 
         docFragment = endTagRange.cloneContents();
@@ -1115,7 +1115,7 @@ const applyCustomTag = function (nodeName = 'sup') {
       if (startTagNode) {
         const startTagRange = new Range();
         startTagRange.setStart(startTagNode, 0);
-        startTagRange.setEnd(selection.baseNode, selection.baseOffset);
+        startTagRange.setEnd(selection.anchorNode, selection.baseOffset);
 
         docFragment = startTagRange.cloneContents();
 
