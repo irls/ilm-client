@@ -1,8 +1,13 @@
 'use strict';
 
+import { ArabicString } from "arabic-utils";
+
 const bookFilterDelim = '/';
 
 const cleanDiacritics = (str) => {
+  str = ArabicString(str).removeDiacritics();
+  str = ArabicString(str).removeTatweel();
+  str = ArabicString(str).normalizeAlef();
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 };
 

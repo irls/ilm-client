@@ -1143,17 +1143,22 @@ class BookBlock {
     const filterContent = function(contentArr, searchStrArr, isFullPhrase = true) {
       //console.log(`contentArr: `, contentArr);
       //console.log(`searchStrArr: `, searchStrArr);
+
       let found = [];
       if (isFullPhrase) {
         let wordIdx = 0;
+        const prepareWord = searchStrArr[0] // different letters - similar words look
+        .replace(/(\u064A|\u06CC)+/ig, '[\u064A\u06CC]') // (1610; Arabic letter Ya | 1740; Arabic Letter Farsi Yeh)
+        .replace(/(\u0643|\u06A9)+/ig, '[\u0643\u06A9]'); // (1603; Arabic letter Kaf | 1705; Arabic letter Keheh)
+        const wordRedExp = new RegExp(prepareWord);
         const firstSeWoLen = searchStrArr[0].length;
         while (wordIdx < contentArr.length) {
           const content = contentArr[wordIdx];
-          //console.log(`content: `, content[1]);
-          const indexOfStart = content[1].indexOf(searchStrArr[0]);
-          //console.log(`indexOfStart: `, indexOfStart, searchStrArr[0], content[1]);
+          let hasWord = wordRedExp.test(prepareForFilter(content[1]));
 
-          if (indexOfStart > -1) {
+          //console.log(`hasWord: `, hasWord, searchStrArr[0], content[1]);
+
+          if (hasWord) {
             if (searchStrArr.length == 1) {
               found.push(content);
               wordIdx++;
