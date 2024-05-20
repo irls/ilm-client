@@ -3076,7 +3076,7 @@ export default {
         } while(parent);
         let child = node.nodeName === '#text' ? node.nextSibling : false; // try opposite direction
         do {
-          child = child === false ? node.firstChild : child.firstChild;
+          child = child === false ? child.firstChild : child;
           if (child && child.localName == tag) {
             return child;
           }
