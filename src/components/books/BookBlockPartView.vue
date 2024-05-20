@@ -3075,7 +3075,7 @@ export default {
           if (child && child.localName == tag) {
             return child;
           }
-          child = child.firstChild;
+          child = child.nodeName === '#text' ? child.nextSibling : child.firstChild;
         } while(child);
         return null;
       },
