@@ -3074,7 +3074,8 @@ export default {
             return parent;
           }
         } while(parent);
-        let child = node.nodeName === '#text' ? node.nextSibling : false; // try opposite direction to find W element
+        let child = node.nodeName === '#text' ? node.nextSibling : false; // try opposite direction
+        do {
           if (child && child.localName == tag) {
             return child;
           }
