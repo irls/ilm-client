@@ -4,6 +4,13 @@ import { ArabicString } from "arabic-utils";
 
 const bookFilterDelim = '/';
 
+const prepareRegexpForArFaLetters = (str) => {
+  const result = str // different letters - similar words look
+    .replace(/(\u064A|\u06CC)+/ig, '[\u064A\u06CC]') // (1610; Arabic letter Ya | 1740; Arabic Letter Farsi Yeh)
+    .replace(/(\u0643|\u06A9)+/ig, '[\u0643\u06A9]'); // (1603; Arabic letter Kaf | 1705; Arabic letter Keheh)
+  return result;
+};
+
 const cleanDiacritics = (str) => {
   str = ArabicString(str).removeDiacritics();
   str = ArabicString(str).removeTatweel();
@@ -114,6 +121,7 @@ const splitPrepareForFilter = (str, isWithSpace = false) => {
 }
 
 export {
+  prepareRegexpForArFaLetters,
   prepareForFilter,
   cleanDiacritics,
   replaceSpecials,

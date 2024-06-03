@@ -1,7 +1,11 @@
 const _ = require('lodash');
 const _id = require('uniqid');
 const moment = require('moment');
-import { prepareForFilter, replaceParsing } from '@src/filters/search.js';
+import {
+  prepareForFilter,
+  replaceParsing,
+  prepareRegexpForArFaLetters
+} from '@src/filters/search.js';
 import superlogin from 'superlogin-client';
 import Vue from 'vue';
 
@@ -1147,9 +1151,7 @@ class BookBlock {
       let found = [];
       if (isFullPhrase) {
         let wordIdx = 0;
-        const prepareWord = searchStrArr[0] // different letters - similar words look
-        .replace(/(\u064A|\u06CC)+/ig, '[\u064A\u06CC]') // (1610; Arabic letter Ya | 1740; Arabic Letter Farsi Yeh)
-        .replace(/(\u0643|\u06A9)+/ig, '[\u0643\u06A9]'); // (1603; Arabic letter Kaf | 1705; Arabic letter Keheh)
+        const prepareWord = prepareRegexpForArFaLetters(searchStrArr[0]);
         const wordRedExp = new RegExp(prepareWord);
         const firstSeWoLen = searchStrArr[0].length;
         while (wordIdx < contentArr.length) {

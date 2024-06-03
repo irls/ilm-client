@@ -1,7 +1,9 @@
 import {
   prepareForFilter,
   cleanDiacritics,
-  splitPrepareForFilter }  from '@src/filters/search.js';
+  splitPrepareForFilter,
+  prepareRegexpForArFaLetters
+}  from '@src/filters/search.js';
 import { Languages }       from "@src/mixins/lang_config.js"
 
 export default {
@@ -183,7 +185,11 @@ export default {
           ];
           const str = prepareForFilter(strParts.join(' '));
           const find = splitPrepareForFilter(state.booksFilters.filter);
-          return find.every((fString)=>str.indexOf(fString) >= 0);
+          return find.every((fString)=>{
+            const prepareWord = prepareRegexpForArFaLetters(fString);
+            const wordRedExp = new RegExp(prepareWord);
+            return wordRedExp.test(str);
+          });
         })
         .filter(book => {
          const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
