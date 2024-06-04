@@ -22,6 +22,7 @@ import gridFilters from './modules/gridFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
+import publishModule from './modules/publish';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -87,7 +88,8 @@ export const store = new Vuex.Store({
     audioExport,
     tocSections,
     ttsModule,
-    genreModule
+    genreModule,
+    publishModule
   },
   state: {
     SelectionModalProgress:0,
@@ -1399,6 +1401,16 @@ export const store = new Vuex.Store({
           state.pauseLiveDBBlocks.splice(index, 1);
         }, 500);// server's timeout for update
       }
+    },
+    set_publicationErrors(state, [update_blocks = []]) {
+      this.commit('publishModule/set_publicationErrors', [update_blocks]);
+    },
+    block_removed(state, [block]) {
+      if (state.allPublicationErrors && state.allPublicationErrors.blocks) {
+        state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(blk => {
+          return blk.blockid !== block.blockid;
+        });
+      }
     }
   },
 
@@ -1794,6 +1806,17 @@ export const store = new Vuex.Store({
         dispatch('startBookWatch', params.bookId)
         commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: null});
         commit('SET_CURRENTBOOK_COUNTER', {name: 'enabled_blocks', value: null});
+        state.storeListO.setLookupsList(params.bookId, response.data);
+        if (response.data.blocks && response.data.blocks.length > 0) {
+          response.data.blocks.forEach(el => {
+            if (!state.storeList.has(el._id)) {
+              commit('set_storeList', new BookBlock(el));
+            } else {
+              //this.parlistO.setLoaded(el.rid);
+            }
+          });
+        }
+        commit('set_publicationErrors', []);
         return response.data;
       })
       .catch(err => err)
@@ -2561,6 +2584,7 @@ export const store = new Vuex.Store({
             if (typeof cleanBlock.type !== 'undefined' && state.blockSelection && state.blockSelection.start && state.blockSelection.start._id) {// changed type of the block
               dispatch('set_selected_blocks');
             }
+            commit('set_publicationErrors', [[response.data]]);
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -4068,6 +4092,14 @@ export const store = new Vuex.Store({
           }
           return dispatch('getBookAlign')
             .then(() => {
+              if (response.data && response.data.blocks) {
+                if (response.data.blocks.donorBlock) {
+                  commit('block_removed', [response.data.blocks.donorBlock]);
+                }
+                if (response.data.blocks.updatedBlock) {
+                  commit('set_publicationErrors', [[response.data.blocks.updatedBlock]]);
+                }
+              }
               return dispatch('checkResponse', response);
             });
         })
@@ -4102,6 +4134,7 @@ export const store = new Vuex.Store({
             }
           }
           //dispatch('recountVoicedBlocks');
+          commit('block_removed', [block]);
           return dispatch('checkResponse', response);
         })
         .catch(err => {
@@ -4197,6 +4230,7 @@ export const store = new Vuex.Store({
             state.suspiciousWordsHighlight.setSuspiciousHighlight(response.data);
           }
           commit('set_storeList', new BookBlock(response.data));
+          commit('set_publicationErrors', [[response.data]]);
           state.storeListO.refresh();
           return Promise.all([
             dispatch('getBookAlign'),
@@ -4772,6 +4806,7 @@ export const store = new Vuex.Store({
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
+          commit('set_publicationErrors', [[response.data]]);
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -4925,6 +4960,7 @@ export const store = new Vuex.Store({
                   dispatch('tc_loadBookTask', state.currentBookid);
                 }
                 dispatch('getBookAlign');
+                commit('set_publicationErrors', [blocks]);
               }
               return resolve(true);
             });
@@ -5118,6 +5154,7 @@ export const store = new Vuex.Store({
       commit('pause_liveDBBlock', [blockid, currentBlockO.id]);
       return axios.post(`${state.API_URL}books/${state.currentBookid}/blocks/${blockid}/split_to_blocks`, update)
         .then(response => {
+          commit('set_publicationErrors', [[response.data]]);
           dispatch('checkInsertedBlocks', [currentOut, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out])
             .then(numUpdated => {
 
@@ -5171,6 +5208,7 @@ export const store = new Vuex.Store({
           state.storeListO.refresh();
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
+          commit('set_publicationErrors', [[response.data]]);
           return Promise.resolve();
         })
         .catch(err => {
@@ -5206,6 +5244,7 @@ export const store = new Vuex.Store({
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
           dispatch('setBlocksDisabled/getDisabledBlocks');
+          commit('set_publicationErrors', [[response.data]]);
           return Promise.resolve();
         })
         .catch(err => {
@@ -5222,6 +5261,7 @@ export const store = new Vuex.Store({
           commit('set_storeList', new BookBlock(response.data));
           dispatch('getCurrentJobInfo');
           dispatch('tc_loadBookTask', state.currentBookid);
+          commit('set_publicationErrors', [[response.data]]);
           return Promise.resolve(response.data);
         })
         .catch(err => {
