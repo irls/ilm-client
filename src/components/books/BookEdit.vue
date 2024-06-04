@@ -2253,16 +2253,6 @@ export default {
         //console.log('getAllBlocks', metaId, startBlock);
         return this.$store.dispatch('loadBookBlocks', {bookId: metaId})
         .then((res)=>{
-          this.parlistO.setLookupsList(metaId, res);
-          if (res.blocks && res.blocks.length > 0) {
-            res.blocks.forEach((el, idx, arr)=>{
-              if (!this.parlist.has(el._id)) {
-                this.$store.commit('set_storeList', new BookBlock(el));
-              } else {
-                //this.parlistO.setLoaded(el.rid);
-              }
-            });
-          }
           return res;
         });
       },

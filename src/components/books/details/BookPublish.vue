@@ -29,14 +29,19 @@
         </template>
       </div>
       <div v-if="allowPublishCurrentBook && currentBookMeta.job_status !== 'archived'" style="margin-top: 10px;">
-        <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
-        <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
-          Publish
-        </button>
-        <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
-          Publish
-        </button>
-        <span v-if="isPublishing" class="align-preloader -small"></span>
+        <template v-if="!preValidateHTMLProgress">
+          <button disabled class="btn btn-primary" v-if="isPublishingQueue">Already in queue</button>
+          <button class="btn btn-primary" v-on:click="checkPublish()" v-if="!isPublishingQueue && !isPublishing && publishButtonStatus">
+            Publish
+          </button>
+          <button disabled="disabled" class="btn btn-primary" v-else-if="!isPublishingQueue && !isPublishing && !publishButtonStatus">
+            Publish
+          </button>
+          <span v-if="isPublishing" class="align-preloader -small"></span>
+        </template>
+        <template v-else>
+          <span class="align-preloader -small"></span>
+        </template>
       </div>
     </section>
 
@@ -95,7 +100,8 @@
         publicationStatus: false,
         isPublishing: false,
         isPublishingQueue: false,
-        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        txt_months : ["Jan", "Feb", "Mar", "Apr", "May", "Jun",  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        preValidateHTMLProgress: false
       }
     },
     mixins: [api_config, access],
@@ -292,34 +298,56 @@
         }
       },
       publish() {
-        return axios.post(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish')
-          .then(resp => {
-            if (resp.status == 200 && resp.data.ok) {
-              this.currentBookMeta.isInTheQueueOfPublication = true;
-              this.currentBookMeta.publication_errors = {};
+        return this.checkPublicationErrors()
+          .then(response => {
+            if (response) {
+              this.publishBook(this.currentBookMeta.bookid);
             }
           });
       },
       checkCollectionPublish(ev) {
         if (this.currentBookMeta) {
           if (!this.currentBookMeta.isInTheQueueOfPublication) {
-            this.checkPublish(()=>{
-              return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/add_in_collection_publish')
-              .then(resp => {
-                if (resp.status == 200 && resp.data.ok) {
-                  this.currentBookMeta.isInTheQueueOfPublication = true;
-                  }
+            return this.checkPublicationErrors()
+            .then(response => {
+              if (response) {
+                return this.checkPublish(()=>{
+                  return this.publishCollectionBook()
+                    .then(() => {
+                      //if
+                    });
                 });
-            });
-          } else {
-            return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/rem_from_collection_publish')
-            .then(resp => {
-              if (resp.status == 200 && resp.data.ok) {
-                this.currentBookMeta.isInTheQueueOfPublication = false;
               }
             });
+          } else {
+            return this.publishCollectionBook();
           }
         }
+      },
+      checkPublicationErrors() {
+        this.preValidateHTMLProgress = true;
+        return this.checkBlocksHTMLErrors()
+          .then(response => {
+            let publicationErrorsCount = this.currentBookMeta.publication_errors && this.currentBookMeta.publication_errors.blocks ? this.currentBookMeta.publication_errors.blocks.length : 0;
+            this.preValidateHTMLProgress = false;
+            if (this.allPublicationErrors.blocks.length > publicationErrorsCount) {
+              this.$root.$emit('show-modal', {
+                title: `Publication error`,
+                text: `Fix HTML error(s) before publishing`,
+                buttons: [
+                  {
+                    title: `Ok`,
+                    handler: () => {
+                      this.$root.$emit('hide-modal');
+                    },
+                    class: 'btn btn-primary'
+                  }
+                ]
+              });
+              return false;
+            }
+            return true;
+        });
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
@@ -394,7 +422,8 @@
           }
         }
       },
-      ...mapActions('setBlocksDisabled', ['getDisabledBlocks'])
+      ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
+      ...mapActions('publishModule', ['publishBook', 'checkBlocksHTMLErrors', 'publishCollectionBook', 'reReadPublicationErrors'])
     },
     computed: {
       publishDate: {
@@ -475,15 +504,13 @@
       publicationErrors: {
         get() {
           let errors = [];
-          if (this.currentBookMeta.publication_errors) {
-            if (Array.isArray(this.currentBookMeta.publication_errors.blocks) && this.currentBookMeta.publication_errors.blocks.length > 0) {
-              errors = this.currentBookMeta.publication_errors.blocks;
-            } else if (this.currentBookMeta.publication_errors.book && this.currentBookMeta.publication_errors.book.message) {
-              errors.push({
-                message: this.currentBookMeta.publication_errors.book.message,
-                info: this.currentBookMeta.publication_errors.book.info
-              });
-            }
+          if (this.allPublicationErrors.blocks.length > 0) {
+            errors = this.allPublicationErrors.blocks;
+          } else if (this.allPublicationErrors.book.message) {
+            errors.push({
+              message: this.allPublicationErrors.book.message,
+              info: this.allPublicationErrors.book.info
+            });
           }
           return errors;
         },
@@ -491,12 +518,13 @@
       },
       showPublicationErrors: {
         get() {
-          return this.adminOrLibrarian && this.publicationErrorsCount > 0;
+          return this.adminOrLibrarian && this.publicationErrorsCount > 0 && !this.currentBookMeta.isInTheQueueOfPublication && !this.currentBookMeta.isInTheProcessOfPublication;
         },
         cache: false
       },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
-      ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery'])
+      ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery']),
+      ...mapGetters('publishModule', ['allPublicationErrors'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
@@ -525,8 +553,11 @@
       },
       'currentBookMeta.isIntheProcessOfPublication': {
         handler(val) {
-          console.log(val)
+          //console.log(val)
           this.isPublishing = !!val;
+          if (!val) {
+            this.reReadPublicationErrors([]);
+          }
         }
       },
       'currentBookMeta.isInTheQueueOfPublication': {
