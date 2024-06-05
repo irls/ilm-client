@@ -71,7 +71,7 @@
     </section>
     <div class="publish-html-validation" v-if="showPublicationErrors" v-bind:key="'errors' + currentBookMeta.bookid">
       <Accordion ref="publicationErrorsAccordion" v-on:tab-open="publicationErrorTabOpen">
-        <AccordionTab :header="'Publication errors (' + publicationErrorsCount + ')'">
+        <AccordionTab :header="'HTML validation error(s) (' + publicationErrorsCount + ')'">
           <div v-for="publication_error in publicationErrors" class="publication-error">
             <div class="publication-error-blockid" v-if="publication_error.blockid">
               <a v-on:click="goToBlock(publication_error.blockid)">{{ shortId(publication_error.blockid) }}</a>
