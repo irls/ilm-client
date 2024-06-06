@@ -20,12 +20,16 @@ export default {
         updated_blocks.forEach(updated_block => {
           updated_blockids.push(updated_block.blockid);
         });
-        state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(block => {
-          return !updated_blockids.includes(block.blockid);
+        updated_blocks.filter(updated_block => {
+          return !updated_block.html_errors || updated_block.html_errors.length === 0;
+        }).forEach(updated_block => {
+          state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(block => {
+            return block.blockid !== updated_block.blockid;
+          });
         });
       }
       if (this.getters.currentBookMeta) {
-        if (this.getters.currentBookMeta.publication_errors && (this.getters.currentBookMeta.publication_errors.book || this.getters.currentBookMeta.publication_errors.blocks)) {
+        if (this.getters.currentBookMeta.publication_errors && (this.getters.currentBookMeta.publication_errors.book || this.getters.currentBookMeta.publication_errors.blocks) && (!updated_blocks || updated_blocks.length === 0)) {
           state.allPublicationErrors = lodash.cloneDeep(this.getters.currentBookMeta.publication_errors);
         }
         let check_blocks = [];
@@ -42,14 +46,22 @@ export default {
           return !block.disabled;
         }).forEach(block => {
           if (block.html_errors) {
-            block.html_errors.forEach(html_error => {
+            lodash.cloneDeep(block.html_errors).forEach(html_error => {
               if (html_error.hasOwnProperty('footnoteIdx')) {
                 html_error.message = `fn ${html_error.footnoteIdx + 1} ${html_error.message}`;
               }
               if (html_error.hasOwnProperty('partIdx')) {
                 html_error.message = `sb ${html_error.partIdx + 1} ${html_error.message}`;
               }
-              state.allPublicationErrors.blocks.push(Object.assign(html_error, {blockid: block.blockid}));
+              let error_data = Object.assign(html_error, {blockid: block.blockid});
+              let errorIndex = state.allPublicationErrors.blocks.findIndex(blk => {
+                return blk.blockid === error_data.blockid && blk.footnoteIdx === html_error.footnoteIdx && blk.partIdx === html_error.partIdx;
+              });
+              if (errorIndex >= 0) {
+                state.allPublicationErrors.blocks[errorIndex] = error_data;
+              } else {
+                state.allPublicationErrors.blocks.push(error_data);
+              }
             });
           }
         });
