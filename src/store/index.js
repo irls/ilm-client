@@ -1406,11 +1406,7 @@ export const store = new Vuex.Store({
       this.commit('publishModule/set_publicationErrors', [update_blocks]);
     },
     block_removed(state, [block]) {
-      if (state.allPublicationErrors && state.allPublicationErrors.blocks) {
-        state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(blk => {
-          return blk.blockid !== block.blockid;
-        });
-      }
+      this.commit('publishModule/block_removed', block);
     }
   },
 
