@@ -1133,15 +1133,16 @@ class BookBlock {
     this.cleanFindMarks();
 
     const reduceSearchArr = function(content, searchStrArr) {
-      let tmpSearchStr = searchStrArr.shift();
-      const indexOfStart = content[1].indexOf(tmpSearchStr);
+      let tmpSearchStr = prepareRegexpForArFaLetters(searchStrArr.shift());
+      let tmpContentStr = prepareRegexpForArFaLetters(content[1]);
+      const indexOfStart = tmpContentStr.indexOf(tmpSearchStr);
 
 
-      while(content[1].indexOf(tmpSearchStr) >-1 && indexOfStart + tmpSearchStr.length < content[1].length && searchStrArr.length) {
+      while(tmpContentStr.indexOf(tmpSearchStr) >-1 && indexOfStart + tmpSearchStr.length < tmpContentStr.length && searchStrArr.length) {
         tmpSearchStr += searchStrArr.shift();
       }
 
-      return content[1].indexOf(tmpSearchStr) > -1 && (indexOfStart + tmpSearchStr.length == content[1].length || searchStrArr.length == 0);
+      return tmpContentStr.indexOf(tmpSearchStr) > -1 && (indexOfStart + tmpSearchStr.length == tmpContentStr.length || searchStrArr.length == 0);
 
     }
 
@@ -1201,7 +1202,9 @@ class BookBlock {
       } else {
         found = contentArr.filter((content)=>{
           let isFound = false;
-          if (content[1].indexOf(searchStrArr[0]) > -1) {
+          const prepareWord = prepareRegexpForArFaLetters(searchStrArr[0]);
+          const wordRedExp = new RegExp(prepareWord);
+          if (wordRedExp.test(content[1])) {
             isFound = true;
           }
           return isFound;
