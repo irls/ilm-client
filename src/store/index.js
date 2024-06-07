@@ -1972,6 +1972,7 @@ export const store = new Vuex.Store({
                 }
                 dispatch('getCurrentJobInfo');
               }
+              commit('publishModule/set_publicationErrors', []);
             }
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
