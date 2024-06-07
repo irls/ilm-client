@@ -66,6 +66,13 @@ export default {
           }
         });
       }
+    },
+    block_removed(state, block) {
+      if (state.allPublicationErrors && state.allPublicationErrors.blocks) {
+        state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(blk => {
+          return blk.blockid !== block.blockid;
+        });
+      }
     }
   },
   actions: {
