@@ -4087,10 +4087,14 @@ export const store = new Vuex.Store({
           if (!state.currentJobInfo.text_cleanup) {
             dispatch('tc_loadBookTask', state.currentBookid);
           }
-          return dispatch('getBookAlign')
+          return Promise.all([
+            dispatch('getBookAlign'),
+            dispatch('setBlocksDisabled/getDisabledBlocks')
+          ])
             .then(() => {
               if (response.data && response.data.blocks) {
-                if (response.data.blocks.donorBlock) {
+                if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
+                  state.storeListO.delExistsBlock(response.data.blocks.donorBlock.id);
                   commit('block_removed', [response.data.blocks.donorBlock]);
                 }
                 if (response.data.blocks.updatedBlock) {
