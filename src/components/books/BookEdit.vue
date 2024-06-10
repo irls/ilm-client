@@ -1147,14 +1147,10 @@ export default {
       })
         .then((response)=>{
           this.clearBlockLock({block: blockBefore, force: true});
-          this.getDisabledBlocks();
 
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-            }
-            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
             }
           }
 
@@ -1204,14 +1200,10 @@ export default {
       })
         .then((response)=>{
           this.clearBlockLock({block: block, force: true});
-          this.getDisabledBlocks();
 
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-            }
-            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
             }
           }
 
