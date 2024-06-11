@@ -4095,6 +4095,7 @@ export const store = new Vuex.Store({
               if (response.data && response.data.blocks) {
                 if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
                   state.storeListO.delExistsBlock(response.data.blocks.donorBlock.id);
+                  state.storeList.delete(response.data.blocks.donorBlock.blockid);
                   commit('block_removed', [response.data.blocks.donorBlock]);
                 }
                 if (response.data.blocks.updatedBlock) {
