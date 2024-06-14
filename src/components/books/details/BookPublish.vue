@@ -108,202 +108,202 @@
     components: {BlocksDisable, Accordion, AccordionTab},
     methods: {
       checkPublish(successCallback = null) {
-        this.$emit('checkPublish');
-
-        let title = '';
-        let text = '';
-        let buttons = [];
-        let popUpReady = false;
-        let defaultCategory = ['story', 'Stories']; // means there is no category assigned
-
-
-        let canPublish = true;
-        let mandatoryFields = [];
-
-        //Book meta is incomplete. Define Title, Author, Title EN (title English translation), Author EN (author English translation) Category, and URL Slug before publishing
-
-        //console.log('meta', this.currentBookMeta);
-
-        if (this.currentBookMeta.title == ''){
-            canPublish = false;
-            mandatoryFields.push('Title');
-        }
-
-        if (this.currentBookMeta.author.join("").length == 0){
-            canPublish = false;
-            mandatoryFields.push('Author');
-        }
-
-        if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
-            canPublish = false;
-            mandatoryFields.push('Title EN (title English translation)');
-        }
-
-        if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
-            canPublish = false;
-            mandatoryFields.push('Author EN (author English translation)');
-        }
-
-        const alt_meta = this.currentBookMeta.alt_meta;
-        let checkCategory = (
-          alt_meta.reader
-          && alt_meta.reader.category
-          && alt_meta.reader.category.trim().length
-          && !defaultCategory.includes(alt_meta.reader.category)
-        );
-        checkCategory = checkCategory || (
-          alt_meta.ocean
-          && alt_meta.ocean.category
-          && alt_meta.ocean.category.trim().length
-          && !defaultCategory.includes(alt_meta.ocean.category)
-        );
-        checkCategory = checkCategory || (
-          this.currentBookMeta.collection_id
-          && this.currentBookMeta.collection_id.length
-        ); // override by collection
-        if(!checkCategory) {
-            canPublish = false;
-            mandatoryFields.push('Category');
-        }
-
-        if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
-            canPublish = false;
-            mandatoryFields.push('URL slug');
-        }
-
-        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
-          canPublish = false;
-          mandatoryFields.push('difficulty');
-        }
-        if ( this.currentBookMeta.difficulty !='' && parseFloat(this.currentBookMeta.difficulty) < 1){
-          canPublish = false;
-          mandatoryFields.push('difficulty');
-        }
-        if( this.currentBookMeta.difficulty && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
-          canPublish = false;
-          mandatoryFields.push('difficulty');
-        }
-        let hasGenres = !this.isBookReaderCategory || (Array.isArray(this.currentBookMeta.genres) && this.currentBookMeta.genres.length > 0);
-        if (!hasGenres) {
-          canPublish = false;
-        }
-
-
-        if(!canPublish){
-          title = 'Publication error';
-          let errorText = '';
-          if (mandatoryFields.length > 0) {
-            errorText+= `${mandatoryFields.join(", ")}`;
-            if (!hasGenres) {
-              errorText+= ` and Genres`;
-            }
-          } else if (!hasGenres) {
-            errorText+= ` Genres`;
-          }
-          text = 'Book meta is incomplete. Define ' + errorText + ' before publishing';
-
-          buttons = [
-              {
-                  title: 'Ok',
-                  handler: () => {
-                      this.$root.$emit('hide-modal');
-                  },
-                  class: 'btn btn-primary'
-              },
-          ];
-          popUpReady = true;
-
-        }
-
-        if(!popUpReady) {
-          let count = 0;
-          if (this.currentJobInfo.tasks_counter && Array.isArray(this.currentJobInfo.tasks_counter)) {
-              this.currentJobInfo.tasks_counter.forEach(tc => {
-                  if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
-                      tc.data.tasks.forEach(t => {
-                          count+= t.count ? parseInt(t.count) : 0;
-                      });
-                  }
-              });
-          }
-          let byAudioQuality = Array.from(this.storeList).reduce((acc, block) => {
-            if (block[1] && block[1].audio_quality) {
-              if (!acc[block[1].audio_quality]) {
-                acc[block[1].audio_quality] = 0;
-              }
-              ++acc[block[1].audio_quality];
-            }
-            return acc;
-          }, {});
-          let quality_count = Object.keys(byAudioQuality).length;
-          if (count === 0 && quality_count < 2) {
-              title = 'Publish the Book?';
-          } else {
-              if (count > 0) {
-                title = 'The Book has incomplete Tasks.';
-              }
-              if (quality_count > 1) {
-                title+= `<br><br>Audio quality varying: `;
-                Object.keys(byAudioQuality).forEach(q => {
-                  title+= ` ${byAudioQuality[q]} `;
-                  switch (q) {
-                    case 'raw':
-                      title+= 'Raw,';
-                      break;
-                    case 'improved':
-                      title+= 'Refined,';
-                      break;
-                    case 'mastered':
-                      title+= 'Mastered,';
-                      break;
-                  }
-                });
-                title = title.replace(/,$/, '') + ' Blocks';
-              }
-              title+= `<br><br> Publish anyway?`;
-          }
-          buttons = [
-              {
-                  title: 'Cancel',
-                  handler: () => {
-                      this.$root.$emit('hide-modal');
-                  },
-              },
-              {
-                  title: 'Publish',
-                  handler: () => {
-                      this.$root.$emit('hide-modal');
-                      if (successCallback) {
-                        successCallback();
-                      }
-                      else {
-                        this.publish();
-                      }
-                  },
-                  'class': 'btn btn-primary'
-              }
-          ];
-          popUpReady = true;
-
-        }
-
-        if(popUpReady){
-            this.$root.$emit('show-modal', {
-                title: title,
-                text: text,
-                buttons: buttons,
-                class: ['align-modal']
-            });
-
-        }
-      },
-      publish() {
         return this.checkPublicationErrors()
           .then(response => {
             if (response) {
-              this.publishBook(this.currentBookMeta.bookid);
-            }
-          });
+              this.$emit('checkPublish');
+
+              let title = '';
+              let text = '';
+              let buttons = [];
+              let popUpReady = false;
+              let defaultCategory = ['story', 'Stories']; // means there is no category assigned
+
+
+              let canPublish = true;
+              let mandatoryFields = [];
+
+              //Book meta is incomplete. Define Title, Author, Title EN (title English translation), Author EN (author English translation) Category, and URL Slug before publishing
+
+              //console.log('meta', this.currentBookMeta);
+
+              if (this.currentBookMeta.title == ''){
+                  canPublish = false;
+                  mandatoryFields.push('Title');
+              }
+
+              if (this.currentBookMeta.author.join("").length == 0){
+                  canPublish = false;
+                  mandatoryFields.push('Author');
+              }
+
+              if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
+                  canPublish = false;
+                  mandatoryFields.push('Title EN (title English translation)');
+              }
+
+              if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
+                  canPublish = false;
+                  mandatoryFields.push('Author EN (author English translation)');
+              }
+
+              const alt_meta = this.currentBookMeta.alt_meta;
+              let checkCategory = (
+                alt_meta.reader
+                && alt_meta.reader.category
+                && alt_meta.reader.category.trim().length
+                && !defaultCategory.includes(alt_meta.reader.category)
+              );
+              checkCategory = checkCategory || (
+                alt_meta.ocean
+                && alt_meta.ocean.category
+                && alt_meta.ocean.category.trim().length
+                && !defaultCategory.includes(alt_meta.ocean.category)
+              );
+              checkCategory = checkCategory || (
+                this.currentBookMeta.collection_id
+                && this.currentBookMeta.collection_id.length
+              ); // override by collection
+              if(!checkCategory) {
+                  canPublish = false;
+                  mandatoryFields.push('Category');
+              }
+
+              if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
+                  canPublish = false;
+                  mandatoryFields.push('URL slug');
+              }
+
+              if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
+                canPublish = false;
+                mandatoryFields.push('difficulty');
+              }
+              if ( this.currentBookMeta.difficulty !='' && parseFloat(this.currentBookMeta.difficulty) < 1){
+                canPublish = false;
+                mandatoryFields.push('difficulty');
+              }
+              if( this.currentBookMeta.difficulty && isNaN(parseFloat(this.currentBookMeta.difficulty)) ){
+                canPublish = false;
+                mandatoryFields.push('difficulty');
+              }
+              let hasGenres = !this.isBookReaderCategory || (Array.isArray(this.currentBookMeta.genres) && this.currentBookMeta.genres.length > 0);
+              if (!hasGenres) {
+                canPublish = false;
+              }
+
+
+              if(!canPublish){
+                title = 'Publication error';
+                let errorText = '';
+                if (mandatoryFields.length > 0) {
+                  errorText+= `${mandatoryFields.join(", ")}`;
+                  if (!hasGenres) {
+                    errorText+= ` and Genres`;
+                  }
+                } else if (!hasGenres) {
+                  errorText+= ` Genres`;
+                }
+                text = 'Book meta is incomplete. Define ' + errorText + ' before publishing';
+
+                buttons = [
+                    {
+                        title: 'Ok',
+                        handler: () => {
+                            this.$root.$emit('hide-modal');
+                        },
+                        class: 'btn btn-primary'
+                    },
+                ];
+                popUpReady = true;
+
+              }
+
+              if(!popUpReady) {
+                let count = 0;
+                if (this.currentJobInfo.tasks_counter && Array.isArray(this.currentJobInfo.tasks_counter)) {
+                    this.currentJobInfo.tasks_counter.forEach(tc => {
+                        if (tc && tc.data && tc.data.tasks && Array.isArray(tc.data.tasks)) {
+                            tc.data.tasks.forEach(t => {
+                                count+= t.count ? parseInt(t.count) : 0;
+                            });
+                        }
+                    });
+                }
+                let byAudioQuality = Array.from(this.storeList).reduce((acc, block) => {
+                  if (block[1] && block[1].audio_quality) {
+                    if (!acc[block[1].audio_quality]) {
+                      acc[block[1].audio_quality] = 0;
+                    }
+                    ++acc[block[1].audio_quality];
+                  }
+                  return acc;
+                }, {});
+                let quality_count = Object.keys(byAudioQuality).length;
+                if (count === 0 && quality_count < 2) {
+                    title = 'Publish the Book?';
+                } else {
+                    if (count > 0) {
+                      title = 'The Book has incomplete Tasks.';
+                    }
+                    if (quality_count > 1) {
+                      title+= `<br><br>Audio quality varying: `;
+                      Object.keys(byAudioQuality).forEach(q => {
+                        title+= ` ${byAudioQuality[q]} `;
+                        switch (q) {
+                          case 'raw':
+                            title+= 'Raw,';
+                            break;
+                          case 'improved':
+                            title+= 'Refined,';
+                            break;
+                          case 'mastered':
+                            title+= 'Mastered,';
+                            break;
+                        }
+                      });
+                      title = title.replace(/,$/, '') + ' Blocks';
+                    }
+                    title+= `<br><br> Publish anyway?`;
+                }
+                buttons = [
+                    {
+                        title: 'Cancel',
+                        handler: () => {
+                            this.$root.$emit('hide-modal');
+                        },
+                    },
+                    {
+                        title: 'Publish',
+                        handler: () => {
+                            this.$root.$emit('hide-modal');
+                            if (successCallback) {
+                              successCallback();
+                            }
+                            else {
+                              this.publish();
+                            }
+                        },
+                        'class': 'btn btn-primary'
+                    }
+                ];
+                popUpReady = true;
+
+              }
+
+              if(popUpReady){
+                  this.$root.$emit('show-modal', {
+                      title: title,
+                      text: text,
+                      buttons: buttons,
+                      class: ['align-modal']
+                  });
+
+              }
+          }
+        });
+      },
+      publish() {
+        this.publishBook(this.currentBookMeta.bookid);
       },
       checkCollectionPublish(ev) {
         if (this.currentBookMeta) {
