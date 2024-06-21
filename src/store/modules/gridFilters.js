@@ -228,7 +228,11 @@ export default {
               ];
               const str = prepareForFilter(strParts.join(' '));
               const find = splitPrepareForFilter(state.collectionsFilters.filter);
-              return find.every((fString)=>str.indexOf(fString) >= 0);
+              return find.every((fString)=>{
+                const prepareWord = prepareRegexpForArFaLetters(fString);
+                const wordRedExp = new RegExp(prepareWord);
+                return wordRedExp.test(str);
+              });
             })
             /*.filter(coll => { [Vue warn]: You may have an infinite update loop in a component render function.
               if (state.booksFilters.filter.length > 0) {
@@ -270,12 +274,20 @@ export default {
           ];
           const str = prepareForFilter(strParts.join(' '));
           const find = splitPrepareForFilter(state.booksFilters.filter);
-          return find.every((fString)=>str.indexOf(fString) >= 0);
+          return find.every((fString)=>{
+            const prepareWord = prepareRegexpForArFaLetters(fString);
+            const wordRedExp = new RegExp(prepareWord);
+            return wordRedExp.test(str);
+          });
         })
         .filter(book => {
           const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
           const find = splitPrepareForFilter(state.booksFilters.secFilter);
-          return find.every((fString)=>str.indexOf(fString) >= 0);
+          return find.every((fString)=>{
+            const prepareWord = prepareRegexpForArFaLetters(fString);
+            const wordRedExp = new RegExp(prepareWord);
+            return wordRedExp.test(str);
+          });
         })
       return filteredbooks;
     }
