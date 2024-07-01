@@ -24,9 +24,9 @@ export default {
           return !updated_block.html_errors || updated_block.html_errors.length === 0;
         }).forEach(updated_block => {
           state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(block_error => {
-            let hasBookError = (this.getters.currentBookMeta.publication_errors && this.getters.currentBookMeta.publication_errors.blocks.find(book_error => {
+            let hasBookError = (this.getters.currentBookMeta.publication_errors && this.getters.currentBookMeta.publication_errors.blocks && this.getters.currentBookMeta.publication_errors.blocks.find(book_error => {
               return block_error.blockid === book_error.blockid && block_error.message === book_error.message;
-            }))
+            }));
             return block_error.blockid !== updated_block.blockid || hasBookError;
           });
         });
