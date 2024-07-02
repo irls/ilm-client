@@ -257,7 +257,10 @@
                 html (val) {
                   const title = val.title.length ? val.title : val.bookid;
                   // data-tooltip="${title}"
-                  return `<span><i class='ico ico-collection'></i>&nbsp;&nbsp;${title}</span>`
+                  if (val.audioBlocksCount > 0) {
+                    return `<span><i class='ico ico-book-collection-audio'></i>&nbsp;&nbsp;${title}</span`
+                  }
+                  return `<span><i class='ico ico-book-collection'></i>&nbsp;&nbsp;${title}</span>`
                 }
               },
               {
