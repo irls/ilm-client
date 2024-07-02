@@ -45,9 +45,9 @@ export default {
             return blk[1];
           });
         }
-        check_blocks.filter(block => {
+        check_blocks./*filter(block => {
           return !block.disabled;
-        }).forEach(block => {
+        }).*/forEach(block => {
           if (block.html_errors) {
             lodash.cloneDeep(block.html_errors).forEach(html_error => {
               if (html_error.hasOwnProperty('footnoteIdx')) {
@@ -68,6 +68,15 @@ export default {
             });
           }
         });
+        if (this.getters['setBlocksDisabled/disabledBlocks'].blocks.length > 0) {
+          let disabledBlockids = [];
+          this.getters['setBlocksDisabled/disabledBlocks'].blocks.forEach(block => {
+            disabledBlockids.push(block.blockid);
+          });
+          state.allPublicationErrors.blocks = state.allPublicationErrors.blocks.filter(block => {
+            return !disabledBlockids.includes(block.blockid);
+          });
+        }
       }
     },
     block_removed(state, block) {
