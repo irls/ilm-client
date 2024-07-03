@@ -173,16 +173,17 @@ export default {
   },
 
   mounted () {
-    let loadBooks = new Promise((resolve, reject) => {
-      if (this.allBooks.length === 0) {
-        return this.updateBooksList()
-          .then(() => {
-            return resolve();
-          })
-      } else {
-        return resolve();
-      }
-    });
+    // let loadBooks = new Promise((resolve, reject) => {
+    //   if (this.allBooks.length === 0) {
+    //     return this.updateBooksList()
+    //       .then(() => {
+    //         return resolve();
+    //       })
+    //   } else {
+    //     return resolve();
+    //   }
+    // });
+    const loadBooks = Promise.resolve();
     return loadBooks
     .then(()=>{
       Vue.nextTick(()=>{
