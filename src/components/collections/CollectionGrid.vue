@@ -136,7 +136,7 @@
             && data.from != data.to) {
           }
         },
-        ...mapActions(['updateBooksList'])
+        ...mapActions([])
       },
       mounted() {
         if (this.$route && this.$route.params) {
