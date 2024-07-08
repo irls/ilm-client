@@ -382,6 +382,7 @@ class BookBlock {
       this.tts_voice_wpm = this.tts_voice_data.wpm;
     }*/
     this.audiocatalog_map = init.audiocatalog_map || {};
+    this.html_errors = init.html_errors || {};
   }
 
   clean() {
