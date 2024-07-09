@@ -89,7 +89,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary', 'tc_loadBookTask']),
+    ...mapActions(['loadBook', 'loadCollection', 'loadLibrary', 'tc_loadBookTask']),
     onPreloaderToggle(state, type) {
       if (state) {
         this.preloader = true;

@@ -596,7 +596,83 @@ i.ico {
     margin-top: -6px;
     display: inline-block;
     &:before {
-      content: url('/static/books_list/books-24.ico');
+      content: url('/static/books_list/collection.png');
+      margin-left: -5px;
+      position: relative;
+      top: 5px;
+      right: -2px;
+      opacity: 0.8;
+    }
+    &:hover {
+      &:before {
+        opacity: 1.0;
+      }
+    }
+  }
+
+  &.ico-book-single {
+    margin-right: -2px;
+    margin-top: -6px;
+    display: inline-block;
+    &:before {
+      content: url('/static/books_list/book_single.png');
+      margin-left: -5px;
+      position: relative;
+      top: 5px;
+      right: -2px;
+      opacity: 0.8;
+    }
+    &:hover {
+      &:before {
+        opacity: 1.0;
+      }
+    }
+  }
+
+  &.ico-book-collection {
+    margin-right: -2px;
+    margin-top: -6px;
+    display: inline-block;
+    &:before {
+      content: url('/static/books_list/book_collection.png');
+      margin-left: -5px;
+      position: relative;
+      top: 5px;
+      right: -2px;
+      opacity: 0.8;
+    }
+    &:hover {
+      &:before {
+        opacity: 1.0;
+      }
+    }
+  }
+
+  &.ico-book-single-audio {
+    margin-right: -2px;
+    margin-top: -6px;
+    display: inline-block;
+    &:before {
+      content: url('/static/books_list/book_single_audio.png');
+      margin-left: -5px;
+      position: relative;
+      top: 5px;
+      right: -2px;
+      opacity: 0.8;
+    }
+    &:hover {
+      &:before {
+        opacity: 1.0;
+      }
+    }
+  }
+
+  &.ico-book-collection-audio {
+    margin-right: -2px;
+    margin-top: -6px;
+    display: inline-block;
+    &:before {
+      content: url('/static/books_list/book_collection_audio.png');
       margin-left: -5px;
       position: relative;
       top: 5px;
@@ -620,6 +696,12 @@ i.ico {
       position: relative;
       left: 6px;
     }
+  }
+}
+
+.collection-title {
+  i.ico-collection:before {
+    top: 6px;
   }
 }
 

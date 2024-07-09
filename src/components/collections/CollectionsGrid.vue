@@ -85,7 +85,7 @@
             this.selectedBooks = [selectedCollectionId];
           }
         },
-        ...mapActions(['updateBooksList'])
+        ...mapActions([])
       },
       mounted() {
         if (this.$route && this.$route.params) {
