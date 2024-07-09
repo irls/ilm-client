@@ -2895,7 +2895,7 @@ Save text changes and realign the Block?`,
 
         // check for <sup> and <sub>
         const selection = document.getSelection();
-        let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+        let startParentNode = selection.anchorNode; // sel.baseNode === sel.anchorNode
         if (!startParentNode) return false;
         const startParentNodes = [startParentNode];
         while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
@@ -3008,8 +3008,7 @@ Save text changes and realign the Block?`,
         return pos;
       },
       commitFootnote: function(pos, ev, field = null) {
-          if (this.proofreadModeReadOnly)
-              return;
+        if (this.proofreadModeReadOnly) return;
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
@@ -3030,6 +3029,14 @@ Save text changes and realign the Block?`,
           } else if (field === 'content' && !isPasteEvent && !isRedactor) {
             this.block.footnotes[pos][field] = ev.target.innerHTML;
           }
+        }
+
+        const _span = ev.target.querySelector('span[style]');
+        if (_span) {
+          const range = document.getSelection().getRangeAt(0);
+          const textNode = document.createTextNode(_span.textContent);
+          _span.replaceWith(textNode);
+          range.setStartAfter(textNode);
         }
       },
 

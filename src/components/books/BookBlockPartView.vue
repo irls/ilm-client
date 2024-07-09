@@ -2115,7 +2115,7 @@ export default {
 
         // check for <sup> and <sub>
         const selection = document.getSelection();
-        let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+        let startParentNode = selection.anchorNode; // sel.baseNode === sel.anchorNode
         if (!startParentNode) return false;
         const startParentNodes = [startParentNode];
         while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
