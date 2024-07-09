@@ -2022,13 +2022,15 @@ export default {
           this.player.loadBlock(this.block._id);
           let startElement = this._getParent(this.range.startContainer, 'w');
           let endElement = this._getParent(this.range.endContainer, 'w');
-          if (startElement !== endElement && !startElement.dataset.map) { //empty sugg in front of selection
-            let startRange = this._getClosestAligned(startElement, 1);
-            startElement = this.$refs.blockContent.querySelector(`[data-map="${startRange.join(',')}"]`)
-          }
-          if (startElement && startElement.dataset.map) {
-            this.isAudStarted = true;
-            this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
+          if (startElement) {
+            if (startElement !== endElement && !startElement.dataset.map) { //empty sugg in front of selection
+              let startRange = this._getClosestAligned(startElement, 1);
+              startElement = this.$refs.blockContent.querySelector(`[data-map="${startRange.join(',')}"]`)
+            }
+            if (startElement && startElement.dataset.map) {
+              this.isAudStarted = true;
+              this.player.playFromWordElement(startElement, 'content-'+this.block.blockid+'-part-'+this.blockPartIdx);
+            }
           }
         }
         this.$refs.blockCntx.close();
@@ -3072,6 +3074,15 @@ export default {
             return parent;
           }
         } while(parent);
+        let child = node.nodeName === '#text' ? node.nextSibling : false; // try opposite direction
+        do {
+          if (child && child.localName == tag) {
+            return child;
+          }
+          if (child) {
+            child = child.nodeName === '#text' ? child.nextSibling : child.firstChild;
+          }
+        } while(child);
         return null;
       },
       _getClosestAligned(node, direction) {
