@@ -1147,14 +1147,10 @@ export default {
       })
         .then((response)=>{
           this.clearBlockLock({block: blockBefore, force: true});
-          this.getDisabledBlocks();
 
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-            }
-            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
             }
           }
 
@@ -1204,14 +1200,10 @@ export default {
       })
         .then((response)=>{
           this.clearBlockLock({block: block, force: true});
-          this.getDisabledBlocks();
 
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
-            }
-            if (response.data.blocks.donorBlock && response.data.blocks.donorBlock.id) {
-              this.parlistO.delExistsBlock(response.data.blocks.donorBlock.id);
             }
           }
 
@@ -2253,16 +2245,6 @@ export default {
         //console.log('getAllBlocks', metaId, startBlock);
         return this.$store.dispatch('loadBookBlocks', {bookId: metaId})
         .then((res)=>{
-          this.parlistO.setLookupsList(metaId, res);
-          if (res.blocks && res.blocks.length > 0) {
-            res.blocks.forEach((el, idx, arr)=>{
-              if (!this.parlist.has(el._id)) {
-                this.$store.commit('set_storeList', new BookBlock(el));
-              } else {
-                //this.parlistO.setLoaded(el.rid);
-              }
-            });
-          }
           return res;
         });
       },

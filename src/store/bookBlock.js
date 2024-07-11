@@ -1,7 +1,11 @@
 const _ = require('lodash');
 const _id = require('uniqid');
 const moment = require('moment');
-import { prepareForFilter, replaceParsing } from '@src/filters/search.js';
+import {
+  prepareForFilter,
+  replaceParsing,
+  prepareRegexpForArFaLetters
+} from '@src/filters/search.js';
 import superlogin from 'superlogin-client';
 import Vue from 'vue';
 
@@ -382,6 +386,7 @@ class BookBlock {
       this.tts_voice_wpm = this.tts_voice_data.wpm;
     }*/
     this.audiocatalog_map = init.audiocatalog_map || {};
+    this.html_errors = init.html_errors || {};
   }
 
   clean() {
@@ -1128,32 +1133,36 @@ class BookBlock {
     this.cleanFindMarks();
 
     const reduceSearchArr = function(content, searchStrArr) {
-      let tmpSearchStr = searchStrArr.shift();
-      const indexOfStart = content[1].indexOf(tmpSearchStr);
+      let tmpSearchStr = prepareRegexpForArFaLetters(searchStrArr.shift());
+      let tmpContentStr = prepareRegexpForArFaLetters(content[1]);
+      const indexOfStart = tmpContentStr.indexOf(tmpSearchStr);
 
 
-      while(content[1].indexOf(tmpSearchStr) >-1 && indexOfStart + tmpSearchStr.length < content[1].length && searchStrArr.length) {
+      while(tmpContentStr.indexOf(tmpSearchStr) >-1 && indexOfStart + tmpSearchStr.length < tmpContentStr.length && searchStrArr.length) {
         tmpSearchStr += searchStrArr.shift();
       }
 
-      return content[1].indexOf(tmpSearchStr) > -1 && (indexOfStart + tmpSearchStr.length == content[1].length || searchStrArr.length == 0);
+      return tmpContentStr.indexOf(tmpSearchStr) > -1 && (indexOfStart + tmpSearchStr.length == tmpContentStr.length || searchStrArr.length == 0);
 
     }
 
     const filterContent = function(contentArr, searchStrArr, isFullPhrase = true) {
       //console.log(`contentArr: `, contentArr);
       //console.log(`searchStrArr: `, searchStrArr);
+
       let found = [];
       if (isFullPhrase) {
         let wordIdx = 0;
+        const prepareWord = prepareRegexpForArFaLetters(searchStrArr[0]);
+        const wordRedExp = new RegExp(prepareWord);
         const firstSeWoLen = searchStrArr[0].length;
         while (wordIdx < contentArr.length) {
           const content = contentArr[wordIdx];
-          //console.log(`content: `, content[1]);
-          const indexOfStart = content[1].indexOf(searchStrArr[0]);
-          //console.log(`indexOfStart: `, indexOfStart, searchStrArr[0], content[1]);
+          let hasWord = wordRedExp.test(prepareForFilter(content[1]));
 
-          if (indexOfStart > -1) {
+          //console.log(`hasWord: `, hasWord, searchStrArr[0], content[1]);
+
+          if (hasWord) {
             if (searchStrArr.length == 1) {
               found.push(content);
               wordIdx++;
@@ -1193,7 +1202,9 @@ class BookBlock {
       } else {
         found = contentArr.filter((content)=>{
           let isFound = false;
-          if (content[1].indexOf(searchStrArr[0]) > -1) {
+          const prepareWord = prepareRegexpForArFaLetters(searchStrArr[0]);
+          const wordRedExp = new RegExp(prepareWord);
+          if (wordRedExp.test(content[1])) {
             isFound = true;
           }
           return isFound;

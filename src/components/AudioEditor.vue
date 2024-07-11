@@ -3777,7 +3777,7 @@ Revert to original block audio?`,
           get() {
             return this.blockSelection.start && this.blockSelection.start._id &&
                     this.blockSelection.end && this.blockSelection.end._id &&
-                    this.alignCounter.count && this.allowAlignBlocksLimit;
+                    this.alignCounter.countAudio && this.allowAlignBlocksLimit;
           }
         },
         selectionBlocksToAlign: {

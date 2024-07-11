@@ -470,6 +470,9 @@
             </div>
             <div class="table-row controls-bottom" >
               <div class="controls-bottom-wrapper">
+                <div class="-left block-html-validate-error" v-if="htmlValidateError" title="HTML error(s)">
+                  <span></span>
+                </div>
                 <div class="-left" :class="{'-hidden': isHideArchFlags}">
                   <span v-if="showBlockFlag">
                     <i :class="['glyphicon', 'glyphicon-flag']"
@@ -1253,6 +1256,22 @@ Save or discard your changes to continue editing`,
         get() {
           return this.block && this.block.isAudioChanged;
         },
+        cache: false
+      },
+      htmlValidateError: {
+        get() {
+          if (this.mode !== 'narrate' && !this.block.disabled) {
+            if (this.block.html_errors && this.block.html_errors.length > 0) {
+              return true;
+            }
+            if (this.meta.publication_errors && Array.isArray(this.meta.publication_errors.blocks)) {
+              return this.meta.publication_errors.blocks.find(block => {
+                return block.blockid === this.block.blockid;
+              }) ? true : false;
+            }
+          }
+          return false;
+        }, 
         cache: false
       }
   },
@@ -2876,7 +2895,7 @@ Save text changes and realign the Block?`,
 
         // check for <sup> and <sub>
         const selection = document.getSelection();
-        let startParentNode = selection.baseNode; // sel.baseNode === sel.anchorNode
+        let startParentNode = selection.anchorNode; // sel.baseNode === sel.anchorNode
         if (!startParentNode) return false;
         const startParentNodes = [startParentNode];
         while (startParentNode.parentNode && startParentNode.parentNode.nodeName.toLowerCase() !== 'div') {
@@ -2989,8 +3008,7 @@ Save text changes and realign the Block?`,
         return pos;
       },
       commitFootnote: function(pos, ev, field = null) {
-          if (this.proofreadModeReadOnly)
-              return;
+        if (this.proofreadModeReadOnly) return;
         //this.block.footnotes[pos] = ev.target.innerText.trim();
         this.isChanged = true;
         this.pushChange(field === null ? 'footnotes' : 'footnotes_' + field);
@@ -3011,6 +3029,14 @@ Save text changes and realign the Block?`,
           } else if (field === 'content' && !isPasteEvent && !isRedactor) {
             this.block.footnotes[pos][field] = ev.target.innerHTML;
           }
+        }
+
+        const _span = ev.target.querySelector('span[style]');
+        if (_span) {
+          const range = document.getSelection().getRangeAt(0);
+          const textNode = document.createTextNode(_span.textContent);
+          _span.replaceWith(textNode);
+          range.setStartAfter(textNode);
         }
       },
 
@@ -5051,6 +5077,15 @@ Save text changes and realign the Block?`,
       .-control {
         padding-left: 10px;
 
+      }
+    }
+    .block-html-validate-error {
+      span {
+        background: url(/static/block-html-error.png);
+        background-size: 20px;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
       }
     }
 }

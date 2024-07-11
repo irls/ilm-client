@@ -68,6 +68,7 @@ export default {
         .then(response => {
           commit('setDisabledBlocks', response.data);
           state.disabledBlocksQuery = false;
+          commit('set_publicationErrors', [], {root: true});
           return Promise.resolve();
         })
         .catch(err => {
