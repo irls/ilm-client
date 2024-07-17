@@ -2103,6 +2103,12 @@ export const store = new Vuex.Store({
       return Promise.resolve();
     },
 
+    incrementBookMetaRecordVersion({state}) {
+      if (state.currentBookMeta) {
+        state.currentBookMeta['@version'] += 1;
+      }
+    },
+
     updateBookMeta({state, dispatch, commit}, update) {
       //console.log(`updateBookMeta.update: `, update);
 

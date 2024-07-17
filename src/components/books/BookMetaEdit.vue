@@ -111,9 +111,9 @@
                       <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
                     </div>
                     <template v-for="(author, i) in currentBook.author" >
-                      <input v-model='currentBook.author[i]' 
-                      v-on:keyup="debounceUpdate('author.'+i, $event.target.value, $event);" 
-                      v-on:keydown="debounceUpdate('author.'+i, $event.target.value, $event);" 
+                      <input v-model='currentBook.author[i]'
+                      v-on:keyup="debounceUpdate('author.'+i, $event.target.value, $event);"
+                      v-on:keydown="debounceUpdate('author.'+i, $event.target.value, $event);"
                       :disabled="!allowMetadataEdit"
                       v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                       <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
@@ -252,9 +252,9 @@
                 </tr>
               </table>
             </fieldset>
-          <Genre 
-            :allowMetadataEdit="allowMetadataEdit" 
-            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']" 
+          <Genre
+            :allowMetadataEdit="allowMetadataEdit"
+            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
             @genresUpdate="checkGenresErrors" />
           <fieldset class='description brief'>
             <legend>Book cover</legend>
@@ -1217,7 +1217,7 @@ export default {
         }
       }
     },
-    
+
     'currentBook.slug': {
       handler(val) {
         if (this.currentBook.slug) {
@@ -1330,7 +1330,7 @@ export default {
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
           this.requiredFields[this.currentBookMeta.bookid]['slug'] = true;
         }
-        
+
         if (this.isBookReaderCategory && (!Array.isArray(this.currentBookMeta.genres) || this.currentBookMeta.genres.length === 0)) {
           this.requiredFields[this.currentBookMeta.bookid]['genres'] = true;
         }
@@ -1527,6 +1527,7 @@ export default {
         }
       }
 
+      this.$store.dispatch('incrementBookMetaRecordVersion');
       this.$store.dispatch('abortRequest', 'metaUpdate');
 
       return true;
@@ -2433,7 +2434,7 @@ export default {
           break;
       }
     },
-    
+
     clearError(field, event) {
       if (this.requiredFields && this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][field]) {
         if (event && event.target && event.target.value) {
@@ -2442,7 +2443,7 @@ export default {
         }
       }
     },
-    
+
     checkGenresErrors() {
       if (this.requiredFields[this.currentBookMeta.bookid]) {
         delete this.requiredFields[this.currentBookMeta.bookid].genres;
