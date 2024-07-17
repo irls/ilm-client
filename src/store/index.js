@@ -2105,7 +2105,7 @@ export const store = new Vuex.Store({
 
     incrementBookMetaRecordVersion({state}) {
       if (state.currentBookMeta) {
-        state.currentBookMeta['@version'] += 1;
+        state.currentBookMeta['@version'] += 10;
       }
     },
 
