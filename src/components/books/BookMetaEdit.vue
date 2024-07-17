@@ -1527,7 +1527,7 @@ export default {
         }
       }
 
-      //this.$store.dispatch('incrementBookMetaRecordVersion');
+      this.$store.dispatch('incrementBookMetaRecordVersion');
       this.$store.dispatch('abortRequest', 'metaUpdate');
 
       return true;
