@@ -127,8 +127,6 @@ export const store = new Vuex.Store({
     currentBook: {},
     selectionModalActive:false,
     currentBookMeta: {},
-//     currentBook_dirty: false,
-//     currentBookMeta_dirty: false,
     currentEditingBlockId: '',
     currentBookFiles: { coverimg: false },
     currentBookBlocksLeft: 0,
@@ -2105,7 +2103,10 @@ export const store = new Vuex.Store({
 
     incrementBookMetaRecordVersion({state}) {
       if (state.currentBookMeta) {
-        state.currentBookMeta['@version'] += 10;
+        const bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==state.currentBookMeta.bookid);
+        if (bookMetaIdx > -1) {
+          state.books_meta[bookMetaIdx]['@version'] += 1;
+        }
       }
     },
 
