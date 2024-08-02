@@ -4,7 +4,12 @@ export default {
   namespaced: true,
   state: {
     aligningBooks: [],
-    aligningBlocks: []
+    aligningBlocks: [],
+    alignTTSVoicesData: {
+      match: '',
+      not_voiced: [],
+      total: []
+    }
   },
   getters: {
     aligningAudiofiles: state => {
@@ -17,6 +22,9 @@ export default {
         return acc.concat(block.audiocatalog_map ? Object.keys(block.audiocatalog_map) : []);
       }, []);
       return aligningInBooks.concat(aligningInBlocks);
+    },
+    alignTTSVoicesData: state => {
+      return state.alignTTSVoicesData;
     }
   },
   mutations: {
@@ -25,6 +33,17 @@ export default {
     },
     setAligningBlocks(state, blocks = []) {
       state.aligningBlocks = blocks;
+    },
+    setAlignTTSVoicesData(state, voicesData) {
+      if (voicesData && voicesData.hasOwnProperty('total')) {
+        state.alignTTSVoicesData = voicesData;
+      } else {
+        state.alignTTSVoicesData = {
+          match: '',
+          not_voiced: [],
+          total: []
+        };
+      }
     }
   },
   actions: {
@@ -67,20 +86,7 @@ export default {
     },
     alignTTS({rootState, dispatch}) {
       // if user is updating custom speed before align - wait for updates to be applied
-      let waitAudioSpeedUpdate = new Promise((resolve, reject) => {
-        if (!rootState.userActions.updatingAudioSpeed) {
-          return resolve();
-        }
-        let checks = 0;
-        let checkInterval = setInterval(() => {
-          if (!rootState.userActions.updatingAudioSpeed || checks >= 10) {
-            clearInterval(checkInterval);
-            return resolve();
-          }
-          ++checks;
-        }, 50);
-      });
-      return waitAudioSpeedUpdate
+      return dispatch('waitAudioSpeedUpdate')
         .then(() => {
           let wpm_settings = {};
           if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
@@ -129,6 +135,75 @@ export default {
           }
         }
       }
+    },
+    checkBlockTTSForPattern({state, dispatch, rootState, commit}) {
+      let blocksSelection = rootState.selectedBlocks;
+      if (blocksSelection.length === 1) {
+        return axios.get(`${rootState.API_URL}books/block/${encodeURIComponent(blocksSelection[0]._rid)}/check_voice_pattern`)
+          .then(response => {
+            //console.log(response);
+            commit('setAlignTTSVoicesData', response.data);
+          });
+      }
+    },
+    waitAudioSpeedUpdate({rootState}) {
+      let waitAudioSpeedUpdate = new Promise((resolve, reject) => {
+        if (!rootState.userActions.updatingAudioSpeed) {
+          return resolve();
+        }
+        let checks = 0;
+        let checkInterval = setInterval(() => {
+          if (!rootState.userActions.updatingAudioSpeed || checks >= 10) {
+            clearInterval(checkInterval);
+            return resolve();
+          }
+          ++checks;
+        }, 50);
+      });
+      return waitAudioSpeedUpdate;
+    },
+    alignTTSVoice({dispatch, state, rootState}, [type, voiceId]) {
+      if (type === "single") {
+        return dispatch("alignTTS");
+      }
+      return dispatch('waitAudioSpeedUpdate')
+        .then(() => {
+          let wpm_settings = {};
+          if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
+            wpm_settings = rootState.user.alignWpmSettings[rootState.currentBookid]['tts'];
+          }
+          let blocksIds = [];
+          switch (type) {
+            case "unvoiced":
+              state.alignTTSVoicesData.not_voiced.forEach(block => {
+                blocksIds.push(block.blockid);
+              });
+              break;
+            case "all":
+              state.alignTTSVoicesData.total.forEach(block => {
+                blocksIds.push(block.blockid);
+              });
+              break;
+          }
+          return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/tts_voice_alignment`, {
+            blockids: blocksIds,
+            voice_id: voiceId,
+            wpm_settings: wpm_settings
+          }, {
+            validateStatus: function (status) {
+              return status == 200 || status == 504;
+            }
+          })
+          .then((response) => {
+            dispatch('getBookAlign', {}, {root: true});
+            dispatch('setCurrentBookCounters', [], {root: true});
+            dispatch('resetSelectionAudiosrcConfig');
+            return Promise.resolve(response);
+          }).catch((err) => {
+            dispatch('getBookAlign', {}, {root: true});
+            return Promise.reject(err);
+          });
+        });
     }
   }
 }
