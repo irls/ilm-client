@@ -40,7 +40,7 @@ export default {
       if (voicesData && voicesData.hasOwnProperty('total')) {
         state.alignTTSVoicesData = voicesData;
       } else {
-        this.resetAlignTTSVoicesData();
+        this.commit('alignActions/resetAlignTTSVoicesData');
       }
     },
     resetAlignTTSVoicesData(state) {
