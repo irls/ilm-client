@@ -1,15 +1,17 @@
 import axios from 'axios';
 
+const defaultAlignTTSVoicesData = {
+  match: '',
+  not_voiced: [],
+  total: []
+};
+
 export default {
   namespaced: true,
   state: {
     aligningBooks: [],
     aligningBlocks: [],
-    alignTTSVoicesData: {
-      match: '',
-      not_voiced: [],
-      total: []
-    }
+    alignTTSVoicesData: defaultAlignTTSVoicesData
   },
   getters: {
     aligningAudiofiles: state => {
@@ -38,12 +40,11 @@ export default {
       if (voicesData && voicesData.hasOwnProperty('total')) {
         state.alignTTSVoicesData = voicesData;
       } else {
-        state.alignTTSVoicesData = {
-          match: '',
-          not_voiced: [],
-          total: []
-        };
+        this.resetAlignTTSVoicesData();
       }
+    },
+    resetAlignTTSVoicesData(state) {
+      state.alignTTSVoicesData = defaultAlignTTSVoicesData;
     }
   },
   actions: {
@@ -137,14 +138,17 @@ export default {
       }
     },
     checkBlockTTSForPattern({state, dispatch, rootState, commit}) {
+      commit('resetAlignTTSVoicesData');
       let blocksSelection = rootState.selectedBlocks;
       if (blocksSelection.length === 1) {
         return axios.get(`${rootState.API_URL}books/block/${encodeURIComponent(blocksSelection[0]._rid)}/check_voice_pattern`)
           .then(response => {
             //console.log(response);
             commit('setAlignTTSVoicesData', response.data);
+            return {};
           });
       }
+      return Promise.resolve({});
     },
     waitAudioSpeedUpdate({rootState}) {
       let waitAudioSpeedUpdate = new Promise((resolve, reject) => {
