@@ -955,7 +955,6 @@
           this.callUnsavedChangesPopup('tts', this.alignTts, [false]);
           return;
         }
-        this.$root.$emit('start-align');
         this.checkBlockTTSForPattern()
           .then(response => {
             if (this.alignTTSVoicesData.total.length > 1) {
@@ -968,6 +967,7 @@
                 }
               );
             } else {
+              this.$root.$emit('start-align');
               return this.alignTTS()
                 .then((response) => {
                 this.$root.$emit('stop-align');
@@ -1310,7 +1310,7 @@
         this.highlightedAudiofiles = highlightedAudiofiles;
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
+      ...mapActions(['setCurrentBookCounters', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
       ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment', 'checkBlockTTSForPattern'])
     },
     beforeDestroy() {
