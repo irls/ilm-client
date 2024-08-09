@@ -292,6 +292,7 @@
         //this.$root.$on('for-audioeditor:select', this.select);
         this.$root.$on('for-audioeditor:close', this.close);
         this.$root.$on('for-audioeditor:force-close', this.forceClose);
+        this.$root.$on('for-audioeditor:check-close-realigning-block', this.checkCloseRealigningBlock);
         this.$root.$on('start-align', () => {
           this.alignProcess = true;
         })
@@ -330,6 +331,7 @@
         }
         this.$root.$off('for-audioeditor:close', this.close);
         this.$root.$off('for-audioeditor:force-close', this.forceClose);
+        this.$root.$off('for-audioeditor:check-close-realigning-block', this.checkCloseRealigningBlock);
         this.$root.$off('for-audioeditor:load-and-play', this.load);
         this.$root.$off('for-audioeditor:load', this.setAudio);
         this.$root.$off('for-audioeditor:load-silent', this.setAudioSilent);
@@ -3656,6 +3658,25 @@ Revert to original block audio?`,
           this.displayRecordingPauses = !this.displayRecordingPauses;
           this.showRecordingPauses();
         },
+        checkCloseRealigningBlock(alignVoicework, realignVoiceType) {
+
+          let editingBlock = this.audioTasksQueueBlock();
+          if (editingBlock && editingBlock.voicework === alignVoicework) {
+            let alignBlk;
+            if (alignVoicework !== "tts" || !realignVoiceType) {
+              alignBlk = this.selectedBlocks.find(blk => {
+                return blk.blockid === editingBlock.blockid;
+              });
+            } else if (alignVoicework === "tts" && realignVoiceType) {
+              alignBlk = this.alignTTSVoiceBlockids(realignVoiceType).find(blockid => {
+                return blockid === editingBlock.blockid;
+              });
+            }
+            if (alignBlk) {
+              this.forceClose();
+            }
+          }
+        },
         ...mapActions(['addAudioTask', 'undoTasksQueue', 'setAudioTasksBlockId', 'loadSilenceSample']),
         ...mapActions('userActions', ['updateUser'])
 
@@ -3905,8 +3926,10 @@ Revert to original block audio?`,
           allowAlignBlocksLimit: 'allowAlignBlocksLimit',
           user: 'user',
           audioFadeConfig: 'audioFadeConfig',
-          selectedBlocksData: 'selectedBlocksData'
-        })
+          selectedBlocksData: 'selectedBlocksData',
+          selectedBlocks: 'selectedBlocks'
+        }),
+        ...mapGetters('alignActions', ['alignTTSVoicesData', 'alignTTSVoiceBlockids'])
       },
       watch: {
         'cursorPosition': {

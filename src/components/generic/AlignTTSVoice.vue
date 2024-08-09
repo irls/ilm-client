@@ -104,7 +104,7 @@
         }
         checkBlocks.forEach(block => {
           let storeBlock = this.storeList.get(block.blockid);
-          if (storeBlock.isChanged || storeBlock.isAudioChanged) {
+          if (storeBlock.isChanged) {
             modifiedBlocks.push(block.blockid);
           }
         });
@@ -136,6 +136,7 @@
         }
       },
       runAlign() {
+        this.$root.$emit('for-audioeditor:check-close-realigning-block', 'tts', this.alignType);
         return this.alignTTSVoice([this.alignType, this.selectedVoiceId])
           .then(response => {
             this.addingBlocks = false;
