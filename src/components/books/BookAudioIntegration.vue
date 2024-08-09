@@ -839,6 +839,7 @@
         Promise.all([update])
           .then((updated) => {
             this.$root.$emit('start-align');
+            this.$root.$emit('for-audioeditor:check-close-realigning-block', "audio_file");
             return this.alignBook({
               start: this.blockSelection.start._id,
               end: this.blockSelection.end._id,
@@ -968,6 +969,7 @@
               );
             } else {
               this.$root.$emit('start-align');
+              this.$root.$emit('for-audioeditor:check-close-realigning-block', 'tts');
               return this.alignTTS()
                 .then((response) => {
                 this.$root.$emit('stop-align');
@@ -1379,7 +1381,8 @@
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
         alignBlocksLimitMessage: 'alignBlocksLimitMessage',
-        selectedBlocksData: 'selectedBlocksData'
+        selectedBlocksData: 'selectedBlocksData',
+        selectedBlocks: 'selectedBlocks'
       }),
       ...mapGetters('alignActions', ['aligningAudiofiles', 'alignTTSVoicesData'])
     },

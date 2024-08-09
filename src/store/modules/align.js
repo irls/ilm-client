@@ -27,6 +27,22 @@ export default {
     },
     alignTTSVoicesData: state => {
       return state.alignTTSVoicesData;
+    },
+    alignTTSVoiceBlockids: state => (type) => {
+      let blocksIds = [];
+      switch (type) {
+        case "unvoiced":
+          state.alignTTSVoicesData.not_voiced.forEach(block => {
+            blocksIds.push(block.blockid);
+          });
+          break;
+        case "all":
+          state.alignTTSVoicesData.total.forEach(block => {
+            blocksIds.push(block.blockid);
+          });
+          break;
+      }
+      return blocksIds;
     }
   },
   mutations: {
@@ -166,7 +182,7 @@ export default {
       });
       return waitAudioSpeedUpdate;
     },
-    alignTTSVoice({dispatch, state, rootState}, [type, voiceId]) {
+    alignTTSVoice({dispatch, state, rootState, getters}, [type, voiceId]) {
       if (type === "single") {
         return dispatch("alignTTS");
       }
@@ -176,21 +192,8 @@ export default {
           if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
             wpm_settings = rootState.user.alignWpmSettings[rootState.currentBookid]['tts'];
           }
-          let blocksIds = [];
-          switch (type) {
-            case "unvoiced":
-              state.alignTTSVoicesData.not_voiced.forEach(block => {
-                blocksIds.push(block.blockid);
-              });
-              break;
-            case "all":
-              state.alignTTSVoicesData.total.forEach(block => {
-                blocksIds.push(block.blockid);
-              });
-              break;
-          }
           return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/tts_voice_alignment`, {
-            blockids: blocksIds,
+            blockids: getters.alignTTSVoiceBlockids(type),
             voice_id: voiceId,
             wpm_settings: wpm_settings
           }, {
