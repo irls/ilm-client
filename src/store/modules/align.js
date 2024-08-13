@@ -28,7 +28,7 @@ export default {
     alignTTSVoicesData: state => {
       return state.alignTTSVoicesData;
     },
-    alignTTSVoiceBlockids: state => (type) => {
+    alignTTSVoiceBlockids: (state, getters, rootState) => (type) => {
       let blocksIds = [];
       switch (type) {
         case "unvoiced":
@@ -40,6 +40,11 @@ export default {
           state.alignTTSVoicesData.total.forEach(block => {
             blocksIds.push(block.blockid);
           });
+          break;
+        case "single":
+          if (rootState.audioTasksQueue.block.blockId) {
+            blocksIds.push(rootState.audioTasksQueue.block.blockId);
+          }
           break;
       }
       return blocksIds;
