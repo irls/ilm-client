@@ -1494,13 +1494,19 @@ export default {
       for (let i = range.start; i <= range.end; i++) {
         const blockId = this.parlistO.idsArray()[i];
         const blockVirtRef = document.getElementById('v-' + blockId);
-        const elRect = this.checkVisible(blockVirtRef, viewHeight);
         if (i === 0 && this.modifiedBlockids.includes(blockId)) {// if block modified it not removed from view, need to show it
           let height = blockVirtRef.style.height;
           if (height === "0px") {
             blockVirtRef.style.removeProperty("height");
+            let blockFrontRef = document.getElementById(`s-${blockId}`);
+            if (blockO.blockid === this.startId || range.padFront === 0) {
+              if (blockFrontRef && blockFrontRef.classList.contains("hidden-by-scroll")) {
+                blockFrontRef.classList.remove("hidden-by-scroll");
+              }
+            }
           }
         }
+        const elRect = this.checkVisible(blockVirtRef, viewHeight);
 
         if (elRect.isVisible) {
           firstVisible = this.parlistO.get(this.parlistArray[i]._rid);
