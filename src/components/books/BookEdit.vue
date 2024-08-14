@@ -1499,11 +1499,13 @@ export default {
           if (height === "0px") {
             blockVirtRef.style.removeProperty("height");
             let blockFrontRef = document.getElementById(`s-${blockId}`);
-            if (blockO.blockid === this.startId || range.padFront === 0) {
-              if (blockFrontRef && blockFrontRef.classList.contains("hidden-by-scroll")) {
-                blockFrontRef.classList.remove("hidden-by-scroll");
+            Vue.nextTick(() => {
+              if (blockO.blockid === this.startId/* || range.padFront === 0*/) {
+                if (blockFrontRef && blockFrontRef.classList.contains("hidden-by-scroll")) {
+                  blockFrontRef.classList.remove("hidden-by-scroll");
+                }
               }
-            }
+            });
           }
         }
         const elRect = this.checkVisible(blockVirtRef, viewHeight);
