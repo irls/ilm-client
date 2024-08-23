@@ -2580,6 +2580,7 @@ export const store = new Vuex.Store({
             }
             if (typeof cleanBlock.type !== 'undefined' && state.blockSelection && state.blockSelection.start && state.blockSelection.start._id) {// changed type of the block
               dispatch('set_selected_blocks');
+              dispatch('getAlignCount');
             }
             commit('set_publicationErrors', [[response.data]]);
             return Promise.resolve(response.data);
