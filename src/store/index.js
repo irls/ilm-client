@@ -286,7 +286,8 @@ export const store = new Vuex.Store({
     },
     pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: [],// blocks with pending updates, shall be skipped from liveDB updates
-    selectionRecount: false
+    selectionRecount: false,
+    modifiedBlockids: []
   }, // end state
 
   getters: {
@@ -691,6 +692,9 @@ export const store = new Vuex.Store({
         }
       }
       return data;
+    },
+    modifiedBlockids: state => {
+      return state.modifiedBlockids;
     }
   },
 
@@ -1407,6 +1411,17 @@ export const store = new Vuex.Store({
     },
     block_removed(state, [block]) {
       this.commit('publishModule/block_removed', block);
+    },
+    add_modified_block(state, blockid) {
+      if (!state.modifiedBlockids.includes(blockid)) {
+        state.modifiedBlockids.push(blockid);
+      }
+    },
+    remove_modified_block(state, blockid) {
+      let blockidIndex = state.modifiedBlockids.indexOf(blockid);
+      if (blockidIndex !== -1) {
+        state.modifiedBlockids.splice(blockidIndex, 1);
+      }
     }
   },
 
@@ -3175,7 +3190,7 @@ export const store = new Vuex.Store({
         for (var idx=0; idx < state.storeList.size; idx++) {
           let block = state.storeList.get(crossId);
           if (block) {
-            if (block.isChanged || block.isAudioChanged) {
+            if (block.isChanged) {
               if ((block.voicework === 'audio_file' && data.voicework === 'audio_file') ||
                       (block.voicework === 'tts' && data.voicework === 'tts')) {
                 ids.push(block._id);
@@ -3251,7 +3266,7 @@ export const store = new Vuex.Store({
               }
             }
           }
-          if (block.isChanged || block.isAudioChanged) {
+          if (block.isChanged) {
             if (block.voicework === 'audio_file') {
               ++d.changed_in_range;
             }
@@ -3393,7 +3408,7 @@ export const store = new Vuex.Store({
                 }
               }
             }
-            if (block.isChanged || block.isAudioChanged) {
+            if (block.isChanged) {
               if (block.voicework === 'audio_file') {
                 ++changed_in_range;
               }

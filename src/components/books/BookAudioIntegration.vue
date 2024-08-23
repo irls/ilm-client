@@ -231,6 +231,8 @@
   import ReplaceAudio from './details/ReplaceAudio.vue';
   import AudioImport from '../audio/AudioImport';
   import ElevenLabsTTS from './details/ElevenLabsTTS.vue';
+  import AlignTTSVoice from '../generic/AlignTTSVoice.vue';
+  import UnsavedChangesPopup from '../generic/UnsavedChangesPopup.vue';
   //import AlignAudioSpeed from './details/AlignAudioSpeed.vue';
   var WaveformPlaylist = require('waveform-playlist');
   import draggable from 'vuedraggable';
@@ -826,50 +828,7 @@
         }
         if (warn >= 1 && this.currentBookCounters.changed_in_range_audio > 0) {
           this.$root.$emit('prepare-alignment');
-          this.$root.$emit('show-modal', {
-            title: 'Unsaved changes',
-            text: 'You have unsaved changes in selected block range.<br/>Save and align with audio?',
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  //this.cancelAlign();
-                },
-              },
-              {
-                title: 'Save&Align',
-                handler: () => {
-                    this.getChangedBlocks({voicework: 'audio_file'})
-                      .then(ids => {
-                        if (!Array.isArray(ids)) {
-                          return Promise.reject();
-                        }
-                        let wait = [];
-                        ids.forEach(blockid => {
-                          let promise = Promise.resolve();
-                          let evt = {};
-                          evt.waitUntil = p => promise = p
-                          this.$root.$emit(`save-block:${blockid}`, evt)
-                          wait.push(promise);
-                        })
-                        Promise.all(wait)
-                          .then(() => {
-                            this.$root.$emit('hide-modal');
-                            let i = setInterval(() => {
-                              if ($('.align-modal').length == 0) {
-                                clearInterval(i);
-                                this.align(id, false)
-                              }
-                            }, 50);
-                          });
-                      });
-                },
-                'class': 'btn btn-primary'
-              }
-            ],
-            class: ['align-modal']
-          });
+          this.callUnsavedChangesPopup('audio_file', this.align, [id, false]);
           return;
         }
         //this.alignmentProcess = true;
@@ -880,6 +839,7 @@
         Promise.all([update])
           .then((updated) => {
             this.$root.$emit('start-align');
+            this.$root.$emit('for-audioeditor:check-close-realigning-block', "audio_file");
             return this.alignBook({
               start: this.blockSelection.start._id,
               end: this.blockSelection.end._id,
@@ -899,6 +859,28 @@
               }
             });
           });
+      },
+      callUnsavedChangesPopup(voicework, callback, callbackParams) {
+        let callbackProps = {
+          saved: false
+        };
+        this.$modal.show(UnsavedChangesPopup, {
+            voicework: voicework,
+            callbackProps: callbackProps
+          },
+          {
+            height: 'auto',
+            width: '400px',
+            clickToClose: false
+          },
+          {
+            'closed': () => {
+              if (callbackProps.saved) {
+                callback.call(this, ...callbackParams);
+              }
+            }
+          }
+        );
       },
       checkAligningBlocks() {
         this.$root.$off('blockChange');
@@ -971,66 +953,38 @@
         }
         if (warn >= 1 && this.currentBookCounters.changed_in_range_tts > 0) {
           this.$root.$emit('prepare-alignment');
-          this.$root.$emit('show-modal', {
-            title: 'Unsaved changes',
-            text: 'You have unsaved changes in selected block range.<br/>Save and align with audio?',
-            buttons: [
-              {
-                title: 'Cancel',
-                handler: () => {
-                  this.$root.$emit('hide-modal');
-                  //this.cancelAlign();
-                },
-              },
-              {
-                title: 'Save&Align',
-                handler: () => {
-                    this.getChangedBlocks({voicework: 'tts'})
-                      .then(ids => {
-                        if (!Array.isArray(ids)) {
-                          return Promise.reject();
-                        }
-                        let wait = [];
-                        ids.forEach(blockid => {
-                          let promise = Promise.resolve();
-                          let evt = {};
-                          evt.waitUntil = p => promise = p
-                          this.$root.$emit(`save-block:${blockid}`, evt)
-                          wait.push(promise);
-                        })
-                        Promise.all(wait)
-                          .then(() => {
-                            this.$root.$emit('hide-modal');
-                            let i = setInterval(() => {
-                              if ($('.align-modal').length == 0) {
-                                clearInterval(i);
-                                this.alignTts(false)
-                              }
-                            }, 50);
-                          });
-                      });
-                },
-                'class': 'btn btn-primary'
-              }
-            ],
-            class: ['align-modal']
-          });
+          this.callUnsavedChangesPopup('tts', this.alignTts, [false]);
           return;
         }
-        this.$root.$emit('start-align');
-        return this.alignTTS()
-          .then((response) => {
-          this.$root.$emit('stop-align');
-          if (response.status===200) {
-            //this.$root.$emit('bookBlocksUpdates', response.data);
-            this.$emit('alignmentFinished');
-            //this.aligningBlocks = [];
-          } else if (response.status == 504) {
-            //self.checkAligningBlocks();
-          }
-        }).catch((err) => {
-          this.$root.$emit('stop-align');
-        });
+        this.checkBlockTTSForPattern()
+          .then(response => {
+            if (this.alignTTSVoicesData.total.length > 1) {
+              this.$modal.show(AlignTTSVoice,
+                {},
+                {
+                  height: 'auto',
+                  width: '400px',
+                  clickToClose: false
+                }
+              );
+            } else {
+              this.$root.$emit('start-align');
+              this.$root.$emit('for-audioeditor:check-close-realigning-block', 'tts');
+              return this.alignTTS()
+                .then((response) => {
+                this.$root.$emit('stop-align');
+                if (response.status===200) {
+                  //this.$root.$emit('bookBlocksUpdates', response.data);
+                  this.$emit('alignmentFinished');
+                  //this.aligningBlocks = [];
+                } else if (response.status == 504) {
+                  //self.checkAligningBlocks();
+                }
+              }).catch((err) => {
+                this.$root.$emit('stop-align');
+              });
+            }
+          });
       },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
@@ -1358,8 +1312,8 @@
         this.highlightedAudiofiles = highlightedAudiofiles;
       },
 
-      ...mapActions(['setCurrentBookCounters', 'getChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
-      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment'])
+      ...mapActions(['setCurrentBookCounters', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
+      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment', 'checkBlockTTSForPattern'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -1397,10 +1351,10 @@
         return this.hasBlocksForTTS && voicesSelected && this.blockSelection.start._id && this.blockSelection.end._id;
       },
       hasBlocksForAlignment: function() {
-        return this.alignCounter.count > 0
+        return this.alignCounter.count > 0;
       },
       hasBlocksForTTS: function() {
-        return this.alignCounter.countTTS > 0
+        return this.alignCounter.countTTS > 0;
       },
       blocksForAlignment: function() {
         let blocks = this.alignCounter.count - this.alignCounter.countTTS;
@@ -1427,9 +1381,10 @@
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
         alignBlocksLimitMessage: 'alignBlocksLimitMessage',
-        selectedBlocksData: 'selectedBlocksData'
+        selectedBlocksData: 'selectedBlocksData',
+        selectedBlocks: 'selectedBlocks'
       }),
-      ...mapGetters('alignActions', ['aligningAudiofiles'])
+      ...mapGetters('alignActions', ['aligningAudiofiles', 'alignTTSVoicesData'])
     },
     watch: {
       'audiobook': {

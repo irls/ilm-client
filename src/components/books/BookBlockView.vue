@@ -1436,6 +1436,7 @@ Save or discard your changes to continue editing`,
         'changeBlocksVoicework',
       ]),
     ...mapActions('tocSections', ['loadBookTocSections', 'checkUpdatedBlock']),
+    ...mapMutations(['add_modified_block', 'remove_modified_block']),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
@@ -4781,12 +4782,17 @@ Save text changes and realign the Block?`,
           if (val === false) {
             this.flushChanges();
             Vue.nextTick(() => {
-              if (!this.isSplittedBlock && this.$refs.blocks) {
+              if (!this.isSplittedBlock && this.$refs.blocks && this.$refs.blocks.length > 0) {
                 this.blockParts.forEach((part, partIdx) => {
                   this.$refs.blocks[partIdx].isChanged = false;
                 });
               }
             });
+            if (!this.isAudioChanged) {
+              this.remove_modified_block(this.block.blockid);
+            }
+          } else {
+            this.add_modified_block(this.block.blockid);
           }
           this.block.setChanged(val);
           this.recountApprovedInRange();

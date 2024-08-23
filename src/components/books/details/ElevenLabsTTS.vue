@@ -272,7 +272,7 @@
         //this.all_voices = [];
         return this.getTTSVoices()
           .then(()=>{
-            let allVoices = this.tts_voices;
+            let allVoices = lodash.cloneDeep(this.tts_voices);
             this.book_voices = [];
             [...allVoices].forEach(voice => {
               if (voice.bookid === this.currentBookid) {

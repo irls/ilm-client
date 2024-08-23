@@ -54,7 +54,7 @@
           v-bind:key="viewObj._id"
           v-bind:class="{ 'hidden-by-scroll': (idsViewArray.indexOf(viewObj._id) == -1) }">
           <!--{{parlistO.getInId(viewObj._rid)}} -> {{viewObj._id}}{{viewObj._rid}} -> {{parlistO.getOutId(viewObj._rid)}}-->
-          <div class='col' v-if="idsViewArray.indexOf(viewObj._id) > -1">
+          <div class='col' v-if="idsViewArray.indexOf(viewObj._id) > -1 || modifiedBlockids.indexOf(viewObj._id) > -1">
               <BookBlockView ref="blocks"
                 :block="parlist.get(viewObj._id)"
                 :blockO="parlistO.get(viewObj._rid)"
@@ -191,7 +191,8 @@ export default {
           adminOrLibrarian: 'adminOrLibrarian',
           isEditor: 'isEditor',
           isNarrator: 'isNarrator',
-          isProofer: 'isProofer'
+          isProofer: 'isProofer',
+          modifiedBlockids: 'modifiedBlockids'
       }),
       metaStyles: function () {
           let result = '';
@@ -1493,6 +1494,20 @@ export default {
       for (let i = range.start; i <= range.end; i++) {
         const blockId = this.parlistO.idsArray()[i];
         const blockVirtRef = document.getElementById('v-' + blockId);
+        if (i === 0 && this.modifiedBlockids.includes(blockId)) {// if block modified it not removed from view, need to show it
+          let height = blockVirtRef.style.height;
+          if (height === "0px") {
+            blockVirtRef.style.removeProperty("height");
+            let blockFrontRef = document.getElementById(`s-${blockId}`);
+            Vue.nextTick(() => {
+              if (blockO.blockid === this.startId/* || range.padFront === 0*/) {
+                if (blockFrontRef && blockFrontRef.classList.contains("hidden-by-scroll")) {
+                  blockFrontRef.classList.remove("hidden-by-scroll");
+                }
+              }
+            });
+          }
+        }
         const elRect = this.checkVisible(blockVirtRef, viewHeight);
 
         if (elRect.isVisible) {
