@@ -219,10 +219,11 @@ export default {
       paste = paste.length ? paste : clipboard.getData('text/plain');
       //-- MSOffice -- { --//
       const wordXreg = new RegExp("<body[\\s\\S]+<\\/body>", 'mi');
+      const ILMRegex = new RegExp(`<w[^>]+>[\\s\\S]*?<\/w>`, `img`);
       if (/<\w[^>]*>/.test(paste)) {// for ILM copied list blocks correctly handle line breaks
         paste = paste.replace(/<span[^>]*?>([\n]+)<\/span>/img, '$1');
       }
-      if (wordXreg.test(paste)) {
+      if (wordXreg.test(paste) && !ILMRegex.test(paste)) {// need to check if text not copied from ILM, Chrome has similar format to docx
         paste = wordXreg.exec(paste)[0];
         //console.log(`paste001: `, paste);
         paste = paste.replace(/<!\[if[^\]]*\]>[\s\S]*?<!\[endif\]>/mig, '');
