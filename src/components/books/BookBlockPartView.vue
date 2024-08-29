@@ -2144,6 +2144,9 @@ export default {
         this.range.insertNode(el);
         const parentW = el.parentNode;
         if (parentW && parentW.innerHTML) { // rearrange spaces
+          // ILM-6723 fix unexpected &nbsp;
+          parentW.innerHTML = parentW.innerHTML.replace('sup>&nbsp;<sup', 'sup> <sup');
+
           const supBeforeRegExp = new RegExp(`(<\\/(?:sup|sub)>)(\\s*?)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
           const supAfterRegExp = new RegExp(`(<sup data-idx="${idx}"><\\/sup>)(\s*?)(<(?:sup|sub))`, 'i');
           if (supBeforeRegExp.test(parentW.innerHTML)) {
