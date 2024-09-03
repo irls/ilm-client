@@ -1,10 +1,17 @@
 import axios from 'axios';
 
+const defaultAlignTTSVoicesData = {
+  match: '',
+  not_voiced: [],
+  total: []
+};
+
 export default {
   namespaced: true,
   state: {
     aligningBooks: [],
-    aligningBlocks: []
+    aligningBlocks: [],
+    alignTTSVoicesData: defaultAlignTTSVoicesData
   },
   getters: {
     aligningAudiofiles: state => {
@@ -17,6 +24,30 @@ export default {
         return acc.concat(block.audiocatalog_map ? Object.keys(block.audiocatalog_map) : []);
       }, []);
       return aligningInBooks.concat(aligningInBlocks);
+    },
+    alignTTSVoicesData: state => {
+      return state.alignTTSVoicesData;
+    },
+    alignTTSVoiceBlockids: (state, getters, rootState) => (type) => {
+      let blocksIds = [];
+      switch (type) {
+        case "unvoiced":
+          state.alignTTSVoicesData.not_voiced.forEach(block => {
+            blocksIds.push(block.blockid);
+          });
+          break;
+        case "all":
+          state.alignTTSVoicesData.total.forEach(block => {
+            blocksIds.push(block.blockid);
+          });
+          break;
+        case "single":
+          if (rootState.audioTasksQueue.block.blockId) {
+            blocksIds.push(rootState.audioTasksQueue.block.blockId);
+          }
+          break;
+      }
+      return blocksIds;
     }
   },
   mutations: {
@@ -25,6 +56,16 @@ export default {
     },
     setAligningBlocks(state, blocks = []) {
       state.aligningBlocks = blocks;
+    },
+    setAlignTTSVoicesData(state, voicesData) {
+      if (voicesData && voicesData.hasOwnProperty('total')) {
+        state.alignTTSVoicesData = voicesData;
+      } else {
+        this.commit('alignActions/resetAlignTTSVoicesData');
+      }
+    },
+    resetAlignTTSVoicesData(state) {
+      state.alignTTSVoicesData = defaultAlignTTSVoicesData;
     }
   },
   actions: {
@@ -67,20 +108,7 @@ export default {
     },
     alignTTS({rootState, dispatch}) {
       // if user is updating custom speed before align - wait for updates to be applied
-      let waitAudioSpeedUpdate = new Promise((resolve, reject) => {
-        if (!rootState.userActions.updatingAudioSpeed) {
-          return resolve();
-        }
-        let checks = 0;
-        let checkInterval = setInterval(() => {
-          if (!rootState.userActions.updatingAudioSpeed || checks >= 10) {
-            clearInterval(checkInterval);
-            return resolve();
-          }
-          ++checks;
-        }, 50);
-      });
-      return waitAudioSpeedUpdate
+      return dispatch('waitAudioSpeedUpdate')
         .then(() => {
           let wpm_settings = {};
           if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
@@ -129,6 +157,65 @@ export default {
           }
         }
       }
+    },
+    checkBlockTTSForPattern({state, dispatch, rootState, commit}) {
+      commit('resetAlignTTSVoicesData');
+      let blocksSelection = rootState.selectedBlocks;
+      if (blocksSelection.length === 1) {
+        return axios.get(`${rootState.API_URL}books/block/${encodeURIComponent(blocksSelection[0]._rid)}/check_voice_pattern`)
+          .then(response => {
+            //console.log(response);
+            commit('setAlignTTSVoicesData', response.data);
+            return {};
+          });
+      }
+      return Promise.resolve({});
+    },
+    waitAudioSpeedUpdate({rootState}) {
+      let waitAudioSpeedUpdate = new Promise((resolve, reject) => {
+        if (!rootState.userActions.updatingAudioSpeed) {
+          return resolve();
+        }
+        let checks = 0;
+        let checkInterval = setInterval(() => {
+          if (!rootState.userActions.updatingAudioSpeed || checks >= 10) {
+            clearInterval(checkInterval);
+            return resolve();
+          }
+          ++checks;
+        }, 50);
+      });
+      return waitAudioSpeedUpdate;
+    },
+    alignTTSVoice({dispatch, state, rootState, getters}, [type, voiceId]) {
+      if (type === "single") {
+        return dispatch("alignTTS");
+      }
+      return dispatch('waitAudioSpeedUpdate')
+        .then(() => {
+          let wpm_settings = {};
+          if (rootState.user.alignWpmSettings && rootState.user.alignWpmSettings[rootState.currentBookid]) {
+            wpm_settings = rootState.user.alignWpmSettings[rootState.currentBookid]['tts'];
+          }
+          return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/tts_voice_alignment`, {
+            blockids: getters.alignTTSVoiceBlockids(type),
+            voice_id: voiceId,
+            wpm_settings: wpm_settings
+          }, {
+            validateStatus: function (status) {
+              return status == 200 || status == 504;
+            }
+          })
+          .then((response) => {
+            dispatch('getBookAlign', {}, {root: true});
+            dispatch('setCurrentBookCounters', [], {root: true});
+            dispatch('resetSelectionAudiosrcConfig');
+            return Promise.resolve(response);
+          }).catch((err) => {
+            dispatch('getBookAlign', {}, {root: true});
+            return Promise.reject(err);
+          });
+        });
     }
   }
 }
