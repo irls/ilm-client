@@ -85,9 +85,14 @@
     },
     components: { SelectLanguages },
     mounted() {
+      if (!this.adminOrLibrarian) {
+        this.$router.push('/books');
+        return;
+      }
       this.loadList();
     },
     computed: {
+      ...mapGetters(['adminOrLibrarian']),
       ...mapGetters('authorsModule', ['authors'])
     },
     methods: {
