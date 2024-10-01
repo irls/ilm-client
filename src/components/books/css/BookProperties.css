@@ -344,7 +344,7 @@ div.tab-heading thead {
 }
 
 div.book-listing span {
-  float:right;
+  /*float:right;*/
   width:50%;
 }
 

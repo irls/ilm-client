@@ -462,7 +462,7 @@
         languages() {
           return Languages;
         },
-        
+
         readerCategory: {
           get() {
             return this.collection.alt_meta.reader.category;
@@ -606,7 +606,7 @@
       }
       &:nth-child(2) {
         width: auto;
-        text-align: right !important;
+        text-align: right;
       }
     }
     tr{
