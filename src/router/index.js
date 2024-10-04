@@ -19,6 +19,7 @@ import CollectionsGrid from '../components/collections/CollectionsGrid';
 import Settings from '../components/Settings'
 import TestAudioConvert from '../components/audio/TestAudioConvert';
 import CalculateWords from '../components/audio/CalculateWords';
+import Authors from '../components/authors/Authors';
 
 
 Vue.use(Router)
@@ -103,6 +104,10 @@ export default new Router({
           component: BookEdit, meta: { mode: 'proofread' }, props: { mode: 'proofread' }
         }
       ]
+    },
+    {
+      path: '/authors',
+      component: Authors
     },
     {
       path: '/users',
