@@ -1998,7 +1998,8 @@ export const store = new Vuex.Store({
                 dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
               }
             }
-          })
+          });
+          dispatch('publishModule/loadHtmlErrorsBlocks');
           return Promise.resolve(answer);
         }).catch((err)=>{
           state.loadBookWait = null;
