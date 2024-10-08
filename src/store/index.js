@@ -9,7 +9,7 @@ import {liveDB} from './liveDB'
 import { Collection } from './collection'
 import suspiciousWordsHighlight from './suspiciousWordsHighlight';
 const _ = require('lodash')
-import axios from 'axios'
+import axios from 'axios';
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';

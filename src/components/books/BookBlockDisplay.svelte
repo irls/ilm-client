@@ -29,7 +29,8 @@
       class="bview-content part-0 {block.getClass ? block.getClass() : ''} hide-archive"
       data-parnum="{block.viewParnum}"
       data-type="{block.type}"
-      on:click={handleFootnote}>
+      on:click={handleFootnote}
+      on:keyup={handleFootnoteKeyUp}>
       {@html block.content}
     </div>
 
@@ -89,6 +90,8 @@
       } else footNotes[ev.target.dataset.idx].className = '-hidden';*/
     }
   }
+
+  const handleFootnoteKeyUp = (ev) => true;
 
 </script>
 

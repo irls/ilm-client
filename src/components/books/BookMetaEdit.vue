@@ -101,61 +101,114 @@
                   <td><input v-model='currentBook.subtitle' v-on:input="debounceUpdate('subtitle', $event.target.value, $event, false);" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
-                <template v-for="(author, i) in currentBook.author_link" >
-                  <tr class='author-link author-name'>
-                    <td>Author</td>
-                    <td>
-                      <input v-model='currentBook.author_link[i].name'
-                             class="author-name" />
-                      <Dropdown
-                        v-model="currentBook.author_link[i]"
-                        :options="authorsArr"
-                        :filter="true"
-                        :showClear="true"
-                        @change="changeAuthor($event, i, author)"
-                        dataKey="id"
-                        optionLabel="name">
-                        <template #value="slotProps">
-                            <div class="" v-if="slotProps.value">
-                              <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
-                              <!--<div v-else>{{slotProps.value}}</div>-->
-                            </div>
-                            <span v-else>
-                              <!--{{slotProps.placeholder}}-->
-                            </span>
-                        </template>
-                        <template #option="slotProps">
-                            <div class="">
-                              <div>{{slotProps.option.name}}({{slotProps.option.slug}})</div>
-                            </div>
-                        </template>
-                      </Dropdown>
+                <tr class='author-link-container'>
+                  <td colspan="2">
 
-                    </td>
-                  </tr>
-                  <tr class='author-link author-en' v-if="currentBook.language !== 'en'">
-                    <td>Author EN</td>
-                    <td>{{author.name_en}}</td>
-                  </tr>
-                  <tr class='author-link author-slug'>
-                    <td>Author Slug</td>
-                    <td>{{author.slug}}</td>
-                  </tr>
-                  <tr class='author-link rem-author' v-if="i !== 0 && allowMetadataEdit">
-                    <td></td>
-                    <td>
-                      <button v-on:click="removeAuthorLink(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
-                    </td>
-                  </tr>
-                </template>
-                <tr class='author-link add-author'>
-                  <td></td>
-                  <td>
-                    <p v-if="allowMetadataEdit" style="text-align: right; margin: 0; padding: 0;">
-                      <button v-on:click="addAuthorLink" :disabled="!allowMetadataEdit" style="margin-right: 6px;">
+                  <fieldset v-for="(author, i) in currentBook.author_link" class='author-link authors-list'>
+                  <legend>Author</legend>
+
+                    <table class='author-link-table'>
+                      <tr class='author-link author-name'>
+                        <td>Author</td>
+                        <td>
+
+                          <input v-model='currentBook.author_link[i].name'
+                                 @input="editAuthorLink($event, i, 'name')"
+                                :disabled="!allowMetadataEdit"
+                                 class="author-name" />
+                          <Dropdown
+                            :value="currentBook.author_link[i]"
+                            :options="author_link_arr"
+                            :disabled="!allowMetadataEdit"
+                            :filter="true"
+                            :showClear="currentBook.author_link[i].id !== null"
+                            @change="changeAuthorLink($event, i, author)"
+                            dataKey="id"
+                            optionLabel="name">
+                            <template #value="slotProps">
+                                <div class="" v-if="slotProps.value">
+                                  <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
+                                  <!--<div v-else>{{slotProps.value}}</div>-->
+                                </div>
+                                <span v-else>
+                                  <!--{{slotProps.placeholder}}-->
+                                </span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="">
+                                  <div>{{slotProps.option.name}}</div>
+                                </div>
+                            </template>
+                          </Dropdown>
+
+                        </td>
+                      </tr>
+                      <tr class='author-link author-name'>
+                        <td>Author EN</td>
+                        <td>
+
+                          <input v-model='currentBook.author_link[i].name_en'
+                                 @input="editAuthorLink($event, i, 'name_en')"
+                                :disabled="!allowMetadataEdit"
+                                 class="author-name" />
+                          <Dropdown
+                            :value="currentBook.author_link[i]"
+                            :options="author_link_arr"
+                            :disabled="!allowMetadataEdit"
+                            :filter="true"
+                            :showClear="currentBook.author_link[i].id !== null"
+                            @change="changeAuthorLink($event, i, author)"
+                            dataKey="id"
+                            optionLabel="name_en">
+                            <template #value="slotProps">
+                                <div class="" v-if="slotProps.value">
+                                  <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
+                                  <!--<div v-else>{{slotProps.value}}</div>-->
+                                </div>
+                                <span v-else>
+                                  <!--{{slotProps.placeholder}}-->
+                                </span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="">
+                                  <div>{{slotProps.option.name_en}}</div>
+                                </div>
+                            </template>
+                          </Dropdown>
+
+                        </td>
+                      </tr>
+                      <tr class='author-link author-name'>
+                        <td>Author Slug</td>
+                        <td>
+
+                          <input v-model='currentBook.author_link[i].slug'
+                                 @input="editAuthorLink($event, i, 'slug')"
+                                :disabled="!allowMetadataEdit"
+                                 class="author-name" />
+
+                        </td>
+                      </tr>
+                      <tr class='author-link rem-author' v-if="currentBook.author_link.length > 1 && allowMetadataEdit">
+                        <td colspan="2">
+                          <div v-if="allowMetadataEdit" class='author-link rem-author'>
+                            <button v-on:click="removeAuthorLink($event, i)" :disabled="!allowMetadataEdit" >
+                              <i class="fa fa-minus-circle" style="margin-right: -18px;"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+
+
+                  </fieldset>
+
+                  <div v-if="allowMetadataEdit" class='author-link add-author'>
+                      <button v-on:click="addAuthorLink" :disabled="!allowMetadataEdit">
                         <i class="fa fa-plus-circle"></i>
                       </button>
-                    </p>
+                    </div>
+
                   </td>
                 </tr>
 
@@ -893,7 +946,7 @@ export default {
       hashTagsSuggestions: 'hashTagsSuggestions',
       playingBlock: 'playingBlock',
       isBookReaderCategory: 'isBookReaderCategory',
-      authorsArr: 'authorsMapModule/authorsArr',
+      author_link_arr: 'authorsMapModule/author_link_arr',
     }),
     proofreadModeReadOnly: {
       get() {
@@ -1336,6 +1389,8 @@ export default {
       }
 
       this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 800);
+
+      this.$store.dispatch('authorsMapModule/getAuthorsList', { lang: this.currentBookMeta.language || 'en' });
     },
     /*
     //close unknown author if clicked outside
@@ -1803,29 +1858,48 @@ export default {
     addAuthor() {
       this.currentBook.author.push('');
       this.debounceUpdate('author', [...this.currentBook.author], false);
-      //this.liveUpdate('author', this.currentBook.author);
     },
 
     removeAuthor(i) {
       if (i > 0 || this.currentBook.author.length > 1) {
         this.currentBook.author.splice(i, 1);
         this.debounceUpdate('author', [...this.currentBook.author], false);
-        //this.liveUpdate('author', this.currentBook.author);
       }
     },
 
-    changeAuthor(ev, i) {
-      console.log(`${__filename.substr(-30)}:changeAuthor:ev: `, ev);
-      console.log(`${__filename.substr(-30)}:changeAuthor:i: `, i);
+    changeAuthorLink(ev, i) {
+      const {
+        id = null,
+        name = '',
+        name_en = '',
+        slug = '',
+      } = ev.value || {};
+      this.currentBook.author_link[i] = {id, name, name_en, slug};
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+    },
+
+    editAuthorLink(ev, i, field) {
+      this.currentBook.author_link[i].id = null;
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
     addAuthorLink(ev) {
-      console.log(`${__filename.substr(-30)}:changeAuthor:ev: `, ev);
+      this.currentBook.author_link.push({
+        id: null,
+        name: '',
+        name_en: '',
+        slug: '',
+        // alt_names: [],
+        // language: 'en'
+      });
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
     removeAuthorLink(ev, i) {
-      console.log(`${__filename.substr(-30)}:changeAuthor:ev: `, ev);
-      console.log(`${__filename.substr(-30)}:changeAuthor:i: `, i);
+      if (i > 0 || this.currentBook.author_link.length > 1) {
+        this.currentBook.author_link.splice(i, 1);
+        this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+      }
     },
 
     publish() {
@@ -2730,33 +2804,102 @@ select.text-danger#categorySelection, input.text-danger{
   tr.author button {border: none !important; background-color: inherit; padding: 0}
   tr.author button.disabled i {display: none; border: none;}
 
-  table.properties {
-    tr.author-link {
-      td { width: auto; text-align: left; }
-      &.add-author {
-        button { border: none !important; background-color: inherit; padding: 0 }
-        button.disabled i { display: none; border: none; }
-      }
+  #p-book-content.tab-container[role="tabpanel"] {
+    table.properties {
+      tr.author-link-container {
 
-      div.p-dropdown.p-component.p-dropdown-clearable {
-        height: 31px;
-        width: 42px;
-        margin-top: -10px;
-        top: 10px;
-        border-left-width: 0px;
-
-        span.p-dropdown-label.p-inputtext {
-          padding-right: 0px;
-          padding-left: 0px;
+        fieldset.authors-list {
+          width: 99%;
+          padding: 0px 0px 5px 2px;
+          margin: 0;
         }
 
+        td {
+          padding: 0;
+        }
+
+        table.author-link-table {
+          width: 100%;
+
+          tr.author-link {
+            border: none;
+            background-color: white;
+            height: 35px;
+
+            &:nth-child(odd) {
+              background-color: #F0F0F0;
+            }
+
+            td:nth-child(1) {
+              padding: 3px;
+              width: 28%;
+            }
+
+            td:nth-child(2) {
+              padding: 2px 0px 2px 2px;
+              text-align: left;
+
+              div.p-dropdown.p-component {
+                border-radius: 0px 2px 2px 0px;
+                /*border-left-width: 0px;*/
+                height: 30px;
+                margin-left: -10px;
+                left: -1px;
+                float: right;
+              }
+            }
+
+            input.author-name {
+              width: 86%;
+              margin-left: 0;
+              margin-right: auto;
+              border: 1px solid rgb(118, 118, 118);
+              border-radius: 2px 0px 0px 2px;
+              /*border-right-width: 0px;*/
+            }
+          }
+        }
+
+        div.add-author, div.rem-author {
+          width: 20px;
+          height: 21px;
+          margin-top: 4px;
+          margin-left: auto;
+          margin-right: 0;
+
+          button { border: none !important; background-color: inherit; padding: 0 }
+          button.disabled i { display: none; border: none; }
+        }
       }
 
-      input {
-        &.author-name {
-          width: 86%;
-          margin-right: -5px;
-        }
+
+      tr.author-link {
+  /*      td { width: auto; text-align: left; }
+        &.add-author {
+          button { border: none !important; background-color: inherit; padding: 0 }
+          button.disabled i { display: none; border: none; }
+        }*/
+
+  /*      div.p-dropdown.p-component.p-dropdown-clearable {
+          height: 31px;
+          width: 42px;
+          margin-top: -10px;
+          top: 10px;
+          border-left-width: 0px;
+
+          span.p-dropdown-label.p-inputtext {
+            padding-right: 0px;
+            padding-left: 0px;
+          }
+
+        }*/
+
+  /*      input {
+          &.author-name {
+            width: 86%;
+            margin-right: -5px;
+          }
+        }*/
       }
     }
   }
@@ -3167,7 +3310,7 @@ select.text-danger#categorySelection, input.text-danger{
 
   table.properties {
     tr.author-link {
-      div.p-dropdown.p-component.p-dropdown-clearable {
+      div.p-dropdown.p-component {
         span.p-dropdown-label.p-inputtext {
           padding-right: 0px;
           padding-left: 16px;
