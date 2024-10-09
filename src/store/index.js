@@ -9,7 +9,7 @@ import {liveDB} from './liveDB'
 import { Collection } from './collection'
 import suspiciousWordsHighlight from './suspiciousWordsHighlight';
 const _ = require('lodash')
-import axios from 'axios'
+import axios from 'axios';
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
@@ -24,6 +24,7 @@ import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
 import publishModule from './modules/publish';
 import authorsModule from './modules/authors';
+import authorsMapModule from './modules/authorsMap';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -91,7 +92,8 @@ export const store = new Vuex.Store({
     ttsModule,
     genreModule,
     publishModule,
-    authorsModule
+    authorsModule,
+    authorsMapModule
   },
   state: {
     SelectionModalProgress:0,

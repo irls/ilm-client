@@ -101,7 +101,120 @@
                   <td><input v-model='currentBook.subtitle' v-on:input="debounceUpdate('subtitle', $event.target.value, $event, false);" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
-                <tr class='author'>
+                <tr class='author-link-container'>
+                  <td colspan="2">
+
+                  <fieldset v-for="(author, i) in currentBook.author_link" class='author-link authors-list'>
+                  <legend>Author</legend>
+
+                    <table class='author-link-table'>
+                      <tr class='author-link author-name'>
+                        <td>Author</td>
+                        <td>
+
+                          <input v-model='currentBook.author_link[i].name'
+                                 @input="editAuthorLink($event, i, 'name')"
+                                :disabled="!allowMetadataEdit"
+                                :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
+                          <Dropdown
+                            :value="currentBook.author_link[i]"
+                            :options="author_link_arr"
+                            :disabled="!allowMetadataEdit"
+                            :filter="true"
+                            :showClear="currentBook.author_link[i].id !== null"
+                            @change="changeAuthorLink($event, i, author)"
+                            dataKey="id"
+                            optionLabel="name">
+                            <template #value="slotProps">
+                                <div class="" v-if="slotProps.value">
+                                  <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
+                                  <!--<div v-else>{{slotProps.value}}</div>-->
+                                </div>
+                                <span v-else>
+                                  <!--{{slotProps.placeholder}}-->
+                                </span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="">
+                                  <div>{{slotProps.option.name}}</div>
+                                </div>
+                            </template>
+                          </Dropdown>
+
+                        </td>
+                      </tr>
+                      <tr class='author-link author-name' v-if="currentBook.language !== 'en'">
+                        <td>Author EN</td>
+                        <td>
+
+                          <input v-model='currentBook.author_link[i].name_en'
+                                 @input="editAuthorLink($event, i, 'name_en')"
+                                :disabled="!allowMetadataEdit"
+                                :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
+                          <Dropdown
+                            :value="currentBook.author_link[i]"
+                            :options="author_link_arr"
+                            :disabled="!allowMetadataEdit"
+                            :filter="true"
+                            :showClear="currentBook.author_link[i].id !== null"
+                            @change="changeAuthorLink($event, i, author)"
+                            dataKey="id"
+                            optionLabel="name_en">
+                            <template #value="slotProps">
+                                <div class="" v-if="slotProps.value">
+                                  <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
+                                  <!--<div v-else>{{slotProps.value}}</div>-->
+                                </div>
+                                <span v-else>
+                                  <!--{{slotProps.placeholder}}-->
+                                </span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="">
+                                  <div>{{slotProps.option.name_en}}</div>
+                                </div>
+                            </template>
+                          </Dropdown>
+
+                        </td>
+                      </tr>
+                      <tr class='author-link author-slug'>
+                        <td>Author Slug</td>
+                        <td>
+
+                          <input v-model='currentBook.author_link[i].slug'
+                                 @input="editAuthorLink($event, i, 'slug')"
+                                :disabled="true || !allowMetadataEdit"
+                                :class="['author-slug', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
+
+                          <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']" class="validation-error" style="text-align: right !important;">Define Author</span>
+
+                        </td>
+                      </tr>
+                      <tr class='author-link rem-author' v-if="currentBook.author_link.length > 1 && allowMetadataEdit">
+                        <td colspan="2">
+                          <div v-if="allowMetadataEdit" class='author-link rem-author'>
+                            <button v-on:click="removeAuthorLink($event, i)" :disabled="!allowMetadataEdit" >
+                              <i class="fa fa-minus-circle" style="margin-right: -18px;"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+
+
+                  </fieldset>
+
+                  <div v-if="allowMetadataEdit" class='author-link add-author'>
+                      <button v-on:click="addAuthorLink" :disabled="!allowMetadataEdit">
+                        <i class="fa fa-plus-circle"></i>
+                      </button>
+                    </div>
+
+                  </td>
+                </tr>
+
+                <!--<tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
@@ -138,7 +251,7 @@
                     <span style="text-align: right !important;" v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
 
                   </td>
-                </tr>
+                </tr>-->
 
                 <tr class='language'>
                   <td>Language</td>
@@ -612,6 +725,7 @@ import BookToc              from './BookToc'
 import _                    from 'lodash'
 import axios                from 'axios'
 import { modal, accordion, panel } from 'vue-strap'
+import Dropdown             from 'primevue/dropdown';
 import task_controls        from '../../mixins/task_controls.js'
 import api_config           from '../../mixins/api_config.js'
 import access               from '../../mixins/access.js'
@@ -683,6 +797,7 @@ export default {
     modal,
     accordion,
     panel,
+    Dropdown,
     BookAssignments,
     BookWorkflow,
     BookPublish,
@@ -832,7 +947,8 @@ export default {
       currentBookCollection: 'currentBookCollection',
       hashTagsSuggestions: 'hashTagsSuggestions',
       playingBlock: 'playingBlock',
-      isBookReaderCategory: 'isBookReaderCategory'
+      isBookReaderCategory: 'isBookReaderCategory',
+      author_link_arr: 'authorsMapModule/author_link_arr',
     }),
     proofreadModeReadOnly: {
       get() {
@@ -1275,6 +1391,8 @@ export default {
       }
 
       this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 800);
+
+      this.$store.dispatch('authorsMapModule/getAuthorsList', { lang: this.currentBookMeta.language || 'en' });
     },
     /*
     //close unknown author if clicked outside
@@ -1315,16 +1433,23 @@ export default {
           this.requiredFields[this.currentBookMeta.bookid]['title'] = true;
         }
 
-        if (this.currentBookMeta.author.join("").length == 0){
-          this.requiredFields[this.currentBookMeta.bookid]['author'] = true;
+        //if (this.currentBookMeta.author.join("").length == 0){
+        //  this.requiredFields[this.currentBookMeta.bookid]['author'] = true;
+        //}
+
+        //if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
+        //  this.requiredFields[this.currentBookMeta.bookid]['author_en'] = true;
+        //}
+
+        const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
+          return author.name.length && author.slug.length //&& author.id;
+        });
+        if (!isAuthorLink) {
+          this.requiredFields[this.currentBookMeta.bookid]['author_link'] = true;
         }
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
           this.requiredFields[this.currentBookMeta.bookid]['title_en'] = true;
-        }
-
-        if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
-          this.requiredFields[this.currentBookMeta.bookid]['author_en'] = true;
         }
 
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
@@ -1390,7 +1515,6 @@ export default {
     ttsUpdate(key, value) {
       this.debounceUpdate(key, value)
     },
-
 
     removeTag(i){
       if (!this.adminOrLibrarian)
@@ -1740,18 +1864,54 @@ export default {
             self.textCleanupProcess = false
           })
     },
+
     addAuthor() {
       this.currentBook.author.push('');
       this.debounceUpdate('author', [...this.currentBook.author], false);
-      //this.liveUpdate('author', this.currentBook.author);
     },
+
     removeAuthor(i) {
       if (i > 0 || this.currentBook.author.length > 1) {
         this.currentBook.author.splice(i, 1);
         this.debounceUpdate('author', [...this.currentBook.author], false);
-        //this.liveUpdate('author', this.currentBook.author);
       }
     },
+
+    changeAuthorLink(ev, i) {
+      const {
+        id = null,
+        name = '',
+        name_en = '',
+        slug = '',
+      } = ev.value || {};
+      this.currentBook.author_link[i] = {id, name, name_en, slug};
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+    },
+
+    editAuthorLink(ev, i, field) {
+      this.currentBook.author_link[i].id = null;
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+    },
+
+    addAuthorLink(ev) {
+      this.currentBook.author_link.push({
+        id: null,
+        name: '',
+        name_en: '',
+        slug: '',
+        // alt_names: [],
+        // language: 'en'
+      });
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+    },
+
+    removeAuthorLink(ev, i) {
+      if (i > 0 || this.currentBook.author_link.length > 1) {
+        this.currentBook.author_link.splice(i, 1);
+        this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+      }
+    },
+
     publish() {
       // this.isPublishing = false;
       // this.isPublishingQueue = true;
@@ -1764,9 +1924,11 @@ export default {
         //console.log(resp);
       });
     },
+
     publishContent() {
       return axios.get(this.API_URL + 'books/' + this.currentBookMeta.bookid + '/publish_content')
     },
+
     goToUnresolved(with_task = false) {
 
       let route = {
@@ -1793,6 +1955,7 @@ export default {
       }
       return route;
     },
+
     setAllowExportAudio() {
       this.allowExportAudio = false;
       if (this.isEditor && this.currentBookMeta._id) {
@@ -1816,6 +1979,7 @@ export default {
         }
       }
     },
+
     startGenerateAudiofile() {
       this.currentBook.mergedAudiofile = null;
       this.debounceUpdate('mergedAudiofile', null);
@@ -1823,6 +1987,7 @@ export default {
       axios.get(this.API_URL + 'books/' + this.currentBook.bookid + '/audiobooks/download')
       //:href="API_URL + 'books/' + currentBook.bookid + '/audiobooks/download'" target="_blank"
     },
+
     removeBook() {
       if (this.isAdmin) {
         axios.delete(this.API_URL + 'books/' + this.currentBook.bookid)
@@ -1985,8 +2150,7 @@ export default {
       });
     },
 
-    selectStyle(blockType, styleKey, styleVal)
-    {
+    selectStyle(blockType, styleKey, styleVal) {
       if(this.proofreadModeReadOnly) {
         return;
       }
@@ -2142,6 +2306,7 @@ export default {
           })
       }
     },
+
     dummySelectStyle(blockType, styleKey, styleVal) {
       if(styleVal !== "couplet" ||
         document.cookie.includes('dontShowAgainCoupletWarning=true')) {
@@ -2170,24 +2335,29 @@ export default {
         this.styleVal = styleVal;
       }
     },
+
     saveCoupletChanges(isDontShowAgain) {
       this.closeCoupletWarningPopup();
       this.saveUserChoiceToCookie(isDontShowAgain);
       this.selectStyle(this.blockType, this.styleKey, this.styleVal);
     },
+
     saveUserChoiceToCookie(isDontShowAgain) {
       if (isDontShowAgain &&
         !document.cookie.includes('dontShowAgainCoupletWarning=true')) {
         document.cookie = 'dontShowAgainCoupletWarning=true';
       }
     },
+
     closeCoupletWarningPopup() {
       this.isCoupletWarningPopupActive = false;
     },
+
     cancelCoupletUpdate(isDontShowAgain) {
       this.saveUserChoiceToCookie(isDontShowAgain);
       this.closeCoupletWarningPopup();
     },
+
     selectPauseAfter(blockType, styleVal) {
       //console.log('selectPauseAfter', blockType, styleVal);
       if (this.proofreadModeReadOnly) {
@@ -2312,6 +2482,7 @@ export default {
                  //this.isExporting = false;
                });
     },
+
     deactivateDemoLink() {
       console.log('inside deactivate');
       return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/deactivateDemoLink')
@@ -2319,12 +2490,15 @@ export default {
                //this.isExporting = false;
              });
     },
+
     downloadExportMp3() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportMp3';
     },
+
     downloadExportFlac() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportFlac';
     },
+
     prepareStyleTabLabel(title) {
       if (this.styleTabLabels.hasOwnProperty(title)) {
         let caption = this.styleTabLabels[title];
@@ -2332,6 +2506,7 @@ export default {
       }
       return title;
     },
+
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
         let caption = this.styleTitles[`${type}_${key}`];
@@ -2339,6 +2514,7 @@ export default {
       }
       return key.charAt(0).toUpperCase() + key.slice(1);
     },
+
     styleValue(type, key, val, lang='en') {
       key = key.split('.').shift(); // in case of "table of contents.level"
       //console.log('styleValue:', type, key, val);
@@ -2354,6 +2530,7 @@ export default {
 
       }
     },
+
     finishPublished() {
       this.finishPublishedProcess = true;
       return axios.post(this.API_URL + 'task/' + this.currentBook._id + '/finish_published')
@@ -2409,21 +2586,23 @@ export default {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
 
-
     goToBlock(blockId, ev) {
       this.$router.push({name: this.$route.name, params: {}});
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
+
     styleTabChange(index, component) {
       //console.log('styleTabChange', index, component.id, component)
       this.activeStyleTab = component.title === 'line' ? 'hr' : component.title;
     },
+
     displayStyleTab(blockType) {
       if (this.bookMode !== 'narrate') {
         return (this.styleTabs.has(blockType));
       }
       return this.pausesAfterProps.has(blockType);
     },
+
     setTrimSilenceConfig(val, ev) {
       switch (val) {
         case 'audio_tts_narration':
@@ -2454,7 +2633,6 @@ export default {
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
 }
-
 
 Vue.filter('prettyBytes', function (num) {
   // jacked from: https://github.com/sindresorhus/pretty-bytes
@@ -2623,16 +2801,119 @@ select.text-danger#categorySelection, input.text-danger{
   table.properties {margin:0; padding:0; width:100%; font-size: 1em;
     border-collapse: separate; border-spacing: 3px;
   }
-  table.properties td:nth-child(1) {width: 30%; padding: 3px; margin:0}
-  table.properties td:nth-child(2) {width: auto; text-align: right !important;}
+  table.properties td:nth-child(1) {width: 28%; padding: 3px; margin:0}
+  table.properties td:nth-child(2) {width: auto; text-align: right;}
   table.properties tr:nth-child(odd) {background-color: #F0F0F0}
   table tr {border: 2px solid white}
   table tr.changed {border: 2px solid wheat}
   table tr input {font-size: 1em; width: 100%}
   tr.subtitle input {font-size: .85em; width: 100%; line-height: 1.85em;}
+
+  /*TODO remove*/
   tr.author input {width: 90%;}
   tr.author button {border: none !important; background-color: inherit; padding: 0}
   tr.author button.disabled i {display: none; border: none;}
+
+  #p-book-content.tab-container[role="tabpanel"] {
+    table.properties {
+      tr.author-link-container {
+
+        fieldset.authors-list {
+          width: 99%;
+          padding: 0px 0px 5px 2px;
+          margin: 0;
+        }
+
+        td {
+          padding: 0;
+        }
+
+        table.author-link-table {
+          width: 100%;
+
+          tr.author-link {
+            border: none;
+            background-color: white;
+            height: 35px;
+
+            &:nth-child(odd) {
+              background-color: #F0F0F0;
+            }
+
+            td:nth-child(1) {
+              padding: 3px;
+              width: 28%;
+            }
+
+            td:nth-child(2) {
+              padding: 2px 0px 2px 2px;
+              text-align: left;
+
+              div.p-dropdown.p-component {
+                border-radius: 0px 2px 2px 0px;
+                /*border-left-width: 0px;*/
+                height: 30px;
+                margin-left: -10px;
+                left: -1px;
+                float: right;
+              }
+            }
+
+            input.author-name {
+              width: 86%;
+              margin-left: 0;
+              margin-right: auto;
+              border: 1px solid rgb(118, 118, 118);
+              border-radius: 2px 0px 0px 2px;
+              /*border-right-width: 0px;*/
+            }
+          }
+        }
+
+        div.add-author, div.rem-author {
+          width: 20px;
+          height: 21px;
+          margin-top: 4px;
+          margin-left: auto;
+          margin-right: 0;
+
+          button { border: none !important; background-color: inherit; padding: 0 }
+          button.disabled i { display: none; border: none; }
+        }
+      }
+
+
+      tr.author-link {
+  /*      td { width: auto; text-align: left; }
+        &.add-author {
+          button { border: none !important; background-color: inherit; padding: 0 }
+          button.disabled i { display: none; border: none; }
+        }*/
+
+  /*      div.p-dropdown.p-component.p-dropdown-clearable {
+          height: 31px;
+          width: 42px;
+          margin-top: -10px;
+          top: 10px;
+          border-left-width: 0px;
+
+          span.p-dropdown-label.p-inputtext {
+            padding-right: 0px;
+            padding-left: 0px;
+          }
+
+        }*/
+
+  /*      input {
+          &.author-name {
+            width: 86%;
+            margin-right: -5px;
+          }
+        }*/
+      }
+    }
+  }
+
   .disabled {font-style: italic; color: gray; font-size: .85em;}
 
   /* publication info */
@@ -3035,6 +3316,20 @@ select.text-danger#categorySelection, input.text-danger{
     list-style-type: none;
     padding: 0;
     margin: 0;
+  }
+
+  table.properties {
+    tr.author-link {
+      div.p-dropdown.p-component {
+        span.p-dropdown-label.p-inputtext {
+          padding-right: 0px;
+          padding-left: 16px;
+        }
+      }
+      div.p-dropdown-panel.p-component {
+        margin-left: -40%;
+      }
+    }
   }
 
 </style>
