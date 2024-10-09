@@ -45,7 +45,6 @@ export default {
         return authorMapped;
       })
       state.author_link_arr = authorsListArr;
-      console.log(`${__filename.substr(-30)}::state.author_link_arr: `, state.author_link_arr);
     }
 
   },

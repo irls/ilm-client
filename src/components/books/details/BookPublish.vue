@@ -132,19 +132,28 @@
                   mandatoryFields.push('Title');
               }
 
-              if (this.currentBookMeta.author.join("").length == 0){
-                  canPublish = false;
-                  mandatoryFields.push('Author');
+              //if (this.currentBookMeta.author.join("").length == 0){
+              //    canPublish = false;
+              //    mandatoryFields.push('Author');
+              //}
+
+              //if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !//this.currentBookMeta.hasOwnProperty('author_en'))){
+              //    canPublish = false;
+              //    mandatoryFields.push('Author EN (author English translation)');
+              //}
+
+              const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
+                return author.name.length && author.slug.length //&& author.id;
+              });
+
+              if (!isAuthorLink) {
+                canPublish = false;
+                mandatoryFields.push('Author');
               }
 
               if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
                   canPublish = false;
                   mandatoryFields.push('Title EN (title English translation)');
-              }
-
-              if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
-                  canPublish = false;
-                  mandatoryFields.push('Author EN (author English translation)');
               }
 
               const alt_meta = this.currentBookMeta.alt_meta;

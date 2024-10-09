@@ -115,7 +115,7 @@
                           <input v-model='currentBook.author_link[i].name'
                                  @input="editAuthorLink($event, i, 'name')"
                                 :disabled="!allowMetadataEdit"
-                                 class="author-name" />
+                                :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
                           <Dropdown
                             :value="currentBook.author_link[i]"
                             :options="author_link_arr"
@@ -143,14 +143,14 @@
 
                         </td>
                       </tr>
-                      <tr class='author-link author-name'>
+                      <tr class='author-link author-name' v-if="currentBook.language !== 'en'">
                         <td>Author EN</td>
                         <td>
 
                           <input v-model='currentBook.author_link[i].name_en'
                                  @input="editAuthorLink($event, i, 'name_en')"
                                 :disabled="!allowMetadataEdit"
-                                 class="author-name" />
+                                :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
                           <Dropdown
                             :value="currentBook.author_link[i]"
                             :options="author_link_arr"
@@ -178,14 +178,16 @@
 
                         </td>
                       </tr>
-                      <tr class='author-link author-name'>
+                      <tr class='author-link author-slug'>
                         <td>Author Slug</td>
                         <td>
 
                           <input v-model='currentBook.author_link[i].slug'
                                  @input="editAuthorLink($event, i, 'slug')"
-                                :disabled="!allowMetadataEdit"
-                                 class="author-name" />
+                                :disabled="true || !allowMetadataEdit"
+                                :class="['author-slug', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
+
+                          <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']" class="validation-error" style="text-align: right !important;">Define Author</span>
 
                         </td>
                       </tr>
@@ -212,7 +214,7 @@
                   </td>
                 </tr>
 
-                <tr class='author'>
+                <!--<tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
@@ -249,7 +251,7 @@
                     <span style="text-align: right !important;" v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
 
                   </td>
-                </tr>
+                </tr>-->
 
                 <tr class='language'>
                   <td>Language</td>
@@ -1431,16 +1433,23 @@ export default {
           this.requiredFields[this.currentBookMeta.bookid]['title'] = true;
         }
 
-        if (this.currentBookMeta.author.join("").length == 0){
-          this.requiredFields[this.currentBookMeta.bookid]['author'] = true;
+        //if (this.currentBookMeta.author.join("").length == 0){
+        //  this.requiredFields[this.currentBookMeta.bookid]['author'] = true;
+        //}
+
+        //if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
+        //  this.requiredFields[this.currentBookMeta.bookid]['author_en'] = true;
+        //}
+
+        const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
+          return author.name.length && author.slug.length //&& author.id;
+        });
+        if (!isAuthorLink) {
+          this.requiredFields[this.currentBookMeta.bookid]['author_link'] = true;
         }
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
           this.requiredFields[this.currentBookMeta.bookid]['title_en'] = true;
-        }
-
-        if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
-          this.requiredFields[this.currentBookMeta.bookid]['author_en'] = true;
         }
 
         if (this.currentBookMeta.slug == '' || !this.currentBookMeta.hasOwnProperty('slug')){
