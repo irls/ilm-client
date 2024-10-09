@@ -41,7 +41,7 @@
           </tr>
         </thead>
         <template v-for="author in authorsList">
-          <tr :class="['author', '-author-' + author.slug, '-closed']">
+          <tr :class="['author', '-author-' + cleanId(author.id), '-closed']">
             <td>
               <!-- {{ langList[author.language] }} -->
               <i class="fa fa-plus" v-on:click="toggleNameLang(author)"></i>
@@ -59,14 +59,14 @@
               </div>
             </td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + author.slug, {'-closed': !openedAuthors.includes(author.id)}, '-name-lang-header']">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !openedAuthors.includes(author.id)}, '-name-lang-header']">
             <td></td>
             <td>Book Language</td>
             <td>Author Name (Verified)</td>
             <td>Author Name (Alternative)</td>
             <td></td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + author.slug, {'-closed': !openedAuthors.includes(author.id)}]" v-for="nameLang in author.name_lang">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !openedAuthors.includes(author.id)}]" v-for="nameLang in author.name_lang">
             <td></td>
             <td>{{ langList[nameLang.language] }}</td>
             <td>{{ nameLang.name }}</td>
@@ -80,7 +80,7 @@
               </div>
             </td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + author.slug, {'-closed': !openedAuthors.includes(author.id)}]">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !openedAuthors.includes(author.id)}]">
             <td colspan="4">
               <button class="btn btn-primary" v-on:click="addNameLang(author)">
                 <i class="fa fa-plus"></i>&nbsp;Add
@@ -307,8 +307,8 @@
         }
       },
       toggleNameLang(author) {
-        let authorRow = document.querySelector(`.author.-author-${author.slug}`);
-        let authorNameLangRow = document.querySelectorAll(`.author-name-lang.-author-${author.slug}`);
+        let authorRow = document.querySelector(`.author.-author-${this.cleanId(author.id)}`);
+        let authorNameLangRow = document.querySelectorAll(`.author-name-lang.-author-${this.cleanId(author.id)}`);
         if (authorRow.classList.contains('-closed')) {
           authorRow.classList.add('-opened');
           authorRow.classList.remove('-closed');
@@ -327,11 +327,14 @@
       },
       forceOpenNameLang(author) {
         Vue.nextTick(() => {
-          document.querySelectorAll(`.author-name-lang.-author-${author.slug}.-closed`).forEach(authorEl => {
+          document.querySelectorAll(`.author-name-lang.-author-${this.cleanId(author.id)}.-closed`).forEach(authorEl => {
             authorEl.classList.remove('-closed');
             authorEl.classList.add('-open');
           })
         });
+      },
+      cleanId(id) {
+        return id.replace(/[\#\:]+/img, '-');
       },
       ...mapActions('authorsModule', ['getAll', 'removeAuthor', 'updateAuthor'])
     }
