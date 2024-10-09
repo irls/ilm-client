@@ -52,8 +52,8 @@ export default {
           return Promise.reject(err);
         });
     },
-    updateAuthor({rootState, state, commit}, [id, update]) {
-      return axios.put(`${rootState.API_URL}authors/${encodeURIComponent(id)}`, update)
+    updateAuthor({rootState, state, commit}, [id, update, language = null]) {
+      return axios.put(`${rootState.API_URL}authors/${encodeURIComponent(id)}${language ? '/' + language : ''}`, update)
         .then(response => {
           commit('updateAuthor', [id, response.data]);
           return response.data;

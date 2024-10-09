@@ -39,17 +39,18 @@
             <i class="fa fa-plus-circle" v-if="alt_name_idx === authorEdit.alt_names.length - 1" v-on:click="addAltName()"></i>
           </div>
         </div>
-        <div class="author-field">
+        <div class="author-field" v-if="primaryAuthor.id">
           <div class="field-label">
             <label>Book Language</label>
           </div>
           <div class="field-value">
-            <select v-model="authorEdit.language">
-              <option v-for="(lang, lang_key) in lang_list" :value="lang_key">{{ lang }}</option>
+            <select v-model="authorEdit.language" :class="[{'-has-error': errors.language}]" v-on:change="clearError('language')">
+              <option v-for="(lang, lang_key) in langList" :value="lang_key">{{ lang }}</option>
             </select>
+            <span class="validation-error" v-if="errors.language">{{ errors.language }}</span>
           </div>
         </div>
-        <div class="author-field" v-if="authorEdit.id">
+        <div class="author-field" v-if="authorEdit.id && !primaryAuthor.id">
           <div class="field-label">
             <label>Author Slug</label>
           </div>
@@ -65,6 +66,7 @@
   </div>
 </template>
 <script>
+  import Vue from 'vue';
   import { mapActions } from 'vuex';
   import lodash from 'lodash';
 
@@ -87,20 +89,73 @@
         errors: {}
       }
     },
-    props: ['author'],
+    props: {
+      'author': {
+        type: Object,
+        default() {
+          return {};
+        }
+      }, 
+      'language': {
+        type: String,
+        default: null
+      }, 
+      'primaryAuthor': {
+        type: Object,
+        default() {
+          return {};
+        }
+      }
+    },
     mounted() {
       this.authorEdit = lodash.cloneDeep(this.author);
+      document.querySelector('.field-value input').focus();
     },
     computed: {
       modalTitle: {
         get() {
-          return this.authorEdit.id ? 'Edit author' : 'Add author';
+          if (this.primaryAuthor.id && !this.language) {
+            return 'Add author language';
+          }
+          if (this.language) {
+            return 'Edit author ' + this.languageLabel;
+          } else {
+            return this.authorEdit.id ? 'Edit author' : 'Add author';
+          }
         },
         cache: false
       },
       saveButtonLabel: {
         get() {
-          return this.authorEdit.id ? 'Save' : 'Add author';
+          if (this.primaryAuthor.id) {
+            return this.language ? 'Save' : 'Add';
+          }
+          return this.authorEdit.id || this.language ? 'Save' : 'Add author';
+        },
+        cache: false
+      },
+      languageLabel: {
+        get() {
+          return this.language ? Languages[this.language] : null;
+        },
+        cache: false
+      },
+      langList: {
+        get() {
+          if (this.primaryAuthor.id) {
+            let lang_list = {};
+            delete this.lang_list["en"];
+            Object.keys(this.lang_list).forEach(langKey => {
+              let hasLang = this.primaryAuthor.name_lang.find(nameLang => {
+                return nameLang.language === langKey;
+              });
+              if (!hasLang || (this.language === langKey)) {
+                lang_list[langKey] = this.lang_list[langKey];
+              }
+            });
+            return lang_list;
+          }
+          return this.lang_list;
         },
         cache: false
       }
@@ -111,6 +166,9 @@
       },
       addAltName() {
         this.authorEdit.alt_names.push("");
+        Vue.nextTick(() => {
+          [...document.querySelectorAll('.author-field.-alt-name input')].at(-1).focus();
+        });
       },
       removeAltName(idx) {
         if (this.authorEdit.alt_names.length > 1) {
@@ -132,10 +190,22 @@
           return;
         }
         this.updateProgress = true;
-        if (!this.authorEdit.id) {
-          return this.create();
+        if (!this.authorEdit.id && !this.language) {
+          if (this.primaryAuthor.id) {
+            let author = lodash.cloneDeep(this.primaryAuthor);
+            author.name_lang.push(this.authorEdit);
+            return this.updateAuthor([this.primaryAuthor.id, author])
+              .then(() => {
+                this.close();
+              })
+              .catch(err => {
+                this.close();
+              });
+          } else {
+            return this.create();
+          }
         } else {
-          return this.updateAuthor([this.authorEdit.id, this.authorEdit])
+          return this.updateAuthor([this.authorEdit.id, this.authorEdit, this.language])
             .then(() => {
               this.close();
             })
@@ -146,8 +216,17 @@
       },
       validate() {
         this.clearErrors();
+        Object.keys(this.authorEdit).forEach(authorKey => {
+          if (typeof this.authorEdit[authorKey] === "string") {
+            this.authorEdit[authorKey] = this.authorEdit[authorKey].trim();
+          }
+        });
         if (this.authorEdit.name.length === 0) {
           this.errors.name = 'Name can not be empty';
+        }
+
+        if (this.primaryAuthor.id && !this.authorEdit.language) {
+          this.errors.language = 'Language can not be empty';
         }
       },
       clearErrors() {
@@ -195,6 +274,9 @@
           select {
             width: 95%;
             height: 26px;
+            &.-has-error {
+              border: 1px solid red;
+            }
           }
           .validation-error {
             color: red;

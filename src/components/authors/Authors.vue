@@ -33,7 +33,7 @@
       <table>
         <thead>
           <tr>
-            <th>Book Language</th>
+            <th></th>
             <th>Author Name (Verified)</th>
             <th>Author Slug</th>
             <th>Author Name (Alternative)</th>
@@ -41,8 +41,12 @@
           </tr>
         </thead>
         <template v-for="author in authorsList">
-          <tr class="author">
-            <td>{{ langList[author.language] }}</td>
+          <tr :class="['author', '-author-' + author.slug, '-closed']">
+            <td>
+              <!-- {{ langList[author.language] }} -->
+              <i class="fa fa-plus" v-on:click="toggleNameLang(author)"></i>
+              <i class="fa fa-minus" v-on:click="toggleNameLang(author)"></i>
+            </td>
             <td>{{ author.name }}</td>
             <td :class="['author-slug', {'-manual': author.manual_slug}]">{{ author.slug }}</td>
             <td>{{ author.alt_names.join(`, `) }}</td>
@@ -54,6 +58,35 @@
                 <i class="fa fa-trash" v-on:click="remove(author.id)"></i>
               </div>
             </td>
+          </tr>
+          <tr :class="['author-name-lang', '-author-' + author.slug, {'-closed': !openedAuthors.includes(author.id)}, '-name-lang-header']">
+            <td></td>
+            <td>Book Language</td>
+            <td>Author Name (Verified)</td>
+            <td>Author Name (Alternative)</td>
+            <td></td>
+          </tr>
+          <tr :class="['author-name-lang', '-author-' + author.slug, {'-closed': !openedAuthors.includes(author.id)}]" v-for="nameLang in author.name_lang">
+            <td></td>
+            <td>{{ langList[nameLang.language] }}</td>
+            <td>{{ nameLang.name }}</td>
+            <td>{{ nameLang.alt_names.join(', ') }}</td>
+            <td>
+              <div class="author-action -edit">
+                <i class="fa fa-pencil" v-on:click="editNameLang(author, nameLang)"></i>
+              </div>
+              <div class="author-action -remove">
+                <i class="fa fa-trash" v-on:click="removeNameLang(author, nameLang.language)"></i>
+              </div>
+            </td>
+          </tr>
+          <tr :class="['author-name-lang', '-author-' + author.slug, {'-closed': !openedAuthors.includes(author.id)}]">
+            <td colspan="4">
+              <button class="btn btn-primary" v-on:click="addNameLang(author)">
+                <i class="fa fa-plus"></i>&nbsp;Add
+              </button>
+            </td>
+            <td></td>
           </tr>
         </template>
       </table>
@@ -80,7 +113,8 @@
         filters: {
           lang: [],
           name: ''
-        }
+        },
+        openedAuthors: []
       }
     },
     components: { SelectLanguages },
@@ -167,6 +201,75 @@
           }
         });
       },
+      editNameLang(author, nameLang) {
+        this.$modal.show(AuthorModal, {
+          author: lodash.assign(nameLang, {id: author.id}),
+          language: nameLang.language,
+          primaryAuthor: author
+        }, {
+          width: "590px",
+          height: "auto"
+        }, {
+          closed: () => {
+            this.loadList();
+          }
+        })
+      },
+      addNameLang(author) {
+        this.$modal.show(AuthorModal, {
+          author: {
+            id: null,
+            name: "",
+            alt_names: [""],
+            language: ""
+          },
+          primaryAuthor: author
+        }, {
+          width: "590px",
+          height: "auto"
+        }, {
+          closed: () => {
+            this.loadList();
+            this.forceOpenNameLang(author);
+          }
+        });
+      },
+      removeNameLang(author, lang, check = true) {
+        if (check) {
+          this.$modal.show('dialog', {
+            title: `Remove author ${this.langList[lang]}?`,
+            text: '',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                },
+                class: 'btn btn-default'
+              },
+              {
+                title: 'Remove',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                  this.removeNameLang(author, lang, false);
+                },
+                class: 'btn btn-primary'
+              }
+            ]
+          });
+          return;
+        }
+        let nameIndex = author.name_lang.findIndex(nameLang => {
+          return nameLang.language === lang;
+        });
+        if (nameIndex !== -1) {
+          author.name_lang.splice(nameIndex, 1);
+          return this.updateAuthor([author.id, { name_lang: author.name_lang }])
+            .then(() => {
+              this.loadList();
+            });
+        }
+      },
       applyFilter(filter, value) {
         if (value  && typeof value === 'string') {
           value = value.trim();
@@ -181,13 +284,56 @@
       filterAuthors() {
         if ((this.filters.lang && this.filters.lang.length > 0) || this.filters.name) {
           this.authorsList = this.authors.filter(author => {
-            return (this.filters.lang && this.filters.lang.includes(author.language)) || (this.filters.name && (author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1));
+            let hasLanguage = false;
+            if (this.filters.lang) {
+              hasLanguage = this.filters.lang.includes(author.language) || author.name_lang.find(nameLang => {
+                return this.filters.lang.includes(nameLang.language);
+              });
+            }
+            let hasName = false;
+            if (this.filters.name) {
+              hasName = author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.alt_names.find(altName => {
+                return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+              }) || author.name_lang.find(nameLang => {
+                return nameLang.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || nameLang.alt_names.find(altName => {
+                  return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+                });
+              });
+            }
+            return hasLanguage || hasName;
           });
         } else {
           this.authorsList = lodash.cloneDeep(this.authors);
         }
       },
-      ...mapActions('authorsModule', ['getAll', 'removeAuthor'])
+      toggleNameLang(author) {
+        let authorRow = document.querySelector(`.author.-author-${author.slug}`);
+        let authorNameLangRow = document.querySelectorAll(`.author-name-lang.-author-${author.slug}`);
+        if (authorRow.classList.contains('-closed')) {
+          authorRow.classList.add('-opened');
+          authorRow.classList.remove('-closed');
+          authorNameLangRow.forEach(langRow => {
+            langRow.classList.remove('-closed');
+          });
+          this.openedAuthors.push(author.id);
+        } else {
+          authorRow.classList.add('-closed');
+          authorRow.classList.remove('-opened');
+          authorNameLangRow.forEach(langRow => {
+            langRow.classList.add('-closed');
+          });
+          this.openedAuthors.splice(this.openedAuthors.indexOf(author.id), 1);
+        }
+      },
+      forceOpenNameLang(author) {
+        Vue.nextTick(() => {
+          document.querySelectorAll(`.author-name-lang.-author-${author.slug}.-closed`).forEach(authorEl => {
+            authorEl.classList.remove('-closed');
+            authorEl.classList.add('-open');
+          })
+        });
+      },
+      ...mapActions('authorsModule', ['getAll', 'removeAuthor', 'updateAuthor'])
     }
   }
 </script>
@@ -233,6 +379,41 @@
               width: 75px;
               min-width: 75px;
             }
+            &:first-child {
+              min-width: 30px;
+            }
+          }
+        }
+        tr {
+          &.author {
+            &.-closed {
+              .fa-minus {
+                display: none;
+              }
+            }
+            &.-opened {
+              .fa-plus {
+                display: none;
+              }
+            }
+          }
+          &.author-name-lang {
+            &.-closed {
+              display: none;
+            }
+            button {
+              float: right;
+              color: white;
+            }
+            &.-name-lang-header {
+              td {
+                background-color: silver;
+                font-weight: bold;
+                &:first-child {
+                  background-color: inherit;
+                }
+              }
+            }
           }
         }
         td {
@@ -254,6 +435,9 @@
             &.-manual {
               color: black;
             }
+          }
+          &:first-child {
+            min-width: 30px;
           }
         }
         tr:nth-of-type(odd) {
