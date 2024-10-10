@@ -116,6 +116,9 @@
                                  @input="editAuthorLink($event, i, 'name')"
                                 :disabled="!allowMetadataEdit"
                                 :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
+                          <i class="pi pi-exclamation-triangle author-link-empty"
+                             v-if="currentBook.author_link[i].id === null">
+                          </i>
                           <Dropdown
                             :value="currentBook.author_link[i]"
                             :options="author_link_arr"
@@ -151,6 +154,9 @@
                                  @input="editAuthorLink($event, i, 'name_en')"
                                 :disabled="!allowMetadataEdit"
                                 :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
+                          <i class="pi pi-exclamation-triangle author-link-empty"
+                             v-if="currentBook.author_link[i].id === null">
+                          </i>
                           <Dropdown
                             :value="currentBook.author_link[i]"
                             :options="author_link_arr"
@@ -208,6 +214,7 @@
                   <div v-if="allowMetadataEdit" class='author-link add-author'>
                       <button v-on:click="addAuthorLink" :disabled="!allowMetadataEdit">
                         <i class="fa fa-plus-circle"></i>
+                        <span class="author-link add-author-hint">Add author</span>
                       </button>
                     </div>
 
@@ -2819,8 +2826,8 @@ select.text-danger#categorySelection, input.text-danger{
       tr.author-link-container {
 
         fieldset.authors-list {
-          width: 99%;
-          padding: 0px 0px 5px 2px;
+          width: 100%;
+          padding: 0px 2px 5px 2px;
           margin: 0;
         }
 
@@ -2835,6 +2842,10 @@ select.text-danger#categorySelection, input.text-danger{
             border: none;
             background-color: white;
             height: 35px;
+
+            &.rem-author {
+              height: 15px;
+            }
 
             &:nth-child(odd) {
               background-color: #F0F0F0;
@@ -2866,19 +2877,42 @@ select.text-danger#categorySelection, input.text-danger{
               border: 1px solid rgb(118, 118, 118);
               border-radius: 2px 0px 0px 2px;
               /*border-right-width: 0px;*/
+
+              &:disabled {
+                border: 1px solid rgba(118, 118, 118, 0.3);
+              }
+            }
+
+            i.author-link-empty {
+              position: absolute;
+              z-index: 1;
+              font-size: 1.6rem;
+              top: 10px;
+              margin-left: 3px;
+              color: red;
             }
           }
         }
 
         div.add-author, div.rem-author {
           width: 20px;
-          height: 21px;
+          height: 15px;
           margin-top: 4px;
           margin-left: auto;
           margin-right: 0;
 
           button { border: none !important; background-color: inherit; padding: 0 }
           button.disabled i { display: none; border: none; }
+        }
+
+        div.add-author {
+          width: 97px;
+          height: 21px;
+
+          span.add-author-hint {
+            margin-left: 5px;
+            color: grey;
+          }
         }
       }
 
