@@ -41,7 +41,7 @@
           </tr>
         </thead>
         <template v-for="author in authorsList">
-          <tr :class="['author', '-author-' + cleanId(author.id), '-closed']">
+          <tr :class="['author', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}, {'-opened': isAuthorOpened(author.id)}]">
             <td>
               <!-- {{ langList[author.language] }} -->
               <i class="fa fa-plus" v-on:click="toggleNameLang(author)"></i>
@@ -59,14 +59,14 @@
               </div>
             </td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !openedAuthors.includes(author.id)}, '-name-lang-header']">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}, '-name-lang-header']">
             <td></td>
             <td>Book Language</td>
             <td>Author Name (Verified)</td>
             <td>Author Name (Alternative)</td>
             <td></td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !openedAuthors.includes(author.id)}]" v-for="nameLang in author.name_lang">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]" v-for="nameLang in author.name_lang">
             <td></td>
             <td>{{ langList[nameLang.language] }}</td>
             <td>{{ nameLang.name }}</td>
@@ -80,7 +80,7 @@
               </div>
             </td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !openedAuthors.includes(author.id)}]">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]">
             <td colspan="4">
               <button class="btn btn-primary" v-on:click="addNameLang(author)">
                 <i class="fa fa-plus"></i>&nbsp;Add
@@ -282,25 +282,37 @@
         }, 300);
       },
       filterAuthors() {
+        this.closeFilteredAuthors();
         if ((this.filters.lang && this.filters.lang.length > 0) || this.filters.name) {
+          let foundInLang = false;
           this.authorsList = this.authors.filter(author => {
             let hasLanguage = false;
             if (this.filters.lang) {
-              hasLanguage = this.filters.lang.includes(author.language) || author.name_lang.find(nameLang => {
+              foundInLang = author.name_lang.find(nameLang => {
                 return this.filters.lang.includes(nameLang.language);
               });
+              hasLanguage = this.filters.lang.includes(author.language) || foundInLang;
+              if (foundInLang) {
+                this.authorOpened(author.id, true);
+              }
             }
             let hasName = false;
+            foundInLang = false;
             if (this.filters.name) {
-              hasName = author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.alt_names.find(altName => {
-                return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
-              }) || author.name_lang.find(nameLang => {
+              foundInLang = author.name_lang.find(nameLang => {
                 return nameLang.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || nameLang.alt_names.find(altName => {
                   return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
                 });
+
               });
+              hasName = author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.alt_names.find(altName => {
+                return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+              }) || foundInLang;
+              if (foundInLang) {
+                this.authorOpened(author.id, true);
+              }
             }
-            return hasLanguage || hasName;
+            return (!this.filters.lang || this.filters.lang.length === 0 || hasLanguage) && (!this.filters.name || hasName);
           });
         } else {
           this.authorsList = lodash.cloneDeep(this.authors);
@@ -315,14 +327,14 @@
           authorNameLangRow.forEach(langRow => {
             langRow.classList.remove('-closed');
           });
-          this.openedAuthors.push(author.id);
+          this.authorOpened(author.id);
         } else {
           authorRow.classList.add('-closed');
           authorRow.classList.remove('-opened');
           authorNameLangRow.forEach(langRow => {
             langRow.classList.add('-closed');
           });
-          this.openedAuthors.splice(this.openedAuthors.indexOf(author.id), 1);
+          this.authorClosed(author.id);
         }
       },
       forceOpenNameLang(author) {
@@ -335,6 +347,29 @@
       },
       cleanId(id) {
         return id.replace(/[\#\:]+/img, '-');
+      },
+      authorOpened(id, inFilter = false) {
+        if (!this.openedAuthors.find(author => { return author.id === id})) {
+          this.openedAuthors.push({id: id, inFilter: inFilter});
+        }
+      },
+      authorClosed(id) {
+        let authorIndex = this.openedAuthors.findIndex(author => {
+          return id === author.id;
+        });
+        if (authorIndex !== -1) {
+          this.openedAuthors.splice(authorIndex, 1);
+        }
+      },
+      closeFilteredAuthors() {
+        this.openedAuthors = this.openedAuthors.filter(author => {
+          return author.inFilter === false;
+        });
+      },
+      isAuthorOpened(id) {
+        return this.openedAuthors.findIndex(author => {
+          return author.id === id;
+        }) !== -1;
       },
       ...mapActions('authorsModule', ['getAll', 'removeAuthor', 'updateAuthor'])
     }
