@@ -1,7 +1,7 @@
 <template>
   <fieldset :class="['publish publish-book', {'-has-error': showPublicationErrors}]">
     <!-- Fieldset Legend -->
-    <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
+    <legend>Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
 
     <section v-if="!isInCollection" class="publish-section">
@@ -590,10 +590,18 @@
 </script>
 <style lang="less">
   fieldset.publish-book {
+
+    legend {
+      margin-bottom: 1px !important;
+      border: none;
+      width: auto;
+    }
+
     &.-has-error {
       padding-bottom: 0px !important;
     }
   }
+
   .preloader-spinner {
     width: 100%;
     height: 50px;
