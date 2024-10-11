@@ -51,6 +51,7 @@
       margin-bottom: 1px !important;
       border: none;
       width: auto;
+      font-size: 1.2rem;
     }
   }
 

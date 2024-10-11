@@ -102,6 +102,7 @@
       margin-bottom: 5px;
       border: none;
       width: auto;
+      font-size: 1.2rem;
     }
     div {
       margin: 7px 0px;
