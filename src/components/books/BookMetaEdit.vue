@@ -139,7 +139,7 @@
                                   </span>
                               </template>
                               <template #option="slotProps">
-                                  <div class="">
+                                  <div class="" style="max-width: 260px; text-wrap: balance;">
                                     <div>{{slotProps.option.name}}</div>
                                   </div>
                               </template>
@@ -178,7 +178,7 @@
                                   </span>
                               </template>
                               <template #option="slotProps">
-                                  <div class="">
+                                  <div class="" style="max-width: 260px; text-wrap: balance;">
                                     <div>{{slotProps.option.name_en}}</div>
                                   </div>
                               </template>
