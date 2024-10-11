@@ -117,17 +117,18 @@
                                   :disabled="true||!allowMetadataEdit"
                                   :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
                             <i class="pi pi-exclamation-triangle author-link-empty"
-                              v-if="currentBook.author_link[i].id === null">
+                              v-if="false&&currentBook.author_link[i].id === null">
                             </i>
                             <Dropdown
                               :value="currentBook.author_link[i]"
-                              :options="author_link_arr"
+                              :options="filteredAuthor_link_arr"
                               :disabled="!allowMetadataEdit"
                               :filter="true"
                               :showClear="false&&currentBook.author_link[i].id !== null"
                               @change="changeAuthorLink($event, i, author)"
                               dataKey="id"
-                              optionLabel="name">
+                              optionLabel="name"
+                              filterPlaceholder="Filter Authors">
                               <template #value="slotProps">
                                   <div class="" v-if="slotProps.value">
                                     <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
@@ -155,17 +156,18 @@
                                   :disabled="true||!allowMetadataEdit"
                                   :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
                             <i class="pi pi-exclamation-triangle author-link-empty"
-                              v-if="currentBook.author_link[i].id === null">
+                              v-if="false&&currentBook.author_link[i].id === null">
                             </i>
                             <Dropdown
                               :value="currentBook.author_link[i]"
-                              :options="author_link_arr"
+                              :options="filteredAuthor_link_arr"
                               :disabled="!allowMetadataEdit"
                               :filter="true"
                               :showClear="false&&currentBook.author_link[i].id !== null"
                               @change="changeAuthorLink($event, i, author)"
                               dataKey="id"
-                              optionLabel="name_en">
+                              optionLabel="name_en"
+                              filterPlaceholder="Filter Authors">
                               <template #value="slotProps">
                                   <div class="" v-if="slotProps.value">
                                     <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
@@ -1105,6 +1107,14 @@ export default {
     displayDownloadDemo: {
       get() {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
+      },
+      cache: false
+    },
+
+    filteredAuthor_link_arr: {
+      get() {
+        const selectedAuthors = this.currentBook.author_link.map((a)=>a.id);
+        return this.author_link_arr.filter((a)=>selectedAuthors.indexOf(a.id) < 0);
       },
       cache: false
     }
