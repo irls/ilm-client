@@ -111,77 +111,79 @@
                       <tr class='author-link author-name'>
                         <td>Author</td>
                         <td>
-
-                          <input v-model='currentBook.author_link[i].name'
-                                 @input="editAuthorLink($event, i, 'name')"
-                                :disabled="!allowMetadataEdit"
-                                :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
-                          <i class="pi pi-exclamation-triangle author-link-empty"
-                             v-if="currentBook.author_link[i].id === null">
-                          </i>
-                          <Dropdown
-                            :value="currentBook.author_link[i]"
-                            :options="author_link_arr"
-                            :disabled="!allowMetadataEdit"
-                            :filter="true"
-                            :showClear="currentBook.author_link[i].id !== null"
-                            @change="changeAuthorLink($event, i, author)"
-                            dataKey="id"
-                            optionLabel="name">
-                            <template #value="slotProps">
-                                <div class="" v-if="slotProps.value">
-                                  <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
-                                  <!--<div v-else>{{slotProps.value}}</div>-->
-                                </div>
-                                <span v-else>
-                                  <!--{{slotProps.placeholder}}-->
-                                </span>
-                            </template>
-                            <template #option="slotProps">
-                                <div class="">
-                                  <div>{{slotProps.option.name}}</div>
-                                </div>
-                            </template>
-                          </Dropdown>
-
+                          <div class='author-dropdown'>
+                            <input v-model='currentBook.author_link[i].name'
+                                  @input="editAuthorLink($event, i, 'name')"
+                                  :disabled="true||!allowMetadataEdit"
+                                  :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
+                            <i class="pi pi-exclamation-triangle author-link-empty"
+                              v-if="false&&currentBook.author_link[i].id === null">
+                            </i>
+                            <Dropdown
+                              :value="currentBook.author_link[i]"
+                              :options="filteredAuthor_link_arr"
+                              :disabled="!allowMetadataEdit"
+                              :filter="true"
+                              :showClear="false&&currentBook.author_link[i].id !== null"
+                              @change="changeAuthorLink($event, i, author)"
+                              dataKey="id"
+                              optionLabel="name"
+                              filterPlaceholder="Filter Authors">
+                              <template #value="slotProps">
+                                  <div class="" v-if="slotProps.value">
+                                    <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
+                                    <!--<div v-else>{{slotProps.value}}</div>-->
+                                  </div>
+                                  <span v-else>
+                                    <!--{{slotProps.placeholder}}-->
+                                  </span>
+                              </template>
+                              <template #option="slotProps">
+                                  <div class="">
+                                    <div>{{slotProps.option.name}}</div>
+                                  </div>
+                              </template>
+                            </Dropdown>
+                          </div>
                         </td>
                       </tr>
                       <tr class='author-link author-name' v-if="currentBook.language !== 'en'">
                         <td>Author EN</td>
                         <td>
-
-                          <input v-model='currentBook.author_link[i].name_en'
-                                 @input="editAuthorLink($event, i, 'name_en')"
-                                :disabled="!allowMetadataEdit"
-                                :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
-                          <i class="pi pi-exclamation-triangle author-link-empty"
-                             v-if="currentBook.author_link[i].id === null">
-                          </i>
-                          <Dropdown
-                            :value="currentBook.author_link[i]"
-                            :options="author_link_arr"
-                            :disabled="!allowMetadataEdit"
-                            :filter="true"
-                            :showClear="currentBook.author_link[i].id !== null"
-                            @change="changeAuthorLink($event, i, author)"
-                            dataKey="id"
-                            optionLabel="name_en">
-                            <template #value="slotProps">
-                                <div class="" v-if="slotProps.value">
-                                  <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
-                                  <!--<div v-else>{{slotProps.value}}</div>-->
-                                </div>
-                                <span v-else>
-                                  <!--{{slotProps.placeholder}}-->
-                                </span>
-                            </template>
-                            <template #option="slotProps">
-                                <div class="">
-                                  <div>{{slotProps.option.name_en}}</div>
-                                </div>
-                            </template>
-                          </Dropdown>
-
+                          <div class='author-dropdown'>
+                            <input v-model='currentBook.author_link[i].name_en'
+                                  @input="editAuthorLink($event, i, 'name_en')"
+                                  :disabled="true||!allowMetadataEdit"
+                                  :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
+                            <i class="pi pi-exclamation-triangle author-link-empty"
+                              v-if="false&&currentBook.author_link[i].id === null">
+                            </i>
+                            <Dropdown
+                              :value="currentBook.author_link[i]"
+                              :options="filteredAuthor_link_arr"
+                              :disabled="!allowMetadataEdit"
+                              :filter="true"
+                              :showClear="false&&currentBook.author_link[i].id !== null"
+                              @change="changeAuthorLink($event, i, author)"
+                              dataKey="id"
+                              optionLabel="name_en"
+                              filterPlaceholder="Filter Authors">
+                              <template #value="slotProps">
+                                  <div class="" v-if="slotProps.value">
+                                    <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
+                                    <!--<div v-else>{{slotProps.value}}</div>-->
+                                  </div>
+                                  <span v-else>
+                                    <!--{{slotProps.placeholder}}-->
+                                  </span>
+                              </template>
+                              <template #option="slotProps">
+                                  <div class="">
+                                    <div>{{slotProps.option.name_en}}</div>
+                                  </div>
+                              </template>
+                            </Dropdown>
+                          </div>
                         </td>
                       </tr>
                       <tr class='author-link author-slug'>
@@ -1105,6 +1107,14 @@ export default {
     displayDownloadDemo: {
       get() {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
+      },
+      cache: false
+    },
+
+    filteredAuthor_link_arr: {
+      get() {
+        const selectedAuthors = this.currentBook.author_link.map((a)=>a.id);
+        return this.author_link_arr.filter((a)=>selectedAuthors.indexOf(a.id) < 0);
       },
       cache: false
     }
@@ -2816,11 +2826,6 @@ select.text-danger#categorySelection, input.text-danger{
   table tr input {font-size: 1em; width: 100%}
   tr.subtitle input {font-size: .85em; width: 100%; line-height: 1.85em;}
 
-  /*TODO remove*/
-  tr.author input {width: 90%;}
-  tr.author button {border: none !important; background-color: inherit; padding: 0}
-  tr.author button.disabled i {display: none; border: none;}
-
   #p-book-content.tab-container[role="tabpanel"] {
     table.properties {
       tr.author-link-container {
@@ -2841,7 +2846,6 @@ select.text-danger#categorySelection, input.text-danger{
           tr.author-link {
             border: none;
             background-color: white;
-            height: 35px;
 
             &.rem-author {
               height: 15px;
@@ -2849,6 +2853,13 @@ select.text-danger#categorySelection, input.text-danger{
 
             &:nth-child(odd) {
               background-color: #F0F0F0;
+            }
+
+            div.author-dropdown {
+              position: relative;
+              width: 100%;
+              max-height: 32px;
+
             }
 
             td:nth-child(1) {
@@ -2861,21 +2872,24 @@ select.text-danger#categorySelection, input.text-danger{
               text-align: left;
 
               div.p-dropdown.p-component {
-                border-radius: 0px 2px 2px 0px;
+                /*border-radius: 0px 2px 2px 0px;*/
                 /*border-left-width: 0px;*/
                 height: 30px;
-                margin-left: -10px;
-                left: -1px;
-                float: right;
+                position: relative;
+                top: -30px;
+                width: 100%;
               }
             }
 
             input.author-name {
               width: 86%;
+              height: 30px;
               margin-left: 0;
               margin-right: auto;
               border: 1px solid rgb(118, 118, 118);
               border-radius: 2px 0px 0px 2px;
+              position: relative;
+              z-index: 1;
               /*border-right-width: 0px;*/
 
               &:disabled {
@@ -2887,7 +2901,7 @@ select.text-danger#categorySelection, input.text-danger{
               position: absolute;
               z-index: 1;
               font-size: 1.6rem;
-              top: 10px;
+              top: 7px;
               margin-left: 3px;
               color: red;
             }
@@ -3361,7 +3375,7 @@ select.text-danger#categorySelection, input.text-danger{
         }
       }
       div.p-dropdown-panel.p-component {
-        margin-left: -40%;
+        /*margin-left: -40%;*/
       }
     }
   }
