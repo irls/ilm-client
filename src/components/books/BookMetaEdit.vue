@@ -110,8 +110,7 @@
                     <table class='author-link-table'>
                       <tr class='author-link author-name'>
                         <td>Author</td>
-                        <td>
-
+                        <td class='author-dropdown'>
                           <input v-model='currentBook.author_link[i].name'
                                  @input="editAuthorLink($event, i, 'name')"
                                 :disabled="!allowMetadataEdit"
@@ -148,8 +147,7 @@
                       </tr>
                       <tr class='author-link author-name' v-if="currentBook.language !== 'en'">
                         <td>Author EN</td>
-                        <td>
-
+                        <td class='author-dropdown'>
                           <input v-model='currentBook.author_link[i].name_en'
                                  @input="editAuthorLink($event, i, 'name_en')"
                                 :disabled="!allowMetadataEdit"
@@ -2848,6 +2846,10 @@ select.text-danger#categorySelection, input.text-danger{
 
             &:nth-child(odd) {
               background-color: #F0F0F0;
+            }
+
+            td.author-dropdown {
+              position: relative;
             }
 
             td:nth-child(1) {
