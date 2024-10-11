@@ -4,7 +4,7 @@
       <legend>
         Align text with TTS audio
       </legend>
-      <AlignAudioSpeed 
+      <AlignAudioSpeed
         :audio_type="'tts'"
         :is_catalog_active="is_active"/>
       <table class="table table-striped table-bordered table-voices">
@@ -67,7 +67,7 @@
             0 blocks selected
           </template>
           <template v-else>
-            {{alignCounter.countTTS}} TTS block(s) in range 
+            {{alignCounter.countTTS}} TTS block(s) in range
             <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
             <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
           </template>
@@ -154,7 +154,7 @@
           <div class="book-voice-option -name" v-on:dblclick="setEditingVoice(voice)">
             <input v-model="editing_voice_name" v-if="editing_voice_id === voice.id" class="editing-voice-name"
               :maxlength="new_name_maxlength"
-              v-on:change="saveVoice()" 
+              v-on:change="saveVoice()"
               v-on:blur="setEditingVoice(null)" />
             <span class="book-voice-name" v-else>{{voice.name}}</span>
           </div>
@@ -174,7 +174,7 @@
   import lodash from 'lodash';
   import AlignAudioSpeed from './AlignAudioSpeed.vue';
   //import v_modal from 'vue-js-modal';
-  
+
   //Vue.use(v_modal, { dialog: true });
   export default {
     data() {
@@ -518,7 +518,7 @@
       ...mapActions(['updateBookMeta']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
     },
-    
+
     watch: {
       'currentBookid': {
         handler(val) {
@@ -583,6 +583,9 @@
       border: 1px solid #b9b6b6;
       legend {
         margin: 0px;
+        border: none;
+        width: auto;
+        font-size: 1.2rem;
       }
     }
     table {
@@ -591,14 +594,14 @@
       td {
         width: 30%;
       }
-      
+
       td:nth-child(2) {
         width: 70%;
       }
     }
     .table.table-voices {
       margin: 0px 2px;
-      
+
       thead {
         tr {
 
@@ -662,7 +665,7 @@
         td {
           vertical-align: middle;
           padding: 2px 5px;
-          
+
           select {
             border: 1px solid #b9b6b6;
             color: #333;

@@ -109,10 +109,10 @@
     margin-bottom: 10px;
     legend {
       padding: 2px 4px 0px 4px;
-      font-size: 12px;
       margin-bottom: 4px;
       border: none;
       width: auto;
+      font-size: 1.2rem;
     }
     .genres-list {
       border: 1px solid #f0f0f0;
