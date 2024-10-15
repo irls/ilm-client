@@ -121,10 +121,13 @@
                             </i>
                             <Dropdown
                               :value="currentBook.author_link[i]"
-                              :options="filteredAuthor_link_arr"
+                              :options="author_link_arr"
                               :disabled="!allowMetadataEdit"
                               :filter="true"
                               :showClear="false&&currentBook.author_link[i].id !== null"
+                              :optionDisabled="getDisabledAuthors"
+                              ref="author_link_name"
+                              @before-hide="onHideAuthorLinkDropdown"
                               @change="changeAuthorLink($event, i, author)"
                               dataKey="id"
                               optionLabel="name"
@@ -160,10 +163,13 @@
                             </i>
                             <Dropdown
                               :value="currentBook.author_link[i]"
-                              :options="filteredAuthor_link_arr"
+                              :options="author_link_arr"
                               :disabled="!allowMetadataEdit"
                               :filter="true"
                               :showClear="false&&currentBook.author_link[i].id !== null"
+                              :optionDisabled="getDisabledAuthors"
+                              ref="author_link_name_en"
+                              @before-hide="onHideAuthorEnLinkDropdown"
                               @change="changeAuthorLink($event, i, author)"
                               dataKey="id"
                               optionLabel="name_en"
@@ -1111,12 +1117,11 @@ export default {
       cache: false
     },
 
-    filteredAuthor_link_arr: {
+    selectedAuthorsIds: {
       get() {
-        const selectedAuthors = this.currentBook.author_link.map((a)=>a.id);
-        return this.author_link_arr.filter((a)=>selectedAuthors.indexOf(a.id) < 0);
+        return this.currentBook.author_link.map((a)=>a.id)
       },
-      cache: false
+      cache: true
     }
   },
 
@@ -1358,6 +1363,12 @@ export default {
             delete this.requiredFields[this.currentBook.bookid]['slug'];
           }
         }
+      }
+    },
+
+    'currentBook.language': {
+      handler(val) {
+        this.$store.dispatch('authorsMapModule/getAuthorsList', { lang: val || 'en' });
       }
     }
 
@@ -2643,6 +2654,22 @@ export default {
       if (this.requiredFields[this.currentBookMeta.bookid]) {
         delete this.requiredFields[this.currentBookMeta.bookid].genres;
         this.$forceUpdate();
+      }
+    },
+
+    getDisabledAuthors(val) {
+      return this.selectedAuthorsIds.indexOf(val.id) >= 0;
+    },
+
+    onHideAuthorLinkDropdown() {
+      for (const filter of this.$refs.author_link_name) {
+        filter.filterValue = '';
+      }
+    },
+
+    onHideAuthorEnLinkDropdown() {
+      for (const filter of this.$refs.author_link_name_en) {
+        filter.filterValue = '';
       }
     },
 
