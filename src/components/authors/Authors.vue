@@ -124,6 +124,10 @@
         return;
       }
       this.loadList();
+      Vue.nextTick(() => {
+        this.setContainerHeight();
+      });
+      window.addEventListener('resize', this.setContainerHeight);
     },
     computed: {
       ...mapGetters(['adminOrLibrarian']),
@@ -371,6 +375,10 @@
           return author.id === id;
         }) !== -1;
       },
+      setContainerHeight() {
+        let containersHeight = document.querySelector('.top-menu-wrapper').offsetHeight + document.querySelector('.authors-filter').offsetHeight;
+        document.querySelector('.all-authors').style.height = window.innerHeight - parseInt(containersHeight) + 'px';
+      },
       ...mapActions('authorsModule', ['getAll', 'removeAuthor', 'updateAuthor'])
     }
   }
@@ -401,7 +409,6 @@
     }
     .all-authors {
       overflow-y: scroll;
-      max-height: 80vh;
       table {
         thead {
           position: sticky;
