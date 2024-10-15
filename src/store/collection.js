@@ -2,6 +2,7 @@
 
 const weightRange = [1, 10.99];
 const difficultyRange = [1, 14.99];
+const DEFAULT_WEIGTH = 5.00;
 
 class Collection {
   constructor(data) {
@@ -64,15 +65,15 @@ class Collection {
       }
     })*/
     this.books_list = this.books_list.sort((a, b) => {
-      return 1 * (b.weight || 1) - 1 * (a.weight || 1) || 1 * (b.difficulty || 1) - 1 * (a.difficulty || 1) || a.title.localeCompare(b.title);
-      let weightDiff = 1 * a.weight - 1 * b.weight;
-      if (weightDiff) {
-        return -1;
-      } else if (b.weight > a.weight) {
-        return 1;
-      } else {
-        return a.title > b.title ? -1 : 1;
-      }
+      return 1 * (a.weight || DEFAULT_WEIGTH) - 1 * (b.weight || DEFAULT_WEIGTH) || 1 * (b.difficulty || 1) - 1 * (a.difficulty || 1) || a.title.localeCompare(b.title);
+      // let weightDiff = 1 * a.weight - 1 * b.weight;
+      // if (weightDiff) {
+      //   return -1;
+      // } else if (b.weight > a.weight) {
+      //   return 1;
+      // } else {
+      //   return a.title > b.title ? -1 : 1;
+      // }
     });
   }
 
