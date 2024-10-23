@@ -641,9 +641,38 @@
             border: none;
             width: 27px;
           }
+
+          .dropdown {
+            position: relative;
+            display: inline-block;
+          }
+
+          .dropdown-button {
+            border: 1px solid #444;
+            border-radius: 2px;
+            padding: 4px 6px 4px 0px;
+            height: 30px
+          }
+
           .dropdown-content {
+            cursor: default;
+            top: 30px;
+            left:-59px;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 80px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            padding: 5px;
+            z-index: 1;
+            border: 1px solid #aaa;
             text-align: center;
           }
+
+          .dropdown-content:hover {
+            background: #1e90ff;
+            color: #fff;
+          }
+
         }
       }
     }
