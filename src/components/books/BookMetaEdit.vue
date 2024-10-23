@@ -2737,7 +2737,7 @@ select.text-danger#categorySelection, input.text-danger{
   position: sticky;
   top: -1px;
   background-color: white;
-  z-index: 1;
+  z-index: 2;
 }
 
 /*.meta-edit-tabs .nav-tabs-navigation .nav > li {
@@ -3320,7 +3320,7 @@ select.text-danger#categorySelection, input.text-danger{
     padding: 5px;
     margin: 5px;
     font-size: 110%;
-  } */
+  }
 
   .dropdown {
     position: relative;
@@ -3350,7 +3350,7 @@ select.text-danger#categorySelection, input.text-danger{
   .dropdown-content:hover {
     background: #1e90ff;
     color: #fff;
-  }
+  }*/
 
   td.category-wrapper {
     position: relative;
