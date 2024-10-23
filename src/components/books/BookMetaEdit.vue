@@ -2736,7 +2736,7 @@ select.text-danger#categorySelection, input.text-danger{
   position: sticky;
   top: -1px;
   background-color: white;
-  z-index: 1;
+  z-index: 2;
 }
 
 /*.meta-edit-tabs .nav-tabs-navigation .nav > li {
