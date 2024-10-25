@@ -1915,6 +1915,7 @@ export const store = new Vuex.Store({
         commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: 0});
         commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: 0});
         commit('SET_CURRENTBOOK_COUNTER', {name: 'enabled_blocks', value: 0});
+        commit('publishModule/clear_htmlErrors');
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 

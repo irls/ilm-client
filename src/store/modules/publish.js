@@ -88,6 +88,12 @@ export default {
     },
     set_blocksHtmlErrors(state, html_errors) {
       state.blocksHtmlErrors = html_errors;
+    },
+    clear_htmlErrors(state) {
+      state.allPublicationErrors.blocks = [];
+      Object.keys(state.allPublicationErrors.book).forEach(fieldKey => {
+        state.allPublicationErrors.book[fieldKey] = "";
+      });
     }
   },
   actions: {
