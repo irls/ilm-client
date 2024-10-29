@@ -143,7 +143,7 @@
               //}
 
               const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
-                return author.name.length && author.slug.length //&& author.id;
+                return author.name.length;// && author.slug.length //&& author.id;
               });
 
               if (!isAuthorLink) {
