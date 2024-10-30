@@ -1470,7 +1470,8 @@ export default {
         //}
 
         const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
-          return author.name.length;// && author.slug.length //&& author.id;
+          const isAuthor_en = this.currentBookMeta.language != 'en' ? author.name_en.length > 0 : true;
+          return author.name.length && isAuthor_en;// && author.slug.length //&& author.id;
         });
         if (!isAuthorLink) {
           this.requiredFields[this.currentBookMeta.bookid]['author_link'] = true;
