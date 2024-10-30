@@ -199,8 +199,8 @@
                           <input v-model='currentBook.author_link[i].slug'
                                  @input="editAuthorLink($event, i, 'slug')"
                                 :disabled="true || !allowMetadataEdit"
-                                :class="['author-slug'}]" />
-                          <!--, { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']-->
+                                :class="['author-slug']" />
+                          <!--, {'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
 
                           <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']" class="validation-error" style="text-align: right !important;">Define Author</span>
 
