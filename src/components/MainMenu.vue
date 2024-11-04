@@ -15,6 +15,8 @@
           <a>Collections</a>
         </router-link>-->
 
+        <router-link to="/authors" class="presentation" tag="li" v-show="isAdmin || isLibrarian"><a>Authors</a></router-link>
+
         <router-link to="/users" class='presentation' tag='li'
         v-show="isAdmin || isBookkeeper || isLibrarian"
         ><a>Users</a></router-link>
