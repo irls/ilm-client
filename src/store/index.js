@@ -24,6 +24,7 @@ import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
 import publishModule from './modules/publish';
 import authorsMapModule from './modules/authorsMap';
+import authorsModule from './modules/authors';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -91,7 +92,8 @@ export const store = new Vuex.Store({
     ttsModule,
     genreModule,
     publishModule,
-    authorsMapModule
+    authorsMapModule,
+    authorsModule
   },
   state: {
     SelectionModalProgress:0,
