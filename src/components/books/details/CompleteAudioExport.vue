@@ -6,8 +6,8 @@
       <button class="btn btn-primary" v-else v-on:click="startGenerateCompleteAudio" :disabled="isGenerating">Rebuild</button>
       &nbsp;&nbsp;{{blocksCountForExport}} block(s)
       <span v-if="blockSelection.start && blockSelection.start._id">
-        in range 
-        <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> - 
+        in range
+        <a v-on:click="goToBlock(blockSelection.start._id)">{{blockSelection.start._id_short}}</a> -
         <a v-on:click="goToBlock(blockSelection.end._id)">{{blockSelection.end._id_short}}</a>
       </span>
     </div>
@@ -100,6 +100,9 @@
   fieldset.complete-audio {
     legend {
       margin-bottom: 5px;
+      border: none;
+      width: auto;
+      font-size: 1.2rem;
     }
     div {
       margin: 7px 0px;
