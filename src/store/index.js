@@ -2211,7 +2211,7 @@ export const store = new Vuex.Store({
 
       if (!state.currentBookMeta.genres_manual) {
         let updateGenres = Object.keys(update).find(updateField => {
-          return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
+          return ['title', 'author_link'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
         });
         if (!updateGenres) {
           if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
