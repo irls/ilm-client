@@ -2058,7 +2058,7 @@ Save or discard your changes to continue editing`,
                     }
                     if (!delCount) {
                       this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                        this.block.footnotes[footnoteIdx].content = this.clearBlockContent(document.querySelector(`[data-footnoteIdx="${this.block._id}_${footnoteIdx}"`).innerHTML);
+                        this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"]').html());
                       });
                     }
                   }
