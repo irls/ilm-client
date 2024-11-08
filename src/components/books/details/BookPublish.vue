@@ -424,13 +424,15 @@
         return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
       setPublishErrorsContainerHeight() {
-        let height = this.calculatePublishErrorsContainerHeight();
-        if (height) {
-          let container = document.querySelector(`.publish-html-validation .p-accordion-content`);
-          if (container) {
-            container.style['max-height'] = `${height}px`;
+        Vue.nextTick(() => {
+          let height = this.calculatePublishErrorsContainerHeight();
+          if (height) {
+            let container = document.querySelector(`.publish-html-validation .p-accordion-content`);
+            if (container) {
+              container.style['max-height'] = `${height}px`;
+            }
           }
-        }
+        });
       },
       ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
       ...mapActions('publishModule', ['publishBook', 'checkBlocksHTMLErrors', 'publishCollectionBook', 'reReadPublicationErrors'])
@@ -582,6 +584,13 @@
             Vue.nextTick(() => {
               this.setPublishErrorsContainerHeight();
             });
+          }
+        }
+      },
+      'showPublicationErrors': {
+        handler(val) {
+          if (val) {
+            this.setPublishErrorsContainerHeight();
           }
         }
       }

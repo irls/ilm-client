@@ -4,11 +4,15 @@ import lodash from 'lodash';
 export default {
   namespaced: true,
   state: {
-    allPublicationErrors: {book: {}, blocks: []}
+    allPublicationErrors: {book: {}, blocks: []},
+    blocksHtmlErrors: []
   },
   getters: {
     allPublicationErrors: state => {
       return state.allPublicationErrors;
+    },
+    blocksHtmlErrors: state => {
+      return state.blocksHtmlErrors;
     }
   },
   mutations: {
@@ -39,11 +43,7 @@ export default {
         if (updated_blocks && updated_blocks.length > 0) {
           check_blocks = updated_blocks;
         } else {
-          check_blocks = Array.from(this.getters.storeList).filter(block => {
-            return block[1].html_errors.length > 0;
-          }).map(blk => {
-            return blk[1];
-          });
+          check_blocks = lodash.cloneDeep(state.blocksHtmlErrors);
         }
         check_blocks./*filter(block => {
           return !block.disabled;
@@ -85,6 +85,15 @@ export default {
           return blk.blockid !== block.blockid;
         });
       }
+    },
+    set_blocksHtmlErrors(state, html_errors) {
+      state.blocksHtmlErrors = html_errors;
+    },
+    clear_htmlErrors(state) {
+      state.allPublicationErrors.blocks = [];
+      Object.keys(state.allPublicationErrors.book).forEach(fieldKey => {
+        state.allPublicationErrors.book[fieldKey] = "";
+      });
     }
   },
   actions: {
@@ -138,6 +147,17 @@ export default {
     },
     reReadPublicationErrors({state, commit}, [blocks = []]) {
       commit('set_publicationErrors', [blocks]);
+    },
+    loadHtmlErrorsBlocks({rootState, commit}) {
+      if (rootState.currentBookMeta.bookid) {
+        return axios.get(`${rootState.API_URL}books/${rootState.currentBookMeta.bookid}/block/html_errors`)
+          .then(response => {
+            commit('set_blocksHtmlErrors', response.data);
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
     }
   }
 }
