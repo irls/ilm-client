@@ -169,7 +169,12 @@ export default {
         .filter(book => (state.booksFilters.importStatus.length == 0 || (state.booksFilters.importStatus).indexOf(book.importStatus) >= 0))
         .filter(book => (state.booksFilters.jobStatus.length == 0 || (state.booksFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
-          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          const bookAuthors = Array.isArray(book.author_link) ? book.author_link.filter(author => {
+            return author.name || author.name_en;
+          }).reduce((authors, author) => {
+            authors.push(author.name ? author.name : author.name_en);
+            return authors;
+          }, []).join('|') : '';
           const bookCategories = Object.keys(book.alt_meta).reduce((acc, key)=>{
             if (book.alt_meta[key].category && book.alt_meta[key].category.length) {
               acc.push(book.alt_meta[key].category);
@@ -258,7 +263,12 @@ export default {
         .filter(book => (state.booksFilters.importStatus.length == 0 || (state.booksFilters.importStatus).indexOf(book.importStatus) >= 0))
         .filter(book => (state.booksFilters.jobStatus.length == 0 || (state.booksFilters.jobStatus).indexOf(book.job_status) >= 0))
         .filter(book => {
-          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
+          const bookAuthors = Array.isArray(book.author_link) ? book.author_link.filter(author => {
+            return author.name || author.name_en;
+          }).reduce((authors, author) => {
+            authors.push(author.name ? author.name : author.name_en);
+            return authors;
+          }, []).join('|') : '';
           const bookCategories = Object.keys(book.alt_meta).reduce((acc, key)=>{
             if (book.alt_meta[key].category && book.alt_meta[key].category.length) {
               acc.push(book.alt_meta[key].category);
