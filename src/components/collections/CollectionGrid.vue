@@ -265,10 +265,15 @@
               },
               {
                 title: 'Author',
-                path: 'author',
+                path: 'author_link',
                 addClass: 'author width-16-p',
                 html(val) {
-                  const text = val && Array.isArray(val) ? val.join(', ') : val;
+                  const text = val && Array.isArray(val) ? val.filter(author => {
+                    return author.name || author.name_en;
+                  }).reduce((authors, author) => {
+                    authors.push(author.name);
+                    return authors;
+                  }, []).join(', ') : val;
                   // data-tooltip="${text}"
                   return `<span>${text}</span>`;
                 }
