@@ -7,7 +7,7 @@
     name="languages[]"
     :search="search"
     multiple
-    :placeholder="'Editor Languages'"
+    :placeholder="placeholder ? placeholder : 'Editor Languages'"
     :disabled="isDisabled"
     :class="['languages-select', 'user-languages-select ' + classList]"
   ></v-select>
@@ -37,7 +37,8 @@ export default {
   props: [
     'selected',
     'isDisabled',
-    'inModal'
+    'inModal',
+    'placeholder'
   ],
   
   computed: {

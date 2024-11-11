@@ -257,6 +257,9 @@
   .job-workflow {
     legend {
       margin-bottom: 0px;
+      border: none;
+      width: auto;
+      font-size: 1.2rem;
     }
     .status-name {
       padding: 10px 2px;

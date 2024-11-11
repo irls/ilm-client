@@ -9,7 +9,7 @@ import {liveDB} from './liveDB'
 import { Collection } from './collection'
 import suspiciousWordsHighlight from './suspiciousWordsHighlight';
 const _ = require('lodash')
-import axios from 'axios'
+import axios from 'axios';
 PouchDB.plugin(hoodie)
 import uploadImage from './uploadImage'
 import testAudioConvert from './modules/testAudioConvert';
@@ -23,6 +23,8 @@ import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
 import publishModule from './modules/publish';
+import authorsMapModule from './modules/authorsMap';
+import authorsModule from './modules/authors';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -89,7 +91,9 @@ export const store = new Vuex.Store({
     tocSections,
     ttsModule,
     genreModule,
-    publishModule
+    publishModule,
+    authorsMapModule,
+    authorsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -1915,6 +1919,7 @@ export const store = new Vuex.Store({
         commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: 0});
         commit('SET_CURRENTBOOK_COUNTER', {name: 'total_blocks', value: 0});
         commit('SET_CURRENTBOOK_COUNTER', {name: 'enabled_blocks', value: 0});
+        commit('publishModule/clear_htmlErrors');
       }
       //let oldBook = (state.currentBook && state.currentBook._id)
 
@@ -1998,7 +2003,8 @@ export const store = new Vuex.Store({
                 dispatch('tc_loadBookTask', state.currentBookMeta.bookid);
               }
             }
-          })
+          });
+          dispatch('publishModule/loadHtmlErrorsBlocks');
           return Promise.resolve(answer);
         }).catch((err)=>{
           state.loadBookWait = null;
@@ -2198,7 +2204,7 @@ export const store = new Vuex.Store({
 
       if (!state.currentBookMeta.genres_manual) {
         let updateGenres = Object.keys(update).find(updateField => {
-          return ['title', 'author'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
+          return ['title', 'author_link'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
         });
         if (!updateGenres) {
           if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {

@@ -1,7 +1,7 @@
 <template>
   <fieldset :class="['publish publish-book', {'-has-error': showPublicationErrors}]">
     <!-- Fieldset Legend -->
-    <legend style="margin-bottom: 1px !important;">Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
+    <legend>Publication<!--{{ currentBookMeta.published ? 'Published' : 'Unpublished' }}--></legend>
     <BlocksDisable v-if="showDisabledBlock"></BlocksDisable>
 
     <section v-if="!isInCollection" class="publish-section">
@@ -132,19 +132,29 @@
                   mandatoryFields.push('Title');
               }
 
-              if (this.currentBookMeta.author.join("").length == 0){
-                  canPublish = false;
-                  mandatoryFields.push('Author');
+              //if (this.currentBookMeta.author.join("").length == 0){
+              //    canPublish = false;
+              //    mandatoryFields.push('Author');
+              //}
+
+              //if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !//this.currentBookMeta.hasOwnProperty('author_en'))){
+              //    canPublish = false;
+              //    mandatoryFields.push('Author EN (author English translation)');
+              //}
+
+              const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
+                const isAuthor_en = this.currentBookMeta.language != 'en' ? author.name_en.length > 0 : true;
+                return author.name.length && isAuthor_en;// && author.slug.length //&& author.id;
+              });
+
+              if (!isAuthorLink) {
+                canPublish = false;
+                mandatoryFields.push('Author');
               }
 
               if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
                   canPublish = false;
                   mandatoryFields.push('Title EN (title English translation)');
-              }
-
-              if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.author_en == '' || !this.currentBookMeta.hasOwnProperty('author_en'))){
-                  canPublish = false;
-                  mandatoryFields.push('Author EN (author English translation)');
               }
 
               const alt_meta = this.currentBookMeta.alt_meta;
@@ -414,13 +424,15 @@
         return containerHeight && containerHeight > 0 ? containerHeight : null;
       },
       setPublishErrorsContainerHeight() {
-        let height = this.calculatePublishErrorsContainerHeight();
-        if (height) {
-          let container = document.querySelector(`.publish-html-validation .p-accordion-content`);
-          if (container) {
-            container.style['max-height'] = `${height}px`;
+        Vue.nextTick(() => {
+          let height = this.calculatePublishErrorsContainerHeight();
+          if (height) {
+            let container = document.querySelector(`.publish-html-validation .p-accordion-content`);
+            if (container) {
+              container.style['max-height'] = `${height}px`;
+            }
           }
-        }
+        });
       },
       ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
       ...mapActions('publishModule', ['publishBook', 'checkBlocksHTMLErrors', 'publishCollectionBook', 'reReadPublicationErrors'])
@@ -574,6 +586,13 @@
             });
           }
         }
+      },
+      'showPublicationErrors': {
+        handler(val) {
+          if (val) {
+            this.setPublishErrorsContainerHeight();
+          }
+        }
       }
 
     }
@@ -581,10 +600,19 @@
 </script>
 <style lang="less">
   fieldset.publish-book {
+
+    legend {
+      margin-bottom: 1px !important;
+      border: none;
+      width: auto;
+      font-size: 1.2rem;
+    }
+
     &.-has-error {
       padding-bottom: 0px !important;
     }
   }
+
   .preloader-spinner {
     width: 100%;
     height: 50px;

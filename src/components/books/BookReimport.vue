@@ -330,9 +330,9 @@
   }
 
   .modal-header .header-title button {
-    float: none;
+    float: right;
     width: auto;
-    right: 0px;
+    margin-right: 5px;
   }
 
   .modal-default-button {
