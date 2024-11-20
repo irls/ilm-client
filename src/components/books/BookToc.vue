@@ -838,7 +838,7 @@ export default {
     },
     
     downloadBookLink() {
-      return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download/${this.buildTypeSection}`);
+      return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download/${this.buildType}`);
     },
     
     hasError(section_id = null, field = null) {
