@@ -165,10 +165,10 @@ export default {
         });
     },
 
-    exportTocSectionBook({state, dispatch, rootState}) {
+    exportTocSectionBook({state, dispatch, rootState}, [buildData]) {
       if (rootState.currentBookid) {
         state.tocSectionBook.isBuilding = true;
-        state.bookTocSectionsXHR = axios.post(`${rootState.API_URL}toc_section/book/${rootState.currentBookid}/export`);
+        state.bookTocSectionsXHR = axios.post(`${rootState.API_URL}toc_section/book/${rootState.currentBookid}/export`, buildData);
         return state.bookTocSectionsXHR.then(response => {
           state.bookTocSectionsXHR = null;
           return Promise.resolve();
