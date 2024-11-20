@@ -1550,7 +1550,7 @@ export default {
         padding: 0px 5px;
         width: 105px;
         &.-toc-actions {
-          width: 255px;
+          width: 260px;
           select {
             height: 34px;
             border-radius: 4px;
