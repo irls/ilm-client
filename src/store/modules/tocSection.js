@@ -44,7 +44,7 @@ export default {
   },
   mutations: {
     set_toc_section_book(state, tocSectionBook) {
-      state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
+      state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false, buildData: {"m4a": {}, "flac": {}}};
     },
     set_book_toc_sections(state, sections) {
       let language = this.getters.currentBookMeta ? this.getters.currentBookMeta.language : 'en';
