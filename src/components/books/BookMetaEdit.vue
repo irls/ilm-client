@@ -103,22 +103,33 @@
 
                 <tr class='author-link-container'>
                   <td colspan="2">
-
-                  <fieldset v-for="(author, i) in currentBook.author_link" class='author-link authors-list'>
+                    <BookAuthors 
+                      :allowMetadataEdit="allowMetadataEdit"
+                      :requiredFields="requiredFields"
+                      :author_link="currentBook.author_link"
+                      @addAuthorLink="addAuthorLink"
+                      @removeAuthorLink="removeAuthorLink"
+                      @editAuthorLink="editAuthorLink"
+                      @verifyAuthor="verifyAuthor"
+                      @changeAuthorLink="changeAuthorLink" />
+                  <!-- <fieldset v-for="(author, i) in currentBook.author_link" class='author-link authors-list'>
                   <legend>Author</legend>
 
                     <table class='author-link-table'>
                       <tr class='author-link author-name'>
-                        <td>Author</td>
+                        <td>
+                          Author
+                          <i class="pi pi-exclamation-triangle author-link-empty"
+                            v-if="(currentBook.author_link[i].id === null || currentBook.author_link[i].alt_author) && currentBook.author_link[i].name"
+                            v-on:click="verifyAuthor(currentBook.author_link[i])">
+                          </i>
+                        </td>
                         <td>
                           <div class='author-dropdown'>
                             <input v-model='currentBook.author_link[i].name'
                                   @input="editAuthorLink($event, i, 'name')"
-                                  :disabled="true||!allowMetadataEdit"
+                                  :disabled="!allowMetadataEdit"
                                   :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
-                            <i class="pi pi-exclamation-triangle author-link-empty"
-                              v-if="false&&currentBook.author_link[i].id === null">
-                            </i>
                             <Dropdown
                               :value="currentBook.author_link[i]"
                               :options="author_link_arr"
@@ -134,11 +145,9 @@
                               filterPlaceholder="Filter Authors">
                               <template #value="slotProps">
                                   <div class="" v-if="slotProps.value">
-                                    <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
-                                    <!--<div v-else>{{slotProps.value}}</div>-->
                                   </div>
                                   <span v-else>
-                                    <!--{{slotProps.placeholder}}-->
+                                    
                                   </span>
                               </template>
                               <template #option="slotProps">
@@ -164,7 +173,7 @@
                             <Dropdown
                               :value="currentBook.author_link[i]"
                               :options="author_link_arr"
-                              :disabled="!allowMetadataEdit"
+                              :disabled="!allowMetadataEdit || currentBook.author_link[i].id"
                               :filter="true"
                               :showClear="false&&currentBook.author_link[i].id !== null"
                               :optionDisabled="getDisabledAuthors"
@@ -176,11 +185,10 @@
                               filterPlaceholder="Filter Authors">
                               <template #value="slotProps">
                                   <div class="" v-if="slotProps.value">
-                                    <!--<div v-if="slotProps.value.name">{{slotProps.value.name}}</div>-->
-                                    <!--<div v-else>{{slotProps.value}}</div>-->
+                                    
                                   </div>
                                   <span v-else>
-                                    <!--{{slotProps.placeholder}}-->
+                                    
                                   </span>
                               </template>
                               <template #option="slotProps">
@@ -198,9 +206,8 @@
 
                           <input v-model='currentBook.author_link[i].slug'
                                  @input="editAuthorLink($event, i, 'slug')"
-                                :disabled="true || !allowMetadataEdit"
+                                :disabled="authorSlugDisabled(currentBook.author_link[i])"
                                 :class="['author-slug']" />
-                          <!--, {'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
 
                           <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']" class="validation-error" style="text-align: right !important;">Define Author</span>
 
@@ -225,7 +232,7 @@
                         <i class="fa fa-plus-circle"></i>
                         <span class="author-link add-author-hint">Add author</span>
                       </button>
-                    </div>
+                    </div> -->
 
                   </td>
                 </tr>
@@ -763,6 +770,7 @@ import VTagSuggestion       from './details/HashTag';
 import ResizableTextarea    from '../generic/ResizableTextarea';
 import Genre                from './details/Genre';
 import v_modal              from 'vue-js-modal';
+import BookAuthors          from './details/BookAuthors';
 
 Vue.use(v_modal, {dialog: true});
 
@@ -824,7 +832,8 @@ export default {
     VTagSuggestion,
     'resizable-textarea': ResizableTextarea,
     CoupletWarningPopup,
-    Genre
+    Genre,
+    BookAuthors
   },
 
   data () {
@@ -964,7 +973,7 @@ export default {
       hashTagsSuggestions: 'hashTagsSuggestions',
       playingBlock: 'playingBlock',
       isBookReaderCategory: 'isBookReaderCategory',
-      author_link_arr: 'authorsMapModule/author_link_arr',
+      //author_link_arr: 'authorsMapModule/author_link_arr',
     }),
     proofreadModeReadOnly: {
       get() {
@@ -1116,13 +1125,6 @@ export default {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
       },
       cache: false
-    },
-
-    selectedAuthorsIds: {
-      get() {
-        return this.currentBook.author_link.map((a)=>a.id)
-      },
-      cache: true
     }
   },
 
@@ -1919,6 +1921,12 @@ export default {
 
     editAuthorLink(ev, i, field) {
       this.currentBook.author_link[i].id = null;
+      this.currentBook.author_link[i].slug = "";
+      delete this.currentBook.author_link[i].alt_author;
+      if (this.currentBook.author_link[i].name_en && field === "name") {
+        this.currentBook.author_link[i].name_en = "";
+        delete this.currentBook.author_link[i].alt_author_en;
+      }
       this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
@@ -2513,7 +2521,6 @@ export default {
     },
 
     deactivateDemoLink() {
-      console.log('inside deactivate');
       return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/deactivateDemoLink')
              .then(resp => {
                //this.isExporting = false;
@@ -2659,7 +2666,7 @@ export default {
       }
     },
 
-    getDisabledAuthors(val) {
+    /*getDisabledAuthors(val) {
       return this.selectedAuthorsIds.indexOf(val.id) >= 0;
     },
 
@@ -2673,7 +2680,28 @@ export default {
       for (const filter of this.$refs.author_link_name_en) {
         filter.filterValue = '';
       }
+    },**/
+
+    verifyAuthor(author, author_en) {
+      let update = {
+        bookid: this.currentBook.bookid
+      };
+      let authorIndex = this.currentBook.author_link.findIndex(auth => {
+        return auth.slug === author.slug;
+      });
+      if (authorIndex >= 0) {
+        if (!author_en) {
+          this.currentBook.author_link[authorIndex].name = author.alt_author;
+          delete this.currentBook.author_link[authorIndex].alt_author;
+        } else {
+          this.currentBook.author_link[authorIndex].name_en = author.alt_author_en;
+          delete this.currentBook.author_link[authorIndex].alt_author_en;
+        }
+        update.author_link = this.currentBook.author_link;
+        return this.updateBookMeta(update);
+      }
     },
+
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
@@ -2926,12 +2954,11 @@ select.text-danger#categorySelection, input.text-danger{
             }
 
             i.author-link-empty {
-              position: absolute;
-              z-index: 1;
               font-size: 1.6rem;
-              top: 7px;
               margin-left: 3px;
               color: red;
+              float: right;
+              cursor: pointer;
             }
           }
         }
