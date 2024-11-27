@@ -682,7 +682,10 @@ export default {
         if (section) {
           if (!value || this.validateSectionField(value, this.editingFieldName)) {
             if (section[this.editingFieldName] !== this.editingFieldValue) {
-              let update = {buildModified: section.zipPath ? true : false};
+              let hasModifiedBuild = Object.values(section.buildData).find(buildInfo => {
+                return buildInfo.zipPath && buildInfo.zipPath.length > 0;
+              });
+              let update = {buildModified: hasModifiedBuild ? true : false};
               update[this.editingFieldName] = value;
               if (value) {
                 let isManual = value ? true : false;
