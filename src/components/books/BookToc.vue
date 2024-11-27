@@ -1558,6 +1558,7 @@ export default {
             height: 34px;
             border-radius: 4px;
             background-color: white;
+            vertical-align: middle;
           }
         }
         &.-refresh-toc {
