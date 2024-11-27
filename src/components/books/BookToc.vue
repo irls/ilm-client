@@ -353,11 +353,12 @@ export default {
     },
     latestBuildTime: {
       get() {
-        let label = this.buildTypes[this.buildType];
+        let label = `${this.buildTypes[this.buildType]}:`;
         if (this.hasLatestBuildTime) {
-          return `${label}: ` + this.convertTime(new Date(this.tocSectionBook.buildData[this.buildType].zipTime).toISOString(), true);
+          label+= ` the latest build `;
+          return `${label}` + this.convertTime(new Date(this.tocSectionBook.buildData[this.buildType].zipTime).toISOString(), true);
         } else {
-          return `${label}: no build has been generated yet`;
+          return `${label} no build has been generated yet`;
         }
       },
       cache: false
