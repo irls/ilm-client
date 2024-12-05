@@ -1271,7 +1271,7 @@ Save or discard your changes to continue editing`,
             }
           }
           return false;
-        }, 
+        },
         cache: false
       }
   },
@@ -3323,7 +3323,7 @@ Save text changes and realign the Block?`,
       recordTimer() {
         let self = this;
         return new BPromise(function(resolve, reject) {
-          $('.recordStartCounterDep').hide();
+          //$('.recordStartCounterDep').hide();
           self.recordStartCounter = 3;
           $('#narrateStartCountdown strong').html(self.recordStartCounter);
           $('body').addClass('modal-open');
@@ -3334,7 +3334,7 @@ Save text changes and realign the Block?`,
               clearTimeout(timer)
               $('body').removeClass('modal-open');
               $('#narrateStartCountdown').hide();
-              $('.recordStartCounterDep').show();
+              //$('.recordStartCounterDep').show();
 
               resolve()
             } else {
