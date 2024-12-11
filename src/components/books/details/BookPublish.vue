@@ -142,14 +142,21 @@
               //    mandatoryFields.push('Author EN (author English translation)');
               //}
 
-              const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
-                const isAuthor_en = this.currentBookMeta.language != 'en' ? author.name_en.length > 0 : true;
-                return author.name.length && isAuthor_en;// && author.slug.length //&& author.id;
+              const isAuthor = this.currentBookMeta.author_link.find((author) => {
+                return author.name.length === 0 || !author.id || author.alt_author;
               });
+              const isAuthorEn = this.currentBookMeta.language !== "en" ? this.currentBookMeta.author_link.find(author => {
+                return author.name_en.length === 0 || author.alt_author_en;
+              }) : false;
 
-              if (!isAuthorLink) {
+              let missingAuthorFields = [];
+              if (isAuthor) {
                 canPublish = false;
-                mandatoryFields.push('Author');
+                missingAuthorFields.push('Author');
+              }
+              if (isAuthorEn) {
+                canPublish = false;
+                missingAuthorFields.push('Author EN');
               }
 
               if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
@@ -206,14 +213,17 @@
                 title = 'Publication error';
                 let errorText = '';
                 if (mandatoryFields.length > 0) {
-                  errorText+= `${mandatoryFields.join(", ")}`;
+                  errorText+= `. Define ${mandatoryFields.join(", ")}`;
                   if (!hasGenres) {
                     errorText+= ` and Genres`;
                   }
                 } else if (!hasGenres) {
-                  errorText+= ` Genres`;
+                  errorText+= `. Define Genres`;
                 }
-                text = 'Book meta is incomplete. Define ' + errorText + ' before publishing';
+                if (missingAuthorFields.length > 0) {
+                  errorText+= `. Verify ${missingAuthorFields.join(', ')}`;
+                }
+                text = 'Book meta is incomplete' + errorText + ' before publishing';
 
                 buttons = [
                     {

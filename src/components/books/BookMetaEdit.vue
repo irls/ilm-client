@@ -105,135 +105,15 @@
                   <td colspan="2">
                     <BookAuthors 
                       :allowMetadataEdit="allowMetadataEdit"
-                      :requiredFields="requiredFields"
+                      :requiredFields="requiredFields[currentBook.bookid] ? requiredFields[currentBook.bookid] : {}"
                       :author_link="currentBook.author_link"
                       @addAuthorLink="addAuthorLink"
                       @removeAuthorLink="removeAuthorLink"
                       @editAuthorLink="editAuthorLink"
                       @verifyAuthor="verifyAuthor"
-                      @changeAuthorLink="changeAuthorLink" />
-                  <!-- <fieldset v-for="(author, i) in currentBook.author_link" class='author-link authors-list'>
-                  <legend>Author</legend>
-
-                    <table class='author-link-table'>
-                      <tr class='author-link author-name'>
-                        <td>
-                          Author
-                          <i class="pi pi-exclamation-triangle author-link-empty"
-                            v-if="(currentBook.author_link[i].id === null || currentBook.author_link[i].alt_author) && currentBook.author_link[i].name"
-                            v-on:click="verifyAuthor(currentBook.author_link[i])">
-                          </i>
-                        </td>
-                        <td>
-                          <div class='author-dropdown'>
-                            <input v-model='currentBook.author_link[i].name'
-                                  @input="editAuthorLink($event, i, 'name')"
-                                  :disabled="!allowMetadataEdit"
-                                  :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]"/>
-                            <Dropdown
-                              :value="currentBook.author_link[i]"
-                              :options="author_link_arr"
-                              :disabled="!allowMetadataEdit"
-                              :filter="true"
-                              :showClear="false&&currentBook.author_link[i].id !== null"
-                              :optionDisabled="getDisabledAuthors"
-                              ref="author_link_name"
-                              @hide="onHideAuthorLinkDropdown"
-                              @change="changeAuthorLink($event, i, author)"
-                              dataKey="id"
-                              optionLabel="name"
-                              filterPlaceholder="Filter Authors">
-                              <template #value="slotProps">
-                                  <div class="" v-if="slotProps.value">
-                                  </div>
-                                  <span v-else>
-                                    
-                                  </span>
-                              </template>
-                              <template #option="slotProps">
-                                  <div class="" style="max-width: 260px; text-wrap: balance;">
-                                    <div>{{slotProps.option.name}}</div>
-                                  </div>
-                              </template>
-                            </Dropdown>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr class='author-link author-name' v-if="currentBook.language !== 'en'">
-                        <td>Author EN</td>
-                        <td>
-                          <div class='author-dropdown'>
-                            <input v-model='currentBook.author_link[i].name_en'
-                                  @input="editAuthorLink($event, i, 'name_en')"
-                                  :disabled="true||!allowMetadataEdit"
-                                  :class="['author-name', { 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link'] }]" />
-                            <i class="pi pi-exclamation-triangle author-link-empty"
-                              v-if="false&&currentBook.author_link[i].id === null">
-                            </i>
-                            <Dropdown
-                              :value="currentBook.author_link[i]"
-                              :options="author_link_arr"
-                              :disabled="!allowMetadataEdit || currentBook.author_link[i].id"
-                              :filter="true"
-                              :showClear="false&&currentBook.author_link[i].id !== null"
-                              :optionDisabled="getDisabledAuthors"
-                              ref="author_link_name_en"
-                              @hide="onHideAuthorEnLinkDropdown"
-                              @change="changeAuthorLink($event, i, author)"
-                              dataKey="id"
-                              optionLabel="name_en"
-                              filterPlaceholder="Filter Authors">
-                              <template #value="slotProps">
-                                  <div class="" v-if="slotProps.value">
-                                    
-                                  </div>
-                                  <span v-else>
-                                    
-                                  </span>
-                              </template>
-                              <template #option="slotProps">
-                                  <div class="" style="max-width: 260px; text-wrap: balance;">
-                                    <div>{{slotProps.option.name_en}}</div>
-                                  </div>
-                              </template>
-                            </Dropdown>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr class='author-link author-slug'>
-                        <td>Author Slug</td>
-                        <td>
-
-                          <input v-model='currentBook.author_link[i].slug'
-                                 @input="editAuthorLink($event, i, 'slug')"
-                                :disabled="authorSlugDisabled(currentBook.author_link[i])"
-                                :class="['author-slug']" />
-
-                          <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']" class="validation-error" style="text-align: right !important;">Define Author</span>
-
-                        </td>
-                      </tr>
-                      <tr class='author-link rem-author' v-if="currentBook.author_link.length > 1 && allowMetadataEdit">
-                        <td colspan="2">
-                          <div v-if="allowMetadataEdit" class='author-link rem-author'>
-                            <button v-on:click="removeAuthorLink($event, i)" :disabled="!allowMetadataEdit" >
-                              <i class="fa fa-minus-circle" style="margin-right: -18px;"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-
-
-                  </fieldset>
-
-                  <div v-if="allowMetadataEdit" class='author-link add-author'>
-                      <button v-on:click="addAuthorLink" :disabled="!allowMetadataEdit">
-                        <i class="fa fa-plus-circle"></i>
-                        <span class="author-link add-author-hint">Add author</span>
-                      </button>
-                    </div> -->
-
+                      @changeAuthorLink="changeAuthorLink"
+                      @addAuthor="addAuthor"
+                      @addAuthorLang="addAuthorLang" />
                   </td>
                 </tr>
 
@@ -838,7 +718,7 @@ export default {
 
   data () {
     return {
-      requiredFields:[],
+      requiredFields: {},
       pubTypes: [
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
@@ -1433,7 +1313,7 @@ export default {
       this.showUnknownAuthorEn = -1;
     },*/
     checkPublish(){
-        this.requiredFields[this.currentBookMeta.bookid] = [];
+        this.requiredFields[this.currentBookMeta.bookid] = {};
 
         let defaultCategory = ['story', 'Stories']; // means there is no category assigned
 
@@ -1472,13 +1352,22 @@ export default {
         //  this.requiredFields[this.currentBookMeta.bookid]['author_en'] = true;
         //}
 
-        const isAuthorLink = this.currentBookMeta.author_link.some((author)=>{
-          const isAuthor_en = this.currentBookMeta.language != 'en' ? author.name_en.length > 0 : true;
-          return author.name.length && isAuthor_en;// && author.slug.length //&& author.id;
+        this.currentBookMeta.author_link.forEach((author, authorIdx) => {
+          let errorFields = [];
+          if (!author.id || !author.name || author.alt_author) {
+            errorFields.push("name");
+          }
+          if (this.currentBookMeta.language !== "en" && (!author.name_en || author.alt_author_en)) {
+            errorFields.push("name_en");
+          }
+          if (errorFields.length > 0) {
+            this.requiredFields[this.currentBookMeta.bookid]['author_link'] = this.requiredFields[this.currentBookMeta.bookid] || {};
+            this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {};
+            errorFields.forEach(errorField => {
+              this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx][errorField] = true;
+            });
+          }
         });
-        if (!isAuthorLink) {
-          this.requiredFields[this.currentBookMeta.bookid]['author_link'] = true;
-        }
 
         if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
           this.requiredFields[this.currentBookMeta.bookid]['title_en'] = true;
@@ -1896,9 +1785,37 @@ export default {
           })
     },
 
-    addAuthor() {
-      this.currentBook.author.push('');
-      this.debounceUpdate('author', [...this.currentBook.author], false);
+    addAuthor(addedAuthor, authorIndex) {
+      if (addedAuthor && addedAuthor.id) {
+        if (this.currentBook.language !== "en") {
+          let nameLang = addedAuthor.name_lang.find(name_lang => {
+            return name_lang.language === this.currentBook.language;
+          });
+          this.currentBook.author_link[authorIndex] = {
+            name: nameLang ? nameLang.name : "",
+            name_en: addedAuthor.name,
+            id: addedAuthor.id,
+            slug: addedAuthor.slug
+          };
+        } else {
+          this.currentBook.author_link[authorIndex] = {
+            name: addedAuthor.name,
+            slug: addedAuthor.slug,
+            id: addedAuthor.id
+          };
+        }
+        this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+      }
+    },
+
+    addAuthorLang(id) {
+      let authorIndex = this.currentBook.author_link.findIndex(author_link => {
+        return author_link.id === id;
+      });
+      if (authorIndex >= 0) {
+        delete this.currentBook.author_link[authorIndex].name_added;
+        this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+      }
     },
 
     removeAuthor(i) {
@@ -1909,44 +1826,19 @@ export default {
     },
 
     changeAuthorLink(ev, i) {
-      const {
-        id = null,
-        name = '',
-        name_en = '',
-        slug = '',
-      } = ev.value || {};
-      this.currentBook.author_link[i] = {id, name, name_en, slug};
       this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
     editAuthorLink(ev, i, field) {
-      this.currentBook.author_link[i].id = null;
-      this.currentBook.author_link[i].slug = "";
-      delete this.currentBook.author_link[i].alt_author;
-      if (this.currentBook.author_link[i].name_en && field === "name") {
-        this.currentBook.author_link[i].name_en = "";
-        delete this.currentBook.author_link[i].alt_author_en;
-      }
       this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
-    addAuthorLink(ev) {
-      this.currentBook.author_link.push({
-        id: null,
-        name: '',
-        name_en: '',
-        slug: '',
-        // alt_names: [],
-        // language: 'en'
-      });
+    addAuthorLink(author) {
       this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
     removeAuthorLink(ev, i) {
-      if (i > 0 || this.currentBook.author_link.length > 1) {
-        this.currentBook.author_link.splice(i, 1);
-        this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
-      }
+      this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
     publish() {
@@ -2683,23 +2575,7 @@ export default {
     },**/
 
     verifyAuthor(author, author_en) {
-      let update = {
-        bookid: this.currentBook.bookid
-      };
-      let authorIndex = this.currentBook.author_link.findIndex(auth => {
-        return auth.slug === author.slug;
-      });
-      if (authorIndex >= 0) {
-        if (!author_en) {
-          this.currentBook.author_link[authorIndex].name = author.alt_author;
-          delete this.currentBook.author_link[authorIndex].alt_author;
-        } else {
-          this.currentBook.author_link[authorIndex].name_en = author.alt_author_en;
-          delete this.currentBook.author_link[authorIndex].alt_author_en;
-        }
-        update.author_link = this.currentBook.author_link;
-        return this.updateBookMeta(update);
-      }
+      return this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
 

@@ -5053,7 +5053,7 @@ export const store = new Vuex.Store({
             const updKeys = [
               'version', 'pubVersion',
               'currVersion', 'currVersionDate',
-              'slug', 'slug_status'
+              'slug', 'slug_status', 'author_link'
             ];
 
             for (let key of updKeys) {

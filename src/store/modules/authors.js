@@ -61,6 +61,30 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+    createAuthorFromBook({rootState, dispatch}, [authorData]) {
+      let authorAdd = {
+        slug: authorData.slug,
+      };
+      if (authorData.name_en) {
+        authorAdd.name = authorData.name_en;
+        authorAdd.name_lang = [
+          {
+            name: authorData.name,
+            language: rootState.currentBookMeta.language
+          }
+        ]
+      } else {
+        authorAdd.name = authorData.name;
+      }
+      return dispatch('createAuthor', [authorAdd]);
+    },
+    createAuthorLangFromBook({rootState, dispatch, state}, [id, authorLang]) {
+      let lang = rootState.currentBookMeta.language;
+      return axios.post(`${rootState.API_URL}authors/${encodeURIComponent(id)}/${lang}`, authorLang)
+        .then(response => {
+          return response.data;
+        });
     }
   }
 }
