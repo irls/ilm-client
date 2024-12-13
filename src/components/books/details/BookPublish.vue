@@ -158,6 +158,18 @@
                 canPublish = false;
                 missingAuthorFields.push('Author EN');
               }
+              let isDuplicateAuthor = false;
+              this.currentBookMeta.author_link.forEach((author, authorIdx) => {
+                if (author.id) {
+                  let existPreviousAuthor = this.currentBookMeta.author_link.find((authorPrev, authorPrevIdx) => {
+                    return authorPrev.id === author.id && authorPrevIdx < authorIdx;
+                  });
+                  if (existPreviousAuthor) {
+                    isDuplicateAuthor = true;
+                    canPublish = false;
+                  }
+                }
+              });
 
               if (this.currentBookMeta.language != 'en' && (this.currentBookMeta.title_en == '' || !this.currentBookMeta.hasOwnProperty('title_en'))){
                   canPublish = false;
@@ -219,6 +231,9 @@
                   }
                 } else if (!hasGenres) {
                   errorText+= `. Define Genres`;
+                }
+                if (isDuplicateAuthor) {
+                  errorText+= `. Duplicated Author`;
                 }
                 if (missingAuthorFields.length > 0) {
                   errorText+= `. Verify ${missingAuthorFields.join(', ')}`;

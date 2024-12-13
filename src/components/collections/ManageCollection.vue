@@ -459,15 +459,39 @@
           }
         });
 
-        if(mandatoryFields.length > 0) {
-          return mandatoryFields;
+        let isDuplicateAuthor = false;
+        this.currentCollection.author_link.forEach((author, authorIdx) => {
+          if (author.id) {
+            let existPreviousAuthor = this.currentCollection.author_link.find((authorPrev, authorPrevIdx) => {
+              return authorPrev.id === author.id && authorPrevIdx < authorIdx;
+            });
+            if (existPreviousAuthor) {
+              isDuplicateAuthor = true;
+            }
+          }
+        });
+
+        if(mandatoryFields.length > 0 || mandatoryAuthorFields.length > 0 || isDuplicateAuthor) {
+          return [mandatoryFields, mandatoryAuthorFields, isDuplicateAuthor];
         }
         return true;
       },
       showPublishFailPopup(mandatoryFields = []) {
+        let [validationFields, authorFields, isDuplicateAuthor] = mandatoryFields;
+        let text = `Collection meta is incomplete`;
+        if (validationFields.length > 0) {
+          text+= `. Define ${validationFields.join(', ')}`;
+        }
+        if (isDuplicateAuthor) {
+          text+= `. Duplicated Author`;
+        }
+        if (authorFields.length > 0) {
+          text+= `. Verify ${authorFields.join(', ')}`;
+        }
+        text+= ` before publishing`;
         const popup = {
           title: 'Publication error',
-          text: 'Collection meta is incomplete. Define ' + mandatoryFields.join(', ') + ' before publishing',
+          text: text,
           buttons: [
             {
               title: 'Ok',
