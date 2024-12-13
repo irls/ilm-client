@@ -1364,8 +1364,16 @@ export default {
             this.requiredFields[this.currentBookMeta.bookid]['author_link'] = this.requiredFields[this.currentBookMeta.bookid] || {};
             this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {};
             errorFields.forEach(errorField => {
-              this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx][errorField] = true;
+              this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx][errorField] = 'Define Author';
             });
+          }
+          if (author.id) {
+            let existPreviousAuthor = this.currentBookMeta.author_link.find((authorPrev, authorPrevIdx) => {
+              return authorPrev.id === author.id && authorPrevIdx < authorIdx;
+            });
+            if (existPreviousAuthor) {
+              this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {name: 'Duplicated Author'};
+            }
           }
         });
 

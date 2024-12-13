@@ -104,7 +104,7 @@
                     :class="['author-slug']" />
               <!--, {'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
 
-              <span v-if="hasError(i)" class="validation-error" style="text-align: right !important;">Define Author</span>
+              <span v-if="hasError(i)" class="validation-error" style="text-align: right !important;">{{ getError(i) }}</span>
 
             </td>
           </tr>
@@ -403,6 +403,22 @@
       hasError(authorLinkIndex, field = null) {
         let hasError = this.requiredFields && this.requiredFields['author_link'] && this.requiredFields['author_link'][authorLinkIndex];
         return hasError && (!field || this.requiredFields['author_link'][authorLinkIndex][field]);
+      },
+      getError(authorLinkIndex, field = null) {
+        let error = '';
+        if (this.requiredFields && this.requiredFields['author_link'] && this.requiredFields['author_link'][authorLinkIndex]) {
+          error = this.requiredFields['author_link'][authorLinkIndex];
+          if (field && error[field]) {
+            error = error['field'];
+          }
+          if (error === true) {
+            error = 'Define Author';
+          }
+          if (error instanceof Object) {
+            error = Object.values(error)[0];
+          }
+        }
+        return error;
       },
       ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook'])
     }

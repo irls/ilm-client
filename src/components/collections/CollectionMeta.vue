@@ -49,7 +49,7 @@
           <td colspan="2">
             <BookAuthors 
             :author_link="currentCollection.author_link"
-            :requiredFields="{}"
+            :requiredFields="currentCollection.validationErrors"
             :allowMetadataEdit="allowCollectionsEdit"
             @addAuthorLink="addAuthorLink"
             @removeAuthorLink="removeAuthorLink"

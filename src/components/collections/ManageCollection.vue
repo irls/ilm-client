@@ -431,6 +431,33 @@
           this.currentCollection.validationErrors.weight = defaultMessage + 'Weight';
         }*/
         //-- } -- end -- Check mandatory fields --//
+        let mandatoryAuthorFields = [];
+        this.currentCollection.author_link.forEach((author, authorIdx) => {
+          let errorFields = [];
+          if (!author.id || !author.name || author.alt_author) {
+            errorFields.push("name");
+            mandatoryAuthorFields.push("Author");
+          }
+          if (this.currentCollection.language !== "en" && (!author.name_en || author.alt_author_en)) {
+            errorFields.push("name_en");
+            mandatoryAuthorFields.push("Author EN");
+          }
+          if (errorFields.length > 0) {
+            this.currentCollection.validationErrors.author_link = this.currentCollection.validationErrors.author_link || {};
+            this.currentCollection.validationErrors.author_link[authorIdx] = {};
+            errorFields.forEach(errorField => {
+              this.currentCollection.validationErrors['author_link'][authorIdx][errorField] = 'Define Author';
+            });
+          }
+          if (author.id) {
+            let existPreviousAuthor = this.currentCollection.author_link.find((authorPrev, authorPrevIdx) => {
+              return authorPrev.id === author.id && authorPrevIdx < authorIdx;
+            });
+            if (existPreviousAuthor) {
+              this.currentCollection.validationErrors.author_link[authorIdx] = {name: 'Duplicated Author'};
+            }
+          }
+        });
 
         if(mandatoryFields.length > 0) {
           return mandatoryFields;
