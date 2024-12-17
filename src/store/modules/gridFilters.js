@@ -172,7 +172,12 @@ export default {
           const bookAuthors = Array.isArray(book.author_link) ? book.author_link.filter(author => {
             return author.name || author.name_en;
           }).reduce((authors, author) => {
-            authors.push(author.name ? author.name : author.name_en);
+            if (author.name) {
+              authors.push(author.name);
+            }
+            if (author.name_en) {
+              authors.push(author.name_en);
+            }
             return authors;
           }, []).join('|') : '';
           const bookCategories = Object.keys(book.alt_meta).reduce((acc, key)=>{
@@ -220,7 +225,17 @@ export default {
       const filteredCollections = rootGetters.bookCollections
             .filter(coll => (state.booksFilters.language.length == 0 || (state.booksFilters.language).indexOf(coll.language) >= 0))
             .filter(coll => {
-              const collAuthors = Array.isArray(coll.author) ? coll.author.join('|') : coll.author;
+              const collAuthors = Array.isArray(coll.author_link) ? coll.author_link.filter(author => {
+                return author.name || author.name_en;
+              }).reduce((authors, author) => {
+                if (author.name) {
+                  authors.push(author.name);
+                }
+                if (author.name_en) {
+                  authors.push(author.name_en);
+                }
+                return authors;
+              }, []).join('|') : '';
               const collCategories = Object.keys(coll.alt_meta).reduce((acc, key)=>{
                 if (coll.alt_meta[key].category && coll.alt_meta[key].category.length) {
                   acc.push(coll.alt_meta[key].category);
@@ -266,7 +281,12 @@ export default {
           const bookAuthors = Array.isArray(book.author_link) ? book.author_link.filter(author => {
             return author.name || author.name_en;
           }).reduce((authors, author) => {
-            authors.push(author.name ? author.name : author.name_en);
+            if (author.name) {
+              authors.push(author.name);
+            }
+            if (author.name_en) {
+              authors.push(author.name_en);
+            }
             return authors;
           }, []).join('|') : '';
           const bookCategories = Object.keys(book.alt_meta).reduce((acc, key)=>{

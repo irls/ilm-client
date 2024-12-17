@@ -46,71 +46,17 @@
           </td>
         </tr>
         <tr class="author">
-          <td>
-            Author
-          </td>
-          <td>
-            <div class="authors">
-              <div class="author-row" v-if="collection.author && collection.author.length === 0">
-                <input v-model="collection.author[0]"
-                  v-on:change="update('author', $event)"
-                  :disabled="!allowCollectionsEdit"
-                  >
-                <div class="dropdown" v-if="collection.author && collection.author.length === 0">
-                  <div v-on:click="toggleShowUnknownAuthor()"
-                    class="dropdown-button" >
-                    <i class="fa fa-angle-down" ></i>
-                  </div>
-                  <div class="dropdown-content"
-                    v-if="showUnknownAuthor && allowCollectionsEdit"
-                    v-on:click="setUnknownAuthor()" >Unknown</div>
-                </div>
-              </div>
-              <template v-for="(author, i) in collection.author" >
-                <div class="author-row">
-                  <input v-model='collection.author[i]' v-on:change="update('author', $event); " :disabled="!allowCollectionsEdit">
-                  <div class="dropdown" v-if=" i == 0">
-                    <div v-on:click="toggleShowUnknownAuthor()" class="dropdown-button">
-                      <i class="fa fa-angle-down" ></i>
-                    </div>
-                    <div class="dropdown-content" v-if="showUnknownAuthor && allowCollectionsEdit"
-                      v-on:click="setUnknownAuthor()" >Unknown</div>
-                  </div>
-                  <button v-if="i !== 0" v-on:click="removeAuthor(i)" :class="[{'disabled': i == 0 && collection.author.length == 1}, 'remove-author']">
-                    <i class="fa fa-minus-circle" v-if="allowCollectionsEdit"></i>
-                  </button>
-                </div>
-              </template>
-              <button v-on:click="addAuthor" class="add-author" v-if="allowCollectionsEdit">
-                <i class="fa fa-plus-circle"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        <tr class="author" v-if="collection.language !== 'en'">
-          <td>
-            Author EN
-          </td>
-          <td>
-            <div class="authors">
-              <div class="author-row">
-                <input v-model="collection.author_en"
-                  v-on:change="update('author_en', $event)"
-                  :disabled="!allowCollectionsEdit"
-                  :class="[{'-has-error': currentCollection.validationErrors.author_en}]"
-                  >
-                <div class="dropdown">
-                  <div v-on:click="toggleShowUnknownAuthorEn()"
-                    class="dropdown-button" >
-                    <i class="fa fa-angle-down" ></i>
-                  </div>
-                  <div class="dropdown-content"
-                    v-if="showUnknownAuthorEn && allowCollectionsEdit"
-                    v-on:click="setUnknownAuthorEn()" >Unknown</div>
-                </div>
-                <span class="validation-error" v-if="currentCollection.validationErrors.author_en">{{ currentCollection.validationErrors.author_en}}</span>
-              </div>
-            </div>
+          <td colspan="2">
+            <BookAuthors 
+            :author_link="currentCollection.author_link"
+            :requiredFields="currentCollection.validationErrors"
+            :allowMetadataEdit="allowCollectionsEdit"
+            @addAuthorLink="addAuthorLink"
+            @removeAuthorLink="removeAuthorLink"
+            @editAuthorLink="editAuthorLink"
+            @verifyAuthor="verifyAuthor"
+            @changeAuthorLink="changeAuthorLink"
+            @addAuthor="addAuthor" />
           </td>
         </tr>
         <tr>
@@ -232,15 +178,13 @@
 </template>
 <script>
   import _ from 'lodash';
-  import superlogin from 'superlogin-client';
-  import PouchDB from 'pouchdb';
   import {mapActions, mapGetters} from 'vuex';
   import api_config from '../../mixins/api_config';
   import number_methods from '../../mixins/number_methods';
   import { Languages }      from "../../mixins/lang_config.js"
   import CollectionCoverModal from './CollectionCoverModal';
-  import Vue from 'vue';
   import ResizableTextarea from '../generic/ResizableTextarea';
+  import BookAuthors from '../books/details/BookAuthors.vue';
   export default {
       name: 'CollectionMeta',
       data() {
@@ -260,7 +204,8 @@
       },
       components: {
         'CollectionCoverModal': CollectionCoverModal,
-        'resizable-textarea': ResizableTextarea
+        'resizable-textarea': ResizableTextarea,
+        'BookAuthors': BookAuthors
       },
       mounted() {
         this.init();
@@ -278,6 +223,7 @@
           if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
             this.$refs.collectionDescription.setValue(this.collection.description);
           }
+          this.getAuthorsList({ lang: this.collection.language || 'en' });
         },
         cleanError(key) {
           if (this.currentCollection.validationErrors
@@ -318,8 +264,8 @@
             update[field] = value;
           }
           return this.updateCollection(update)
-          .then(() => {
-            this.currentCollection[field] = value;
+          .then((response) => {
+            this.currentCollection[field] = field !== "author_link" ? value : response[field];
             this.collection = Object.assign({}, this.currentCollection);
           });
         },
@@ -357,15 +303,42 @@
             this.showUnknownAuthorEn = setValue ? true : false;
           }
         },
-        addAuthor() {
-          this.collection.author.push('');
-          this.liveUpdate('author', this.collection.author);
-        },
-        removeAuthor(i) {
-          if (i > 0 || this.collection.author.length > 1) {
-            this.collection.author.splice(i, 1);
-            this.liveUpdate('author', this.collection.author);
+        addAuthor(addedAuthor, authorIndex) {
+          if (addedAuthor && addedAuthor.id) {
+            if (this.collection.language !== "en") {
+              let nameLang = addedAuthor.name_lang.find(name_lang => {
+                return name_lang.language === this.collection.language;
+              });
+              this.collection.author_link[authorIndex] = {
+                name: nameLang ? nameLang.name : "",
+                name_en: addedAuthor.name,
+                id: addedAuthor.id,
+                slug: addedAuthor.slug
+              };
+            } else {
+              this.collection.author_link[authorIndex] = {
+                name: addedAuthor.name,
+                slug: addedAuthor.slug,
+                id: addedAuthor.id
+              };
+            }
+            this.liveUpdate('author_link', this.collection.author_link);
           }
+        },
+        addAuthorLink(author) {
+          this.liveUpdate('author_link', this.collection.author_link);
+        },
+        removeAuthorLink(ev, i) {
+          this.liveUpdate('author_link', this.collection.author_link);
+        },
+        editAuthorLink(ev, i, field) {
+          this.liveUpdate('author_link', this.collection.author_link);
+        },
+        changeAuthorLink(ev, i) {
+          this.liveUpdate('author_link', this.collection.author_link);
+        },
+        verifyAuthor(author, author_en) {
+          this.liveUpdate('author_link', this.collection.author_link);
         },
         setUnknownAuthor() {
           this.toggleShowUnknownAuthor(false);
@@ -443,7 +416,8 @@
             this.update('alt_meta.reader.category', {target:{value:''}});
           }
         },
-        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection'])
+        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection']),
+        ...mapActions('authorsMapModule', ['getAuthorsList'])
       },
       computed: {
         collectionBooksLength: {
