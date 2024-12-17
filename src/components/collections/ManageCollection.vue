@@ -107,6 +107,7 @@
     mixins: [api_config],
     computed: {
       ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'bookMetaById']),
+      ...mapGetters('authorsMapModule', ['isVariousAuthor']),
 
       languages() {
         return Languages;
@@ -438,7 +439,7 @@
             errorFields.push("name");
             mandatoryAuthorFields.push("Author");
           }
-          if (this.currentCollection.language !== "en" && (!author.name_en || author.alt_author_en)) {
+          if (this.currentCollection.language !== "en" && ((!author.name_en && !this.isVariousAuthor(author)) || author.alt_author_en)) {
             errorFields.push("name_en");
             mandatoryAuthorFields.push("Author EN");
           }

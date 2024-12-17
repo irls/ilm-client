@@ -853,7 +853,7 @@ export default {
       hashTagsSuggestions: 'hashTagsSuggestions',
       playingBlock: 'playingBlock',
       isBookReaderCategory: 'isBookReaderCategory',
-      //author_link_arr: 'authorsMapModule/author_link_arr',
+      isVariousAuthor: 'authorsMapModule/isVariousAuthor',
     }),
     proofreadModeReadOnly: {
       get() {
@@ -1357,7 +1357,7 @@ export default {
           if (!author.id || !author.name || author.alt_author) {
             errorFields.push("name");
           }
-          if (this.currentBookMeta.language !== "en" && (!author.name_en || author.alt_author_en)) {
+          if (this.currentBookMeta.language !== "en" && ((!author.name_en && !this.isVariousAuthor(author)) || author.alt_author_en)) {
             errorFields.push("name_en");
           }
           if (errorFields.length > 0) {

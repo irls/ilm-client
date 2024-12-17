@@ -17,10 +17,35 @@ export default {
       ],
       alt_names: ['Lewis C. Carroll', 'Lewis K. Carroll'],
       language: 'en'
-    }]
+    }],
+    various_authors: [
+      {
+        id: "various",
+        name: "Various",
+        slug: ""
+      },
+      {
+        id: "anonymous",
+        name: "Anonymous",
+        slug: ""
+      },
+      {
+        id: "unknown",
+        name: "Unknown",
+        slug: ""
+      }
+    ]
   },
   getters: {
-    author_link_arr: state => state.author_link_arr
+    author_link_arr: state => state.author_link_arr,
+    various_authors: state => {
+      return state.various_authors;
+    },
+    isVariousAuthor: state => (author) => {
+      return state.various_authors.find(various_author => {
+        return various_author.id === author.id;
+      }) ? true : false;
+    }
   },
   mutations: {
 
@@ -45,6 +70,11 @@ export default {
         return authorMapped;
       })
       state.author_link_arr = authorsListArr;
+      this.commit('authorsMapModule/add_variousAuthors');
+    },
+
+    add_variousAuthors(state) {
+      state.author_link_arr = state.author_link_arr.concat(state.various_authors);
     }
 
   },

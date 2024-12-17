@@ -190,7 +190,8 @@
       ...mapGetters({
         currentBookMeta: 'currentBookMeta',
         currentCollection: 'currentCollection',
-        author_link_arr: 'authorsMapModule/author_link_arr'
+        author_link_arr: 'authorsMapModule/author_link_arr',
+        adminOrLibrarian: 'adminOrLibrarian'
       })
     },
     created() {
@@ -234,6 +235,9 @@
         return this.selectedAuthorsIds.indexOf(val.id) >= 0;
       },
       verifyAuthor(author, author_en = false) {
+        if (!this.adminOrLibrarian) {
+          return;
+        }
         let text = '';
         let buttons = [];
         if (author.name && author.name.length > 0 && (this.currentItem.language === "en" || (author.name_en && author.name_en.length > 0)) && author.slug && !author.id) {

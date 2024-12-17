@@ -146,7 +146,7 @@
                 return author.name.length === 0 || !author.id || author.alt_author;
               });
               const isAuthorEn = this.currentBookMeta.language !== "en" ? this.currentBookMeta.author_link.find(author => {
-                return author.name_en.length === 0 || author.alt_author_en;
+                return (author.name_en.length === 0 && !this.isVariousAuthor(author)) || author.alt_author_en;
               }) : false;
 
               let missingAuthorFields = [];
@@ -561,7 +561,8 @@
       },
       ...mapGetters(['currentBookMeta', 'allowPublishCurrentBook', 'publishButtonStatus', 'currentJobInfo', 'storeList', 'adminOrLibrarian', 'isBookWasPublishedInCollection', 'isBookReaderCategory']),
       ...mapGetters('setBlocksDisabled', ['disabledBlocks', 'disabledBlocksQuery']),
-      ...mapGetters('publishModule', ['allPublicationErrors'])
+      ...mapGetters('publishModule', ['allPublicationErrors']),
+      ...mapGetters('authorsMapModule', ['isVariousAuthor'])
     },
     mounted() {
       if (this.currentBookMeta && this.currentBookMeta.isInTheQueueOfPublication) {
