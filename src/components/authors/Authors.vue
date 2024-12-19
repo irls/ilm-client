@@ -102,6 +102,7 @@
 
   import AuthorModal from './AuthorModal';
   import SelectLanguages from '../generic/SelectLanguages';
+  import { cleanDiacritics } from "../../filters/search";
 
   Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -303,14 +304,15 @@
             let hasName = false;
             foundInLang = false;
             if (this.filters.name) {
+              let nameFilter = this.clearForFilter(this.filters.name);
               foundInLang = author.name_lang.find(nameLang => {
-                return nameLang.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || nameLang.alt_names.find(altName => {
-                  return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+                return this.clearForFilter(nameLang.name).indexOf(nameFilter) !== -1 || nameLang.alt_names.find(altName => {
+                  return this.clearForFilter(altName).indexOf(nameFilter) !== -1;
                 });
 
               });
-              hasName = author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.alt_names.find(altName => {
-                return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+              hasName = this.clearForFilter(author.name).indexOf(nameFilter) !== -1 || this.clearForFilter(author.slug).indexOf(nameFilter) !== -1 || author.alt_names.find(altName => {
+                return this.clearForFilter(altName).indexOf(nameFilter) !== -1;
               }) || foundInLang;
               if (foundInLang) {
                 this.authorOpened(author.id, true);
@@ -321,6 +323,9 @@
         } else {
           this.authorsList = lodash.cloneDeep(this.authors);
         }
+      },
+      clearForFilter(value) {
+        return cleanDiacritics(value.toLowerCase().replace(/[….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]]/img, ''));
       },
       toggleNameLang(author) {
         let authorRow = document.querySelector(`.author.-author-${this.cleanId(author.id)}`);
