@@ -41,7 +41,7 @@
           </tr>
         </thead>
         <template v-for="author in authorsList">
-          <tr :class="['author', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}, {'-opened': isAuthorOpened(author.id)}]">
+          <tr :class="['author', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}, {'-opened': isAuthorOpened(author.id)}]" v-on:dblclick="edit(author)">
             <td>
               <!-- {{ langList[author.language] }} -->
               <i class="fa fa-plus" v-on:click="toggleNameLang(author)"></i>
@@ -66,7 +66,7 @@
             <td>Author Name (Alternative)</td>
             <td></td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]" v-for="nameLang in author.name_lang">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]" v-for="nameLang in author.name_lang" v-on:dblclick="editNameLang(author, nameLang)">
             <td></td>
             <td>{{ langList[nameLang.language] }}</td>
             <td>{{ nameLang.name }}</td>
