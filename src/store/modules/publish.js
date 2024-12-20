@@ -106,7 +106,7 @@ export default {
           }
         });
     },
-    checkBlocksHTMLErrors({state, rootState, commit}) {
+    checkBlocksHTMLErrors({state, rootState, commit, dispatch}) {
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookMeta.bookid}/check_blocks_html_errors`)
         .then(response => {
           if (response.status === 200) {
@@ -120,6 +120,7 @@ export default {
               });
               rootState.storeListO.refresh();
             }
+            dispatch('loadHtmlErrorsBlocks');
           }
         });
     },
