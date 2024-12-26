@@ -94,7 +94,7 @@
     </div>
 
     <div class="toolbar-second-row-buttons">
-      <button class="btn btn-primary add-book-button" v-on:click="addJob" v-if="(isAdmin || isLibrarian)">
+      <button class="btn btn-primary add-book-button" v-on:click="addJob" v-on:mouseover="addJobButtonMouseover" v-if="(isAdmin || isLibrarian)">
         <i class="fa fa-plus"></i>&nbsp;Add Book
       </button>
       <button class="btn btn-primary add-collection-button" v-on:click="addCollection" v-if="(isAdmin || isLibrarian) && allowCollectionsEdit">
@@ -397,6 +397,7 @@ export default {
       }
     },
     addJob() {
+      console.log('addJob check');
       let uploadInfo = {};
       this.$modal.show(TaskAddModal, {
         uploadInfo: uploadInfo
@@ -413,6 +414,10 @@ export default {
           }
         }
       });
+    },
+    addJobButtonMouseover() 
+    {
+      console.log('Add Book hover');
     },
     ...mapActions(['tc_loadBookTask'])
   },
