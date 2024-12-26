@@ -1,11 +1,6 @@
 <template>
-  <modal
-    id="taskAddModal"
-    :show="show"
-    effect="fade"
-    :backdrop="false"
-    @closed="closed">
-    <div slot="modal-header" class="modal-header">
+  <div id="taskAddModal">
+    <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
       <h4 class="modal-title">Add Job</h4>
       <alert
@@ -19,15 +14,13 @@
       </alert>
     </div>
 
-    <div slot="modal-body" class="modal-body">
-      <div class="form-group" v-if="showField('name')">
+    <div class="modal-body">
+      <div class="form-group">
         <label>Title</label>
-        <div v-for="n in Object.keys(name)" class="form-group book-row">
-          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name[n]" v-on:keypress="clearErrors('name')" />
-          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i><br/>
-          <input type="text" class="form-control" v-model="id[n]" disabled />
+        <div class="form-group book-row">
+          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name" v-on:keypress="clearErrors('name')" />
+          <input type="text" class="form-control" v-model="id" disabled />
         </div>
-        <!-- <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i> -->
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
       </div>
       <div class="form-group">
@@ -50,10 +43,10 @@
         <div v-if="errors.description" v-for="err in errors.description" class="error-message" v-text="err"></div>
       </div>
     </div>
-    <div slot="modal-footer" class="modal-footer">
+    <div class="modal-footer">
       <!--<form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">-->
       <div class="col-sm-3 pull-right non-modal-submit">
-        <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled" v-show='!isUploading'>Submit</button>
+        <button class="btn btn-primary" type="button" v-on:click="save" :disabled="saveDisabled" v-show='!isUploading'>Submit</button>
       </div>
       <div class="col-sm-9 pull-right non-modal-form">
         <!-- Import Books Modal Popup -->
@@ -61,7 +54,7 @@
           ref="bookImport"
           :bookId="createdJob.bookid"
           :multiple="false"
-          :forceUpload="typeof createdJob.bookid != 'undefined'"
+          :forceUpload="forceUploadBookImport"
           @close_modal="bookImportFinished"
           @books_changed="bookListChanged"
           @upload_error="uploadError"/>
@@ -69,19 +62,15 @@
       <!--</form>-->
     </div>
 
-  </modal>
+  </div>
 </template>
 <script>
 import { modal, alert } from 'vue-strap'
 import { mapGetters, mapActions } from 'vuex'
 import modalMixin from './../../mixins/modal'
-import axios from 'axios'
-import superlogin from 'superlogin-client'
 import BookImport from '../books/BookImport'
-import { Languages } from "../../mixins/lang_config.js"
+import { Languages } from "@src/mixins/lang_config"
 var getSlug = require('speakingurl')
-const TASKS_URL = process.env.ILM_API + '/api/v1/task'
-import api_config from '../../mixins/api_config.js';
 export default {
   name: 'TaskAddModal',
   components: {
@@ -89,43 +78,35 @@ export default {
     alert,
     BookImport
   },
-  mixins: [modalMixin, api_config],
+  mixins: [modalMixin],
   props: {
-    show: Boolean
+    uploadInfo: Object
   },
   data() {
     return {
-      type: '',
-      roles: {},
-      name: [''],
+      roles: {
+        'editor': {'require': true},
+        'proofer': {'require': true},
+        'narrator': {'require': true}
+      },
+      name: '',
       lang: 'en',
       langs: Languages,
       fields_by_type: {
-        'with-audio': {
-          'name': {'require': true},
-          'roles': {
-            'editor': {'require': true},
-            'proofer': {'require': true},
-            'narrator': {'require': true}
-          },
-          'lang': {'require': true}
+        'name': {'require': true},
+        'roles': {
+          'editor': {'require': true},
+          'proofer': {'require': true},
+          'narrator': {'require': true}
         },
-        'without-audio': {
-          'name': {'require': true},
-          'roles': {
-            'editor': {'require': true},
-            'proofer': {'require': true},
-            'narrator': {'require': true}
-          },
-          'lang': {'require': true}
-        }
+        'lang': {'require': true}
       },
       errors: {},
       bookUploadError: false,
       bookUploadCommonError: false,
       bookUploadCheckError: false,
       description: '',
-      id: [''],
+      id: '',
       createdJob: {},
       importingBooksList: [],
       isUploading: false,
@@ -147,8 +128,9 @@ export default {
     ...mapActions([
       'createDummyBook', 'getTaskUsers', 'updateBooksList'
     ]),
+    ...mapActions('tasks', ['createTask']),
     cancel() {
-      this.$emit('closed', false)
+      this.$emit('close', false)
     },
     save() {
       this.bookUploadCommonError = false;
@@ -158,34 +140,31 @@ export default {
         return false
       }
       var task = {
-        name: this.name,
-        type: this.type,
+        name: [this.name],
+        type: "with-audio",
         roles: this.roles,
         description: this.description,
-        id: this.id,
+        id: [this.id],
         hasBooks: this.importingBooksList.length > 0,
         language: this.lang
       }
-      axios.post(TASKS_URL, task)
+      this.createTask([task])
         .then(response => {
           this.isUploading = true;
           this.errors = null
           this.errors = {}// force re render errors
-          if (Object.keys(response.data.errors).length > 0) {
-            for (let _id in this.id) {
-              if (typeof response.data.errors[this.id[_id]] == 'undefined') {
-                //console.log(_id, self.id[_id])
-                this.removeBook(_id)
-              } else {
-                if (!this.errors['name']) {
-                  this.errors['name'] = [];
-                }
-                this.errors['name'].push(`${this.id[_id]}:${response.data.errors[this.id[_id]]}`)
+          if (Object.keys(response.errors).length > 0) {
+            if (typeof response.errors[this.id] == 'undefined') {
+              this.removeBook()
+            } else {
+              if (!this.errors['name']) {
+                this.errors['name'] = [];
               }
+              this.errors['name'].push(`${this.id}:${response.errors[this.id]}`)
             }
             this.isUploading = false;
           } else {
-            this.createdJob = response.data.insert_jobs[0]
+            this.createdJob = response.insert_jobs[0]
             this.$nextTick(()=>{
               if (!this.$refs.bookImport.saveDisabled) {
                 this.$refs.bookImport.onFormSubmit()
@@ -198,7 +177,8 @@ export default {
                       this.$store.commit('gridFilters/set_fltrChangeTrigger');
                     }
                     this.isUploading = false;
-                    this.$emit('closed', true);
+                    this.uploadInfo.create = true;
+                    this.$emit('close');
                   })
                 }).catch(error => {
                   this.isUploading = false;
@@ -216,74 +196,52 @@ export default {
                       this.$store.commit('gridFilters/set_fltrChangeTrigger');
                     }
                     this.isUploading = false;
-                    this.$emit('closed', true);
+                    this.uploadInfo.create = true;
+                    this.$emit('close');
                   })
                   }).catch(error => {
                     this.deleteTask()
                   });
                 } else {
-                  this.$emit('closed', true);
+                  this.$emit('close');
                 }
               }
-            })
+            });
           }
         })
         .catch(error => {
         })
     },
-    showField(name) {
-      if (this.type && this.fields_by_type[this.type]) {
-        let names = name.split('.')
-        let check = this.fields_by_type[this.type]
-        for (let i in names) {
-          if (!check[names[i]]) {
-            return false
-          }
-          check = check[names[i]]
-        }
-        return true
-      } else {
-        return false
-      }
-    },
     validate() {
-      this.errors = {}
-      //console.log(this.roles)
-      if (!this.type) {
-        if (!this.errors['type']) {
-          this.errors['type'] = []
-        }
-        this.errors['type'].push('Required')
-      } else {
-        for (var field in this.fields_by_type[this.type]) {
-          let check = this.fields_by_type[this.type][field]
-          if (Object.keys(check).indexOf('require') !== -1) {
-            if (check['require'] === true) {
-              let has_error = false
-              if (this[field] instanceof Array) {
-                for (let n in this[field]) {
-                  if (!this[field][n]) {
-                    has_error = true
-                  }
+      this.errors = {};
+      for (var field in this.fields_by_type) {
+        let check = this.fields_by_type[field];
+        if (Object.keys(check).indexOf('require') !== -1) {
+          if (check['require'] === true) {
+            let has_error = false
+            if (this[field] instanceof Array) {
+              for (let n in this[field]) {
+                if (!this[field][n]) {
+                  has_error = true
                 }
-              } else {
-                has_error = !this[field]
               }
-              if (has_error) {
-                if (!this.errors[field]) {
-                  this.errors[field] = []
-                }
-                this.errors[field].push('Required')
-              }
+            } else {
+              has_error = !this[field]
             }
-          } else {
-            for (let i in check) {
-              if (check[i]['require'] === true && !this[field][i]) {
-                if (!this.errors[field + '.' + i]) {
-                  this.errors[field + '.' + i] = []
-                }
-                this.errors[field + '.' + i].push(`Please define ${i}`);
+            if (has_error) {
+              if (!this.errors[field]) {
+                this.errors[field] = []
               }
+              this.errors[field].push('Required')
+            }
+          }
+        } else {
+          for (let i in check) {
+            if (check[i]['require'] === true && !this[field][i]) {
+              if (!this.errors[field + '.' + i]) {
+                this.errors[field + '.' + i] = []
+              }
+              this.errors[field + '.' + i].push(`Please define ${i}`);
             }
           }
         }
@@ -293,8 +251,8 @@ export default {
     addBook() {
       this.name.push('')
     },
-    removeBook(n) {
-      this.name.splice(n, 1)
+    removeBook() {
+      this.name = "";
     },
     cleanBookId(bookId) {
       let cleanId = bookId.replace(/[\-\,\.]/g,'_');
@@ -305,12 +263,8 @@ export default {
       //console.log('cleanId', cleanId);
       return cleanId;
     },
-    generateIds() {
-      this.id = ['']
-      for (let i in this.name) {
-        let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''))
-        this.id[i] = _id
-      }
+    generateId() {
+      this.id = this.cleanBookId((getSlug(this.name)) + '_' + (this.lang ? this.lang : ''));
     },
     bookImportFinished() {
       this.$emit('closed', true)
@@ -383,78 +337,75 @@ export default {
       //return false; // while we need to create job without book
       return this.bookUploadError && this.importingBooksList.length == 0;
     },
+    forceUploadBookImport: {
+      get() {
+        return typeof this.createdJob.bookid != 'undefined';
+      },
+      cache: false
+    },
     ...mapGetters(['auth', 'taskUsers'])
   },
   watch: {
-    show() {
-      this.type = 'with-audio'
-      this.roles = {}
-      this.name = ['']
-      this.errors = {}
-      this.description = ''
-      this.lang = 'en'
-      this.createdJob = null
-      this.createdJob = {}
-      this.bookUploadError = false;
-      this.isUploading = false;
-      this.$refs.bookImport.isDummyBook = true;
-    },
     'name': {
       handler(val) {
-        this.generateIds()
+        this.generateId()
       },
       deep: true
     },
     lang() {
-      this.generateIds()
+      this.generateId()
     }
   }
 }
 </script>
-<style scoped>
-.error-message {
-  margin-left: 0%;
-}
-i.add-book {
-  float: right;
-  margin-top: -40px;
-}
-.book-row input {
-  width: 90%;
-  display: inline-block;
-}
-textarea.job-descr {
-  resize: vertical;
-}
+<style lang="less">
+  #taskAddModal {
+    .modal-header {
+      padding: 15px 15px 15px 15px;
+    }
+    .error-message {
+      margin-left: 0%;
+    }
+    i.add-book {
+      float: right;
+      margin-top: -40px;
+    }
+    .book-row input {
+      display: inline-block;
+    }
+    textarea.job-descr {
+      resize: vertical;
+    }
 
-  .alert-icon-float-left {
-    font-size: 40px;
-    float: left;
-    color: #a94442;
-  }
+      .alert-icon-float-left {
+        font-size: 40px;
+        float: left;
+        color: #a94442;
+      }
 
-  .alert-text-float-right {
-    float: right;
-    text-align: left;
-    width: 400px;
-  }
+      .alert-text-float-right {
+        float: right;
+        text-align: left;
+        width: 400px;
+      }
 
-  .alert.top .alert-text-float-right p {
-    text-align: left;
-    margin: 5px 0;
-    word-break: break-word;
-  }
+      .alert.top .alert-text-float-right p {
+        text-align: left;
+        margin: 5px 0;
+        word-break: break-word;
+      }
 
-  .modal-footer .non-modal-submit {
-    width: 15%;
-  }
+      .modal-footer .non-modal-submit {
+        width: 15%;
+      }
 
-  .modal-footer .non-modal-form {
-    width: 85%;
-  }
+      .modal-footer .non-modal-form {
+        width: 85%;
+      }
 
-  .has-error {
-    border: 1px solid red;
+      .has-error {
+        border: 1px solid red;
+      }
   }
 
 </style>
