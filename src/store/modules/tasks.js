@@ -30,6 +30,15 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         })
+    },
+    createTask({rootState}, [task]) {
+      return axios.post(`${rootState.API_URL}task`, task)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 }
