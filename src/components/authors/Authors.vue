@@ -47,7 +47,7 @@
               <i class="fa fa-plus" v-on:click="toggleNameLang(author)"></i>
               <i class="fa fa-minus" v-on:click="toggleNameLang(author)"></i>
             </td>
-            <td>{{ author.name }}</td>
+            <td>{{ author.name }}<template v-if="author.verified_names.length > 0">, {{ author.verified_names.join(", ") }}</template></td>
             <td :class="['author-slug', {'-manual': author.manual_slug}]">{{ author.slug }}</td>
             <td>{{ author.alt_names.join(`, `) }}</td>
             <td>
@@ -142,7 +142,8 @@
             alt_names: [
               ""
             ],
-            language: ""
+            language: "",
+            verified_names: []
           }
         }, 
         {

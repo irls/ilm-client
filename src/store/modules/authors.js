@@ -53,6 +53,15 @@ export default {
         });
     },
     updateAuthor({rootState, state, commit}, [id, update, language = null]) {
+      ['verified_names', 'alt_names'].forEach(updateKey => {
+        if (update[updateKey]) {
+          update[updateKey] = update[updateKey].filter((verified_name, verified_name_idx) => {
+            return verified_name.trim().length > 0 && !(update[updateKey].find((verifiedName, verifiedNameIdx) => {
+              return verifiedName.trim() === verified_name.trim() && verifiedNameIdx < verified_name_idx;
+            }));
+          });
+        }
+      });
       return axios.put(`${rootState.API_URL}authors/${encodeURIComponent(id)}${language ? '/' + language : ''}`, update)
         .then(response => {
           commit('updateAuthor', [id, response.data]);
