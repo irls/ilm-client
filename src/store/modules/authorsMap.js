@@ -22,17 +22,20 @@ export default {
       {
         id: "various",
         name: "Various",
-        slug: ""
+        slug: "",
+        name_en: "Various"
       },
       {
         id: "anonymous",
         name: "Anonymous",
-        slug: ""
+        slug: "",
+        name_en: "Anonymous"
       },
       {
         id: "unknown",
         name: "Unknown",
-        slug: ""
+        slug: "",
+        name_en: "Unknown"
       }
     ]
   },
