@@ -20,7 +20,7 @@
                       :class="['author-name', { 'text-danger': hasError(i, 'name') }]"/>
                 <Dropdown
                   :value="author_link[i]"
-                  :options="author_link_arr"
+                  :options="authorsList"
                   :disabled="!allowMetadataEdit"
                   :filter="true"
                   :showClear="false&&author_link[i].id !== null"
@@ -28,7 +28,7 @@
                   ref="author_link_name"
                   @hide="onHideAuthorLinkDropdown"
                   @change="changeAuthorLink($event, i, author)"
-                  dataKey="id"
+                  dataKey="key"
                   optionLabel="name"
                   filterPlaceholder="Filter Authors">
                   <template #value="slotProps">
@@ -73,7 +73,7 @@
                   ref="author_link_name_en"
                   @hide="onHideAuthorEnLinkDropdown"
                   @change="changeAuthorLink($event, i, author)"
-                  dataKey="id"
+                  dataKey="key"
                   optionLabel="name_en"
                   filterPlaceholder="Filter Authors">
                   <template #value="slotProps">
@@ -187,6 +187,16 @@
         },
         cache: false
       },
+      authorsList: {
+        get() {
+          return this.currentItem.language === "en" ? this.author_link_arr : this.author_link_arr.filter((author, authorIdx) => {
+            return !(this.author_link_arr.find((auth, authIdx) => {
+              return auth.id === author.id && authorIdx > authIdx;
+            }));
+          });
+        },
+        cache: false
+      },
       ...mapGetters({
         currentBookMeta: 'currentBookMeta',
         currentCollection: 'currentCollection',
@@ -232,7 +242,9 @@
       },
 
       getDisabledAuthors(val) {
-        return this.selectedAuthorsIds.indexOf(val.id) >= 0;
+        return this.author_link.find(author => {
+          return author.id === val.id && author.name === val.name;
+        });
       },
       verifyAuthor(author, author_en = false) {
         if (!this.adminOrLibrarian) {

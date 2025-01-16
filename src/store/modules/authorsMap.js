@@ -1,4 +1,5 @@
 import axios from 'axios';
+import lodash from 'lodash';
 
 export default {
   namespaced: true,
@@ -23,19 +24,22 @@ export default {
         id: "various",
         name: "Various",
         slug: "",
-        name_en: "Various"
+        name_en: "Various",
+        key: "various"
       },
       {
         id: "anonymous",
         name: "Anonymous",
         slug: "",
-        name_en: "Anonymous"
+        name_en: "Anonymous",
+        key: "anonymous"
       },
       {
         id: "unknown",
         name: "Unknown",
         slug: "",
-        name_en: "Unknown"
+        name_en: "Unknown",
+        key: "unknown"
       }
     ]
   },
@@ -54,10 +58,12 @@ export default {
 
     set_authorsList(state, authorsListData) {
       const lang = authorsListData.lang || 'en';
-      const authorsListArr = authorsListData.data.map((author)=>{
+      let authorsListArr = [];
+      authorsListData.data.forEach((author) => {
         const authorMapped = {
           id: author.id,
-          slug: author.slug
+          slug: author.slug,
+          key: author.id
         }
         if (lang === 'en') {
           authorMapped.name = author.name;
@@ -70,8 +76,16 @@ export default {
           authorMapped.name_en = author.name;
           authorMapped.alt_names = author_local.length ? author_local[0].alt_names : author.alt_names;
         }
-        return authorMapped;
-      })
+        authorsListArr.push(authorMapped);
+        author.verified_names.forEach((verifiedName, verifiedNameIdx) => {
+          authorsListArr.push(lodash.assign(lodash.cloneDeep(authorMapped), 
+          { 
+            name: lang === "en" ? verifiedName : authorMapped.name, 
+            name_en: lang === "en" ? authorMapped.name : verifiedName,
+            key: `${author.id}_${verifiedNameIdx}` 
+          }));
+        });
+      });
       state.author_link_arr = authorsListArr;
       this.commit('authorsMapModule/add_variousAuthors');
     },
