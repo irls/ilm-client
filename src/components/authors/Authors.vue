@@ -69,7 +69,7 @@
           <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]" v-for="nameLang in author.name_lang" v-on:dblclick="editNameLang(author, nameLang)">
             <td></td>
             <td>{{ langList[nameLang.language] }}</td>
-            <td>{{ nameLang.name }}</td>
+            <td>{{ [nameLang.name].concat(nameLang.verified_names).join(', ') }}</td>
             <td>{{ nameLang.alt_names.join(', ') }}</td>
             <td>
               <div class="author-action -edit">
@@ -227,7 +227,8 @@
             id: null,
             name: "",
             alt_names: [""],
-            language: ""
+            language: "",
+            verified_names: []
           },
           primaryAuthor: author
         }, {
