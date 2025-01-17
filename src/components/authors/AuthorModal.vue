@@ -10,40 +10,27 @@
     </div>
     <div class="modal-body">
       <div class="author-form">
-        <template v-if="language || primaryAuthor.id">
-          <div class="author-field">
-            <div class="field-label">
-              <label>Author Name (Verified)</label>
-            </div>
-            <div class="field-value">
-              <input type="text" v-model="authorEdit.name" :class="{'-has-error': errors.name}" v-on:keyup="clearError('name')" />
-              <span class="validation-error" v-if="errors.name">{{ errors.name }}</span>
-            </div>
+        <div class="author-field -verified-name" v-for="(verified_name, verified_name_idx) in verifiedNames">
+          <div class="field-label">
+            <label>Author Name (Verified)</label>
           </div>
-        </template>
-        <template v-else>
-          <div class="author-field -verified-name" v-for="(verified_name, verified_name_idx) in verifiedNames">
-            <div class="field-label">
-              <label>Author Name (Verified)</label>
-            </div>
-            <div class="field-value">
-              <input type="text" v-on:change="setVerifiedName(verified_name_idx, $event)" :class="{'-has-error': errors.name}" v-on:keyup="clearError('name')" />
-              <span class="validation-error" v-if="errors.name">{{ errors.name }}</span>
-            </div>
-            <template v-if="verifiedNames.length > 1">
-              <div class="alt-name-option">
-                <i class="fa fa-minus-circle" v-on:click="removeVerifiedName(verified_name_idx)"></i>
-              </div>
-            </template>
-            <template v-if="verifiedNames.length > 1 && verified_name_idx === verifiedNames.length - 1">
-              <div class="field-label"></div>
-              <div class="field-value"></div>
-            </template>
+          <div class="field-value">
+            <input type="text" v-on:change="setVerifiedName(verified_name_idx, $event)" :class="{'-has-error': errors.name}" v-on:keyup="clearError('name')" />
+            <span class="validation-error" v-if="errors.name">{{ errors.name }}</span>
+          </div>
+          <template v-if="verifiedNames.length > 1">
             <div class="alt-name-option">
-              <i class="fa fa-plus-circle" v-if="verified_name_idx === verifiedNames.length - 1" v-on:click="addVerifiedName()"></i>
+              <i class="fa fa-minus-circle" v-on:click="removeVerifiedName(verified_name_idx)"></i>
             </div>
+          </template>
+          <template v-if="verifiedNames.length > 1 && verified_name_idx === verifiedNames.length - 1">
+            <div class="field-label"></div>
+            <div class="field-value"></div>
+          </template>
+          <div class="alt-name-option">
+            <i class="fa fa-plus-circle" v-if="verified_name_idx === verifiedNames.length - 1" v-on:click="addVerifiedName()"></i>
           </div>
-        </template>
+        </div>
         <div class="author-field -alt-name" v-for="(alt_name, alt_name_idx) in authorEdit.alt_names">
           <div class="field-label">
             <label v-if="alt_name_idx === 0">Author Name (Alternative)</label>

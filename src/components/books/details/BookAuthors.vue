@@ -528,6 +528,7 @@
 
       input.author-slug {
         position: relative;
+        width: 100%;
       }
     }
   }
