@@ -201,7 +201,8 @@
         currentBookMeta: 'currentBookMeta',
         currentCollection: 'currentCollection',
         author_link_arr: 'authorsMapModule/author_link_arr',
-        adminOrLibrarian: 'adminOrLibrarian'
+        adminOrLibrarian: 'adminOrLibrarian',
+        various_authors: "authorsMapModule/various_authors"
       })
     },
     created() {
@@ -379,6 +380,12 @@
           this.author_link[i].slug = "";
         }
         this.author_link[i].update_field = field;
+        let variousAuthor = this.various_authors.find(author => {
+          return author.name.toLowerCase().trim() === ev.target.value.toLowerCase().trim() || author.name_en.toLowerCase().trim() === ev.target.value.toLowerCase().trim();
+        });
+        if (variousAuthor) {
+          this.author_link[i] = variousAuthor;
+        }
         this.$emit('editAuthorLink', ev, i, field);
         //this.currentBook.author_link[i].id = null;
         //this.currentBook.author_link[i].slug = "";
