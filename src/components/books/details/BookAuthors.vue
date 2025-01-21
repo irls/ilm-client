@@ -15,7 +15,7 @@
             <td>
               <div class='author-dropdown'>
                 <input v-model='author_link[i].name'
-                      @input="editAuthorLink($event, i, 'name')"
+                      @change="editAuthorLink($event, i, 'name')"
                       :disabled="!allowMetadataEdit"
                       :class="['author-name', { 'text-danger': hasError(i, 'name') }]"/>
                 <Dropdown
@@ -60,7 +60,7 @@
             <td>
               <div class='author-dropdown'>
                 <input v-model='author_link[i].name_en'
-                      @input="editAuthorLink($event, i, 'name_en')"
+                      @change="editAuthorLink($event, i, 'name_en')"
                       :disabled="authorEnDisabled(author_link[i])"
                       :class="['author-name', { 'text-danger': hasError(i, 'name_en') }]" />
                 <Dropdown
@@ -99,7 +99,7 @@
             <td>
 
               <input v-model='author_link[i].slug'
-                      @input="editAuthorLink($event, i, 'slug')"
+                      @change="editAuthorLink($event, i, 'slug')"
                     :disabled="authorSlugDisabled(author_link[i])"
                     :class="['author-slug']" />
               <!--, {'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
