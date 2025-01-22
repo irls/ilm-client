@@ -310,11 +310,15 @@
               foundInLang = author.name_lang.find(nameLang => {
                 return nameLang.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || nameLang.alt_names.find(altName => {
                   return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+                }) || nameLang.verified_names.find(verified_name => {
+                  return verified_name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
                 });
 
               });
               hasName = author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.alt_names.find(altName => {
                 return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+              }) || author.verified_names.find(verified_name => {
+                return verified_name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
               }) || foundInLang;
               if (foundInLang) {
                 this.authorOpened(author.id, true);
