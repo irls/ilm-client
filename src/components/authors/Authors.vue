@@ -312,11 +312,15 @@
               foundInLang = author.name_lang.find(nameLang => {
                 return this.clearForFilter(nameLang.name).indexOf(nameFilter) !== -1 || nameLang.alt_names.find(altName => {
                   return this.clearForFilter(altName).indexOf(nameFilter) !== -1;
+                }) || nameLang.verified_names.find(verified_name => {
+                  return this.clearForFilter(verified_name).indexOf(nameFilter) !== -1;
                 });
 
               });
               hasName = this.clearForFilter(author.name).indexOf(nameFilter) !== -1 || this.clearForFilter(author.slug).indexOf(nameFilter) !== -1 || author.alt_names.find(altName => {
                 return this.clearForFilter(altName).indexOf(nameFilter) !== -1;
+              }) || author.verified_names.find(verified_name => {
+                return this.clearForFilter(verified_name).indexOf(nameFilter) !== -1;
               }) || foundInLang;
               if (foundInLang) {
                 this.authorOpened(author.id, true);
