@@ -17,8 +17,8 @@
           </span>
         </div>
 
-        <div class="table-cell pause-recording -left" 
-          @click="_pauseRecording" 
+        <div class="table-cell pause-recording -left"
+          @click="_pauseRecording"
           v-if="!isPaused"
           v-on:mousedown="_pauseMousedown">
             <span class="btn btn-default">
@@ -39,7 +39,7 @@
             </span>
         </div>
 
-        <div class="table-cell recording-in-progress recordStartCounterDep  -left"  style="display: none;" v-if="!isPaused">
+        <div class="table-cell recording-in-progress recordStartCounterDep  -left" v-if="!isPaused && recordingCheck.isRecording">
           <span class="icon"></span>
 
           <span class="text">
@@ -47,7 +47,7 @@
           </span>
         </div>
 
-        <div class="table-cell recording-on-pause recordStartCounterDep  -left"  style="display: none;"  v-else>
+        <div class="table-cell recording-on-pause recordStartCounterDep  -left" v-if="isPaused && recordingCheck.isRecording">
           <span class="icon"></span>
 
           <span class="text">
@@ -55,7 +55,7 @@
           </span>
         </div>
 
-        <div class="table-cell">
+        <div class="save-narration-controls table-cell">
           <div class="table-row -right">
             <div class="table-cell save-recording">
               <span class="btn btn-primary" @click="_stopRecording()">
@@ -161,7 +161,7 @@
     }
   }
 </script>
-<style lang="less">
+<style lang="less" scoped >
 
 .resume-recording{
   height: 38px;
@@ -338,6 +338,12 @@
     }*/
     .part-separator {
       height: 12px;
+    }
+  }
+
+  .save-narration-controls {
+    &.table-cell {
+      vertical-align: top;
     }
   }
 </style>
