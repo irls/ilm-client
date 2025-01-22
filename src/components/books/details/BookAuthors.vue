@@ -9,7 +9,7 @@
               Author
               <i class="pi pi-exclamation-triangle author-link-empty"
                 v-if="((author_link[i].id === null || author_link[i].alt_author) || (author_link[i].id && author_link[i].name_added)) && author_link[i].name"
-                v-on:click="verifyAuthor(author_link[i])">
+                v-on:click="verifyAuthor(author_link[i], false, i)">
               </i>
             </td>
             <td>
@@ -54,7 +54,7 @@
               Author EN
               <i class="pi pi-exclamation-triangle author-link-empty"
                 v-if="(author_link[i].id === null || author_link[i].alt_author_en) && author_link[i].name_en"
-                v-on:click="verifyAuthor(author_link[i], true)">
+                v-on:click="verifyAuthor(author_link[i], true, i)">
               </i>
             </td>
             <td>
@@ -247,7 +247,7 @@
           return author.id === val.id && author.name === val.name;
         });
       },
-      verifyAuthor(author, author_en = false) {
+      verifyAuthor(author, author_en = false, authorIdx = null) {
         if (!this.adminOrLibrarian) {
           return;
         }
@@ -313,7 +313,7 @@
               title: 'Update',
               handler: () => {
                 this.$modal.hide('dialog');
-                this.runVerifyAuthor(author, author_en);
+                this.runVerifyAuthor(author, author_en, authorIdx);
               },
               class: 'btn btn-primary'
             }
@@ -340,19 +340,16 @@
           buttons: buttons
         });
       },
-      runVerifyAuthor(author, author_en) {
-        let authorIndex = this.author_link.findIndex(auth => {
-          return auth.slug === author.slug;
-        });
-        if (authorIndex >= 0) {
+      runVerifyAuthor(author, author_en, authorIdx) {
+        if (authorIdx >= 0) {
           if (!author_en) {
-            this.author_link[authorIndex].name = author.alt_author;
-            delete this.author_link[authorIndex].alt_author;
+            this.author_link[authorIdx].name = author.alt_author;
+            delete this.author_link[authorIdx].alt_author;
           } else {
-            this.author_link[authorIndex].name_en = author.alt_author_en;
-            delete this.author_link[authorIndex].alt_author_en;
+            this.author_link[authorIdx].name_en = author.alt_author_en;
+            delete this.author_link[authorIdx].alt_author_en;
           }
-          this.$emit('verifyAuthor', author, author_en);
+          this.$emit('verifyAuthor', author, author_en, authorIdx);
         }
       },
       addAuthor(author) {
