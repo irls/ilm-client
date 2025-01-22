@@ -2583,7 +2583,7 @@ export default {
       }
     },**/
 
-    verifyAuthor(author, author_en) {
+    verifyAuthor(author, author_en, authorIdx) {
       return this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
