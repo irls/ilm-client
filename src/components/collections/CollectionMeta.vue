@@ -51,6 +51,7 @@
             :author_link="currentCollection.author_link"
             :requiredFields="currentCollection.validationErrors"
             :allowMetadataEdit="allowCollectionsEdit"
+            :authorUpdated="authorUpdated"
             @addAuthorLink="addAuthorLink"
             @removeAuthorLink="removeAuthorLink"
             @editAuthorLink="editAuthorLink"
@@ -177,6 +178,7 @@
   </div>
 </template>
 <script>
+  import Vue from "vue";
   import _ from 'lodash';
   import {mapActions, mapGetters} from 'vuex';
   import api_config from '../../mixins/api_config';
@@ -199,7 +201,8 @@
           validationErrors: {
             difficulty: '',
             weight: ''
-          }
+          },
+          authorUpdated: false
         }
       },
       components: {
@@ -265,6 +268,12 @@
           }
           return this.updateCollection(update)
           .then((response) => {
+            if (field === "author_link") {
+              this.authorUpdated = true;
+              Vue.nextTick(() => {
+                this.authorUpdated = false;
+              });
+            }
             this.currentCollection[field] = field !== "author_link" ? value : response[field];
             this.collection = Object.assign({}, this.currentCollection);
           });

@@ -107,6 +107,7 @@
                       :allowMetadataEdit="allowMetadataEdit"
                       :requiredFields="requiredFields[currentBook.bookid] ? requiredFields[currentBook.bookid] : {}"
                       :author_link="currentBook.author_link"
+                      :authorUpdated="authorUpdated"
                       @addAuthorLink="addAuthorLink"
                       @removeAuthorLink="removeAuthorLink"
                       @editAuthorLink="editAuthorLink"
@@ -116,45 +117,6 @@
                       @addAuthorLang="addAuthorLang" />
                   </td>
                 </tr>
-
-                <!--<tr class='author'>
-                  <td>Author</td>
-                  <td style="text-align: left !important;">
-
-                    <input v-model='currentBook.author[0]' v-on:change="debounceUpdate('author', [...currentBook.author], $event);" :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
-                    <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
-                      <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
-                      <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
-                    </div>
-                    <template v-for="(author, i) in currentBook.author" >
-                      <input v-model='currentBook.author[i]'
-                      v-on:keyup="debounceUpdate('author.'+i, $event.target.value, $event);"
-                      v-on:keydown="debounceUpdate('author.'+i, $event.target.value, $event);"
-                      :disabled="!allowMetadataEdit"
-                      v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
-                      <div class="dropdown" v-if=" i == 0 && allowMetadataEdit">
-                        <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                        <div class="dropdown-content" v-if="showUnknownAuthor == 1 && allowMetadataEdit" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; debounceUpdate('author', [...currentBook.author]);" >Unknown</div>
-                      </div>
-                      <button v-if="i !== 0 && allowMetadataEdit" v-on:click="removeAuthor(i)" :class="{'disabled': i == 0 && currentBook.author.length == 1}" :disabled="!allowMetadataEdit" ><i class="fa fa-minus-circle" style="margin-right: -18px;"></i></button>
-                      <br/>
-                    </template>
-                    <p v-if="allowMetadataEdit" style="text-align: right; margin: 0; padding: 0;"><button v-on:click="addAuthor" :disabled="!allowMetadataEdit" style="margin-right: 6px;"><i class="fa fa-plus-circle"></i></button></p>
-                    <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author']" class="validation-error" style="text-align: right !important;">Define Author</span>
-                  </td>
-                </tr>
-
-                <tr class='author' v-if="currentBook.language !== 'en'">
-                  <td>Author en</td>
-                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="debounceUpdate('author_en', $event.target.value, $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
-                    <div class="dropdown" v-if="allowMetadataEdit">
-                      <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
-                      <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; debounceUpdate('author_en', 'Unknown');" >Unknown</div>
-                    </div>
-                    <span style="text-align: right !important;" v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en']" class="validation-error">Define Author EN</span>
-
-                  </td>
-                </tr>-->
 
                 <tr class='language'>
                   <td>Language</td>
@@ -811,6 +773,7 @@ export default {
       blockType: '',
       styleKey: '',
       styleVal: '',
+      authorUpdated: false
     }
   },
 
@@ -1588,6 +1551,7 @@ export default {
 
     updateMetaHook (bookCheck, ...args) {
       let targets = [];
+      let updateField = '';
       const update = args.reduce((acc, arg)=>{
         let [key, value = null, _event = false, disable = false] = arg;
         //console.log(`updateMetaHook.key.value._event: `, key,value,_event);
@@ -1601,6 +1565,7 @@ export default {
         }
 
         let keys = key.split('.');
+        updateField = keys[0];
 
         if (keys[0] == 'alt_meta' && keys.length == 3) { // case of .alt_meta.ocean.category
           acc[keys[0]] = this.currentBook[keys[0]] || {};
@@ -1624,6 +1589,12 @@ export default {
       update.bookid = bookCheck.bookid;
       return this.updateBookMeta(update)
       .then((response)=>{
+        if (updateField === "author_link") {
+          this.authorUpdated = true;
+          Vue.nextTick(() => {
+            this.authorUpdated = false;
+          });
+        }
 
         targets.forEach((target)=>{
           target.disabled = false
