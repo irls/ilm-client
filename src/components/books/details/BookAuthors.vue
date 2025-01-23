@@ -8,7 +8,7 @@
             <td>
               Author
               <i class="pi pi-exclamation-triangle author-link-empty"
-                v-if="((author_link[i].id === null || author_link[i].alt_author) || (author_link[i].id && author_link[i].name_added)) && author_link[i].name"
+                v-if="((author_link[i].id === null || author_link[i].alt_author) || (author_link[i].id && author_link[i].name_added)) && author_link[i].name && inputField !== 'name'"
                 v-on:click="verifyAuthor(author_link[i], false, i)">
               </i>
             </td>
@@ -16,6 +16,7 @@
               <div class='author-dropdown'>
                 <input v-model='author_link[i].name'
                       @change="editAuthorLink($event, i, 'name')"
+                      @input="startInput('name')"
                       :disabled="!allowMetadataEdit"
                       :class="['author-name', { 'text-danger': hasError(i, 'name') }]"/>
                 <Dropdown
@@ -53,7 +54,7 @@
             <td>
               Author EN
               <i class="pi pi-exclamation-triangle author-link-empty"
-                v-if="(author_link[i].id === null || author_link[i].alt_author_en) && author_link[i].name_en"
+                v-if="(author_link[i].id === null || author_link[i].alt_author_en) && author_link[i].name_en && inputField !== 'name_en'"
                 v-on:click="verifyAuthor(author_link[i], true, i)">
               </i>
             </td>
@@ -61,6 +62,7 @@
               <div class='author-dropdown'>
                 <input v-model='author_link[i].name_en'
                       @change="editAuthorLink($event, i, 'name_en')"
+                      @input="startInput('name_en')"
                       :disabled="authorEnDisabled(author_link[i])"
                       :class="['author-name', { 'text-danger': hasError(i, 'name_en') }]" />
                 <Dropdown
@@ -141,7 +143,7 @@
   export default {
     data() {
       return {
-        //currentBook: {}
+        inputField: null
       }
     },
     props: {
@@ -163,6 +165,9 @@
       },*/
       author_link: {
         type: Array
+      },
+      authorUpdated: {
+        type: Boolean
       }
     },
     components: {
@@ -383,6 +388,11 @@
         if (variousAuthor) {
           this.author_link[i] = variousAuthor;
         }
+        Object.keys(this.author_link[i]).forEach(key => {
+          if (this.author_link[i][key]) {
+            this.author_link[i][key] = this.author_link[i][key].trim();
+          }
+        });
         this.$emit('editAuthorLink', ev, i, field);
         //this.currentBook.author_link[i].id = null;
         //this.currentBook.author_link[i].slug = "";
@@ -390,6 +400,7 @@
         //this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
       },
       changeAuthorLink(ev, i) {
+        this.inputField = null;
         const {
           id = null,
           name = '',
@@ -440,7 +451,19 @@
         }
         return error;
       },
+      startInput(inputField) {
+        this.inputField = inputField;
+      },
       ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook'])
+    },
+    'watch': {
+      authorUpdated: {
+        handler(val) {
+          if (this.authorUpdated) {
+            this.inputField = null;
+          }
+        }
+      }
     }
   }
 </script>
