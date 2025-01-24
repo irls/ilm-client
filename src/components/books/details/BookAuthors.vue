@@ -29,6 +29,7 @@
                   ref="author_link_name"
                   @hide="onHideAuthorLinkDropdown"
                   @change="changeAuthorLink($event, i, author)"
+                  @filter="onAuthorInput"
                   dataKey="key"
                   optionLabel="name"
                   filterPlaceholder="Filter Authors">
@@ -453,6 +454,10 @@
       },
       startInput(inputField) {
         this.inputField = inputField;
+      },
+      onAuthorInput(a, b, c, d) {
+        console.log(a, b, c, d);
+        console.log(this.$refs.author_link_name);
       },
       ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook'])
     },
