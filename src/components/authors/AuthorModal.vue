@@ -122,6 +122,9 @@
     },
     mounted() {
       this.authorEdit = lodash.cloneDeep(this.author);
+      if (this.authorEdit.alt_names.length === 0) {
+        this.authorEdit.alt_names = [""];
+      }
       this.fillVerifiedNames();
     },
     computed: {
