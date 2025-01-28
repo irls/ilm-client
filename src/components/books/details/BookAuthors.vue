@@ -392,7 +392,7 @@
           this.author_link[i].slug = "";
         }
 
-        if (field === "name" && (this.currentItem.language === "en" || hasTranslation) ) {
+        if ((field === "name" && (this.currentItem.language === "en" || hasTranslation)) || field === "name_en") {
           this.author_link[i].id = null;
         }
         this.author_link[i].update_field = field;
