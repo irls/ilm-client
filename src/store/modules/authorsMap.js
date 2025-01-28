@@ -44,7 +44,9 @@ export default {
     ]
   },
   getters: {
-    author_link_arr: state => state.author_link_arr,
+    author_link_arr: (state, getters, rootState) => {
+      return state.author_link_arr;
+    },
     various_authors: state => {
       return state.various_authors;
     },
@@ -52,6 +54,45 @@ export default {
       return state.various_authors.find(various_author => {
         return various_author.id === author.id;
       }) ? true : false;
+    },
+    authorsLangList: (state, getters, rootState) => (lang, bookLang) => {
+      let authorsList = [];
+      rootState.authorsModule.authors.forEach((author) => {
+        const authorMapped = {
+          id: author.id,
+          slug: author.slug,
+          key: author.id
+        }
+        let authorLang = lang === "en" ? lodash.cloneDeep(author) : author.name_lang.find((name_lang) => {
+          return name_lang.language === lang;
+        });
+        let bookAuthor = bookLang === "en" ? lodash.cloneDeep(author) : author.name_lang.find((name_lang) => {
+          return name_lang.language === bookLang;
+        });
+        if (authorLang && authorLang.name) {
+          authorMapped.name = bookAuthor ? bookAuthor.name : "";
+          if (lang === 'en') {
+            authorMapped.name_en = bookLang === "en" ? "" : author.name;
+            //authorMapped.alt_names = author.alt_names;
+          } else {
+            //author.name_lang = author.name_lang || [];
+            authorMapped.name_en = author.name;
+            //authorMapped.alt_names = authorLang ? authorLang.alt_names : author.alt_names;
+          }
+          authorsList.push(authorMapped);
+          authorLang.verified_names.forEach((verifiedName, verifiedNameIdx) => {
+            if (verifiedName && verifiedName.length > 0) {
+              authorsList.push(lodash.assign(lodash.cloneDeep(authorMapped), 
+              {
+                name: verifiedName, 
+                name_en: bookLang === "en" ? "" : verifiedName,
+                key: `${author.id}_${verifiedNameIdx}`
+              }));
+            }
+          });
+        }
+      });
+      return authorsList;
     }
   },
   mutations: {

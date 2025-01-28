@@ -1210,12 +1210,6 @@ export default {
           }
         }
       }
-    },
-
-    'currentBook.language': {
-      handler(val) {
-        this.$store.dispatch('authorsMapModule/getAuthorsList', { lang: val || 'en' });
-      }
     }
 
   },
@@ -1265,8 +1259,6 @@ export default {
       }
 
       this.debounceUpdate = _cacheDebounce(this.beforeMetaUpdateHook, this.updateMetaHook, this.currentBook.bookid, 800);
-
-      this.$store.dispatch('authorsMapModule/getAuthorsList', { lang: this.currentBookMeta.language || 'en' });
     },
     /*
     //close unknown author if clicked outside

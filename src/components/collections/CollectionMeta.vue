@@ -226,7 +226,6 @@
           if (!document.activeElement || !document.activeElement.classList.contains('resizable-textarea')) {
             this.$refs.collectionDescription.setValue(this.collection.description);
           }
-          this.getAuthorsList({ lang: this.collection.language || 'en' });
         },
         cleanError(key) {
           if (this.currentCollection.validationErrors
@@ -425,8 +424,7 @@
             this.update('alt_meta.reader.category', {target:{value:''}});
           }
         },
-        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection']),
-        ...mapActions('authorsMapModule', ['getAuthorsList'])
+        ...mapActions(['reloadCollection', 'updateCollectionVersion', 'updateCollection'])
       },
       computed: {
         collectionBooksLength: {
