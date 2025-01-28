@@ -82,10 +82,10 @@ export default {
           authorsList.push(authorMapped);
           authorLang.verified_names.forEach((verifiedName, verifiedNameIdx) => {
             if (verifiedName && verifiedName.length > 0) {
-              authorsList.push(lodash.assign(lodash.cloneDeep(authorMapped), 
+              authorsList.push(lodash.assign(lodash.cloneDeep(authorMapped),
               {
-                name: bookLang === "en" ? verifiedName : (bookAuthor ? bookAuthor.name : ""), 
-                name_en: bookLang === "en" ? "" : verifiedName,
+                name: bookLang === lang ? verifiedName : (bookAuthor ? bookAuthor.name : ""),
+                name_en: bookLang === "en" ? "" : (lang === "en" ? verifiedName : author.name),
                 key: `${author.id}_${verifiedNameIdx}`
               }));
             }
