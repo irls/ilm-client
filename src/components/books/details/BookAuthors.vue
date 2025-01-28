@@ -28,7 +28,7 @@
                   :optionDisabled="getDisabledAuthors"
                   ref="author_link_name"
                   @hide="onHideAuthorLinkDropdown"
-                  @change="changeAuthorLink($event, i, author)"
+                  @change="changeAuthorLink($event, i)"
                   @filter="onAuthorInput"
                   dataKey="key"
                   optionLabel="name"
@@ -68,14 +68,14 @@
                       :class="['author-name', { 'text-danger': hasError(i, 'name_en') }]" />
                 <Dropdown
                   :value="author_link[i]"
-                  :options="author_link_arr"
+                  :options="authorsEnList"
                   :disabled="authorEnDisabled(author_link[i])"
                   :filter="true"
                   :showClear="false&&author_link[i].id !== null"
                   :optionDisabled="getDisabledAuthors"
                   ref="author_link_name_en"
                   @hide="onHideAuthorEnLinkDropdown"
-                  @change="changeAuthorLink($event, i, author)"
+                  @change="changeAuthorLink($event, i)"
                   dataKey="key"
                   optionLabel="name_en"
                   filterPlaceholder="Filter Authors">
@@ -195,11 +195,13 @@
       },
       authorsList: {
         get() {
-          return this.currentItem.language === "en" ? this.author_link_arr : this.author_link_arr.filter((author, authorIdx) => {
-            return !(this.author_link_arr.find((auth, authIdx) => {
-              return auth.id === author.id && authorIdx > authIdx;
-            }));
-          });
+          return this.authorsLangList(this.currentItem.language, this.currentItem.language);
+        },
+        cache: false
+      },
+      authorsEnList: {
+        get() {
+          return this.authorsLangList("en", this.currentItem.language);
         },
         cache: false
       },
@@ -209,7 +211,8 @@
         author_link_arr: 'authorsMapModule/author_link_arr',
         adminOrLibrarian: 'adminOrLibrarian',
         various_authors: "authorsMapModule/various_authors"
-      })
+      }),
+      ...mapGetters('authorsMapModule', ["authorsLangList"])
     },
     created() {
       
