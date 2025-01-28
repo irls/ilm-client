@@ -309,7 +309,7 @@
           if (author.name_en) {
             text+= `, ${author.name_en}`;
           }
-          text+= `, ${author.slug} is commonly recognized as ${!author_en ? author.alt_author : author.alt_author_en}.`;
+          text+= `, ${author.slug} is commonly recognized as ${!author_en ? author.alt_author : author.alt_author_en}.<br>Update Author?`;
           buttons = [
             {
               title: 'Cancel',
