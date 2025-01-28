@@ -1780,10 +1780,7 @@ export default {
       }
     },
 
-    addAuthorLang(id) {
-      let authorIndex = this.currentBook.author_link.findIndex(author_link => {
-        return author_link.id === id;
-      });
+    addAuthorLang(id, authorIndex) {
       if (authorIndex >= 0) {
         delete this.currentBook.author_link[authorIndex].name_added;
         this.debounceUpdate('author_link', [...this.currentBook.author_link], false);

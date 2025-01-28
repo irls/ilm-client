@@ -8,15 +8,18 @@
             <td>
               Author
               <i class="pi pi-exclamation-triangle author-link-empty"
-                v-if="((author_link[i].id === null || author_link[i].alt_author) || (author_link[i].id && author_link[i].name_added)) && author_link[i].name && inputField !== 'name'"
+                v-if="((author_link[i].id === null || author_link[i].alt_author) || (author_link[i].id && author_link[i].name_added)) && author_link[i].name && inputField !== 'name_' + i"
                 v-on:click="verifyAuthor(author_link[i], false, i)">
               </i>
             </td>
             <td>
+              <div class="update-in-progress" v-if="updatingIndex === i">
+                <span class="update-spinner"></span>
+              </div>
               <div class='author-dropdown'>
                 <input v-model='author_link[i].name'
                       @change="editAuthorLink($event, i, 'name')"
-                      @input="startInput('name')"
+                      @input="startInput('name_' + i)"
                       :disabled="!allowMetadataEdit"
                       :class="['author-name', { 'text-danger': hasError(i, 'name') }]"/>
                 <Dropdown
@@ -55,7 +58,7 @@
             <td>
               Author EN
               <i class="pi pi-exclamation-triangle author-link-empty"
-                v-if="(author_link[i].id === null || author_link[i].alt_author_en) && author_link[i].name_en && inputField !== 'name_en'"
+                v-if="(author_link[i].id === null || author_link[i].alt_author_en) && author_link[i].name_en && inputField !== 'name_en_' + i"
                 v-on:click="verifyAuthor(author_link[i], true, i)">
               </i>
             </td>
@@ -63,7 +66,7 @@
               <div class='author-dropdown'>
                 <input v-model='author_link[i].name_en'
                       @change="editAuthorLink($event, i, 'name_en')"
-                      @input="startInput('name_en')"
+                      @input="startInput('name_en_' + i)"
                       :disabled="authorEnDisabled(author_link[i])"
                       :class="['author-name', { 'text-danger': hasError(i, 'name_en') }]" />
                 <Dropdown
@@ -144,7 +147,8 @@
   export default {
     data() {
       return {
-        inputField: null
+        inputField: null,
+        updatingIndex: null
       }
     },
     props: {
@@ -212,7 +216,8 @@
         adminOrLibrarian: 'adminOrLibrarian',
         various_authors: "authorsMapModule/various_authors"
       }),
-      ...mapGetters('authorsMapModule', ["authorsLangList"])
+      ...mapGetters('authorsMapModule', ["authorsLangList"]),
+      ...mapGetters('authorsModule', ['authors'])
     },
     created() {
       
@@ -234,7 +239,7 @@
         if (!this.allowMetadataEdit) {
           return true;
         }
-        if (author.id && author.id.length > 0 && author.name && author.name.length > 0/* && !author.alt_author && !author.alt_author_en*/) {
+        if (author.id && author.id.length > 0 && author.name && author.name.length > 0 && !author.name_added) {
           return true;
         }
         return false;
@@ -299,7 +304,7 @@
               title: 'Add author',
               handler: () => {
                 this.$modal.hide('dialog');
-                this.addAuthorLang(author.id, {name: author.name});
+                this.addAuthorLang(author.id, {name: author.name}, authorIdx);
               },
               class: 'btn btn-primary'
             }
@@ -358,6 +363,7 @@
             this.author_link[authorIdx].name_en = author.alt_author_en;
             delete this.author_link[authorIdx].alt_author_en;
           }
+          this.updatingIndex = authorIdx;
           this.$emit('verifyAuthor', author, author_en, authorIdx);
         }
       },
@@ -373,17 +379,21 @@
         }
       },
       editAuthorLink(ev, i, field) {
-        this.author_link[i].id = null;
+        let hasTranslation = this.author_link[i].id && this.hasTranslation(this.author_link[i].id);
         if ((this.currentItem.language === "en" && field === "name") || (this.currentItem.language !== "en" && field === "name_en")) {
           this.author_link[i].slug = "";
         }
         if (field === "name") {
           delete this.author_link[i].alt_author;
         }
-        if (this.author_link[i].name_en && field === "name") {
+        if (this.author_link[i].name_en && field === "name" && this.author_link[i].id && hasTranslation) {
           this.author_link[i].name_en = "";
           delete this.author_link[i].alt_author_en;
           this.author_link[i].slug = "";
+        }
+
+        if (field === "name" && (this.currentItem.language === "en" || hasTranslation) ) {
+          this.author_link[i].id = null;
         }
         this.author_link[i].update_field = field;
         let variousAuthor = this.various_authors.find(author => {
@@ -393,10 +403,11 @@
           this.author_link[i] = variousAuthor;
         }
         Object.keys(this.author_link[i]).forEach(key => {
-          if (this.author_link[i][key]) {
+          if (this.author_link[i][key] && typeof this.author_link[i][key] === "string") {
             this.author_link[i][key] = this.author_link[i][key].trim();
           }
         });
+        this.updatingIndex = i;
         this.$emit('editAuthorLink', ev, i, field);
         //this.currentBook.author_link[i].id = null;
         //this.currentBook.author_link[i].slug = "";
@@ -412,6 +423,7 @@
           slug = '',
         } = ev.value || {};
         this.author_link[i] = {id, name, name_en, slug};
+        this.updatingIndex = i;
         this.$emit('changeAuthorLink', ev, i);
       },
       addAuthorLink() {
@@ -429,10 +441,11 @@
           this.$emit('removeAuthorLink', ev, i);
         }
       },
-      addAuthorLang(id, author) {
+      addAuthorLang(id, author, authorIdx) {
+        this.updatingIndex = authorIdx;
         return this.createAuthorLangFromBook([id, author])
           .then(author => {
-            this.$emit('addAuthorLang', id);
+            this.$emit('addAuthorLang', id, authorIdx);
           });
       },
       hasError(authorLinkIndex, field = null) {
@@ -462,6 +475,16 @@
         console.log(a, b, c, d);
         console.log(this.$refs.author_link_name);
       },
+      hasTranslation(id) {
+        if (this.currentItem.language === "en") {
+          return true;
+        }
+        return this.authors.find(author => {
+          return author.id === id && author.name_lang.find(name_lang => {
+            return name_lang.language === this.currentItem.language;
+          });
+        }) ? true : false;
+      },
       ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook'])
     },
     'watch': {
@@ -469,6 +492,7 @@
         handler(val) {
           if (this.authorUpdated) {
             this.inputField = null;
+            this.updatingIndex = null;
           }
         }
       }
@@ -564,6 +588,23 @@
       input.author-slug {
         position: relative;
         width: 100%;
+      }
+    }
+    .update-in-progress {
+      position: absolute;
+      z-index: 999;
+      width: 71%;
+      height: 100%;
+      background: #80808026;
+      span.update-spinner {
+        background: url(/static/preloader-snake-transparent-tiny.gif);
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        vertical-align: text-top;
+        width: 90%;
+        background-repeat: no-repeat;
+        background-position-x: right;
       }
     }
   }

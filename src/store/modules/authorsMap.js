@@ -84,7 +84,7 @@ export default {
             if (verifiedName && verifiedName.length > 0) {
               authorsList.push(lodash.assign(lodash.cloneDeep(authorMapped), 
               {
-                name: verifiedName, 
+                name: bookLang === "en" ? verifiedName : bookAuthor.name, 
                 name_en: bookLang === "en" ? "" : verifiedName,
                 key: `${author.id}_${verifiedNameIdx}`
               }));
