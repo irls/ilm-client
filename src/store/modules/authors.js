@@ -86,13 +86,20 @@ export default {
       } else {
         authorAdd.name = authorData.name;
       }
-      return dispatch('createAuthor', [authorAdd]);
+      return dispatch('createAuthor', [authorAdd])
+        .then((response) => {
+          dispatch("getAll");
+          return response;
+        });
     },
     createAuthorLangFromBook({rootState, dispatch, state}, [id, authorLang]) {
       let lang = rootState.currentBookMeta.language;
       return axios.post(`${rootState.API_URL}authors/${encodeURIComponent(id)}/${lang}`, authorLang)
         .then(response => {
-          return response.data;
+          return dispatch("getAll")
+            .then(() => {
+              return response.data;
+            });
         });
     }
   }

@@ -1,6 +1,14 @@
 import axios from 'axios';
 import lodash from 'lodash';
 
+import { cleanFilter } from "../../filters/search";
+
+const setFilters = function (author) {
+  author.name_filter = cleanFilter(author.name);
+  author.name_en_filter = cleanFilter(author.name_en);
+  return author;
+}
+
 export default {
   namespaced: true,
   state: {
@@ -79,20 +87,22 @@ export default {
             authorMapped.name_en = author.name;
             //authorMapped.alt_names = authorLang ? authorLang.alt_names : author.alt_names;
           }
-          authorsList.push(authorMapped);
+          authorsList.push(setFilters(authorMapped));
           authorLang.verified_names.forEach((verifiedName, verifiedNameIdx) => {
             if (verifiedName && verifiedName.length > 0) {
-              authorsList.push(lodash.assign(lodash.cloneDeep(authorMapped),
+              authorsList.push(setFilters(lodash.assign(lodash.cloneDeep(authorMapped),
               {
                 name: bookLang === lang ? verifiedName : (bookAuthor ? bookAuthor.name : ""),
                 name_en: bookLang === "en" ? "" : (lang === "en" ? verifiedName : author.name),
                 key: `${author.id}_${verifiedNameIdx}`
-              }));
+              })));
             }
           });
         }
       });
-      return authorsList;
+      return authorsList.concat(state.various_authors.map(various_author => {
+        return setFilters(various_author);
+      }));
     }
   },
   mutations: {
