@@ -22,7 +22,7 @@
                       @input="startInput('name_' + i)"
                       :disabled="!allowMetadataEdit"
                       :class="['author-name', { 'text-danger': hasError(i, 'name') }]"/>
-                <Dropdown
+                <DropdownILM
                   :value="author_link[i]"
                   :options="authorsList"
                   :disabled="!allowMetadataEdit"
@@ -32,9 +32,8 @@
                   ref="author_link_name"
                   @hide="onHideAuthorLinkDropdown"
                   @change="changeAuthorLink($event, i)"
-                  @filter="onAuthorInput"
                   dataKey="key"
-                  optionLabel="name"
+                  optionLabel="name_filter"
                   filterPlaceholder="Filter Authors">
                   <template #value="slotProps">
                       <div class="" v-if="slotProps.value">
@@ -50,7 +49,7 @@
                         <div>{{slotProps.option.name}}</div>
                       </div>
                   </template>
-                </Dropdown>
+                </DropdownILM>
               </div>
             </td>
           </tr>
@@ -69,7 +68,7 @@
                       @input="startInput('name_en_' + i)"
                       :disabled="authorEnDisabled(author_link[i])"
                       :class="['author-name', { 'text-danger': hasError(i, 'name_en') }]" />
-                <Dropdown
+                <DropdownILM
                   :value="author_link[i]"
                   :options="authorsEnList"
                   :disabled="authorEnDisabled(author_link[i])"
@@ -80,7 +79,7 @@
                   @hide="onHideAuthorEnLinkDropdown"
                   @change="changeAuthorLink($event, i)"
                   dataKey="key"
-                  optionLabel="name_en"
+                  optionLabel="name_en_filter"
                   filterPlaceholder="Filter Authors">
                   <template #value="slotProps">
                       <div class="" v-if="slotProps.value">
@@ -96,7 +95,7 @@
                         <div>{{slotProps.option.name_en}}</div>
                       </div>
                   </template>
-                </Dropdown>
+                </DropdownILM>
               </div>
             </td>
           </tr>
@@ -139,7 +138,7 @@
 <script>
   import Vue from 'vue';
   import { mapGetters, mapActions } from 'vuex';
-  import Dropdown from 'primevue/dropdown';
+  import DropdownILM from "../../generic/components/DropdownILM";
   import v_modal from 'vue-js-modal';
 
   Vue.use(v_modal, {dialog: true});
@@ -148,7 +147,9 @@
     data() {
       return {
         inputField: null,
-        updatingIndex: null
+        updatingIndex: null,
+        authorsList: [],
+        authorsEnList: []
       }
     },
     props: {
@@ -176,7 +177,7 @@
       }
     },
     components: {
-      Dropdown
+      DropdownILM
     },
     computed: {
 
@@ -197,18 +198,6 @@
         },
         cache: false
       },
-      authorsList: {
-        get() {
-          return this.authorsLangList(this.currentItem.language, this.currentItem.language);
-        },
-        cache: false
-      },
-      authorsEnList: {
-        get() {
-          return this.authorsLangList("en", this.currentItem.language);
-        },
-        cache: false
-      },
       ...mapGetters({
         currentBookMeta: 'currentBookMeta',
         currentCollection: 'currentCollection',
@@ -220,7 +209,7 @@
       ...mapGetters('authorsModule', ['authors'])
     },
     created() {
-      
+      this.setAuthorsList();
     },
     methods: {
       authorSlugDisabled(author) {
@@ -446,6 +435,7 @@
         return this.createAuthorLangFromBook([id, author])
           .then(author => {
             this.$emit('addAuthorLang', id, authorIdx);
+            this.setAuthorsList();
           });
       },
       hasError(authorLinkIndex, field = null) {
@@ -471,10 +461,6 @@
       startInput(inputField) {
         this.inputField = inputField;
       },
-      onAuthorInput(a, b, c, d) {
-        console.log(a, b, c, d);
-        console.log(this.$refs.author_link_name);
-      },
       hasTranslation(id) {
         if (this.currentItem.language === "en") {
           return true;
@@ -485,6 +471,10 @@
           });
         }) ? true : false;
       },
+      setAuthorsList() {
+        this.authorsList = this.authorsLangList(this.currentItem.language, this.currentItem.language);
+        this.authorsEnList = this.authorsLangList("en", this.currentItem.language);
+      },
       ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook'])
     },
     'watch': {
@@ -494,6 +484,11 @@
             this.inputField = null;
             this.updatingIndex = null;
           }
+        }
+      },
+      "authors.length": {
+        handler(val) {
+          this.setAuthorsList();
         }
       }
     }
