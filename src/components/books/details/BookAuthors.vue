@@ -272,7 +272,7 @@
           if (author.name_en) {
             text+= `, ${author.name_en}`;
           }
-          text+= `, ${author.slug} is absent from the Authors list.`;;
+          text+= `, ${author.slug} is absent from the Authors list.<br>Add Author?`;;
           buttons = [
           {
               title: 'Cancel',
