@@ -222,6 +222,9 @@
         if (this.currentItem.language !== "en" && (!author.name_en || !author.name_en.length)) {
           return true;
         }
+        if (this.currentItem.language === "en" && (!author.name || author.name.length === 0)) {
+          return true;
+        }
         return false;
       },
       authorEnDisabled(author) {
@@ -488,6 +491,16 @@
       },
       "authors.length": {
         handler(val) {
+          this.setAuthorsList();
+        }
+      },
+      "currentItem.id": {
+        handler() {
+          this.setAuthorsList();
+        }
+      },
+      "currentItem.language": {
+        handler() {
           this.setAuthorsList();
         }
       }
