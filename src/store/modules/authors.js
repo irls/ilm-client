@@ -24,6 +24,15 @@ export default {
     }
   },
   actions: {
+    get({rootState}, [id]) {
+      return axios.get(`${rootState.API_URL}author/${encodeURIComponent(id)}`)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
     getAll({rootState, commit, state}) {
       return axios.get(`${rootState.API_URL}authors`)
         .then(response => {
