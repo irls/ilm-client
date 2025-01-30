@@ -104,7 +104,7 @@
 
   import AuthorModal from './AuthorModal';
   import SelectLanguages from '../generic/SelectLanguages';
-  import { cleanDiacritics } from "../../filters/search";
+  import { cleanFilter } from "../../filters/search";
 
   Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -333,7 +333,7 @@
         }
       },
       clearForFilter(value) {
-        return cleanDiacritics(value.toLowerCase().replace(/[….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]]/img, ''));
+        return cleanFilter(value);
       },
       toggleNameLang(author) {
         let authorRow = document.querySelector(`.author.-author-${this.cleanId(author.id)}`);
