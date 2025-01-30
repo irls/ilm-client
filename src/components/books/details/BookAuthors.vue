@@ -74,7 +74,7 @@
                   :disabled="authorEnDisabled(author_link[i])"
                   :filter="true"
                   :showClear="false&&author_link[i].id !== null"
-                  :optionDisabled="getDisabledAuthors"
+                  :optionDisabled="getDisabledAuthorsEn"
                   ref="author_link_name_en"
                   @hide="onHideAuthorEnLinkDropdown"
                   @change="changeAuthorLink($event, i)"
@@ -251,6 +251,11 @@
       getDisabledAuthors(val) {
         return this.author_link.find(author => {
           return author.id === val.id && author.name === val.name;
+        });
+      },
+      getDisabledAuthorsEn(val) {
+        return this.author_link.find(author => {
+          return author.id === val.id && author.name_en === val.name_en;
         });
       },
       verifyAuthor(author, author_en = false, authorIdx = null) {
@@ -478,7 +483,7 @@
         this.authorsList = this.authorsLangList(this.currentItem.language, this.currentItem.language);
         this.authorsEnList = this.authorsLangList("en", this.currentItem.language);
       },
-      ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook'])
+      ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook', 'getAll'])
     },
     'watch': {
       authorUpdated: {
@@ -486,6 +491,16 @@
           if (this.authorUpdated) {
             this.inputField = null;
             this.updatingIndex = null;
+          }
+        }
+      },
+      updatingIndex: {
+        handler(val) {
+          if (val === null) {
+            this.getAll()
+              .then(() => {
+                this.setAuthorsList();
+              })
           }
         }
       },
