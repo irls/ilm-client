@@ -138,6 +138,7 @@
 <script>
   import Vue from 'vue';
   import { mapGetters, mapActions } from 'vuex';
+  import lodash from "lodash";
   import DropdownILM from "../../generic/components/DropdownILM";
   import v_modal from 'vue-js-modal';
 
@@ -352,7 +353,7 @@
         });
       },
       runVerifyAuthor(author, author_en, authorIdx) {
-        if (authorIdx >= 0) {
+        /*if (authorIdx >= 0) {
           if (!author_en) {
             this.author_link[authorIdx].name = author.alt_author;
             delete this.author_link[authorIdx].alt_author;
@@ -362,6 +363,35 @@
           }
           this.updatingIndex = authorIdx;
           this.$emit('verifyAuthor', author, author_en, authorIdx);
+        }*/
+        if (authorIdx >= 0) {
+          return this.getAuthor([author.id])
+            .then(dbAuthor => {
+              let langAuthor = lodash.cloneDeep(dbAuthor);
+              if (this.currentItem.language !== "en") {
+                let nameLang = dbAuthor.name_lang.find(name_lang => {
+                  return name_lang.language === this.currentItem.language;
+                });
+                if (nameLang) {
+                  langAuthor = lodash.cloneDeep(nameLang);
+                }
+              }
+              if (!author_en) {
+                let updateName = "";
+                if (langAuthor.name === author.alt_author || langAuthor.verified_names.includes(author.alt_author)) {
+                  updateName = author.alt_author;
+                } else {
+                  updateName = langAuthor.name;
+                }
+                this.author_link[authorIdx].name = updateName;
+                delete this.author_link[authorIdx].alt_author;
+              } else {
+                this.author_link[authorIdx].name_en = dbAuthor.name === author.alt_author_en || dbAuthor.verified_names.includes(author.alt_author_en) ? author.alt_author_en : dbAuthor.name;
+                delete this.author_link[authorIdx].alt_author_en;
+              }
+              this.updatingIndex = authorIdx;
+              this.$emit('verifyAuthor', author, author_en, authorIdx);
+            });
         }
       },
       addAuthor(author) {
@@ -483,7 +513,12 @@
         this.authorsList = this.authorsLangList(this.currentItem.language, this.currentItem.language);
         this.authorsEnList = this.authorsLangList("en", this.currentItem.language);
       },
-      ...mapActions('authorsModule', ['createAuthorFromBook', 'createAuthorLangFromBook', 'getAll'])
+      ...mapActions('authorsModule', {
+        createAuthorFromBook: 'createAuthorFromBook', 
+        createAuthorLangFromBook: 'createAuthorLangFromBook', 
+        getAll: 'getAll',
+        getAuthor: 'get'
+      })
     },
     'watch': {
       authorUpdated: {
