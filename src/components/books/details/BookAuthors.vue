@@ -77,7 +77,7 @@
                   :optionDisabled="getDisabledAuthorsEn"
                   ref="author_link_name_en"
                   @hide="onHideAuthorEnLinkDropdown"
-                  @change="changeAuthorLink($event, i)"
+                  @change="changeAuthorLink($event, i, true)"
                   dataKey="key"
                   optionLabel="name_en_filter"
                   filterPlaceholder="Filter Authors">
@@ -441,7 +441,7 @@
         //delete this.currentBook.author_link[i].alt_author;
         //this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
       },
-      changeAuthorLink(ev, i) {
+      changeAuthorLink(ev, i, author_en = false) {
         this.inputField = null;
         const {
           id = null,
@@ -450,6 +450,13 @@
           slug = '',
         } = ev.value || {};
         this.author_link[i] = {id, name, name_en, slug};
+        this.author_link[i].slug = "";
+        this.author_link[i].update_field = author_en ? "name_en" : "name";
+        if (author_en) {
+          this.author_link[i].name = "";
+        } else {
+          this.author_link[i].name_en = "";
+        }
         this.updatingIndex = i;
         this.$emit('changeAuthorLink', ev, i);
       },
@@ -546,12 +553,18 @@
       },
       "currentItem.id": {
         handler() {
-          this.setAuthorsList();
+          this.getAll()
+            .then(() => {
+              this.setAuthorsList();
+            });
         }
       },
       "currentItem.language": {
         handler() {
-          this.setAuthorsList();
+          this.getAll()
+            .then(() => {
+              this.setAuthorsList();
+            });
         }
       }
     }
