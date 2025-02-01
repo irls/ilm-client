@@ -32,21 +32,21 @@ export default {
         id: "various",
         name: "Various",
         slug: "",
-        name_en: "Various",
+        name_en: "",
         key: "various"
       },
       {
         id: "anonymous",
         name: "Anonymous",
         slug: "",
-        name_en: "Anonymous",
+        name_en: "",
         key: "anonymous"
       },
       {
         id: "unknown",
         name: "Unknown",
         slug: "",
-        name_en: "Unknown",
+        name_en: "",
         key: "unknown"
       }
     ]
@@ -100,9 +100,12 @@ export default {
           });
         }
       });
-      return authorsList.concat(state.various_authors.map(various_author => {
-        return setFilters(various_author);
-      }));
+      if ((bookLang === "en") || (bookLang !== "en" && lang !== "en")) {
+        authorsList = authorsList.concat(state.various_authors.map(various_author => {
+          return setFilters(various_author);
+        }));
+      }
+      return authorsList;
     }
   },
   mutations: {
