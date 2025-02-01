@@ -424,7 +424,7 @@
         }
         this.author_link[i].update_field = field;
         let variousAuthor = this.various_authors.find(author => {
-          return author.name.toLowerCase().trim() === ev.target.value.toLowerCase().trim() || author.name_en.toLowerCase().trim() === ev.target.value.toLowerCase().trim();
+          return author.name.toLowerCase().trim() === ev.target.value.toLowerCase().trim();
         });
         if (variousAuthor) {
           this.author_link[i] = variousAuthor;
