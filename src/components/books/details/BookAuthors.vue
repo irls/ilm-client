@@ -204,9 +204,9 @@
         currentCollection: 'currentCollection',
         author_link_arr: 'authorsMapModule/author_link_arr',
         adminOrLibrarian: 'adminOrLibrarian',
-        various_authors: "authorsMapModule/various_authors"
+        various_authors: "authorsMapModule/various_authors",
       }),
-      ...mapGetters('authorsMapModule', ["authorsLangList"]),
+      ...mapGetters('authorsMapModule', ["authorsLangList", "isVariousId"]),
       ...mapGetters('authorsModule', ['authors'])
     },
     created() {
@@ -508,6 +508,9 @@
       },
       hasTranslation(id) {
         if (this.currentItem.language === "en") {
+          return true;
+        }
+        if (this.isVariousId(id)) {
           return true;
         }
         return this.authors.find(author => {

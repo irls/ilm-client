@@ -63,6 +63,11 @@ export default {
         return various_author.id === author.id;
       }) ? true : false;
     },
+    isVariousId: state => (id) => {
+      return state.various_authors.find(various_author => {
+        return various_author.id === id;
+      }) ? true : false;
+    },
     authorsLangList: (state, getters, rootState) => (lang, bookLang) => {
       let authorsList = [];
       rootState.authorsModule.authors.forEach((author) => {
