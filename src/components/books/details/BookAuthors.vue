@@ -399,6 +399,7 @@
           return auth.slug === author.slug && auth.name === author.name;
         });
         if (authorIndex >= 0) {
+          this.updatingIndex = authorIndex;
           return this.createAuthorFromBook([author])
             .then(addedAuthor => {
               this.$emit('addAuthor', addedAuthor, authorIndex);
@@ -435,6 +436,7 @@
           }
         });
         this.updatingIndex = i;
+        this.clearError(i);
         this.$emit('editAuthorLink', ev, i, field);
         //this.currentBook.author_link[i].id = null;
         //this.currentBook.author_link[i].slug = "";
@@ -458,6 +460,7 @@
           this.author_link[i].name_en = "";
         }
         this.updatingIndex = i;
+        this.clearError(i);
         this.$emit('changeAuthorLink', ev, i);
       },
       addAuthorLink() {
@@ -472,6 +475,7 @@
       removeAuthorLink(ev, i) {
         if (this.author_link[i]) {
           this.author_link.splice(i, 1);
+          this.clearError(i);
           this.$emit('removeAuthorLink', ev, i);
         }
       },
@@ -502,6 +506,11 @@
           }
         }
         return error;
+      },
+      clearError(i) {
+        if (this.requiredFields && this.requiredFields.author_link) {
+          delete this.requiredFields.author_link[i];
+        }
       },
       startInput(inputField) {
         this.inputField = inputField;
@@ -546,6 +555,8 @@
               .then(() => {
                 this.setAuthorsList();
               })
+          } else {
+            this.clearError(val);
           }
         }
       },

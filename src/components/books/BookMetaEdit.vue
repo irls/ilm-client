@@ -1429,13 +1429,13 @@ export default {
 
       if (this.requiredFields[this.currentBook.bookid]
       && this.requiredFields[this.currentBook.bookid][checkErrorKey]) {
-        if (checkErrorKey != 'author'){
+        if (checkErrorKey != 'author_link'){
           delete this.requiredFields[this.currentBook.bookid][checkErrorKey];
-        } else {
+        }/* else {
           if (this.currentBookMeta.author.join("").length !== 0){
             delete this.requiredFields[this.currentBook.bookid][checkErrorKey];
           }
-        }
+        }*/
       }
 
       if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
