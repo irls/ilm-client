@@ -1316,7 +1316,7 @@ export default {
             errorFields.push("name_en");
           }
           if (errorFields.length > 0) {
-            this.requiredFields[this.currentBookMeta.bookid]['author_link'] = this.requiredFields[this.currentBookMeta.bookid] || {};
+            this.requiredFields[this.currentBookMeta.bookid]['author_link'] = this.requiredFields[this.currentBookMeta.bookid]['author_link'] || {};
             this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {};
             errorFields.forEach(errorField => {
               this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx][errorField] = 'Define Author';
@@ -1327,6 +1327,9 @@ export default {
               return authorPrev.id === author.id && authorPrevIdx < authorIdx;
             });
             if (existPreviousAuthor) {
+              if (!this.requiredFields[this.currentBookMeta.bookid]['author_link']) {
+                this.requiredFields[this.currentBookMeta.bookid]['author_link'] = {};
+              }
               this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {name: 'Duplicated Author'};
             }
           }
@@ -1429,13 +1432,13 @@ export default {
 
       if (this.requiredFields[this.currentBook.bookid]
       && this.requiredFields[this.currentBook.bookid][checkErrorKey]) {
-        if (checkErrorKey != 'author'){
+        if (checkErrorKey != 'author_link'){
           delete this.requiredFields[this.currentBook.bookid][checkErrorKey];
-        } else {
+        }/* else {
           if (this.currentBookMeta.author.join("").length !== 0){
             delete this.requiredFields[this.currentBook.bookid][checkErrorKey];
           }
-        }
+        }*/
       }
 
       if (this.currentBook.language == 'en' && (key == 'title' || key == 'author'))
