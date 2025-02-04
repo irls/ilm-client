@@ -1316,7 +1316,7 @@ export default {
             errorFields.push("name_en");
           }
           if (errorFields.length > 0) {
-            this.requiredFields[this.currentBookMeta.bookid]['author_link'] = this.requiredFields[this.currentBookMeta.bookid] || {};
+            this.requiredFields[this.currentBookMeta.bookid]['author_link'] = this.requiredFields[this.currentBookMeta.bookid]['author_link'] || {};
             this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {};
             errorFields.forEach(errorField => {
               this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx][errorField] = 'Define Author';
@@ -1327,6 +1327,9 @@ export default {
               return authorPrev.id === author.id && authorPrevIdx < authorIdx;
             });
             if (existPreviousAuthor) {
+              if (!this.requiredFields[this.currentBookMeta.bookid]['author_link']) {
+                this.requiredFields[this.currentBookMeta.bookid]['author_link'] = {};
+              }
               this.requiredFields[this.currentBookMeta.bookid]['author_link'][authorIdx] = {name: 'Duplicated Author'};
             }
           }
