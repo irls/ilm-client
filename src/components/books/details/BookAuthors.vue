@@ -21,7 +21,7 @@
                       @change="editAuthorLink($event, i, 'name')"
                       @input="startInput('name_' + i)"
                       :disabled="!allowMetadataEdit"
-                      :class="['author-name', { 'text-danger': hasError(i, 'name') }]"/>
+                      :class="['author-name', { '-has-error': hasError(i, 'name') }]"/>
                 <DropdownILM
                   :value="author_link[i]"
                   :options="authorsList"
@@ -67,7 +67,7 @@
                       @change="editAuthorLink($event, i, 'name_en')"
                       @input="startInput('name_en_' + i)"
                       :disabled="authorEnDisabled(author_link[i])"
-                      :class="['author-name', { 'text-danger': hasError(i, 'name_en') }]" />
+                      :class="['author-name', { '-has-error': hasError(i, 'name_en') }]" />
                 <DropdownILM
                   :value="author_link[i]"
                   :options="authorsEnList"
@@ -107,9 +107,9 @@
                       @change="editAuthorLink($event, i, 'slug')"
                     :disabled="authorSlugDisabled(author_link[i])"
                     :class="['author-slug']" />
-              <!--, {'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
+              <!--, {'-has-error': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
 
-              <span v-if="hasError(i)" class="validation-error" style="text-align: right !important;">{{ getError(i) }}</span>
+              <span v-if="hasError(i)" class="author-error">{{ getError(i) }}</span>
 
             </td>
           </tr>
@@ -660,6 +660,11 @@
         &:disabled {
           border: 1px solid rgba(118, 118, 118, 0.3);
         }
+
+        &.-has-error {
+          color: #000;
+          border: 1px solid red !important;
+        }
       }
 
       i.author-link-empty {
@@ -673,6 +678,13 @@
       input.author-slug {
         position: relative;
         width: 100%;
+      }
+
+      .author-error {
+        width: 100% !important;
+        color: red;
+        float: left !important;
+        text-align: right !important;
       }
     }
     .update-in-progress {
