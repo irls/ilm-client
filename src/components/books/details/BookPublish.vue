@@ -143,7 +143,7 @@
               //}
 
               const isAuthor = this.currentBookMeta.author_link.find((author) => {
-                return author.name.length === 0 || !author.id || author.alt_author;
+                return author.name.length === 0 || !author.id || author.alt_author || author.name_added;
               });
               const isAuthorEn = this.currentBookMeta.language !== "en" ? this.currentBookMeta.author_link.find(author => {
                 return (author.name_en.length === 0 && !this.isVariousAuthor(author)) || author.alt_author_en;

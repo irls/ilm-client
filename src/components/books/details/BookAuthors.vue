@@ -411,7 +411,7 @@
         if ((this.currentItem.language === "en" && field === "name") || (this.currentItem.language !== "en" && field === "name_en")) {
           this.author_link[i].slug = "";
         }
-        if (field === "name") {
+        if (field === "name" && hasTranslation) {
           delete this.author_link[i].alt_author;
         }
         if (this.author_link[i].name_en && field === "name" && this.author_link[i].id && hasTranslation) {
