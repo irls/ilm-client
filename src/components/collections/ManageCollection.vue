@@ -487,6 +487,11 @@
           text+= `. Duplicated Author`;
         }
         if (authorFields.length > 0) {
+          authorFields = authorFields.filter((auth, authIdx) => {
+            return !(authorFields.find((field, fieldIdx) => {
+              return field === auth && fieldIdx > authIdx;
+            }))
+          });
           text+= `. Verify ${authorFields.join(', ')}`;
         }
         text+= ` before publishing`;
