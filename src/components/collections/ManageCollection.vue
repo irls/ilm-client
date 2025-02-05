@@ -435,7 +435,7 @@
         let mandatoryAuthorFields = [];
         this.currentCollection.author_link.forEach((author, authorIdx) => {
           let errorFields = [];
-          if (!author.id || !author.name || author.alt_author) {
+          if (!author.id || !author.name || author.alt_author || author.name_added) {
             errorFields.push("name");
             mandatoryAuthorFields.push("Author");
           }

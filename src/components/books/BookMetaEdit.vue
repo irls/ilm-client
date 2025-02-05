@@ -1309,7 +1309,7 @@ export default {
 
         this.currentBookMeta.author_link.forEach((author, authorIdx) => {
           let errorFields = [];
-          if (!author.id || !author.name || author.alt_author) {
+          if (!author.id || !author.name || author.alt_author || author.name_added) {
             errorFields.push("name");
           }
           if (this.currentBookMeta.language !== "en" && ((!author.name_en && !this.isVariousAuthor(author)) || author.alt_author_en)) {
