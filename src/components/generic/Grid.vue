@@ -355,4 +355,33 @@ Features:
   .min-width-150 {
     min-width:150px;
   }
+  #books_grid {
+    /*width: 100%;*/
+    /*height: 100%;*/
+    min-width: 900px;
+    /*padding-top: 4px;*/
+  }
+
+  #books_grid tbody tr:hover {
+    background-color: cornsilk  ;
+  }
+  #books_grid tbody tr.selected {
+    background-color: darkseagreen  ;
+  }
+  #books_grid thead th {
+    padding-right: 5px; margin-right:0;
+    background-color: silver;
+  }
+  #books_grid thead th.act {
+    background-color: gray;
+  }
+  #books_grid tbody td.booktitle {
+    max-width: 300px;
+    font-size: 1.25em;
+  }
+  #books_grid tbody td {
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: top;
+  }
 </style>
