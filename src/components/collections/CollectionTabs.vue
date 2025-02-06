@@ -1,5 +1,5 @@
 <template>
-  <vue-tabs ref="collectiontabs" class="meta-edit-tabs" @tab-change="onTabChange">
+  <vue-tabs ref="collectiontabs" class="meta-edit-tabs collection-tabs" @tab-change="onTabChange">
     <vue-tab title="Manage Collection" id="manageCollection">
       <ManageCollection @collectionRemoved="$emit('collectionRemoved')" v-if="tabIndex === 0"></ManageCollection>
     </vue-tab>
@@ -39,6 +39,7 @@
     width: 29%;*/
     height: 100%;
     overflow-y: auto;
+    float: none;
     /*padding-top: 38px;*/
     fieldset {
       border:1px solid #b9b6b6;
@@ -74,6 +75,40 @@
     background-color: #F5F5F5;
   }
   .collection-meta::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+  }
+  .collection-tabs {
+    height: auto;
+    &.vue-tabs {
+      height: auto;
+    }
+    .nav-tabs-navigation {
+      position: sticky;
+      top: 43px;
+      background-color:white;
+      z-index: 1;
+    }
+
+    & > .nav-tabs-navigation {
+      border: 1px solid white;
+      position: sticky;
+      top: -1px;
+      background-color: white;
+      z-index: 2;
+    }
+  }
+  .metaedit::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #F5F5F5;
+  }
+  .metaedit::-webkit-scrollbar {
+    width: 12px;
+    background-color: #F5F5F5;
+  }
+  .metaedit::-webkit-scrollbar-thumb {
     border-radius: 10px;
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
