@@ -39,6 +39,7 @@
     width: 29%;*/
     height: 100%;
     overflow-y: auto;
+    float: none;
     /*padding-top: 38px;*/
     fieldset {
       border:1px solid #b9b6b6;
