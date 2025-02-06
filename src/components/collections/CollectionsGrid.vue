@@ -123,10 +123,15 @@
               },
               {
                 title: 'Author',
-                path: 'author',
+                path: 'author_link',
                 addClass: 'author width-25-p',
                 render(val) {
-                  return val && Array.isArray(val) ? val.join(', ') : val;
+                  return val && Array.isArray(val) ? val.filter(author => {
+                    return author.name || author.name_en;
+                  }).reduce((authors, author) => {
+                    authors.push(author.name ? author.name : author.name_en);
+                    return authors;
+                  }, []).join(', ') : '';
                 }
               },
               {

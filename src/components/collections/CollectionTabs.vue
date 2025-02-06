@@ -33,6 +33,49 @@
     }
   }
 </script>
-<style>
-
+<style lang="less">
+  .collection-meta {
+    /*position: fixed;
+    width: 29%;*/
+    height: 100%;
+    overflow-y: auto;
+    /*padding-top: 38px;*/
+    fieldset {
+      border:1px solid #b9b6b6;
+      position:relative;
+      margin-bottom:10px;
+    }
+    legend {
+      width:auto;
+      border-bottom:0;
+      font-size:12px;
+      margin-bottom:0;
+    }
+    textarea {
+      width: 100%;
+      border: none;
+      resize: none;
+      height: 100px;
+    }
+    .has-error {
+      border: solid 1px red;
+    }
+    .error-message {
+      margin: 0px;
+    }
+  }
+  .collection-meta::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #F5F5F5;
+  }
+  .collection-meta::-webkit-scrollbar {
+    width: 12px;
+    background-color: #F5F5F5;
+  }
+  .collection-meta::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+  }
 </style>

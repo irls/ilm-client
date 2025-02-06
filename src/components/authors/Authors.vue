@@ -41,13 +41,13 @@
           </tr>
         </thead>
         <template v-for="author in authorsList">
-          <tr :class="['author', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}, {'-opened': isAuthorOpened(author.id)}]">
+          <tr :class="['author', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}, {'-opened': isAuthorOpened(author.id)}]" v-on:dblclick="edit(author)">
             <td>
               <!-- {{ langList[author.language] }} -->
               <i class="fa fa-plus" v-on:click="toggleNameLang(author)"></i>
               <i class="fa fa-minus" v-on:click="toggleNameLang(author)"></i>
             </td>
-            <td>{{ author.name }}</td>
+            <td>{{ author.name }}<template v-if="author.verified_names.length > 0">, {{ author.verified_names.join(", ") }}</template></td>
             <td :class="['author-slug', {'-manual': author.manual_slug}]">{{ author.slug }}</td>
             <td>{{ author.alt_names.join(`, `) }}</td>
             <td>
@@ -66,10 +66,12 @@
             <td>Author Name (Alternative)</td>
             <td></td>
           </tr>
-          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]" v-for="nameLang in author.name_lang">
+          <tr :class="['author-name-lang', '-author-' + cleanId(author.id), {'-closed': !isAuthorOpened(author.id)}]" v-for="nameLang in author.name_lang" v-on:dblclick="editNameLang(author, nameLang)">
             <td></td>
             <td>{{ langList[nameLang.language] }}</td>
-            <td>{{ nameLang.name }}</td>
+            <td>{{ [nameLang.name].concat(nameLang.verified_names.filter(nameLang => {
+              return nameLang && nameLang.length > 0;
+            })).join(', ') }}</td>
             <td>{{ nameLang.alt_names.join(', ') }}</td>
             <td>
               <div class="author-action -edit">
@@ -102,6 +104,7 @@
 
   import AuthorModal from './AuthorModal';
   import SelectLanguages from '../generic/SelectLanguages';
+  import { cleanFilter } from "../../filters/search";
 
   Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -142,7 +145,8 @@
             alt_names: [
               ""
             ],
-            language: ""
+            language: "",
+            verified_names: []
           }
         }, 
         {
@@ -225,7 +229,8 @@
             id: null,
             name: "",
             alt_names: [""],
-            language: ""
+            language: "",
+            verified_names: []
           },
           primaryAuthor: author
         }, {
@@ -303,14 +308,19 @@
             let hasName = false;
             foundInLang = false;
             if (this.filters.name) {
+              let nameFilter = this.clearForFilter(this.filters.name);
               foundInLang = author.name_lang.find(nameLang => {
-                return nameLang.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || nameLang.alt_names.find(altName => {
-                  return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+                return this.clearForFilter(nameLang.name).indexOf(nameFilter) !== -1 || nameLang.alt_names.find(altName => {
+                  return this.clearForFilter(altName).indexOf(nameFilter) !== -1;
+                }) || nameLang.verified_names.find(verified_name => {
+                  return this.clearForFilter(verified_name).indexOf(nameFilter) !== -1;
                 });
 
               });
-              hasName = author.name.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.slug.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1 || author.alt_names.find(altName => {
-                return altName.toLowerCase().indexOf(this.filters.name.toLowerCase()) !== -1;
+              hasName = this.clearForFilter(author.name).indexOf(nameFilter) !== -1 || this.clearForFilter(author.slug).indexOf(nameFilter) !== -1 || author.alt_names.find(altName => {
+                return this.clearForFilter(altName).indexOf(nameFilter) !== -1;
+              }) || author.verified_names.find(verified_name => {
+                return this.clearForFilter(verified_name).indexOf(nameFilter) !== -1;
               }) || foundInLang;
               if (foundInLang) {
                 this.authorOpened(author.id, true);
@@ -321,6 +331,9 @@
         } else {
           this.authorsList = lodash.cloneDeep(this.authors);
         }
+      },
+      clearForFilter(value) {
+        return cleanFilter(value);
       },
       toggleNameLang(author) {
         let authorRow = document.querySelector(`.author.-author-${this.cleanId(author.id)}`);

@@ -1,4 +1,13 @@
 import axios from 'axios';
+import lodash from 'lodash';
+
+import { cleanFilter } from "../../filters/search";
+
+const setFilters = function (author) {
+  author.name_filter = cleanFilter(author.name);
+  author.name_en_filter = cleanFilter(author.name_en);
+  return author;
+}
 
 export default {
   namespaced: true,
@@ -17,19 +26,103 @@ export default {
       ],
       alt_names: ['Lewis C. Carroll', 'Lewis K. Carroll'],
       language: 'en'
-    }]
+    }],
+    various_authors: [
+      {
+        id: "various",
+        name: "Various",
+        slug: "",
+        name_en: "",
+        key: "various"
+      },
+      {
+        id: "anonymous",
+        name: "Anonymous",
+        slug: "",
+        name_en: "",
+        key: "anonymous"
+      },
+      {
+        id: "unknown",
+        name: "Unknown",
+        slug: "",
+        name_en: "",
+        key: "unknown"
+      }
+    ]
   },
   getters: {
-    author_link_arr: state => state.author_link_arr
+    author_link_arr: (state, getters, rootState) => {
+      return state.author_link_arr;
+    },
+    various_authors: state => {
+      return state.various_authors;
+    },
+    isVariousAuthor: state => (author) => {
+      return state.various_authors.find(various_author => {
+        return various_author.id === author.id;
+      }) ? true : false;
+    },
+    isVariousId: state => (id) => {
+      return state.various_authors.find(various_author => {
+        return various_author.id === id;
+      }) ? true : false;
+    },
+    authorsLangList: (state, getters, rootState) => (lang, bookLang) => {
+      let authorsList = [];
+      rootState.authorsModule.authors.forEach((author) => {
+        const authorMapped = {
+          id: author.id,
+          slug: author.slug,
+          key: author.id
+        }
+        let authorLang = lang === "en" ? lodash.cloneDeep(author) : author.name_lang.find((name_lang) => {
+          return name_lang.language === lang;
+        });
+        let bookAuthor = bookLang === "en" ? lodash.cloneDeep(author) : author.name_lang.find((name_lang) => {
+          return name_lang.language === bookLang;
+        });
+        if (authorLang && authorLang.name) {
+          authorMapped.name = bookAuthor ? bookAuthor.name : "";
+          if (lang === 'en') {
+            authorMapped.name_en = bookLang === "en" ? "" : author.name;
+            //authorMapped.alt_names = author.alt_names;
+          } else {
+            //author.name_lang = author.name_lang || [];
+            authorMapped.name_en = author.name;
+            //authorMapped.alt_names = authorLang ? authorLang.alt_names : author.alt_names;
+          }
+          authorsList.push(setFilters(authorMapped));
+          authorLang.verified_names.forEach((verifiedName, verifiedNameIdx) => {
+            if (verifiedName && verifiedName.length > 0) {
+              authorsList.push(setFilters(lodash.assign(lodash.cloneDeep(authorMapped),
+              {
+                name: bookLang === lang ? verifiedName : (bookAuthor ? bookAuthor.name : ""),
+                name_en: bookLang === "en" ? "" : (lang === "en" ? verifiedName : author.name),
+                key: `${author.id}_${verifiedNameIdx}`
+              })));
+            }
+          });
+        }
+      });
+      if ((bookLang === "en") || (bookLang !== "en" && lang !== "en")) {
+        authorsList = authorsList.concat(state.various_authors.map(various_author => {
+          return setFilters(various_author);
+        }));
+      }
+      return authorsList;
+    }
   },
   mutations: {
 
     set_authorsList(state, authorsListData) {
       const lang = authorsListData.lang || 'en';
-      const authorsListArr = authorsListData.data.map((author)=>{
+      let authorsListArr = [];
+      authorsListData.data.forEach((author) => {
         const authorMapped = {
           id: author.id,
-          slug: author.slug
+          slug: author.slug,
+          key: author.id
         }
         if (lang === 'en') {
           authorMapped.name = author.name;
@@ -42,9 +135,22 @@ export default {
           authorMapped.name_en = author.name;
           authorMapped.alt_names = author_local.length ? author_local[0].alt_names : author.alt_names;
         }
-        return authorMapped;
-      })
+        authorsListArr.push(authorMapped);
+        author.verified_names.forEach((verifiedName, verifiedNameIdx) => {
+          authorsListArr.push(lodash.assign(lodash.cloneDeep(authorMapped), 
+          { 
+            name: lang === "en" ? verifiedName : authorMapped.name, 
+            name_en: lang === "en" ? authorMapped.name : verifiedName,
+            key: `${author.id}_${verifiedNameIdx}` 
+          }));
+        });
+      });
       state.author_link_arr = authorsListArr;
+      this.commit('authorsMapModule/add_variousAuthors');
+    },
+
+    add_variousAuthors(state) {
+      state.author_link_arr = state.author_link_arr.concat(state.various_authors);
     }
 
   },
