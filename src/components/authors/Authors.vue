@@ -465,8 +465,9 @@
             }
             &.-name-lang-header {
               td {
-                background-color: silver;
+                background-color: #e3e3e3;
                 font-weight: bold;
+                font-size: 16px;
                 &:first-child {
                   background-color: inherit;
                 }
