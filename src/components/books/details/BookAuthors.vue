@@ -251,12 +251,12 @@
 
       getDisabledAuthors(val) {
         return this.author_link.find(author => {
-          return author.id === val.id && author.name === val.name;
+          return author.id === val.id;
         });
       },
       getDisabledAuthorsEn(val) {
         return this.author_link.find(author => {
-          return author.id === val.id && author.name_en === val.name_en;
+          return author.id === val.id;
         });
       },
       verifyAuthor(author, author_en = false, authorIdx = null) {
