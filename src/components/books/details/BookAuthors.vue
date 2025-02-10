@@ -251,12 +251,12 @@
 
       getDisabledAuthors(val) {
         return this.author_link.find(author => {
-          return author.id === val.id && author.name === val.name;
+          return author.id === val.id;
         });
       },
       getDisabledAuthorsEn(val) {
         return this.author_link.find(author => {
-          return author.id === val.id && author.name_en === val.name_en;
+          return author.id === val.id;
         });
       },
       verifyAuthor(author, author_en = false, authorIdx = null) {
@@ -407,41 +407,43 @@
         }
       },
       editAuthorLink(ev, i, field) {
-        let hasTranslation = this.author_link[i].id && this.hasTranslation(this.author_link[i].id);
-        if ((this.currentItem.language === "en" && field === "name") || (this.currentItem.language !== "en" && field === "name_en")) {
-          this.author_link[i].slug = "";
-        }
-        if (field === "name" && hasTranslation) {
-          delete this.author_link[i].alt_author;
-        }
-        if (this.author_link[i].name_en && field === "name" && this.author_link[i].id && hasTranslation) {
-          this.author_link[i].name_en = "";
-          delete this.author_link[i].alt_author_en;
-          this.author_link[i].slug = "";
-        }
+        return this.hasTranslation(this.author_link[i].id)
+          .then(hasTranslation => {
+            if ((this.currentItem.language === "en" && field === "name") || (this.currentItem.language !== "en" && field === "name_en")) {
+              this.author_link[i].slug = "";
+            }
+            if (field === "name" && hasTranslation) {
+              delete this.author_link[i].alt_author;
+            }
+            if (this.author_link[i].name_en && field === "name" && this.author_link[i].id && hasTranslation) {
+              this.author_link[i].name_en = "";
+              delete this.author_link[i].alt_author_en;
+              this.author_link[i].slug = "";
+            }
 
-        if ((field === "name" && (this.currentItem.language === "en" || hasTranslation)) || field === "name_en") {
-          this.author_link[i].id = null;
-        }
-        this.author_link[i].update_field = field;
-        let variousAuthor = this.various_authors.find(author => {
-          return author.name.toLowerCase().trim() === ev.target.value.toLowerCase().trim();
-        });
-        if (variousAuthor) {
-          this.author_link[i] = variousAuthor;
-        }
-        Object.keys(this.author_link[i]).forEach(key => {
-          if (this.author_link[i][key] && typeof this.author_link[i][key] === "string") {
-            this.author_link[i][key] = this.author_link[i][key].trim();
-          }
-        });
-        this.updatingIndex = i;
-        this.clearError(i);
-        this.$emit('editAuthorLink', ev, i, field);
-        //this.currentBook.author_link[i].id = null;
-        //this.currentBook.author_link[i].slug = "";
-        //delete this.currentBook.author_link[i].alt_author;
-        //this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+            if ((field === "name" && (this.currentItem.language === "en" || hasTranslation)) || field === "name_en") {
+              this.author_link[i].id = null;
+            }
+            this.author_link[i].update_field = field;
+            let variousAuthor = this.various_authors.find(author => {
+              return author.name.toLowerCase().trim() === ev.target.value.toLowerCase().trim();
+            });
+            if (variousAuthor) {
+              this.author_link[i] = variousAuthor;
+            }
+            Object.keys(this.author_link[i]).forEach(key => {
+              if (this.author_link[i][key] && typeof this.author_link[i][key] === "string") {
+                this.author_link[i][key] = this.author_link[i][key].trim();
+              }
+            });
+            this.updatingIndex = i;
+            this.clearError(i);
+            this.$emit('editAuthorLink', ev, i, field);
+            //this.currentBook.author_link[i].id = null;
+            //this.currentBook.author_link[i].slug = "";
+            //delete this.currentBook.author_link[i].alt_author;
+            //this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
+          });
       },
       changeAuthorLink(ev, i, author_en = false) {
         this.inputField = null;
@@ -516,17 +518,21 @@
         this.inputField = inputField;
       },
       hasTranslation(id) {
+        if (!id) {
+          return Promise.resolve(false);
+        }
         if (this.currentItem.language === "en") {
-          return true;
+          return Promise.resolve(true);
         }
         if (this.isVariousId(id)) {
-          return true;
+          return Promise.resolve(true);
         }
-        return this.authors.find(author => {
-          return author.id === id && author.name_lang.find(name_lang => {
-            return name_lang.language === this.currentItem.language;
+        return this.getAuthor([id])
+          .then(author => {
+            return author.name_lang.find(name_lang => {
+              return name_lang.language === this.currentItem.language;
+            }) ? true : false;
           });
-        }) ? true : false;
       },
       setAuthorsList() {
         this.authorsList = this.authorsLangList(this.currentItem.language, this.currentItem.language);

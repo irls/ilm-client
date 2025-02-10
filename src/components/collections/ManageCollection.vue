@@ -455,6 +455,7 @@
               return authorPrev.id === author.id && authorPrevIdx < authorIdx;
             });
             if (existPreviousAuthor) {
+              this.currentCollection.validationErrors.author_link = this.currentCollection.validationErrors.author_link || {};
               this.currentCollection.validationErrors.author_link[authorIdx] = {name: 'Duplicated Author'};
             }
           }
@@ -483,9 +484,6 @@
         if (validationFields.length > 0) {
           text+= `. Define ${validationFields.join(', ')}`;
         }
-        if (isDuplicateAuthor) {
-          text+= `. Duplicated Author`;
-        }
         if (authorFields.length > 0) {
           authorFields = authorFields.filter((auth, authIdx) => {
             return !(authorFields.find((field, fieldIdx) => {
@@ -494,7 +492,12 @@
           });
           text+= `. Verify ${authorFields.join(', ')}`;
         }
-        text+= ` before publishing`;
+        if (validationFields.length > 0 || authorFields.length > 0) {
+          text+= ` before publishing`;
+        }
+        if (isDuplicateAuthor) {
+          text+= `. Duplicated Author`;
+        }
         const popup = {
           title: 'Publication error',
           text: text,
