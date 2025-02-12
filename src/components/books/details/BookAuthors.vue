@@ -299,7 +299,7 @@
               class: 'btn btn-default'
             },
             {
-              title: 'Add author',
+              title: 'Add Author',
               handler: () => {
                 this.$modal.hide('dialog');
                 this.addAuthorLang(author.id, {name: author.name}, authorIdx);
