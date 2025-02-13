@@ -107,6 +107,7 @@
     mixins: [api_config],
     computed: {
       ...mapGetters(['currentCollection', 'allowCollectionsEdit', 'bookMetaById']),
+      ...mapGetters('authorsMapModule', ['isVariousAuthor']),
 
       languages() {
         return Languages;
@@ -394,13 +395,6 @@
           mandatoryFields.push('Title EN (title English translation)');
           this.currentCollection.validationErrors.title_en = defaultMessage + 'Title EN';
         }
-        if (this.currentCollection.language !== 'en'
-          && (!this.currentCollection.author_en
-             || this.currentCollection.author_en.trim().length == 0))
-        {
-          mandatoryFields.push('Author EN (author English translation)');
-          this.currentCollection.validationErrors.author_en = defaultMessage + 'Author EN';
-        }
         if (!this.currentCollection.slug
           || this.currentCollection.slug.trim().length == 0)
         {
@@ -438,16 +432,75 @@
           this.currentCollection.validationErrors.weight = defaultMessage + 'Weight';
         }*/
         //-- } -- end -- Check mandatory fields --//
+        let mandatoryAuthorFields = [];
+        this.currentCollection.author_link.forEach((author, authorIdx) => {
+          let errorFields = [];
+          if (!author.id || !author.name || author.alt_author || author.name_added) {
+            errorFields.push("name");
+            mandatoryAuthorFields.push("Author");
+          }
+          if (this.currentCollection.language !== "en" && ((!author.name_en && !this.isVariousAuthor(author)) || author.alt_author_en)) {
+            errorFields.push("name_en");
+            mandatoryAuthorFields.push("Author EN");
+          }
+          if (errorFields.length > 0) {
+            this.currentCollection.validationErrors.author_link = this.currentCollection.validationErrors.author_link || {};
+            this.currentCollection.validationErrors.author_link[authorIdx] = {};
+            errorFields.forEach(errorField => {
+              this.currentCollection.validationErrors['author_link'][authorIdx][errorField] = 'Define Author';
+            });
+          }
+          if (author.id) {
+            let existPreviousAuthor = this.currentCollection.author_link.find((authorPrev, authorPrevIdx) => {
+              return authorPrev.id === author.id && authorPrevIdx < authorIdx;
+            });
+            if (existPreviousAuthor) {
+              this.currentCollection.validationErrors.author_link = this.currentCollection.validationErrors.author_link || {};
+              this.currentCollection.validationErrors.author_link[authorIdx] = {name: 'Duplicated Author'};
+            }
+          }
+        });
 
-        if(mandatoryFields.length > 0) {
-          return mandatoryFields;
+        let isDuplicateAuthor = false;
+        this.currentCollection.author_link.forEach((author, authorIdx) => {
+          if (author.id) {
+            let existPreviousAuthor = this.currentCollection.author_link.find((authorPrev, authorPrevIdx) => {
+              return authorPrev.id === author.id && authorPrevIdx < authorIdx;
+            });
+            if (existPreviousAuthor) {
+              isDuplicateAuthor = true;
+            }
+          }
+        });
+
+        if(mandatoryFields.length > 0 || mandatoryAuthorFields.length > 0 || isDuplicateAuthor) {
+          return [mandatoryFields, mandatoryAuthorFields, isDuplicateAuthor];
         }
         return true;
       },
       showPublishFailPopup(mandatoryFields = []) {
+        let [validationFields, authorFields, isDuplicateAuthor] = mandatoryFields;
+        let text = `Collection meta is incomplete`;
+        if (validationFields.length > 0) {
+          text+= `. Define ${validationFields.join(', ')}`;
+        }
+        if (authorFields.length > 0) {
+          authorFields = authorFields.filter((auth, authIdx) => {
+            return !(authorFields.find((field, fieldIdx) => {
+              return field === auth && fieldIdx > authIdx;
+            }))
+          });
+          text+= `. Verify ${authorFields.join(', ')}`;
+        }
+        if (validationFields.length > 0 || authorFields.length > 0) {
+          text+= ` before publishing`;
+        }
+        if (isDuplicateAuthor) {
+          text+= `. Duplicated Author`;
+        }
         const popup = {
           title: 'Publication error',
-          text: 'Collection meta is incomplete. Define ' + mandatoryFields.join(', ') + ' before publishing',
+          text: text,
           buttons: [
             {
               title: 'Ok',

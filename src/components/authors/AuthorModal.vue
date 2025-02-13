@@ -10,13 +10,25 @@
     </div>
     <div class="modal-body">
       <div class="author-form">
-        <div class="author-field">
+        <div class="author-field -verified-name" v-for="(verified_name, verified_name_idx) in verifiedNames">
           <div class="field-label">
             <label>Author Name (Verified)</label>
           </div>
           <div class="field-value">
-            <input type="text" v-model="authorEdit.name" :class="{'-has-error': errors.name}" v-on:keyup="clearError('name')" />
+            <input type="text" v-on:change="setVerifiedName(verified_name_idx, $event)" :class="{'-has-error': errors.name}" v-on:keyup="clearError('name')" />
             <span class="validation-error" v-if="errors.name">{{ errors.name }}</span>
+          </div>
+          <template v-if="verifiedNames.length > 1">
+            <div class="alt-name-option">
+              <i class="fa fa-minus-circle" v-on:click="removeVerifiedName(verified_name_idx)"></i>
+            </div>
+          </template>
+          <template v-if="verifiedNames.length > 1 && verified_name_idx === verifiedNames.length - 1">
+            <div class="field-label"></div>
+            <div class="field-value"></div>
+          </template>
+          <div class="alt-name-option">
+            <i class="fa fa-plus-circle" v-if="verified_name_idx === verifiedNames.length - 1" v-on:click="addVerifiedName()"></i>
           </div>
         </div>
         <div class="author-field -alt-name" v-for="(alt_name, alt_name_idx) in authorEdit.alt_names">
@@ -82,7 +94,8 @@
             ""
           ],
           language: "",
-          slug: ""
+          slug: "",
+          verified_names: []
         },
         lang_list: Languages,
         updateProgress: false,
@@ -109,7 +122,10 @@
     },
     mounted() {
       this.authorEdit = lodash.cloneDeep(this.author);
-      document.querySelector('.field-value input').focus();
+      if (this.authorEdit.alt_names.length === 0) {
+        this.authorEdit.alt_names = [""];
+      }
+      this.fillVerifiedNames();
     },
     computed: {
       modalTitle: {
@@ -158,17 +174,47 @@
           return this.lang_list;
         },
         cache: false
+      },
+      verifiedNames: {
+        get() {
+          return [this.authorEdit.name].concat(this.authorEdit.verified_names);
+        },
+        cache: false
       }
     },
     methods: {
       close() {
         this.$emit('close');
       },
+      addVerifiedName() {
+        this.authorEdit.verified_names.push("");
+        Vue.nextTick(() => {
+          [...document.querySelectorAll('.author-field.-verified-name input')].at(-1).focus();
+        });
+      },
+      setVerifiedName(name_idx, ev) {
+        if (name_idx === 0) {
+          this.authorEdit.name = ev.target.value;
+        } else {
+          this.authorEdit.verified_names[name_idx - 1] = ev.target.value;
+        }
+      },
       addAltName() {
         this.authorEdit.alt_names.push("");
         Vue.nextTick(() => {
           [...document.querySelectorAll('.author-field.-alt-name input')].at(-1).focus();
         });
+      },
+      removeVerifiedName(idx) {
+        if (this.verifiedNames.length > 1) {
+          if (idx > 0) {
+            this.authorEdit.verified_names.splice(idx - 1, 1);
+          } else {
+            this.authorEdit.name = this.authorEdit.verified_names[0];
+            this.authorEdit.verified_names.splice(0, 1);
+          }
+        }
+        this.fillVerifiedNames();
       },
       removeAltName(idx) {
         if (this.authorEdit.alt_names.length > 1) {
@@ -235,6 +281,14 @@
       clearError(field) {
         delete this.errors[field];
         this.$forceUpdate();
+      },
+      fillVerifiedNames() {
+        Vue.nextTick(() => {
+          document.querySelectorAll('.author-field.-verified-name input').forEach((el, elIdx) => {
+            el.value = this.verifiedNames[elIdx];
+          });
+          document.querySelector('.field-value input').focus();
+        });
       },
       ...mapActions('authorsModule', ['createAuthor', 'updateAuthor'])
     }

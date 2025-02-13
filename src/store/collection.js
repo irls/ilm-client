@@ -51,6 +51,7 @@ class Collection {
     this.pubBooksEntities          = data.pubBooksEntities          || [];
     this.pubBooksHistory           = data.pubBooksHistory           || [];
     //-- } -- end -- Publication section --//
+    this.author_link               = data.author_link               || [];
   }
 
   sortBooks() {

@@ -44,7 +44,7 @@ export default {
   },
   mutations: {
     set_toc_section_book(state, tocSectionBook) {
-      state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false};
+      state.tocSectionBook = tocSectionBook && tocSectionBook.id ? tocSectionBook : {isBuilding: false, buildData: {"m4a": {}, "flac": {}}};
     },
     set_book_toc_sections(state, sections) {
       let language = this.getters.currentBookMeta ? this.getters.currentBookMeta.language : 'en';
@@ -165,10 +165,10 @@ export default {
         });
     },
 
-    exportTocSectionBook({state, dispatch, rootState}) {
+    exportTocSectionBook({state, dispatch, rootState}, [buildData]) {
       if (rootState.currentBookid) {
         state.tocSectionBook.isBuilding = true;
-        state.bookTocSectionsXHR = axios.post(`${rootState.API_URL}toc_section/book/${rootState.currentBookid}/export`);
+        state.bookTocSectionsXHR = axios.post(`${rootState.API_URL}toc_section/book/${rootState.currentBookid}/export`, buildData);
         return state.bookTocSectionsXHR.then(response => {
           state.bookTocSectionsXHR = null;
           return Promise.resolve();

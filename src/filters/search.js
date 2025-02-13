@@ -120,6 +120,10 @@ const splitPrepareForFilter = (str, isWithSpace = false) => {
   return strings.map((string)=>cleanDiacritics(replaceSpecials(replaceHTMLSpecials(string), isWithSpace)));
 }
 
+const cleanFilter = (value) => {
+  return cleanDiacritics(value.toLowerCase().trim().replace(/[….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]\'\’]/img, '').replace(/\s{2,}/img, ' '));
+}
+
 export {
   prepareRegexpForArFaLetters,
   prepareForFilter,
@@ -128,5 +132,6 @@ export {
   replaceParsing,
   replaceSuperscript,
   replaceHTMLSpecials,
-  splitPrepareForFilter
+  splitPrepareForFilter,
+  cleanFilter
 }

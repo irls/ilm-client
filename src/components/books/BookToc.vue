@@ -4,7 +4,12 @@
       :isLoading="isBlocked && blockers.indexOf('loadBookToc') >-1"
       @close="closeSettings"
       @save="saveSettings" />
-    <legend>Table of contents</legend>
+    <legend>
+      Table of contents
+      <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)" title="Refresh" v-if="!updatingToc">
+        <i class="fa fa-refresh refresh-toc"></i>
+      </button>
+    </legend>
     <template v-if="updatingToc">
       <div class="preloader-spinner"></div>
     </template>
@@ -30,25 +35,23 @@
             <template v-else>
               <button class="btn btn-default btn-build-book toc-book-settings" v-on:click="openSettings($event)" title="Name and Title generation pattern">
               </button>
+              <select v-model="buildType" title="Export type">
+                <option v-for="(build_label, build_type) in buildTypes" :value="build_type">{{ build_label }}</option>
+              </select>
               <button class="btn btn-primary btn-build-book toc-export" v-if="buildBookButtonEnabled" v-on:click="exportBook($event)" title="Build">
               </button>
               <span class="btn btn-primary btn-build-book -disabled toc-export" title="Build" v-else>
               </span>
-              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="tocSectionBook.zipPath && !tocSectionBook.isBuilding" title="Download">
+              <a class="btn btn-primary btn-download-book" :href="downloadBookLink()" target="_blank" v-if="downloadBookButtonEnabled" title="Download">
               </a>
               <span class="btn btn-primary -disabled btn-download-book" title="Download" v-else>
               </span>
             </template>
           </template>
         </div>
-        <div class="toc-button -refresh-toc">
-          <button class="btn btn-default refresh-toc" v-on:click="loadBookTocProxy(true)" title="Refresh">
-            <i class="fa fa-refresh refresh-toc"></i>
-          </button>
-        </div>
       </div>
-      <div v-if="tocSectionBook.zipTime && sectionsMode" class="book-zip-time">
-        Latest build: {{convertTime(new Date(tocSectionBook.zipTime).toISOString(), true)}}
+      <div v-if="sectionsMode" class="book-zip-time">
+        {{ latestBuildTime }}
       </div>
       <!-- {{bookTocSections}} -->
       <div v-if="currentBookTocCombined.length > 0" class="toc-list">
@@ -106,15 +109,15 @@
                         <!-- {{toc.section.zipPath}},{{toc.section.zipPath && !toc.section.buildModified ? true : false}} -->
                         <div class="section-generating" v-if="toc.section.isBuilding"></div>
                         <template v-else>
-                          <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" disabled v-if="toc.section.zipPath && !toc.section.buildModified"></i>
-                          <i class="" :title="toc.section.zipPath ? 'Rebuild' : 'Build'" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
+                          <i class="" :title="buildTypeLabel(toc.section.buildData[buildTypeSection].zipPath ? 'Rebuild' : 'Build')" disabled v-if="buildSectionButtonEnabled(toc.section)"></i>
+                          <i class="" :title="buildTypeLabel(toc.section.buildData[buildTypeSection].zipPath ? 'Rebuild' : 'Build')" v-on:click="exportSection(toc.section.id, $event)" v-else></i>
                         </template>
                       </div>
-                      <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-if="toc.section.zipPath && !toc.section.isBuilding && !tocSectionBook.isBuilding">
-                        <i class="" title="Download"></i>
+                      <a class="-option -download -hidden" :href="downloadSectionLink(toc.section.id)" target="_blank" v-if="downloadSectionButtonEnabled(toc.section)">
+                        <i class="" :title="buildTypeLabel('Download')"></i>
                       </a>
                       <a class="-option -download -hidden" v-else>
-                        <i class="" title="Download" disabled></i>
+                        <i class="" :title="buildTypeLabel('Download')" disabled></i>
                       </a>
                       </div>
                   </div>
@@ -276,7 +279,13 @@ export default {
           slug: 'Define section Name'
         }
       },
-      listScrollPosition: 0
+      listScrollPosition: 0,
+      buildType: "m4a",
+      buildTypeSection: "m4a",
+      buildTypes: {
+        "m4a": "MD & M4A",
+        "flac": "FLAC"
+      }
     }
   },
 
@@ -293,7 +302,7 @@ export default {
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid', 'adminOrLibrarian']),
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid', 'adminOrLibrarian', 'storeList']),
     ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined', 'bookTocSections', 'pendingSectionUpdate']),
     buildBookButtonEnabled: {
       get() {
@@ -301,8 +310,14 @@ export default {
           return toc.section && toc.section.id;
         });
         return (
-                !this.tocSectionBook.zipPath || (this.tocSectionBook.zipPath && this.tocSectionBook.buildModified)
+                !this.tocSectionBook.buildData[this.buildType].zipPath || (this.tocSectionBook.buildData[this.buildType].zipPath && this.tocSectionBook.buildData[this.buildType].buildModified)
                 ) && hasSections;
+      },
+      cache: false
+    },
+    downloadBookButtonEnabled: {
+      get() {
+        return this.tocSectionBook.buildData[this.buildType].zipPath && !this.tocSectionBook.isBuilding;
       },
       cache: false
     },
@@ -327,6 +342,24 @@ export default {
     updatingToc: {
       get() {
         return this.isBlocked && this.blockers.indexOf('loadBookToc') >-1;
+      },
+      cache: false
+    },
+    hasLatestBuildTime: {
+      get() {
+        return this.tocSectionBook.buildData && this.tocSectionBook.buildData[this.buildType].zipTime && this.sectionsMode;
+      },
+      cache: false
+    },
+    latestBuildTime: {
+      get() {
+        let label = `${this.buildTypes[this.buildType]}:`;
+        if (this.hasLatestBuildTime) {
+          label+= ` the latest build `;
+          return `${label}` + this.convertTime(new Date(this.tocSectionBook.buildData[this.buildType].zipTime).toISOString(), true);
+        } else {
+          return `${label} no build has been generated yet`;
+        }
       },
       cache: false
     }
@@ -650,7 +683,10 @@ export default {
         if (section) {
           if (!value || this.validateSectionField(value, this.editingFieldName)) {
             if (section[this.editingFieldName] !== this.editingFieldValue) {
-              let update = {buildModified: section.zipPath ? true : false};
+              let hasModifiedBuild = Object.values(section.buildData).find(buildInfo => {
+                return buildInfo.zipPath && buildInfo.zipPath.length > 0;
+              });
+              let update = {buildModified: hasModifiedBuild ? true : false};
               update[this.editingFieldName] = value;
               if (value) {
                 let isManual = value ? true : false;
@@ -776,15 +812,37 @@ export default {
         this.showNameError();
         return false;
       }
-      this.exportTocSectionBook();
+      if (this.buildType === "flac") {
+        let blocks = Array.from(this.storeList.values());
+        let voicedBlocks = blocks.find(blk => {
+          return blk.audiosrc && blk.audiosrc.length > 0 && !blk.disabled;
+        });
+        if (!voicedBlocks) {
+          this.$root.$emit('show-modal', {
+            title: `Build error`,
+            text: `Unable to build FLAC archive because the book doesn't contain audio`,
+            buttons: [
+              {
+                title: `Ok`,
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                },
+                class: 'btn btn-primary'
+              }
+            ]
+          });
+          return false;
+        }
+      }
+      this.exportTocSectionBook([{buildType: this.buildType}]);
     },
     
     downloadSectionLink(sectionId) {
-      return this.getAPILink(`toc_section_export/${encodeURIComponent(sectionId)}/download`);
+      return this.getAPILink(`toc_section_export/${encodeURIComponent(sectionId)}/download/${this.buildTypeSection}`);
     },
     
     downloadBookLink() {
-      return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download`);
+      return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download/${this.buildType}`);
     },
     
     hasError(section_id = null, field = null) {
@@ -1033,6 +1091,15 @@ export default {
         //audioEditorHeight+= 115;
         $('fieldset.toc-items-list').css('height', `calc(100vh - ${elementsHeight}px)`);
       });
+    },
+    buildSectionButtonEnabled(section) {
+      return section.buildData[this.buildTypeSection].zipPath && !section.buildData[this.buildTypeSection].buildModified;
+    },
+    downloadSectionButtonEnabled(section) {
+      return section.buildData[this.buildTypeSection].zipPath && !section.isBuilding && !this.tocSectionBook.isBuilding;
+    },
+    buildTypeLabel(label) {
+      return `${label} ${this.buildTypes[this.buildTypeSection]}`;
     }
   },
 
@@ -1487,7 +1554,13 @@ export default {
         padding: 0px 5px;
         width: 105px;
         &.-toc-actions {
-          width: 160px;
+          width: 260px;
+          select {
+            height: 34px;
+            border-radius: 4px;
+            background-color: white;
+            vertical-align: middle;
+          }
         }
         &.-refresh-toc {
           width: 125px;
@@ -1593,6 +1666,24 @@ export default {
             transform: rotate(-45deg);
           }
         }
+      }
+    }
+    button.refresh-toc {
+      border: none;
+      &:hover {
+        background-color: transparent;
+      }
+      &:focus {
+        border: none;
+        background-color: transparent;
+        outline: none;
+      }
+      &:active {
+        border: none;
+        box-shadow: none;
+      }
+      i {
+        color: #337AB7;
       }
     }
   }

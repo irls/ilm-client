@@ -24,6 +24,15 @@ export default {
     }
   },
   actions: {
+    get({rootState}, [id]) {
+      return axios.get(`${rootState.API_URL}author/${encodeURIComponent(id)}`)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
     getAll({rootState, commit, state}) {
       return axios.get(`${rootState.API_URL}authors`)
         .then(response => {
@@ -53,6 +62,15 @@ export default {
         });
     },
     updateAuthor({rootState, state, commit}, [id, update, language = null]) {
+      ['verified_names', 'alt_names'].forEach(updateKey => {
+        if (update[updateKey]) {
+          update[updateKey] = update[updateKey].filter((verified_name, verified_name_idx) => {
+            return verified_name.trim().length > 0 && !(update[updateKey].find((verifiedName, verifiedNameIdx) => {
+              return verifiedName.trim() === verified_name.trim() && verifiedNameIdx < verified_name_idx;
+            }));
+          });
+        }
+      });
       return axios.put(`${rootState.API_URL}authors/${encodeURIComponent(id)}${language ? '/' + language : ''}`, update)
         .then(response => {
           commit('updateAuthor', [id, response.data]);
@@ -60,6 +78,37 @@ export default {
         })
         .catch(err => {
           return Promise.reject(err);
+        });
+    },
+    createAuthorFromBook({rootState, dispatch}, [authorData]) {
+      let authorAdd = {
+        slug: authorData.slug,
+      };
+      if (authorData.name_en) {
+        authorAdd.name = authorData.name_en;
+        authorAdd.name_lang = [
+          {
+            name: authorData.name,
+            language: rootState.currentBookMeta.language
+          }
+        ]
+      } else {
+        authorAdd.name = authorData.name;
+      }
+      return dispatch('createAuthor', [authorAdd])
+        .then((response) => {
+          dispatch("getAll");
+          return response;
+        });
+    },
+    createAuthorLangFromBook({rootState, dispatch, state}, [id, authorLang]) {
+      let lang = rootState.currentBookMeta.language;
+      return axios.post(`${rootState.API_URL}authors/${encodeURIComponent(id)}/${lang}`, authorLang)
+        .then(response => {
+          return dispatch("getAll")
+            .then(() => {
+              return response.data;
+            });
         });
     }
   }

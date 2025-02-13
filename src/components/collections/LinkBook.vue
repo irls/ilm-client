@@ -1,6 +1,6 @@
 <template>
   <div>
-    <modal 
+    <modal
       name="example-modal"
       transition="nice-modal-fade"
       :adaptive="true"
@@ -9,60 +9,62 @@
       height="80%"
       @before-open="modalOpened"
       @before-close="modalClosed">
-      <div class="modal-header">
-        <div class="header-title">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
-          <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-          </button>
-          <h4>Add books</h4>
-        </div>
-        <div class="col-sm-12">
-          <div class="col-sm-3">
-            <div class="col-sm-4">
+      <div class="link-book-modal-wrapper">
+        <div class="modal-header">
+          <div class="header-title">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
+            <i class="fa fa-times-circle-o" aria-hidden="true"></i>
+            </button>
+            <h4>Add books</h4>
+          </div>
+          <div class="col-sm-12">
+            <div class="col-sm-3">
+              <div class="col-sm-4">
+                <label>
+                  <i class="fa fa-check-square" v-if="allSelected" v-on:click="allSelected = false"></i>
+                  <i class="fa fa-square" v-else v-on:click="allSelected = true"></i>
+                  All
+                </label>
+              </div>
+              <div class="col-sm-8">
+                <input type="text" @keyup="filterChange('title', $event)" class="" placeholder="Search by author or title"></input>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <label>Language: </label>{{languages[currentCollection.language]}}
+            </div>
+            <div class="col-sm-3">
+              <label>Collection</label>
+              <select @change="filterChange('collection', $event)">
+                <option v-for="c in filterCollectionsList" :value="c._id">{{c.title}}</option>
+              </select>
+            </div>
+            <div class="col-sm-3">
               <label>
-                <i class="fa fa-check-square" v-if="allSelected" v-on:click="allSelected = false"></i>
-                <i class="fa fa-square" v-else v-on:click="allSelected = true"></i>
-                All
+                <input type="checkbox" @change="filterChange('published', $event)"/>
+                Published
               </label>
             </div>
-            <div class="col-sm-8">
-              <input type="text" @keyup="filterChange('title', $event)" class="" placeholder="Search by author or title"></input>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <label>Language: </label>{{languages[currentCollection.language]}}
-          </div>
-          <div class="col-sm-3">
-            <label>Collection</label>
-            <select @change="filterChange('collection', $event)">
-              <option v-for="c in filterCollectionsList" :value="c._id">{{c.title}}</option>
-            </select>
-          </div>
-          <div class="col-sm-3">
-            <label>
-              <input type="checkbox" @change="filterChange('published', $event)"/>
-              Published
-            </label>
           </div>
         </div>
-      </div>
-      <div class="modal-body clearfix">
-        <div class="link-book-search"></div>
-        <Grid id='books_grid' class="link-books-grid"
-          :data="linkBooksList"
-          :columns="headers"
-          :rowsPerPage="100"
-          @clickRow="rowClick"
-          :selected="selected"
-          :idField="idField"
-          :filter-key="''"></Grid>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" :disabled="selected.length == 0" v-on:click="linkBooks(true)">
-          <i class="fa fa-plus"></i>&nbsp;Add to collection<span v-if="selected.length > 0">&nbsp;({{selected.length}})</span>
-        </button>
-        <button class="btn btn-default" v-on:click="$emit('close_modal')">Cancel</button>
-      </div>
+        <div class="modal-body">
+          <div class="link-book-search"></div>
+          <Grid id='books_grid' class="link-books-grid"
+            :data="linkBooksList"
+            :columns="headers"
+            :rowsPerPage="100"
+            @clickRow="rowClick"
+            :selected="selected"
+            :idField="idField"
+            :filter-key="''"></Grid>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" :disabled="selected.length == 0" v-on:click="linkBooks(true)">
+            <i class="fa fa-plus"></i>&nbsp;Add to collection<span v-if="selected.length > 0">&nbsp;({{selected.length}})</span>
+          </button>
+          <button class="btn btn-default" v-on:click="$emit('close_modal')">Cancel</button>
+        </div>
+      </div><!--<div class="link-book-modal-wrapper">-->
     </modal>
     <modal name="on-link-message" :height="150" :resizeable="false">
       <div class="modal-header"></div>
@@ -139,14 +141,14 @@
       computed: {
         linkBooksList: {
           get() {
-            
+
             let books = [];
             this.allBooks.forEach(b => {
               if (b.collection_id != this.currentCollection._id) {
                 books.push(b);
               }
             });
-            
+
             for (var field in this.booksFilter) {
               let filter = this.booksFilter[field].toLowerCase();
               if (filter.length) {
@@ -168,7 +170,7 @@
                     break;
                   case 'collection':
                     books = books.filter(b => {
-                      
+
                       switch(filter) {
                         case 'not-linked':
                           return !b.collection_id;
@@ -274,7 +276,7 @@
           }
         },
         filterChange(field, event) {
-          
+
           this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
         },
         modalOpened() {
@@ -291,7 +293,7 @@
         this.booksFilter.language = this.currentCollection.language;
         let self = this;
         this.showModal('example-modal');
-        
+
         $('body').on('change', '.link-book-select-toggle', function(e) {
           let id = e.target.name.replace('select-link-', '');
           let index = self.selected.indexOf(id);
@@ -321,52 +323,9 @@
   transition: opacity .3s ease;
 }
 
-.modal-wrapper {
-  display: table-cell;
-  vertical-align: middle;
-}
-
-.modal-container {
-  width: 80%;
-  margin: 0px auto;
-  padding: 0px 0px;
-  background-color: #fff;
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
-  transition: all .3s ease;
-  font-family: Helvetica, Arial, sans-serif;
-}
-
-.modal-header {
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-bottom:5px;
-  .header-title {
-    position: relative;
-    h4 {
-      text-align: center;
-    }
-    button {
-      position: absolute;
-      display: inline-block;
-      float: right;
-      width: 100%;
-      text-align: right;
-      padding: 0px 5px;
-    }
-  }
-}
-
-.modal-body {
-  margin: 0px 0;
-}
-
-.modal-footer {
-
-}
 .link-books-grid {
-  height: 200px;
-  overflow: scroll;
+  height: 100%;
+  overflow: auto;
   .link-book-select-toggle {
     display: none;
   }
@@ -401,4 +360,51 @@
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
   background-color: #555;
 }
+</style>
+
+<style lang="less" scoped>
+
+.link-book-modal-wrapper {
+  height: 89%;
+}
+
+.modal-wrapper {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.modal-container {
+  width: 80%;
+  margin: 0px auto;
+  padding: 0px 0px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
+  transition: all .3s ease;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.modal-body {
+  margin: 0px 0;
+  height: 81%;
+}
+
+.modal-footer {}
+
+.modal-header {
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-bottom:5px;
+  .header-title {
+    position: relative;
+    h4 {
+      text-align: center;
+    }
+    button {
+      text-align: right;
+      padding: 0px 15px;
+    }
+  }
+}
+
 </style>
