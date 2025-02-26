@@ -4683,6 +4683,7 @@ export const store = new Vuex.Store({
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
         mode: state.bookMode,
         recording_pauses: block.getPartRecordingPauses(alignBlock.partIdx || 0),
+        audio_silences: block.getPartAudioSilences(alignBlock.partIdx || 0),
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
