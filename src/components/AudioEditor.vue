@@ -270,7 +270,8 @@
           remoteSilenceData: [],
           silencePeaks: [],
           recordingPauses: [],
-          displayRecordingPauses: true
+          displayRecordingPauses: true,
+          audioSilences: []
         }
       },
       mounted() {
@@ -395,6 +396,7 @@
             return false;//component was destroyed;
           }
           this.recordingPauses = [];
+          this.audioSilences = [];
           let mode = bookAudiofile.id ? 'file' : 'block';
           if (mode === 'file') {
             this.setEditingLocked(false);
@@ -409,6 +411,7 @@
             });
           } else {
             this.recordingPauses = block.recording_pauses || [];
+            this.audioSilences = block.audio_silences || [];
           }
           let closingId = this.audiofileId;
           if (bookAudiofile.id) {
@@ -747,6 +750,7 @@
               this.play();
             }
             this.showRecordingPauses();
+            this.showAudioSilences();
             //$(`#content-${this.blockId}`).on('click', 'w', {blockId: this.blockId}, this.showSelection)
             let waveform = document.querySelector('.playlist-overlay');
             if (waveform) {
@@ -1462,7 +1466,8 @@
             {range: range, start: fadeOutStart, end: fadeOutEnd, length: fadeTime},
             {range: rangeEnd, start: fadeInStart, end: fadeInEnd, length: fadeTime}
           ], this.cursorPosition, this.cursorPosition + this.silenceLength, {
-            recording_pauses: [...this.recordingPauses]
+            recording_pauses: [...this.recordingPauses],
+            audio_silences: _.cloneDeep(this.audioSilences)
           });
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start >= time) {
@@ -1480,11 +1485,20 @@
               this.recordingPauses[idx]+= this.silenceLength * 1000;
             }
           });
+          this.audioSilences.forEach((silence, idx) => {
+            if (silence.start > time * 1000) {
+              this.audioSilences[idx].start+= this.silenceLength * 1000;
+            }
+            if (silence.end > time * 1000) {
+              this.audioSilences[idx].end+= this.silenceLength * 1000;
+            }
+          });
           this.fixMap();
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           this.addTaskQueue('insert_silence', [this._round(this.cursorPosition, 2), this.silenceLength, fadeTime]);
           //this.clearSelection();
           this.showRecordingPauses();
+          this.showAudioSilences();
           this.isModified = true;
           this.clearSelection();
         },
@@ -1563,6 +1577,7 @@
                   //this.scrollPlayerToAnnotation(0);
                   let block = this.audioTasksQueueBlockOrPart();
                   block.recording_pauses = this.recordingPauses || [];
+                  block.audio_silences = this.audioSilences || [];
                   this.$root.$emit('from-audioeditor:save');
                 });
               //this.addTaskQueue('save', []);
@@ -1596,6 +1611,7 @@
                 //this.scrollPlayerToAnnotation(0);
                 let block = this.audioTasksQueueBlockOrPart();
                 block.recording_pauses = this.recordingPauses || [];
+                block.audio_silences = this.audioSilences || [];
                 this.$root.$emit('from-audioeditor:save', true);
               });
             //this.isModified = false;
@@ -1607,7 +1623,8 @@
             .then(() => {
               let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
               this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end, {
-                recording_pauses: [...this.recordingPauses]
+                recording_pauses: [...this.recordingPauses],
+                audio_silences: _.cloneDeep(this.audioSilences)
               });
               let diff = this._round(this.selection.end - this.selection.start, 2);
               if (this.cursorPosition >= this.selection.start && this.cursorPosition <= this.selection.end) {
@@ -1749,6 +1766,23 @@
                 }
               });
               this.recordingPauses = changedPauses;
+              this.audioSilences.forEach((silence, idx) => {
+                if (silence.start > positionEnd) {
+                  this.audioSilences[idx].start-= diff * 1000;
+                  this.audioSilences[idx].end-= diff * 1000;
+                } else if (silence.start >= positionStart && silence.start < positionEnd && silence.end > positionEnd) {
+                  this.audioSilences[idx].start = positionStart;
+                  this.audioSilences[idx].end-= diff * 1000;
+                } else if (silence.start < positionStart && silence.end >= positionEnd) {
+                  this.audioSilences[idx].end-= diff * 1000;
+                } else if (silence.start < positionStart && silence.end < positionEnd && silence.end > positionStart) {
+                  this.audioSilences[idx].end = positionStart;
+                  // keep
+                } else if (silence.start >= positionStart && silence.end <= positionEnd) {
+                  this.audioSilences[idx].start = positionStart;
+                  this.audioSilences[idx].end = positionStart;
+                }
+              })
               this.addTaskQueue('cut', [positionStart, positionEnd, shift]);
               this.clearSelection();
               this.isModified = true;
@@ -1762,6 +1796,7 @@
               //scroll
               //playbackReset call
               this.showRecordingPauses();
+              this.showAudioSilences();
             });
         },
         cutRangeAction(start, end) {
@@ -1957,7 +1992,8 @@
               let selectionStart = Math.round(this.selection.start * 1000);
               let selectionEnd = Math.round(this.selection.end * 1000);
               this._addHistoryLocal('erase', range, this.selection.start, this.selection.end, {
-                recording_pauses: [...this.recordingPauses]
+                recording_pauses: [...this.recordingPauses],
+                audio_silences: [...this.audioSilences]
               });
               let changedPauses = [];
               this.recordingPauses.forEach(pause => {
@@ -1968,6 +2004,7 @@
               this.recordingPauses = changedPauses;
               this.addTaskQueue('erase', [selectionStart, selectionEnd]);
               this.showRecordingPauses();
+              this.showAudioSilences();
               //this.$root.$emit('from-audioeditor:erase-audio', this.blockId, Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000));
               this.clearSelection();
               this.isModified = true;
@@ -2539,6 +2576,10 @@
             this.showRecordingPauses();
             //let block = this.audioTasksQueueBlockOrPart();
             //block.recording_pauses = this.recordingPauses;
+          }
+          if (record.additional.hasOwnProperty('audio_silences')) {
+            this.audioSilences = record.additional.audio_silences || [];
+            this.showAudioSilences();
           }
           return record;
         },
@@ -3654,6 +3695,24 @@ Revert to original block audio?`,
             });
           }
         },
+        showAudioSilences() {
+          document.querySelectorAll('.audio-silence').forEach(silencePosition => {
+            silencePosition.remove();
+          });
+          let zoomRate = this.audiosourceEditor.sampleRate / this.audiosourceEditor.samplesPerPixel;
+          this.audioSilences.forEach(silence => {
+            let positions = {
+              start: parseInt((silence.start / 1000) * zoomRate),
+              end: parseInt(((silence.end - silence.start) / 1000) * zoomRate)
+            };
+            let silencePosition = document.createElement('div');
+            let waveform = document.querySelector(`.waveform`);
+            silencePosition.className = 'audio-silence';
+            silencePosition.style.left = `${positions.start}px`;
+            silencePosition.style.width = `${positions.end}px`;
+            waveform.appendChild(silencePosition);
+          });
+        },
         toggleDisplayRecordingPauses() {
           this.displayRecordingPauses = !this.displayRecordingPauses;
           this.showRecordingPauses();
@@ -3968,6 +4027,7 @@ Revert to original block audio?`,
             Vue.nextTick(() => {
               this.showSelectionTooltip();
               this.showRecordingPauses();
+              this.showAudioSilences();
             });
             setTimeout(() => {
               this.setDragLimit();
@@ -4757,5 +4817,11 @@ Revert to original block audio?`,
     background-color: #FF9900;
     height: 80px;
     z-index: 8;
+  }
+  .audio-silence {
+    position: absolute;
+    height: 80px;
+    z-index: 8;
+    background-color: #ff99001a;
   }
 </style>
