@@ -18,9 +18,8 @@
         </div>
 
         <div class="table-cell pause-recording -left"
-          @click="_pauseRecording"
-          v-if="!isPaused"
-          v-on:mousedown="_pauseMousedown">
+          @mousedown="_pauseRecording"
+          v-if="!isPaused">
             <span class="btn btn-default">
               <span class="icon"></span>
               <span class="text">
@@ -29,7 +28,7 @@
             </span>
         </div>
 
-        <div class="table-cell resume-recording -left" @click="_resumeRecording" v-else>
+        <div class="table-cell resume-recording -left" @mouseup="_resumeRecording" v-else>
             <span class="btn btn-default">
               <span class="icon"></span>
 
@@ -86,7 +85,8 @@
     data() {
       return {
         isPaused: false,
-        editor: null
+        editor: null,
+        pauseRecordingProgress: false
       }
     },
     props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang', 'pauseMousedown', 'recordingCheck'],
@@ -103,11 +103,19 @@
         this.toggleSpaceClickControl(false);
         this.$emit('close');
       },
-      _pauseRecording() {
+      _pauseRecording(delay = true) {
         this.isPaused = true;
+        if (delay) {
+          this.pauseRecordingProgress = true;
+        }
+        this._pauseMousedown(null, true);
         this.pauseRecording();
       },
       _resumeRecording() {
+        if (this.pauseRecordingProgress) {
+          this.pauseRecordingProgress = false;
+          return {};
+        }
         this.isPaused = false;
         this.resumeRecording();
       },
@@ -126,8 +134,8 @@
           if (this.isPaused) {
             this._resumeRecording();
           } else {
-            this._pauseMousedown(null, false);
-            this._pauseRecording();
+            //this._pauseMousedown(null, false);
+            this._pauseRecording(false);
           }
         }
       }
