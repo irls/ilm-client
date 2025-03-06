@@ -14,6 +14,9 @@ export default {
     alignTTSVoicesData: defaultAlignTTSVoicesData
   },
   getters: {
+    currentAlignCounter: state => {
+      return state.aligningBlocks ? state.aligningBlocks.length : 0;
+    },
     aligningAudiofiles: state => {
       let aligningInBooks = state.aligningBooks.reduce((acc, alignBook) => {
         return acc.concat(alignBook.audiofiles.filter(audiofile => {
