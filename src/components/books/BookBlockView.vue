@@ -4980,14 +4980,6 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
-      },
-      'block.content': {
-        handler(val, oldval) {
-          if (!oldval) {
-
-          }
-        },
-        deep: true
       }
 
   }
