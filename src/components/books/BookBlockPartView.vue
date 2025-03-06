@@ -3576,6 +3576,9 @@ Save text changes and realign the Block?`,
         this.blockAudio.map = this.blockContent();
         this.blockAudio.src = this.blockAudiosrc('m4a');
         //this.showPinnedInText();
+        Vue.nextTick(() => {
+          this.$parent.highlightSuspiciousWords();
+        });
       },
       isSplitPointAllowed() {
         /*if (this.isSplittedBlock) {
