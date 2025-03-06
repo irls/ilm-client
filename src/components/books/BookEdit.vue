@@ -2969,16 +2969,33 @@ export default {
       border-radius: 50%;
     }
   }
+  .cancel-align-wrapper {
+    margin-left: 17px;
 
-  .cancel-align {
-      border: 1px solid red;
-      border-radius: 8px;
-      background-color: white;
-      i.fa {
+    span {
+      display: inline-block;
+      position: relative;
+      top: -1px;
+    }
+
+    button.cancel-align {
+        /*border: 1px solid red;*/
+        /*border-radius: 8px;*/
+        border: none;
+        height: 32px;
+        background-color: white;
+        color: red;
+        i.fa {
           color: red;
-      }
-      font-size: 12px;
-      padding: 6px 12px;
+        }
+        font-size: 14px;
+        padding: 6px 12px 6px 12px;
+
+        i.cancel-align-caption {
+          vertical-align: top;
+          font-style: normal;
+        }
+    }
   }
 
 </style>

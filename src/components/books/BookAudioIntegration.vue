@@ -1,9 +1,8 @@
 <template>
   <div>
-    <div>
-      Aligning {{currentAlignCounter}} block(s)
-
-      <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-times-circle-o"></i></button><span>  Cancel all</span>
+    <div v-if="hasLocks('align')" class="cancel-align-wrapper">
+      <span>Aligning {{currentAlignCounter}} block(s)</span>
+      <button class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-times-circle-o"></i><i class="cancel-align-caption">  Cancel all</i></button>
 
     </div>
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
