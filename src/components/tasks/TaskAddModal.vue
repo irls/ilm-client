@@ -119,7 +119,6 @@ export default {
     }
   },
   mounted() {
-    console.log('TaskAddModal mounted');
     this.getTaskUsers()
       .then(() => {
         this.filterUsers();
