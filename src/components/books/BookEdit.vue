@@ -125,6 +125,7 @@ Vue.use(VueHotkey);
 
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
+import TaskAddModal from "../tasks/TaskAddModal";
 
 export default {
   data () {

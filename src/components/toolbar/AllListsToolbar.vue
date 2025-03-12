@@ -94,7 +94,7 @@
     </div>
 
     <div class="toolbar-second-row-buttons">
-      <button class="btn btn-primary add-book-button" v-on:click="addJob" v-if="(isAdmin || isLibrarian)">
+      <button class="btn btn-primary add-book-button" v-on:click="taskAddModalActive = true" v-if="(isAdmin || isLibrarian)">
         <i class="fa fa-plus"></i>&nbsp;Add Book
       </button>
       <button class="btn btn-primary add-collection-button" v-on:click="addCollection" v-if="(isAdmin || isLibrarian) && allowCollectionsEdit">
@@ -118,6 +118,8 @@
   <!-- Import Books Modal Popup -->
   <BookImport v-if="showImportBooksModal"
   @close_modal="importBooksModalClose" />
+  <TaskAddModal :show="taskAddModalActive"
+  @closed="taskAddModalClose" />
 
 </div>
 </template>
@@ -125,29 +127,27 @@
 <script>
 import Vue from 'vue';
 import _ from 'lodash';
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 import BookImport from '@src/components/books/BookImport'
 import TaskAddModal from '@src/components/tasks/TaskAddModal'
 import { Languages } from "@src/mixins/lang_config.js"
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import MultiSelect from 'primevue/multiselect';
-import v_modal from 'vue-js-modal';
-
-//Vue.use(v_modal, { dialog: true });
 
 export default {
 
   name: 'AllListsToolbar',
 
   components: {
-    BookImport, TabView, TabPanel, MultiSelect
+    BookImport, TaskAddModal, TabView, TabPanel, MultiSelect
   },
 
   data () {
     return {
       filterStr: '',
       showImportBooksModal: false,
+      taskAddModalActive: false,
       languages: Languages,
       activeTabIdx: 0,
     }
@@ -318,6 +318,12 @@ export default {
       this.showImportBooksModal = false
       this.$emit('import_finished', uploaded)
     },
+    taskAddModalClose(create) {
+      this.taskAddModalActive = false;
+      if (create) {
+        this.$store.dispatch('tc_loadBookTask')
+      }
+    },
     addCollection() {
       return this.$store.dispatch('createCollection', {})
         .then(doc => {
@@ -395,26 +401,7 @@ export default {
       if (this.showCollectionsFilters) {
         this.$refs['collectionsFilters.filter'].value = this.collectionsFilters.filter;
       }
-    },
-    addJob() {
-      let uploadInfo = {};
-      this.$modal.show(TaskAddModal, {
-        uploadInfo: uploadInfo
-      },
-      {
-        height: "auto",
-        width: "600px",
-        clickToClose: false
-      },
-      {
-        closed: () => {
-          if (uploadInfo.create) {
-            this.tc_loadBookTask();
-          }
-        }
-      });
-    },
-    ...mapActions(['tc_loadBookTask'])
+    }
   },
 
   async mounted() {

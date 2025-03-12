@@ -44,7 +44,7 @@
     </div>
 
     <v-dialog :clickToClose="false"/>
-    <modals-container></modals-container>
+    <modals-container/>
 
     <alert :show="hasErrorAlert" placement="top" :duration="5000" type="danger" width="400px">
       <span class="icon-ok-circled alert-icon-float-left"></span>
