@@ -9,12 +9,16 @@
             <h3><i class="fa fa-arrow-circle-o-right"></i>&nbsp;{{tasks.total}} Current tasks in your Queue</h3>
           </div>
           <div class='td'>
-            <button @click='addJob()' class='btn btn-default' v-if="isAdmin || isLibrarian">
+            <button @click='taskAddModalActive = true' class='btn btn-default' v-if="isAdmin || isLibrarian">
               <i class="fa fa-plus"></i>&nbsp;New Job
             </button>
           </div>
         </div>
       </div>
+      <task-add-modal
+        :show="taskAddModalActive"
+        @closed="taskAddModalClose">
+      </task-add-modal>
       <!-- Import Books Modal Popup -->
       <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"
                   :importTaskId="import_book_task_id"
@@ -85,8 +89,10 @@
 
 <script>
 import { VueTabs, VTab } from 'vue-nav-tabs'
+import axios from 'axios'
 import TaskAddModal from './tasks/TaskAddModal'
 import TaskHistory from './tasks/TaskHistory'
+import superlogin from 'superlogin-client'
 import BookImport from './books/BookImport'
 import AudioImport from './audio/AudioImport.vue';
 import { mapGetters, mapActions } from 'vuex'
@@ -102,6 +108,7 @@ export default {
   data () {
     return {
       msg: 'Assignments',
+      taskAddModalActive: false,
       tasks: {
         list: [],
         total: 0
@@ -120,6 +127,7 @@ export default {
   components: {
     VueTabs,
     VTab,
+    TaskAddModal,
     BookImport,
     TaskHistory
   },
@@ -181,6 +189,13 @@ export default {
       }
       this.tasks = tasks_formatted;
     },
+    taskAddModalClose(create) {
+      this.taskAddModalActive = false
+      if (create) {
+        this.$store.dispatch('tc_loadBookTask')
+        //this.getTasks()
+      }
+    },
     importBook(task) {
       this.import_book_task_id = task.id
       this.import_book_id = task.bookid
@@ -232,28 +247,9 @@ export default {
     onTabChange() {
       return true
     },
-    
-    addJob() {
-      let uploadInfo = {};
-      this.$modal.show(TaskAddModal, {
-        uploadInfo: uploadInfo
-      },
-      {
-        height: "auto",
-        width: "600px",
-        clickToClose: false
-      },
-      {
-        closed: () => {
-          if (uploadInfo.create) {
-            this.tc_loadBookTask();
-          }
-        }
-      });
-    },
 
     ...mapActions([
-        'getBookMeta', 'getAudioBook', 'tc_loadBookTask'
+        'getBookMeta', 'getAudioBook'
     ])
   }
 }
