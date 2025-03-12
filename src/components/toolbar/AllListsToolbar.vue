@@ -428,11 +428,9 @@ export default {
     this.syncRouteWithTab();
     this.changeFilterVisual();
     this.fillFilters();
-    if (this.isLibrarian) {
-      document.body.addEventListener('mouseover', (e) => {
-        console.log(e.target.innerHTML);
-      });
-    }
+    document.body.addEventListener('mouseover', (e) => {
+      console.log(e.target.innerHTML);
+    });
   },
   watch:{
     async '$route' ($to, $from) {
