@@ -19,7 +19,7 @@
 
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Assignments" id="assignments">
+          <vue-tab title="Tasks" id="assignments">
             <BookAssignments
               @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
@@ -545,6 +545,9 @@
 
             </div>
         </vue-tab>
+        <vue-tab title="Suggestions" id="suggestions" :disabled="!tc_displayAudiointegrationTab()">
+          <Suggestions />
+        </vue-tab>
       </vue-tabs>
       </div>
     </div>
@@ -613,6 +616,7 @@ import ResizableTextarea    from '../generic/ResizableTextarea';
 import Genre                from './details/Genre';
 import v_modal              from 'vue-js-modal';
 import BookAuthors          from './details/BookAuthors';
+import Suggestions          from './details/suggestions/Suggestions';
 
 Vue.use(v_modal, {dialog: true});
 
@@ -675,7 +679,8 @@ export default {
     'resizable-textarea': ResizableTextarea,
     CoupletWarningPopup,
     Genre,
-    BookAuthors
+    BookAuthors,
+    Suggestions
   },
 
   data () {
@@ -3152,6 +3157,11 @@ select.text-danger#categorySelection, input.text-danger{
       height: 100%;
       margin-top: -44px;
       padding-top: 44px;
+    }
+    .nav-tabs {
+      &>li>a {
+        padding: 10px 12px;
+      }
     }
   }
 
