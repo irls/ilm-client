@@ -2999,6 +2999,17 @@ export default {
     }
   }
 
+  .cancel-align {
+    border: 1px solid red;
+    border-radius: 8px;
+    background-color: white;
+    i.fa {
+      color: red;
+    }
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
 </style>
 
 
