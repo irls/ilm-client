@@ -2973,10 +2973,10 @@ export default {
   .cancel-align-wrapper {
     margin-left: 17px;
 
-    span {
+    span.blocks-counter {
       display: inline-block;
       position: relative;
-      top: -1px;
+      top: -4px;
     }
 
     button.cancel-align {
@@ -2986,7 +2986,7 @@ export default {
         height: 32px;
         background-color: white;
         color: red;
-        i.fa {
+        i.fa, i.glyphicon-remove-circle {
           color: red;
         }
         font-size: 14px;
