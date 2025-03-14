@@ -73,9 +73,9 @@
           </template>
         </div>
         <div class="align-blocks-section">
-          <button class="align-blocks" :disabled="alignCounter.countTTS === 0" v-on:click="startAlign" title="Align Text with TTS Audio"></button>
-          <button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()" title="Cancel Alignment">
-            <i class="fa fa-ban"></i>
+          <button :class="['align-blocks', {'align-blocks-gray':alignProcess}]" :disabled="isAlignButtonDisabled" v-on:click="startAlign" title="Align Text with TTS Audio"></button>
+          <!--<button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()" title="Cancel Alignment">
+            <i class="fa fa-ban"></i>-->
           </button>
         </div>
       </div>
@@ -176,6 +176,8 @@
   //import v_modal from 'vue-js-modal';
 
   //Vue.use(v_modal, { dialog: true });
+  const ALIGN_TIMEOUT = 3*1000;
+
   export default {
     data() {
       return {
@@ -204,7 +206,8 @@
         alignWpmSettings: {
           type: 'custom',
           wpm: 140
-        }
+        },
+        alignStartedTimeout: null
       }
     },
     components: {
@@ -230,6 +233,11 @@
           return this.generated_voice_url.length === 0 || this.new_voice.name.length === 0 || this.new_voice.name.replace(/\s+/, '').length === 0;
         },
         cache: false
+      },
+      isAlignButtonDisabled: {
+        get() {
+          return this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null;
+        }
       }
     },
     mounted() {
@@ -252,6 +260,15 @@
       this.$root.$off('from-audioeditor:content-loaded', this.setMaxContainerHeight);
     },
     methods: {
+      waitUntilNextAlignAllowed() {
+        return new Promise ((resolve, reject) => {
+          this.alignStartedTimeout = window.setTimeout(()=>{
+            resolve();
+            clearTimeout(this.alignStartedTimeout);
+            this.alignStartedTimeout = null;
+          }, ALIGN_TIMEOUT)
+        });
+      },
       defaultVoice(type) {
         return this.currentBookMeta.voices ? this.currentBookMeta.voices[type] : '';
       },
@@ -264,6 +281,7 @@
       },
       startAlign() {
         this.$emit('alignTts');
+        this.waitUntilNextAlignAllowed();
       },
       cancelAlign() {
         this.$emit('cancelAlign');
@@ -645,6 +663,10 @@
           padding: 8px 5px;
           &[disabled] {
             opacity: 0.4;
+            cursor: not-allowed;
+          }
+          &.align-blocks-gray:not([disabled]) {
+            opacity: 0.7;
           }
         }
         .cancel-align {

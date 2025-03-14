@@ -18,7 +18,7 @@
           let lockedBlock = this.aligningBlocks.find(blk => {
             return blk._id === this.block.blockid && (this.blockPartIdx === null || blk.partIdx === this.blockPartIdx);
           });
-          return lockedBlock && ['narration', 'audio_file'].indexOf(this.block.voicework) > -1;
+          return lockedBlock && ['narration', 'audio_file', 'tts'].indexOf(this.block.voicework) > -1;
         }
       },
       ...mapGetters(['aligningBlocks'])
@@ -44,7 +44,7 @@
       i {
         color: red;
         vertical-align: middle;
-        font-size: 12px;
+        font-size: 20px;
       }
     }
   }
