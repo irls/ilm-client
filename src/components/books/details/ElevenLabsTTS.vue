@@ -261,13 +261,10 @@
     },
     methods: {
       waitUntilNextAlignAllowed() {
-        return new Promise ((resolve, reject) => {
-          this.alignStartedTimeout = window.setTimeout(()=>{
-            resolve();
-            clearTimeout(this.alignStartedTimeout);
-            this.alignStartedTimeout = null;
-          }, ALIGN_TIMEOUT)
-        });
+        this.alignStartedTimeout = window.setTimeout(()=>{
+          clearTimeout(this.alignStartedTimeout);
+          this.alignStartedTimeout = null;
+        }, ALIGN_TIMEOUT);
       },
       defaultVoice(type) {
         return this.currentBookMeta.voices ? this.currentBookMeta.voices[type] : '';
