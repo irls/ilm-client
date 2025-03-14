@@ -40,7 +40,7 @@
       border: 1px solid red;
       border-radius: 5px;
       font-size: 10px;
-      padding: 2px 4px;
+      padding: 3px 4px 2px 4px;
       i {
         color: red;
         vertical-align: middle;
