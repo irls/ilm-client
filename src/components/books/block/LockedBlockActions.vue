@@ -1,7 +1,7 @@
 <template>
   <div v-if="lockedType === 'align'" class="cancel-block-align">
     <button class="btn btn-default" v-if="allowAlignCancel" v-on:click="cancelAlign">
-      <i class="fa fa-times-circle-o"></i>
+      <!--<i class="fa fa-times-circle-o"></i>--><i class="glyphicon glyphicon-remove-circle"></i>
     </button>
   </div>
 </template>
