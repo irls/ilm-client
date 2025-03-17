@@ -5632,7 +5632,7 @@ Save text changes and realign the Block?`,
         /*cursor: pointer*/
       }
 
-      w:not([data-map]):not([data-sugg=""]), w.alignment-changed, w.suspicious-silence {
+      w:not([data-map]):not([data-sugg=""]), w.alignment-changed {
         background: linear-gradient(
             transparent,
             transparent 30%,
@@ -6044,6 +6044,15 @@ div.-content.editing  div.content-wrap {
   border-color: #ded056 !important;
   box-shadow: 0 0 10px #ded056 !important;
   background: #ffffe1 !important;
+  w.suspicious-silence {
+    background: linear-gradient(
+        transparent,
+        transparent 30%,
+        rgba(255, 153, 0, 0.4) 55%,
+        transparent 80%,
+        transparent
+      );
+  }
 }
 
 .blocked-editing {
