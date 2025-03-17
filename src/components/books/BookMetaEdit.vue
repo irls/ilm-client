@@ -545,8 +545,10 @@
 
             </div>
         </vue-tab>
-        <vue-tab title="Suggestions" id="suggestions" :disabled="!tc_displayAudiointegrationTab()">
-          <Suggestions />
+        <vue-tab title="Suggestions" id="suggestions" 
+          :disabled="!tc_displayAudiointegrationTab()">
+          <Suggestions 
+          :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
         </vue-tab>
       </vue-tabs>
       </div>
@@ -742,6 +744,7 @@ export default {
       TAB_TOC_INDEX: 2,
       TAB_AUDIO_INDEX: 3,
       TAB_STYLE_INDEX: 4,
+      TAB_SUGGESTION_INDEX: 5,
       users: {
         'editor': [],
         'proofer': [],
@@ -1160,6 +1163,7 @@ export default {
           case this.TAB_META_INDEX:
             break;
           case this.TAB_AUDIO_INDEX:
+          case this.TAB_SUGGESTION_INDEX:
             if (!this.tc_displayAudiointegrationTab()) {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
               //console.log('HERE')

@@ -3,18 +3,28 @@ import axios from 'axios';
 export default {
   namespaced: true,
   state: {
-    suggestions: []
+    suggestions: [],
+    applySuggestions: []
   },
   getters: {
     suggestions: state => (category = null) => {
       return state.suggestions.filter(suggestion => {
         return category ? suggestion.category === category : !suggestion.category;
       });
+    },
+    applySuggestions: state => (category = null) => {
+      let applySuggestions = state.applySuggestions.find(suggestions => {
+        return suggestions.category === category;
+      });
+      return applySuggestions ? applySuggestions : {};
     }
   },
   mutations: {
     setSuggestions(state, suggestions) {
       state.suggestions = suggestions;
+    },
+    createdSuggestion(state, suggestion) {
+      state.suggestions.unshift(suggestion);
     }
   },
   actions: {
@@ -37,9 +47,11 @@ export default {
           return Promise.reject(err);
         });
     },
-    create({rootState}, [suggestionData]) {
+    create({rootState, commit}, [suggestionData]) {
+      suggestionData.bookid = rootState.currentBookMeta.bookid;
       return axios.post(`${rootState.API_URL}suggestions`, suggestionData)
         .then(response => {
+          commit('createdSuggestion', response.data);
           return response.data;
         })
         .catch(err => {
@@ -55,13 +67,70 @@ export default {
           return Promise.reject(err);
         });
     },
-    update({rootState, state, commit}, [id, update]) {
+    update({rootState, state, commit, dispatch}, [id, update]) {
       return axios.put(`${rootState.API_URL}suggestions/${encodeURIComponent(id)}`, update)
         .then(response => {
           //commit('updateAuthor', [id, response.data]);
+          return dispatch('getAll')
+            .then(() => {
+              return response.data;
+            });
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    canApplySuggestions({rootState, state}, [category = null]) {
+      let request = {};
+      request.bookid = rootState.currentBookMeta.bookid;
+      if (category) {
+        request.category = category;
+      }
+      if (rootState.blockSelection && rootState.blockSelection.start && rootState.blockSelection.start._id) {
+        request.start = rootState.blockSelection.start._id;
+        request.end = rootState.blockSelection.end._id;
+      }
+      let request_query = [];
+      Object.keys(request).forEach(key => {
+        request_query.push(`${key}=${request[key]}`);
+      });
+      return axios.get(`${rootState.API_URL}suggestions/apply?${request_query.join("&")}`)
+        .then(response => {
+          let suggestionsIndex = state.applySuggestions.findIndex(suggestion => {
+            return suggestion.category === category;
+          });
+          if (suggestionsIndex >= 0) {
+            state.applySuggestions[suggestionsIndex] = response.data;
+          } else {
+            state.applySuggestions.push(response.data);
+          }
           return response.data;
         })
         .catch(err => {
+          console.log(err.message);
+          return Promise.reject(err);
+        });
+    },
+    applySuggestions({rootState}, [category = null]) {
+      let request = {};
+      request.bookid = rootState.currentBookMeta.bookid;
+      if (category) {
+        request.category = category;
+      }
+      if (rootState.blockSelection && rootState.blockSelection.start && rootState.blockSelection.start._id) {
+        request.start = rootState.blockSelection.start._id;
+        request.end = rootState.blockSelection.end._id;
+      }
+      let request_query = [];
+      Object.keys(request).forEach(key => {
+        request_query.push(`${key}=${request[key]}`);
+      });
+      return axios.post(`${rootState.API_URL}suggestions/apply`, request)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          console.log(err.message);
           return Promise.reject(err);
         });
     }
