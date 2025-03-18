@@ -10,7 +10,7 @@
 
         <div class="table-cell cancel-recording -left">
           <span class="btn btn-default" @click="_cancelRecording">
-            <span class="icon"></span>
+            <!--<span class="icon"></span>--><i class="glyphicon glyphicon-remove-circle"></i>
             <span class="text">
             Cancel
             </span>
@@ -185,6 +185,7 @@
 
 .cancel-recording .btn {
   height: 38px;
+  padding-top: 5px;
 }
 
 .cancel-recording i {
@@ -208,10 +209,6 @@
   padding-left: 15px;
 }
 .resume-recording .btn{
-  height: 38px;
-  padding-top: 0px;
-}
-.cancel-recording .btn{
   height: 38px;
   padding-top: 0px;
 }
@@ -255,14 +252,23 @@
   //border-radius: 0px;
   position: relative;
 }
-.cancel-recording .icon{
-  height: 24px;
-  width: 24px;
-  display: inline-block;
-  top: 3px;
-  background-image: url(/static/RecordingBlock/cancel.png);
-  //border-radius: 0px;
-  position: relative;
+.cancel-recording {
+ .icon{
+    height: 24px;
+    width: 24px;
+    display: inline-block;
+    top: 3px;
+    background-image: url(/static/RecordingBlock/cancel.png);
+    //border-radius: 0px;
+    position: relative;
+  }
+  .glyphicon-remove-circle {
+    color: red;
+    font-size: 18px;
+    display: inline-block;
+    top: 3px;
+    position: relative;
+  }
 }
 .recording-in-progress .icon{
   height: 37px;

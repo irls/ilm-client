@@ -2,7 +2,7 @@
   <div>
     <div v-if="hasLocks('align')" class="cancel-align-wrapper">
       <span class="blocks-counter">Aligning {{currentAlignCounter}} block(s)</span>
-      <button class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><!--<i class="fa fa-times-circle-o"></i>--><i class="glyphicon glyphicon-remove-circle"></i><i class="cancel-align-caption">  Cancel all</i></button>
+      <button class="cancel-align" v-on:click="cancelAlign(true)"><!-- title="Cancel aligning">--><!--<i class="fa fa-times-circle-o"></i>--><i class="glyphicon glyphicon-remove-circle"></i><i class="cancel-align-caption">  Cancel all</i></button>
 
     </div>
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
