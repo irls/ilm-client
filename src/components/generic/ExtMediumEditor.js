@@ -2,6 +2,42 @@ import MediumEditor from './medium-editor/js/medium-editor.js';
 require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
 
+const customFormAddListLabel = `<style>
+  .medium-editor-toolbar-form i.customFormAddListLabel {
+    height: 30px; width: 30px;
+    display: inline-block;
+    position: relative; top: 9px; left: 1px;
+    background-size: contain;
+    background-image: url(/static/MediumEditorButtons/playlist-add-white-svgrepo-com.svg);
+  }
+  .medium-editor-toolbar-form i.customFormAddListLabel:hover {
+    background-image: url(/static/MediumEditorButtons/playlist-add-gray-svgrepo-com.svg);
+  }
+</style>
+<i class="customFormAddListLabel"></i>`;
+
+const iconButtonsTmpl = {
+  'fontawesome': {
+    formSaveLabel:    '<i class="fa fa-check"></i>',
+    formCloseLabel:   '<i class="fa fa-times"></i>',
+    formRemoveLabel:  '<i class="fa fa-trash"></i>',
+    formDiscardLabel: '<i class="fa fa-times-circle-o"></i>'
+  },
+  'glyphicon': {
+    formSaveLabel:    '<i class="glyphicon glyphicon-ok-circle"></i>',
+    formCloseLabel:   '<i class="glyphicon glyphicon-remove-circle"></i>',
+    formRemoveLabel:  '<i class="glyphicon glyphicon-trash"></i>',
+    formDiscardLabel: '<i class="glyphicon glyphicon-ban-circle"></i>',
+    formAddListLabel:  customFormAddListLabel,
+  },
+  'default': {
+    formSaveLabel:    '&#10003;',
+    formCloseLabel:   '&times;',
+    formRemoveLabel:  '&#xf056;',
+    formDiscardLabel: '&times;'
+  }
+};
+
 const QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
   quoteForm: false,
@@ -9,12 +45,9 @@ const QuoteButton = MediumEditor.Extension.extend({
   quoteFormList: false,
   value: '',
   isListOpen: false,
+  iconButtonsStyle: 'glyphicon',
 
   wrapNode: 'qq',
-
-  formSaveLabel: '&#10003;',
-  formCloseLabel: '&times;',
-  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.button = this.document.createElement('button');
@@ -37,6 +70,12 @@ const QuoteButton = MediumEditor.Extension.extend({
 
   getButton: function () {
     return this.button;
+  },
+
+  getIconButton: function (buttonName) {
+    const buttonLabels = this.iconButtonsStyle || this.getEditorOption('buttonLabels') || 'default';
+    const iconButtons = iconButtonsTmpl[buttonLabels] || iconButtonsTmpl['default'];
+    return iconButtons[buttonName] || '<i>Wrong button name</i>';
   },
 
   isAlreadyApplied: function (node) {
@@ -286,19 +325,23 @@ const QuoteButton = MediumEditor.Extension.extend({
 
     template.push(
       '<a href="#" class="medium-editor-toolbar-save">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+      this.getIconButton('formSaveLabel'),
       '</a>'
     );
+
+    template.push('<a href="#" class="medium-editor-toolbar-close">',
+      this.getIconButton('formAddListLabel'),
+      '</a>');
 
     if (this.value.length) {
       template.push(
         '<a href="#" class="medium-editor-toolbar-remove">',
-        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
+        this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
     template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+      this.getIconButton('formCloseLabel'),
       '</a>');
 
     return template.join('');
@@ -549,12 +592,9 @@ const SuggestButton = MediumEditor.Extension.extend({
   suggestFormInput: false,
   value: '',
   hasProp: false,
+  iconButtonsStyle: 'glyphicon',
 
   wrapNode: 'sg',
-
-  formSaveLabel: '&#10003;',
-  formCloseLabel: '&times;',
-  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.wrapNode = this.getEditorOption('suggestEl') || 'sg';
@@ -576,6 +616,12 @@ const SuggestButton = MediumEditor.Extension.extend({
 
   getButton: function () {
     return this.button;
+  },
+
+  getIconButton: function (buttonName) {
+    const buttonLabels = this.iconButtonsStyle || this.getEditorOption('buttonLabels') || 'default';
+    const iconButtons = iconButtonsTmpl[buttonLabels] || iconButtonsTmpl['default'];
+    return iconButtons[buttonName] || '<i>Wrong button name</i>';
   },
 
   isAlreadyApplied: function (node) {
@@ -761,19 +807,19 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     template.push(
       '<a href="#" class="medium-editor-toolbar-save">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+      this.getIconButton('formSaveLabel'),
       '</a>'
     );
 
     if (this.value.length || this.hasProp) {
       template.push(
         '<a href="#" class="medium-editor-toolbar-remove">',
-        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
+        this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
     template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+      this.getIconButton('formCloseLabel'),
       '</a>');
 
     return template.join('');

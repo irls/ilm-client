@@ -5578,8 +5578,20 @@ Save text changes and realign the Block?`,
     position: static;
 }
 
-.medium-editor-toolbar .fa {
-    color: #FFFFFF;
+.medium-editor-toolbar {
+  .fa, .glyphicon {
+      color: #FFFFFF;
+  }
+
+  .glyphicon {
+      font-size: 20px;
+      vertical-align: text-bottom;
+      &.glyphicon-ok-circle,
+      &.glyphicon-remove-circle,
+      &.glyphicon-ban-circle {
+        font-size: 22px;
+      }
+  }
 }
 
 .fa:hover, .glyphicon:hover {
