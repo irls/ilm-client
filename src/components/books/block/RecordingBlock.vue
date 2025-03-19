@@ -263,7 +263,7 @@
     position: relative;
   }
   .glyphicon-remove-circle {
-    color: red;
+    color: #b32e22;
     font-size: 18px;
     display: inline-block;
     top: 3px;
