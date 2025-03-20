@@ -3,14 +3,14 @@ require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
 
 const customFormAddListLabel = `<style>
-  .medium-editor-toolbar-form i.customFormAddListLabel {
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-item i.customFormAddListLabel {
     height: 30px; width: 30px;
     display: inline-block;
     position: relative; top: 9px; left: 1px;
     background-size: contain;
     background-image: url(/static/MediumEditorButtons/playlist-add-white-svgrepo-com.svg);
   }
-  .medium-editor-toolbar-form i.customFormAddListLabel:hover {
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-item i.customFormAddListLabel:hover {
     background-image: url(/static/MediumEditorButtons/playlist-add-gray-svgrepo-com.svg);
   }
 </style>
@@ -328,10 +328,6 @@ const QuoteButton = MediumEditor.Extension.extend({
       this.getIconButton('formSaveLabel'),
       '</a>'
     );
-
-    template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getIconButton('formAddListLabel'),
-      '</a>');
 
     if (this.value.length) {
       template.push(
@@ -810,6 +806,10 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.getIconButton('formSaveLabel'),
       '</a>'
     );
+
+    template.push('<a href="#" class="medium-editor-toolbar-add-item">',
+      this.getIconButton('formAddListLabel'),
+      '</a>');
 
     if (this.value.length || this.hasProp) {
       template.push(

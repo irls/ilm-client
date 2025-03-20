@@ -5579,6 +5579,14 @@ Save text changes and realign the Block?`,
 }
 
 .medium-editor-toolbar {
+
+  border-radius: 4px;
+
+  .medium-editor-toolbar-input {
+    border-bottom-left-radius: 4px;
+    border-top-left-radius: 4px;
+  }
+
   .fa, .glyphicon {
       color: #FFFFFF;
   }
