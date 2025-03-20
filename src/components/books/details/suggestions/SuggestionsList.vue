@@ -1,20 +1,27 @@
 <template>
   <div class="suggestions-list-options">
-    <div class="apply-suggestion">
-      <button class="btn btn-primary" :disabled="applySuggestionData.total === 0">Apply</button>
-      {{ applySuggestionData.total }} matching block(s) in range 
-      <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
-      <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
-    </div>
-    <div class="filter-suggestion">
-      <div>
-        <input type="text" v-model="filter" />
-        <i v-if="filter.length > 0" class="ico ico-clear-filter btn-inside" v-on:click="clearFilter"></i>
+    <div class="suggestions-header">
+      <div class="apply-suggestion">
+        <button class="btn btn-primary" :disabled="applySuggestionData.total === 0" v-on:click="startApplySuggestions(true)">Apply</button>
+        <template v-if="calculate_apply">
+          <div class="process-preloader"></div>
+        </template>
+        <template v-else>
+          {{ applySuggestionData.total }} matching block(s) in range 
+          <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
+          <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
+        </template>
       </div>
-      <div>
-        <button class="btn btn-primary" :disabled="!filter.length" v-on:click="add">
-          <i class="fa fa-plus"></i>
-        </button>
+      <div class="filter-suggestion">
+        <div>
+          <input type="text" v-model="filter" />
+          <i v-if="filter.length > 0" class="ico ico-clear-filter btn-inside" v-on:click="clearFilter"></i>
+        </div>
+        <div>
+          <button class="btn btn-primary" :disabled="!filter.length" v-on:click="add">
+            <i class="fa fa-plus"></i>
+          </button>
+        </div>
       </div>
     </div>
     <div v-if="addSuggestionMode" class="add-suggestion">
@@ -80,10 +87,11 @@
         editing_suggestions: {},
         applySuggestionData: {
           total: 0
-        }
+        },
+        calculate_apply: false
       }
     },
-    props: ['suggestions', 'category', 'isActive'],
+    props: ['suggestions', 'category', 'isActive', 'categoryName'],
     components: {
       EditSuggestion
     },
@@ -129,10 +137,14 @@
         },
         cache: false
       },
-      ...mapGetters(['storeList', 'blockSelection']),
+      ...mapGetters(['storeList', 'blockSelection', 'modifiedBlockids']),
       ...mapGetters('suggestionsModule', ['applySuggestions'])
     },
     mounted() {
+      Vue.nextTick(() => {
+        this.setContainerHeight();
+      });
+      window.addEventListener('resize', this.setContainerHeight);
     },
     activated() {
       console.log('activated', this.category);
@@ -159,6 +171,7 @@
             this.addSuggestionMode = false;
             this.added_suggestion_id = response.id;
             this.resetEditSuggestion();
+            this.getApplySuggestions();
           });
       },
       remove(suggestion, check = true) {
@@ -189,6 +202,7 @@
         return this.removeSuggestion([suggestion.id])
           .then(() => {
             this.getAll();
+            this.getApplySuggestions();
           });
       },
       cancelCreate() {
@@ -230,6 +244,8 @@
         return this.updateSuggestion([suggestion.id, suggestion])
           .then(() => {
             this.cancelUpdate(suggestion);
+            this.getApplySuggestions();
+            return {};
           });
       },
       cancelUpdate(suggestion) {
@@ -251,13 +267,17 @@
       },
       getApplySuggestions() {
         if (this.isActive) {
+          this.calculate_apply = true;
           this.applySuggestionData.total = 0;
-          this.canApplySuggestions([this.category])
+          return this.canApplySuggestions([this.category])
             .then(response => {
               let suggestions = this.applySuggestions(this.category);
               this.applySuggestionData.total = suggestions.total;
+              this.calculate_apply = false;
+              return {};
             });
         }
+        return Promise.resolve();
       },
       shortId(blockid) {
         const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
@@ -271,12 +291,99 @@
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
       },
+      startApplySuggestions(check = true) {
+        if (check) {
+          this.$modal.show('dialog', {
+            title: 'Apply dictionary suggestions',
+            text: `Would you like to apply ${this.categoryName} dictionary suggestions to ${this.applySuggestionData.total} matching blocks?<br>You'll need to review and, if necessary, adjust them.`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                },
+                class: 'btn btn-default'
+              },
+              {
+                title: 'Apply Suggestions',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                  this.startApplySuggestions(false);
+                },
+                class: 'btn btn-primary'
+              }
+            ]
+          });
+          return;
+        }
+        if (Object.keys(this.editing_suggestions).length > 0) {
+          this.$modal.show('dialog', {
+            title: 'Unsaved changes',
+            text: `You have unsaved ${this.categoryName} dictionary changes. Save and apply suggestions?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                },
+                class: 'btn btn-default'
+              },
+              {
+                title: 'Save & Apply Suggestions',
+                handler: () => {
+                  this.saveAllSuggestions()
+                    .then(() => {
+                      this.$modal.hide('dialog');
+                      this.startApplySuggestions(false);
+                    });
+                },
+                class: 'btn btn-primary'
+              }
+            ]
+          });
+          return;
+        }
+        this.$modal.show('dialog', {
+          title: 'Apply dictionary suggestions',
+          text: `Applying ${this.categoryName} dictionary suggestions...`,
+          buttons: [
+            
+          ]
+        });
+        return this.postSuggestions([this.category])
+          .then(() => {
+            this.getApplySuggestions()
+              .then(() => {
+                this.$modal.hide('dialog');
+              });
+          });
+      },
+      saveAllSuggestions() {
+        let updates = [];
+        Object.values(this.editing_suggestions).forEach(suggestion => {
+          updates.push(this.update(suggestion));
+        });
+        return Promise.all(updates)
+          .then(() => {
+            return {};
+          });
+      },
+      setContainerHeight() {
+        Vue.nextTick(() => {
+          let targetContainer = document.querySelector(`section[id="${'p-' + this.categoryName}"] .suggestions-list-options`);
+          if (targetContainer) {
+            let containersHeight = document.querySelector('.nav-tabs-navigation').offsetHeight * 2 + document.querySelector('.top-menu-wrapper').offsetHeight/* + document.querySelector(`section[id="${'p-' + this.categoryName}"] .apply-suggestion`).offsetHeight + document.querySelector(`section[id="${'p-' + this.categoryName}"] .filter-suggestion`).offsetHeight*/ + 10;
+            targetContainer.style.height = window.innerHeight - parseInt(containersHeight) + 'px';
+          }
+        });
+      },
       ...mapActions('suggestionsModule', {
         addSuggestion: 'create',
         removeSuggestion: 'remove',
         getAll: 'getAll',
         updateSuggestion: 'update',
-        canApplySuggestions: 'canApplySuggestions'
+        canApplySuggestions: 'canApplySuggestions',
+        postSuggestions: 'postSuggestions'
       })
     },
     watch: {
@@ -289,6 +396,7 @@
         handler(val) {
           if (this.isActive) {
             this.getApplySuggestions();
+            this.setContainerHeight();
           }
         }
       },
@@ -304,41 +412,57 @@
 <style lang="less">
   @border-color: 2px solid #D9D9D9;
   .suggestions-list-options {
-    .apply-suggestion {
-      padding: 10px 3px;
+    overflow-y: scroll;
+    .process-preloader {
+      background: url(/static/preloader-snake-small.gif);
+      background-repeat: no-repeat;
+      background-position: center;
+      height: 34px;
+      display: inline-block;
+      width: 50%;
+      vertical-align: middle;
     }
-    .filter-suggestion {
-      padding: 10px 3px;
-      &>div {
-        display: inline-block;
-        &:first-child {
-          width: 80%;
-          input[type="text"] {
-            width: 100%;
-            height: 34px;
-            border: 1px solid #D9D9D9;
-            border-radius: 5px;
-            &:focus {
-              outline: 0;
+    .suggestions-header {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 999;
+      .apply-suggestion {
+        padding: 10px 3px;
+      }
+      .filter-suggestion {
+        padding: 10px 3px;
+        &>div {
+          display: inline-block;
+          &:first-child {
+            width: 80%;
+            input[type="text"] {
+              width: 100%;
+              height: 34px;
+              border: 1px solid #D9D9D9;
+              border-radius: 5px;
+              &:focus {
+                outline: 0;
+              }
+            }
+            i {
+              margin-left: -30px;
+              margin-top: 6px;
+              z-index: 999;
+              position: absolute;
             }
           }
-          i {
-            margin-left: -30px;
-            margin-top: 6px;
-            z-index: 999;
-            position: absolute;
-          }
-        }
-        button {
-          i {
-            color: white;
-            font-weight: 200;
-            font-size: 14px;
-            border: 1px solid white;
-            border-radius: 15px;
-            padding: 5px;
-            width: 26px;
-            height: 26px;
+          button {
+            i {
+              color: white;
+              font-weight: 200;
+              font-size: 14px;
+              border: 1px solid white;
+              border-radius: 15px;
+              padding: 5px;
+              width: 26px;
+              height: 26px;
+            }
           }
         }
       }

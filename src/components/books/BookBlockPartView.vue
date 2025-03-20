@@ -1133,6 +1133,7 @@ export default {
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
+    ...mapMutations(['add_modified_block', 'remove_modified_block']),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -4307,6 +4308,14 @@ Join subblocks?`,
           this.recountApprovedInRange();
           if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx !== null && this.blockPartIdx === this.audioTasksQueue.block.partIdx) {
             this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
+          }
+          let hasChangedPart = this.block.isChanged || this.block.parts.find(part => {
+            return part.isChanged;
+          });
+          if (hasChangedPart) {
+            this.add_modified_block(this.block.blockid);
+          } else {
+            this.remove_modified_block(this.block.blockid);
           }
         }
       },

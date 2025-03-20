@@ -90,6 +90,10 @@ export default {
         request.start = rootState.blockSelection.start._id;
         request.end = rootState.blockSelection.end._id;
       }
+      let modifiedIds = rootState.modifiedBlockids;
+      if (modifiedIds.length > 0) {
+        request.exclude_ids=modifiedIds.join(',');
+      }
       let request_query = [];
       Object.keys(request).forEach(key => {
         request_query.push(`${key}=${request[key]}`);
@@ -111,7 +115,7 @@ export default {
           return Promise.reject(err);
         });
     },
-    applySuggestions({rootState}, [category = null]) {
+    postSuggestions({rootState, dispatch}, [category = null]) {
       let request = {};
       request.bookid = rootState.currentBookMeta.bookid;
       if (category) {
@@ -121,13 +125,20 @@ export default {
         request.start = rootState.blockSelection.start._id;
         request.end = rootState.blockSelection.end._id;
       }
+      let modifiedIds = rootState.modifiedBlockids;
+      if (modifiedIds.length > 0) {
+        request.exclude_ids = modifiedIds.join(',');
+      }
       let request_query = [];
       Object.keys(request).forEach(key => {
         request_query.push(`${key}=${request[key]}`);
       });
       return axios.post(`${rootState.API_URL}suggestions/apply`, request)
         .then(response => {
-          return response.data;
+          return dispatch('getProcessQueue', {}, {root: true})
+            .then(() => {
+              return response.data;
+            });
         })
         .catch(err => {
           console.log(err.message);

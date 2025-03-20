@@ -5,7 +5,8 @@
         <SuggestionsList 
           :suggestions="suggestions(category.category)" 
           :category="category.category"
-          :isActive="isActive && $refs.categoriesTabs.activeTabIndex === categoryIdx" />
+          :isActive="isActive && $refs.categoriesTabs.activeTabIndex === categoryIdx"
+          :categoryName="category.title" />
       </VTab>
     </VueTabs>
   </div>
