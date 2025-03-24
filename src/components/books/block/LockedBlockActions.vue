@@ -36,13 +36,13 @@
     float: right;
     margin: 2px;
     button, button:hover {
-      color: red;
-      border: 1px solid red;
+      color: rgb(197, 94, 93);
+      border: 1px solid rgb(197, 94, 93);
       border-radius: 5px;
       font-size: 10px;
-      padding: 3px 4px 2px 4px;
+      padding: 3.5px 4px 2px 4px;
       i {
-        color: red;
+        color: rgb(197, 94, 93);
         vertical-align: middle;
         font-size: 20px;
       }
