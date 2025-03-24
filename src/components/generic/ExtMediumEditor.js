@@ -21,20 +21,25 @@ const iconButtonsTmpl = {
     formSaveLabel:    '<i class="fa fa-check"></i>',
     formCloseLabel:   '<i class="fa fa-times"></i>',
     formRemoveLabel:  '<i class="fa fa-trash"></i>',
-    formDiscardLabel: '<i class="fa fa-times-circle-o"></i>'
+    formDiscardLabel: '<i class="fa fa-times-circle-o"></i>',
+    formAddLabel:     '<i class="fa fa-times-circle-o"></i>',
+    formAddListLabel: '<i class="fa fa-times-circle-o"></i>'
   },
   'glyphicon': {
     formSaveLabel:    '<i class="glyphicon glyphicon-ok-circle"></i>',
     formCloseLabel:   '<i class="glyphicon glyphicon-remove-circle"></i>',
     formRemoveLabel:  '<i class="glyphicon glyphicon-trash"></i>',
     formDiscardLabel: '<i class="glyphicon glyphicon-ban-circle"></i>',
-    formAddListLabel:  customFormAddListLabel,
+    formAddLabel:     '<i class="glyphicon glyphicon-remove-circle" style="transform: rotate(45deg);"></i>',
+    formAddListLabel:  customFormAddListLabel
   },
   'default': {
     formSaveLabel:    '&#10003;',
     formCloseLabel:   '&times;',
     formRemoveLabel:  '&#xf056;',
-    formDiscardLabel: '&times;'
+    formDiscardLabel: '&times;',
+    formAddLabel:     '&times;',
+    formAddListLabel: '&times;'
   }
 };
 
@@ -806,6 +811,10 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.getIconButton('formSaveLabel'),
       '</a>'
     );
+
+    template.push('<a href="#" class="medium-editor-toolbar-add-item">',
+      this.getIconButton('formAddLabel'),
+      '</a>');
 
     template.push('<a href="#" class="medium-editor-toolbar-add-item">',
       this.getIconButton('formAddListLabel'),
