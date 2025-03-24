@@ -263,7 +263,7 @@
     position: relative;
   }
   .glyphicon-remove-circle {
-    color: #b32e22;
+    color: rgb(197, 94, 93);
     font-size: 18px;
     display: inline-block;
     top: 3px;
@@ -335,13 +335,13 @@
       padding: 20px;
     }
     .cancel-recording {
-      color: #C51216;
+      color: rgb(197, 94, 93);
       .btn.btn-default {
-        border-color: #C51216;
-        color: #C51216;
+        border-color: rgb(197, 94, 93);
+        color: rgb(197, 94, 93);
       }
       .fa {
-        color: #C51216;
+        color: rgb(197, 94, 93);
       }
     }
     /*br {

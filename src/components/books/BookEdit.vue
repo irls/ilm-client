@@ -2985,9 +2985,9 @@ export default {
         border: none;
         height: 32px;
         background-color: white;
-        color: red;
+        color: rgb(197, 94, 93);
         i.fa, i.glyphicon-remove-circle {
-          color: red;
+          color: rgb(197, 94, 93);
         }
         font-size: 14px;
         padding: 6px 12px 6px 12px;
@@ -2995,6 +2995,7 @@ export default {
         i.cancel-align-caption {
           vertical-align: top;
           font-style: normal;
+          color: rgb(197, 94, 93);
         }
     }
   }
