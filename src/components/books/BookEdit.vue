@@ -2972,11 +2972,12 @@ export default {
   }
   .cancel-align-wrapper {
     margin-left: 17px;
+    height: 32px;
+    display: flex;
+    align-items: center;
 
     span.blocks-counter {
       display: inline-block;
-      position: relative;
-      top: -4px;
     }
 
     button.cancel-align {
@@ -2986,11 +2987,14 @@ export default {
         height: 32px;
         background-color: white;
         color: rgb(197, 94, 93);
-        i.fa, i.glyphicon-remove-circle {
-          color: rgb(197, 94, 93);
-        }
         font-size: 14px;
         padding: 6px 12px 6px 12px;
+
+        i.fa,
+        i.glyphicon-remove-circle {
+          color: rgb(197, 94, 93);
+          padding-top: 1px;
+        }
 
         i.cancel-align-caption {
           vertical-align: top;
