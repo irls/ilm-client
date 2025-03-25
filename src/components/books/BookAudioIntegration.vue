@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div v-if="hasLocks('align')" class="cancel-align-wrapper">
+    <div class="cancel-align-wrapper">
       <span class="blocks-counter">Aligning {{currentAlignCounter}} block(s)</span>
-      <button class="cancel-align" v-on:click="cancelAlign(true)"><!-- title="Cancel aligning">--><!--<i class="fa fa-times-circle-o"></i>--><i class="glyphicon glyphicon-remove-circle"></i><i class="cancel-align-caption">  Cancel all</i></button>
+      <button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)"><!-- title="Cancel aligning">--><!--<i class="fa fa-times-circle-o"></i>--><i class="glyphicon glyphicon-remove-circle"></i><i class="cancel-align-caption">  Cancel all</i></button>
 
     </div>
     <Accordion :activeIndex.sync="activeTabIndex" class="audio-integration-accordion" v-on:tab-open="checkTabOpen">
@@ -1603,6 +1603,9 @@
       .audiofile {
         list-style-type: none;
         padding: 2px;
+        display: flex;
+        justify-content: space-between;
+
         &.-selected {
             background-color: #d0e9ff;
         }
@@ -1618,9 +1621,14 @@
         }
         span {
           display: inline-block;
-          padding: 0px 2px;
+          /*padding: 0px 2px;*/
           display: inline-block;
           width: 100%;
+
+          &.checkmark {
+            top: 2px;
+            left: 0;
+          }
         }
         .audiofile-info {
           display: inline-block;
@@ -1682,6 +1690,10 @@
               margin-left: -56px;
               min-width: 97px;
               max-width: 97px;
+          }
+          .checkbox-container {
+            display: flex;
+            padding-top: 0px;
           }
         }
         button {

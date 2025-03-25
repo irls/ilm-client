@@ -659,11 +659,11 @@
           vertical-align: middle;
           padding: 8px 5px;
           &[disabled] {
-            opacity: 0.4;
+            opacity: 0.5;
             cursor: not-allowed;
           }
           &.align-blocks-gray:not([disabled]) {
-            opacity: 0.7;
+            /*opacity: 0.7;*/
           }
         }
         .cancel-align {
