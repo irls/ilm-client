@@ -287,7 +287,7 @@
   background-size:37px;
 }
 .recording-in-progress .text{
-  color: #C51216;
+  color: #c55e5d;
   padding-left: 5px;
   top: -13px;
   position: relative;
