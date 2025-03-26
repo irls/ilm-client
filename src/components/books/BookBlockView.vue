@@ -1131,7 +1131,8 @@ Save or discard your changes to continue editing`,
                 audiosrc_ver: this.block.audiosrc_ver,
                 manual_boundaries: this.block.manual_boundaries,
                 audiosrc_original: this.block.audiosrc_original || null,
-                recording_pauses: this.block.recording_pauses
+                recording_pauses: this.block.recording_pauses,
+                audio_silences: this.block.audio_silences || []
               }
             ];
           }
@@ -4478,17 +4479,23 @@ Save text changes and realign the Block?`,
         return null;
       },
       highlightSuspiciousWords() {
+        if (this.mode === "edit" || (this.mode === "narrate" && this.block.voicework === "narration")) {
+          if (this.$refs.blocks) {
+          this.$refs.blocks.forEach((blk, blkIdx) => {
+            if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
+              if (this.mode === "edit") {
+                this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent, this.blockParts[blkIdx].audio_silences);
+              } else {
+                this.suspiciousWordsHighlight.addElementSuspiciousSilenceHighlight(blk.$refs.blockContent, this.blockParts[blkIdx].audio_silences);
+              }
+            }
+          });
+        }
+        }
         if (this.mode !== 'edit') {
           return;
         }
         let suspiciousTextRegex = this.suspiciousWordsHighlight.getSuspiciousTextRegex();
-        if (this.$refs.blocks) {
-          this.$refs.blocks.forEach(blk => {
-            if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
-              this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent);
-            }
-          });
-        }
         if (this.block.footnotes.length > 0) {
           this.block.footnotes.forEach((footnote, ftnIdx) => {
             if (this.$refs['footnoteContent_' + ftnIdx] && this.$refs['footnoteContent_' + ftnIdx][0]) {
@@ -4973,14 +4980,6 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
-      },
-      'block.content': {
-        handler(val, oldval) {
-          if (!oldval) {
-
-          }
-        },
-        deep: true
       }
 
   }
@@ -6045,6 +6044,15 @@ div.-content.editing  div.content-wrap {
   border-color: #ded056 !important;
   box-shadow: 0 0 10px #ded056 !important;
   background: #ffffe1 !important;
+  w.suspicious-silence {
+    background: linear-gradient(
+        transparent,
+        transparent 30%,
+        rgba(255, 153, 0, 0.4) 55%,
+        transparent 80%,
+        transparent
+      );
+  }
 }
 
 .blocked-editing {

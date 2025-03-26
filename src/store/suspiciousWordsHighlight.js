@@ -3,6 +3,7 @@
 let swhInstance;
 
 const SUSPICIOUS_WORD_CLASS = 'suspicious-word';
+const SUSPICIOUS_SILENCE_CLASS = "suspicious-silence";
 let element = document.createElement('span');
 
 class SuspiciousWordsHighlight {
@@ -18,8 +19,8 @@ class SuspiciousWordsHighlight {
       suspiciousCharacters = `\\${suspiciousCharacters}`;
     }
     this.suspiciousTextRegex = new RegExp(`[${suspiciousCharacters}]`, 'im');
-    this.clearRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}`, 'img');
-    this.checkRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}`, 'im');
+    this.clearRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS|SUSPICIOUS_SILENCE_CLASS}`, 'img');
+    this.checkRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS|SUSPICIOUS_SILENCE_CLASS}`, 'im');
   }
   
   getSuspiciousTextRegex() {
@@ -70,6 +71,9 @@ class SuspiciousWordsHighlight {
     if (block.description) {
       block.description = this.addHighlight(block.description);
     }
+    if (Array.isArray(block.audio_silences) && block.audio_silences.length > 0) {
+      block.content = this.addSuspiciousSilenceHighlight(block.content, block.audio_silences);
+    }
     return block;
   }
   
@@ -81,8 +85,13 @@ class SuspiciousWordsHighlight {
     element.innerHTML = text;
     return this.addElementHighlight(element).innerHTML;
   }
+
+  addSuspiciousSilenceHighlight(text, silences) {
+    element.innerHTML = text;
+    return this.addElementSuspiciousSilenceHighlight(element, silences).innerHTML;
+  }
   
-  addElementHighlight(el) {
+  addElementHighlight(el, silences = []) {
     if (this.suspiciousTextRegex.test(el.innerText)) {
       el.querySelectorAll('w').forEach(word => {
         if (word.innerText && this.suspiciousTextRegex.test(word.innerText)) {
@@ -111,6 +120,29 @@ class SuspiciousWordsHighlight {
         }
       });
     }
+    if (Array.isArray(silences) && silences.length > 0) {
+      this.addElementSuspiciousSilenceHighlight(el, silences);
+    }
+    return el;
+  }
+
+  addElementSuspiciousSilenceHighlight(el, silences) {
+    el.querySelectorAll('w').forEach(wordEl => {
+      //console.log(wordEl.dataset, silences);
+      if (wordEl.dataset.map) {
+        let map = wordEl.dataset.map.split(',');
+        if (map && map.length === 2) {
+          map[0] = parseInt(map[0]);
+          map[1] = parseInt(map[1]) + map[0];
+          let silence = silences.find(sl => {
+            return (sl.start <= map[0] && sl.end >= map[0]) || (sl.start <= map[1] && sl.end >= map[1]) || (sl.start >= map[0] && sl.end <= map[1]);
+          });
+          if (silence) {
+            wordEl.classList.add(SUSPICIOUS_SILENCE_CLASS);
+          }
+        }
+      }
+    });
     return el;
   }
   

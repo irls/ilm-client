@@ -20,6 +20,7 @@ import Settings from '../components/Settings'
 import TestAudioConvert from '../components/audio/TestAudioConvert';
 import CalculateWords from '../components/audio/CalculateWords';
 import Authors from '../components/authors/Authors';
+import CalculateLevels from "../components/audio/CalculateLevels.vue";
 
 
 Vue.use(Router)
@@ -157,6 +158,10 @@ export default new Router({
     {
       path: '/calculate_words',
       component: CalculateWords
+    },
+    {
+      path: '/calculate_levels',
+      component: CalculateLevels
     },
     { path: '*', redirect: '/books' }
   ]
