@@ -411,7 +411,7 @@
             });
           } else {
             this.recordingPauses = block.recording_pauses || [];
-            this.audioSilences = block.audio_silences || [];
+            this.audioSilences = block.audio_silences ? _.cloneDeep(block.audio_silences) : [];
           }
           let closingId = this.audiofileId;
           if (bookAudiofile.id) {
@@ -947,7 +947,6 @@
           }
         },
         onEmittedSelect (r_start, r_end) {
-          console.log('on select', r_start, r_end);
           let start = this._round(r_start, 2);
           let end = this._round(r_end, 2);
           let is_single_cursor = end - start == 0;
@@ -1485,12 +1484,16 @@
               this.recordingPauses[idx]+= this.silenceLength * 1000;
             }
           });
+          let maxAudioPosition = parseInt(this.audiosourceEditor.duration * 1000);
           this.audioSilences.forEach((silence, idx) => {
             if (silence.start > time * 1000) {
               this.audioSilences[idx].start+= this.silenceLength * 1000;
             }
             if (silence.end > time * 1000) {
               this.audioSilences[idx].end+= this.silenceLength * 1000;
+              if (this.audioSilences[idx].end > maxAudioPosition) {
+                this.audioSilences[idx].end = maxAudioPosition;
+              }
             }
           });
           this.fixMap();
@@ -1993,7 +1996,7 @@
               let selectionEnd = Math.round(this.selection.end * 1000);
               this._addHistoryLocal('erase', range, this.selection.start, this.selection.end, {
                 recording_pauses: [...this.recordingPauses],
-                audio_silences: [...this.audioSilences]
+                audio_silences: _.cloneDeep(this.audioSilences)
               });
               let changedPauses = [];
               this.recordingPauses.forEach(pause => {
@@ -2219,14 +2222,11 @@
                   setLeft = this._round(this.selection.start / pixelsPerSecond - 1, 1);
                 }
                 //this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                console.log('show borders:', setRight, setLeft);
                 if (setLeft !== null) {
-                  console.log('show borders: left');
                   //this.dragLeft.stop();
                   this.setDragLeftPosition(setLeft);
                 }
                 if (setRight !== null) {
-                  console.log('show borders: right');
                   this.setDragRightPosition(setRight);
                 }
                 this.selectionBordersVisible = true;
@@ -2250,7 +2250,6 @@
             //$('[id="resize-selection-left"]').css('left', setLeft);
             this.dragLeft.element.style.left = position !== null ? `${position}px` : '0px';
             this.dragLeft.element.style.display = position !== null ? 'block' : 'none';
-            console.log('left set', position);
           }
         },
         setDragRightPosition(position) {
@@ -2259,7 +2258,6 @@
             //$('[id="resize-selection-right"]').css('left', setRight);
             this.dragRight.element.style.left = position !== null ? `${position}px` : '0px';
             this.dragRight.element.style.display = position !== null ? 'block' : 'none';
-            console.log('right set', position);
           }
         },
         _scrollToCursor() {
