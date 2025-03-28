@@ -662,12 +662,14 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.hideToolbarDefaultActions();
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
+
+    console.log(`${__filename.substr(-30)}:showForm:this.value: `, this.value);
   },
 
-  doSuggestSave: function () {
+  doSuggestSave: function (value = false) {
     this.base.restoreSelection();
 
-    let value = this.suggestFormInput.value.trim();
+    value = value || this.suggestFormInput.value.trim();
 //     if (value.length) {
       let node = document.createElement(this.wrapNode);
       node.dataset.suggestion = value;
@@ -730,6 +732,56 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.base.checkSelection();
   },
 
+  compareSelectedWordWithSuggestionsList: function() {
+    const suggestionsList = this.getEditorOption('suggestionsList')();
+    if (!suggestionsList || !Array.isArray(suggestionsList)) {
+      return false;
+    }
+    console.log(`:suggestionsList: `, suggestionsList);
+
+    //this.base.restoreSelection();
+    if (window.getSelection) {
+      const sel = window.getSelection();
+      const startNode = sel.anchorNode;
+      const endNode = sel.focusNode;
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0).cloneContents();
+        // if ((startNode.nodeName.toLowerCase() === this.wrapNode && startNode.dataset.hasOwnProperty('suggestion'))
+        //   || (endNode.nodeName.toLowerCase() === this.wrapNode && endNode.dataset.hasOwnProperty('suggestion'))) {
+        if (this.value) {
+          // isAlreadyApplied
+          console.log(`isAlreadyApplied::: `);
+          return false;
+        }
+
+        const div = document.createElement('div');
+        div.appendChild(range);
+        let innerHTML = div.innerHTML;
+        innerHTML = innerHTML.replace(/<sup data-idx[^>]*>.*?<\/sup>/mig, '');
+
+        div.innerHTML = innerHTML;
+        const textContent = div.textContent;
+
+        const foundSuggestion = suggestionsList.find((sugg)=>{
+          return sugg.text === textContent;
+        })
+
+        console.log(`foundSuggestion.suggestion::: `, foundSuggestion.suggestion);
+
+        if (foundSuggestion) {
+          this.doSuggestSave(foundSuggestion.suggestion);
+          return true;
+        }
+
+        console.log(`foundSuggestion: `, foundSuggestion);
+
+      }
+    }
+
+    return false;
+
+  },
+
   triggerEvent: function(el, type) {
     if ('createEvent' in document) {
       // modern browsers, IE9+
@@ -748,7 +800,10 @@ const SuggestButton = MediumEditor.Extension.extend({
     event.preventDefault();
     event.stopPropagation();
 
-    this.showForm({});
+    console.log(`${__filename.substr(-30)}::handleClick: `);
+    if (!this.compareSelectedWordWithSuggestionsList()) {
+      this.showForm({});
+    }
   },
 
   handleHideToolbar: function () {
@@ -850,6 +905,7 @@ const SuggestButton = MediumEditor.Extension.extend({
   },
 
   onClick: function (ev) {
+    console.log(`${__filename.substr(-30)}:onClick:function:textContent: `, ev.target.textContent);
     this.suggestFormInput.value = ev.target.textContent;
   },
 

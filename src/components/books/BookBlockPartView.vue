@@ -818,9 +818,12 @@ export default {
           storeListById: 'storeListById',
           blockAudiosrcConfig: 'blockAudiosrcConfig'
       }),
-    ...mapGetters('uploadImage', {
-      tempImage: 'file'
-    }),
+      ...mapGetters('uploadImage', {
+        tempImage: 'file'
+      }),
+      ...mapGetters('suggestionsModule', [
+        'suggestions'
+      ]),
       getBlockLang: {
         cache: false,
         get() {
@@ -1293,7 +1296,8 @@ export default {
                 disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
                 spellcheck: false,
-                keyboardCommands: keyboardCommands
+                keyboardCommands: keyboardCommands,
+                suggestionsList: this.suggestions
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log('editableInput', event, target);
@@ -1356,7 +1360,8 @@ export default {
                 extensions: extensions,
                 disableEditing: true,
                 imageDragging: false,
-                keyboardCommands: keyboardCommands
+                keyboardCommands: keyboardCommands,
+                suggestionsList: this.suggestions
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
