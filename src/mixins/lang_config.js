@@ -8,7 +8,7 @@ import API_CONFIG  from './api_config.js'
 function getLanguages(){
   var result = null;
   var xmlhttp = new XMLHttpRequest();
-  let filePath = API_CONFIG.data().API_URL + '/settings/languages';
+  let filePath = API_CONFIG.data().API_URL + 'settings/languages';
   xmlhttp.open("GET", filePath, false);
   xmlhttp.send();
   if (xmlhttp.status==200) {
