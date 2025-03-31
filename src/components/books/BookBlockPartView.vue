@@ -3576,6 +3576,9 @@ Save text changes and realign the Block?`,
         this.blockAudio.map = this.blockContent();
         this.blockAudio.src = this.blockAudiosrc('m4a');
         //this.showPinnedInText();
+        Vue.nextTick(() => {
+          this.$parent.highlightSuspiciousWords();
+        });
       },
       isSplitPointAllowed() {
         /*if (this.isSplittedBlock) {
@@ -4200,7 +4203,7 @@ Join subblocks?`,
   },
   watch: {
       'blockPart.content': {
-        handler(val) {
+        handler(val, oldval) {
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
           let oldW = [];// save old content to apply temporary classes to new content
           if (this.$refs.blockContent && this.$refs.blockContent.innerHTML && this.$refs.blockContent.innerHTML.indexOf(`class="selected"`) !== -1) {
@@ -4222,6 +4225,11 @@ Join subblocks?`,
                 }
               }
             });
+            let inSearch = val.indexOf('data-in-search') !== -1;
+            let wasInSearch = oldval.indexOf('data-in-search') !== -1;
+            if ((inSearch && !wasInSearch) || (wasInSearch && !inSearch) || (inSearch && wasInSearch)) {
+              this.$parent.highlightSuspiciousWords();
+            }
           });
         }
       },

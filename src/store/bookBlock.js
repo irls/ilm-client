@@ -49,7 +49,8 @@ let defBlock = [
   'aligned_wpm',
   'tts_voice',
   'tts_voice_data',
-  'recording_pauses'
+  'recording_pauses',
+  'audio_silences'
 ];
 
 let BlockTypes = {
@@ -387,6 +388,7 @@ class BookBlock {
     }*/
     this.audiocatalog_map = init.audiocatalog_map || {};
     this.html_errors = init.html_errors || {};
+    this.audio_silences = init.audio_silences || [];
   }
 
   clean() {
@@ -1372,6 +1374,19 @@ class BookBlock {
       return this.recording_pauses;
     } else {
       return this.parts[partIdx].recording_pauses;
+    }
+  }
+
+  getPartAudioSilences(partIdx) {
+    if (
+      !(
+        Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined'
+      ) &&
+      partIdx === 0
+    ) {
+      return this.audio_silences;
+    } else {
+      return this.parts[partIdx].audio_silences;
     }
   }
 }

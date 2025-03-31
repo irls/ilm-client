@@ -2970,16 +2970,49 @@ export default {
       border-radius: 50%;
     }
   }
+  .cancel-align-wrapper {
+    margin-left: 17px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+
+    span.blocks-counter {
+      display: inline-block;
+    }
+
+    button.cancel-align {
+        /*border: 1px solid red;*/
+        /*border-radius: 8px;*/
+        border: none;
+        height: 32px;
+        background-color: white;
+        color: rgb(197, 94, 93);
+        font-size: 14px;
+        padding: 6px 12px 6px 12px;
+
+        i.fa,
+        i.glyphicon-remove-circle {
+          color: rgb(197, 94, 93);
+          padding-top: 1px;
+        }
+
+        i.cancel-align-caption {
+          vertical-align: top;
+          font-style: normal;
+          color: rgb(197, 94, 93);
+        }
+    }
+  }
 
   .cancel-align {
-      border: 1px solid red;
-      border-radius: 8px;
-      background-color: white;
-      i.fa {
-          color: red;
-      }
-      font-size: 12px;
-      padding: 6px 12px;
+    border: 1px solid red;
+    border-radius: 8px;
+    background-color: white;
+    i.fa {
+      color: red;
+    }
+    font-size: 12px;
+    padding: 6px 12px;
   }
 
 </style>

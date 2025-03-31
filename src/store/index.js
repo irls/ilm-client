@@ -25,6 +25,7 @@ import genreModule from './modules/genre';
 import publishModule from './modules/publish';
 import authorsMapModule from './modules/authorsMap';
 import authorsModule from './modules/authors';
+import calculateLevelsModule from "./modules/calculateLevels";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -93,7 +94,8 @@ export const store = new Vuex.Store({
     genreModule,
     publishModule,
     authorsMapModule,
-    authorsModule
+    authorsModule,
+    calculateLevelsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -4676,6 +4678,7 @@ export const store = new Vuex.Store({
         manual_boundaries: block.getPartManualBoundaries(alignBlock.partIdx || 0),
         mode: state.bookMode,
         recording_pauses: block.getPartRecordingPauses(alignBlock.partIdx || 0),
+        audio_silences: block.getPartAudioSilences(alignBlock.partIdx || 0),
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {

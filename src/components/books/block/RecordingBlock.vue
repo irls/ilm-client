@@ -10,7 +10,7 @@
 
         <div class="table-cell cancel-recording -left">
           <span class="btn btn-default" @click="_cancelRecording">
-            <span class="icon"></span>
+            <!--<span class="icon"></span>--><i class="glyphicon glyphicon-remove-circle"></i>
             <span class="text">
             Cancel
             </span>
@@ -18,9 +18,8 @@
         </div>
 
         <div class="table-cell pause-recording -left"
-          @click="_pauseRecording"
-          v-if="!isPaused"
-          v-on:mousedown="_pauseMousedown">
+          @mousedown="_pauseRecording"
+          v-if="!isPaused">
             <span class="btn btn-default">
               <span class="icon"></span>
               <span class="text">
@@ -29,7 +28,7 @@
             </span>
         </div>
 
-        <div class="table-cell resume-recording -left" @click="_resumeRecording" v-else>
+        <div class="table-cell resume-recording -left" @mouseup="_resumeRecording" v-else>
             <span class="btn btn-default">
               <span class="icon"></span>
 
@@ -86,7 +85,8 @@
     data() {
       return {
         isPaused: false,
-        editor: null
+        editor: null,
+        pauseRecordingProgress: false
       }
     },
     props: ['text', 'cancelRecording', 'stopRecording', 'pauseRecording', 'resumeRecording', 'lang', 'pauseMousedown', 'recordingCheck'],
@@ -103,11 +103,19 @@
         this.toggleSpaceClickControl(false);
         this.$emit('close');
       },
-      _pauseRecording() {
+      _pauseRecording(delay = true) {
         this.isPaused = true;
+        if (delay) {
+          this.pauseRecordingProgress = true;
+        }
+        this._pauseMousedown(null, true);
         this.pauseRecording();
       },
       _resumeRecording() {
+        if (this.pauseRecordingProgress) {
+          this.pauseRecordingProgress = false;
+          return {};
+        }
         this.isPaused = false;
         this.resumeRecording();
       },
@@ -126,8 +134,8 @@
           if (this.isPaused) {
             this._resumeRecording();
           } else {
-            this._pauseMousedown(null, false);
-            this._pauseRecording();
+            //this._pauseMousedown(null, false);
+            this._pauseRecording(false);
           }
         }
       }
@@ -177,6 +185,7 @@
 
 .cancel-recording .btn {
   height: 38px;
+  padding-top: 5px;
 }
 
 .cancel-recording i {
@@ -200,10 +209,6 @@
   padding-left: 15px;
 }
 .resume-recording .btn{
-  height: 38px;
-  padding-top: 0px;
-}
-.cancel-recording .btn{
   height: 38px;
   padding-top: 0px;
 }
@@ -247,14 +252,23 @@
   //border-radius: 0px;
   position: relative;
 }
-.cancel-recording .icon{
-  height: 24px;
-  width: 24px;
-  display: inline-block;
-  top: 3px;
-  background-image: url(/static/RecordingBlock/cancel.png);
-  //border-radius: 0px;
-  position: relative;
+.cancel-recording {
+ .icon{
+    height: 24px;
+    width: 24px;
+    display: inline-block;
+    top: 3px;
+    background-image: url(/static/RecordingBlock/cancel.png);
+    //border-radius: 0px;
+    position: relative;
+  }
+  .glyphicon-remove-circle {
+    color: rgb(197, 94, 93);
+    font-size: 18px;
+    display: inline-block;
+    top: 3px;
+    position: relative;
+  }
 }
 .recording-in-progress .icon{
   height: 37px;
@@ -281,7 +295,7 @@
   background-size:37px;
 }
 .recording-in-progress .text{
-  color: #C51216;
+  color: #c55e5d;
   padding-left: 5px;
   top: -13px;
   position: relative;
@@ -321,13 +335,13 @@
       padding: 20px;
     }
     .cancel-recording {
-      color: #C51216;
+      color: rgb(197, 94, 93);
       .btn.btn-default {
-        border-color: #C51216;
-        color: #C51216;
+        border-color: rgb(197, 94, 93);
+        color: rgb(197, 94, 93);
       }
       .fa {
-        color: #C51216;
+        color: rgb(197, 94, 93);
       }
     }
     /*br {
