@@ -116,8 +116,9 @@
   </div>
 
   <!-- Import Books Modal Popup -->
-  <BookImport v-if="showImportBooksModal"
-  @close_modal="importBooksModalClose" />
+  <!--<BookImport v-if="showImportBooksModal"
+  @close_modal="importBooksModalClose" />-->
+
   <TaskAddModal :show="taskAddModalActive"
   @closed="taskAddModalClose" />
 

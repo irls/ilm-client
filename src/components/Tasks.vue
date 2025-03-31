@@ -15,14 +15,14 @@
           </div>
         </div>
       </div>
-      <task-add-modal
-        :show="taskAddModalActive"
-        @closed="taskAddModalClose">
-      </task-add-modal>
+
       <!-- Import Books Modal Popup -->
-      <BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"
+      <!--<BookImport v-if="show_import_book_modal" :multiple="false" @close_modal="importBookClose"
                   :importTaskId="import_book_task_id"
-                  :bookId="import_book_id" />
+                  :bookId="import_book_id" />-->
+
+      <TaskAddModal :show="taskAddModalActive"
+      @closed="taskAddModalClose" />
 
       <div class="overflow-wrapper">
 
@@ -193,7 +193,6 @@ export default {
       this.taskAddModalActive = false
       if (create) {
         this.$store.dispatch('tc_loadBookTask')
-        //this.getTasks()
       }
     },
     importBook(task) {
@@ -205,18 +204,18 @@ export default {
       this.import_book = book_meta
       this.import_audio_task = task
       this.task_audiobook = {}
-      
+
       let uploadInfo = {};
-      
+
       this.$modal.show(AudioImport, {
           book: book_meta,
           uploadInfo: uploadInfo
-        }, 
+        },
         {
           height: 'auto',
           width: '590px',
           clickToClose: false
-        }, 
+        },
         {
           'closed': () => {
             this.importAudioClose();
