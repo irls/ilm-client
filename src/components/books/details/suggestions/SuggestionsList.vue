@@ -163,9 +163,11 @@
         this.addSuggestionMode = true;
       },
       onAddEvent(suggestionItem = {}) {
-        this.edit_suggestion.text = suggestionItem.text;
-        this.edit_suggestion.suggestion = suggestionItem.suggestion;
-        this.addSuggestionMode = true;
+        if (this.isActive) {
+          this.edit_suggestion.text = suggestionItem.text;
+          this.edit_suggestion.suggestion = suggestionItem.suggestion;
+          this.addSuggestionMode = true;
+        }
       },
       setEditSuggestion(suggestion) {
         //this.addSuggestionMode = false;

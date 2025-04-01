@@ -741,8 +741,8 @@ const SuggestButton = MediumEditor.Extension.extend({
     console.log(`doAddListItem::: `, this.selectedTextContent);
     if (this.onAddListItemCallback && typeof this.onAddListItemCallback === 'function') {
       this.onAddListItemCallback({
-        suggestion: this.selectedTextContent,
-        text: this.value || this.suggestFormInput.value.trim()
+        suggestion: this.value || this.suggestFormInput.value.trim(),
+        text: this.selectedTextContent
       });
     }
   },
@@ -840,6 +840,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     event.preventDefault();
     this.destroy();
     this.doAddListItem();
+    //this.base.restoreSelection();
   },
 
   handleRemoveClick: function (event) {
