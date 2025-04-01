@@ -1297,7 +1297,11 @@ export default {
                 imageDragging: false,
                 spellcheck: false,
                 keyboardCommands: keyboardCommands,
-                suggestionsList: this.suggestions
+                suggestionsList: this.suggestions,
+                onAddListItemCallback: (suggestionItem)=>{
+                  console.log(`suggestionItem::: `, suggestionItem);
+                  this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                }
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log('editableInput', event, target);
@@ -1361,7 +1365,11 @@ export default {
                 disableEditing: true,
                 imageDragging: false,
                 keyboardCommands: keyboardCommands,
-                suggestionsList: this.suggestions
+                suggestionsList: this.suggestions,
+                onAddListItemCallback: (suggestionItem)=>{
+                  console.log(`suggestionItem::: `, suggestionItem);
+                  this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                }
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});

@@ -3,14 +3,14 @@ require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
 
 const customFormAddListLabel = `<style>
-  .medium-editor-toolbar-form .medium-editor-toolbar-add-item i.customFormAddListLabel {
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel {
     height: 30px; width: 30px;
     display: inline-block;
     position: relative; top: 9px; left: 1px;
     background-size: contain;
     background-image: url(/static/MediumEditorButtons/playlist-add-white-svgrepo-com.svg);
   }
-  .medium-editor-toolbar-form .medium-editor-toolbar-add-item i.customFormAddListLabel:hover {
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel:hover {
     background-image: url(/static/MediumEditorButtons/playlist-add-gray-svgrepo-com.svg);
   }
 </style>
@@ -22,8 +22,8 @@ const iconButtonsTmpl = {
     formCloseLabel:   '<i class="fa fa-times"></i>',
     formRemoveLabel:  '<i class="fa fa-trash"></i>',
     formDiscardLabel: '<i class="fa fa-times-circle-o"></i>',
-    formAddLabel:     '<i class="fa fa-times-circle-o"></i>',
-    formAddListLabel: '<i class="fa fa-times-circle-o"></i>'
+    formAddLabel:     '<i class="fa fa-check"></i>',
+    formAddListLabel: '<i class="fa fa-check"></i>'
   },
   'glyphicon': {
     formSaveLabel:    '<i class="glyphicon glyphicon-ok-circle"></i>',
@@ -594,6 +594,8 @@ const SuggestButton = MediumEditor.Extension.extend({
   value: '',
   hasProp: false,
   iconButtonsStyle: 'glyphicon',
+  selectedTextContent: '',
+  onAddListItemCallback: null,
 
   wrapNode: 'sg',
 
@@ -606,6 +608,8 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     this.on(this.button, 'click', this.handleClick.bind(this));
     this.subscribe('hideToolbar', this.handleHideToolbar.bind(this));
+
+    this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || null;
   },
 
   getForm: function () {
@@ -640,6 +644,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     }
     this.value = '';
     this.hasProp = false;
+    this.selectedTextContent = '';
     return false;
   },
 
@@ -732,6 +737,16 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.base.checkSelection();
   },
 
+  doAddListItem: function (value = false) {
+    console.log(`doAddListItem::: `, this.selectedTextContent);
+    if (this.onAddListItemCallback && typeof this.onAddListItemCallback === 'function') {
+      this.onAddListItemCallback({
+        suggestion: this.selectedTextContent,
+        text: this.value || this.suggestFormInput.value.trim()
+      });
+    }
+  },
+
   compareSelectedWordWithSuggestionsList: function() {
     const suggestionsList = this.getEditorOption('suggestionsList')();
     if (!suggestionsList || !Array.isArray(suggestionsList)) {
@@ -746,32 +761,35 @@ const SuggestButton = MediumEditor.Extension.extend({
       const endNode = sel.focusNode;
       if (sel.rangeCount) {
         const range = sel.getRangeAt(0).cloneContents();
-        // if ((startNode.nodeName.toLowerCase() === this.wrapNode && startNode.dataset.hasOwnProperty('suggestion'))
-        //   || (endNode.nodeName.toLowerCase() === this.wrapNode && endNode.dataset.hasOwnProperty('suggestion'))) {
-        if (this.value) {
+        if (this.hasProp) {
           // isAlreadyApplied
-          console.log(`isAlreadyApplied::: `);
+          console.log(`isAlreadyApplied::: `, this.hasProp);
           return false;
         }
 
         const div = document.createElement('div');
         div.appendChild(range);
+
+        //-- Cleanup selected html -- { --//
         let innerHTML = div.innerHTML;
         innerHTML = innerHTML.replace(/<sup data-idx[^>]*>.*?<\/sup>/mig, '');
-
         div.innerHTML = innerHTML;
-        const textContent = div.textContent;
+        //-- } -- end -- Cleanup selected html --//
+
+        const textContent = div.textContent.trim().toLowerCase();
 
         const foundSuggestion = suggestionsList.find((sugg)=>{
-          return sugg.text === textContent;
+          return sugg.text.trim().toLowerCase() === textContent;
         })
 
-        console.log(`foundSuggestion.suggestion::: `, foundSuggestion.suggestion);
+        console.log(`foundSuggestion.suggestion::: `, foundSuggestion?.suggestion);
 
         if (foundSuggestion) {
           this.doSuggestSave(foundSuggestion.suggestion);
           return true;
         }
+
+        this.selectedTextContent = textContent;
 
         console.log(`foundSuggestion: `, foundSuggestion);
 
@@ -816,6 +834,12 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.doSuggestSave();
     this.showToolbarDefaultActions();
     this.base.checkContentChanged();
+  },
+
+  handleAddListClick: function (event) {
+    event.preventDefault();
+    this.destroy();
+    this.doAddListItem();
   },
 
   handleRemoveClick: function (event) {
@@ -867,11 +891,7 @@ const SuggestButton = MediumEditor.Extension.extend({
       '</a>'
     );
 
-    template.push('<a href="#" class="medium-editor-toolbar-add-item">',
-      this.getIconButton('formAddLabel'),
-      '</a>');
-
-    template.push('<a href="#" class="medium-editor-toolbar-add-item">',
+    template.push('<a href="#" class="medium-editor-toolbar-add-list-item">',
       this.getIconButton('formAddListLabel'),
       '</a>');
 
@@ -895,13 +915,15 @@ const SuggestButton = MediumEditor.Extension.extend({
     toolbar.getToolbarElement().appendChild(this.getForm());
 
     this.suggestFormInput = this.getForm().querySelector('.medium-editor-toolbar-input');
-    var close = this.getForm().querySelector('.medium-editor-toolbar-close'),
-        save = this.getForm().querySelector('.medium-editor-toolbar-save'),
-        remove = this.getForm().querySelector('.medium-editor-toolbar-remove')
+    var close =   this.getForm().querySelector('.medium-editor-toolbar-close'),
+        save =    this.getForm().querySelector('.medium-editor-toolbar-save'),
+        remove =  this.getForm().querySelector('.medium-editor-toolbar-remove'),
+        addList = this.getForm().querySelector('.medium-editor-toolbar-add-list-item')
 
-    if (close) this.on(close, 'click', this.handleCloseClick.bind(this));
-    if (save) this.on(save, 'click', this.handleSaveClick.bind(this), true);
-    if (remove) this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+    if (close)   this.on(close, 'click', this.handleCloseClick.bind(this));
+    if (save)    this.on(save, 'click', this.handleSaveClick.bind(this), true);
+    if (remove)  this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+    if (addList) this.on(addList, 'click', this.handleAddListClick.bind(this));
   },
 
   onClick: function (ev) {
