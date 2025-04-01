@@ -546,7 +546,7 @@
             </div>
         </vue-tab>
         <vue-tab title="Suggestions" id="suggestions" 
-          :disabled="!tc_displayAudiointegrationTab()">
+          :disabled="!tc_displaySuggestionsTab()">
           <Suggestions 
           :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
         </vue-tab>

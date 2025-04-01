@@ -2,14 +2,19 @@
   <div class="suggestions-list-options">
     <div class="suggestions-header">
       <div class="apply-suggestion">
-        <button class="btn btn-primary" :disabled="applySuggestionData.total === 0" v-on:click="startApplySuggestions(true)">Apply</button>
-        <template v-if="calculate_apply">
-          <div class="process-preloader"></div>
+        <template v-if="editModeAllowed">
+          <button class="btn btn-primary" :disabled="applySuggestionData.total === 0" v-on:click="startApplySuggestions(true)">Apply</button>
+          <template v-if="calculate_apply">
+            <div class="process-preloader"></div>
+          </template>
+          <template v-else>
+            {{ applySuggestionData.total }} matching block(s) in range 
+            <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
+            <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
+          </template>
         </template>
         <template v-else>
-          {{ applySuggestionData.total }} matching block(s) in range 
-          <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
-          <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
+          <button class="btn btn-primary" disabled>Apply</button>
         </template>
       </div>
       <div class="filter-suggestion">
@@ -18,7 +23,7 @@
           <i v-if="filter.length > 0" class="ico ico-clear-filter btn-inside" v-on:click="clearFilter"></i>
         </div>
         <div>
-          <button class="btn btn-primary" :disabled="!filter.length" v-on:click="add">
+          <button class="btn btn-primary" :disabled="!filter.length" v-on:click="add" v-if="editModeAllowed">
             <i class="fa fa-plus"></i>
           </button>
         </div>
@@ -40,7 +45,7 @@
             </td>
             <td :title="suggestion.suggestion">
               {{ suggestion.suggestion }}
-              <div class="suggestion-options">
+              <div class="suggestion-options" v-if="editModeAllowed">
                 <i class="fa fa-trash" v-on:click="remove(suggestion, true)"></i>
                 <i class="fa fa-pencil" v-on:click="setEditSuggestion(suggestion)"></i>
               </div>
@@ -67,6 +72,7 @@
   import lodash from "lodash";
   import { cleanFilter } from "../../../../filters/search";
   import EditSuggestion from "./EditSuggestion";
+  import access from '../../../../mixins/access.js';
 
   Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -92,6 +98,7 @@
       }
     },
     props: ['suggestions', 'category', 'isActive', 'categoryName'],
+    mixins: [access],
     components: {
       EditSuggestion
     },
@@ -137,7 +144,13 @@
         },
         cache: false
       },
-      ...mapGetters(['storeList', 'blockSelection', 'modifiedBlockids']),
+      editModeAllowed: {
+        get() {
+          return this.adminOrLibrarian || this._is('editor', true) || this._is('narrator', true);
+        },
+        cache: false
+      },
+      ...mapGetters(['storeList', 'blockSelection', 'modifiedBlockids', 'adminOrLibrarian']),
       ...mapGetters('suggestionsModule', ['applySuggestions'])
     },
     mounted() {
@@ -155,6 +168,7 @@
       },
       add() {
         this.edit_suggestion.text = this.filter;
+        this.edit_suggestion.category = this.category;
         this.addSuggestionMode = true;
       },
       setEditSuggestion(suggestion) {
@@ -214,6 +228,7 @@
         this.edit_suggestion.suggestion = '';
         this.edit_suggestion.voice_id = null;
         this.edit_suggestion.voice_example = '';
+        this.edit_suggestion.category = null;
       },
       playSuggestion(suggestion) {
         if (suggestion.voice_example) {
@@ -429,6 +444,11 @@
       z-index: 999;
       .apply-suggestion {
         padding: 10px 3px;
+        button {
+          &:disabled {
+            opacity: 0.5;
+          }
+        }
       }
       .filter-suggestion {
         padding: 10px 3px;

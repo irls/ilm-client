@@ -1,7 +1,7 @@
 <template>
   <div class="edit-suggestion">
     <div>
-      <input type="text" v-model="suggestion.text" />
+      <input type="text" v-model="suggestion.text" v-on:change="textChange" />
     </div>
     <div>
       <input type="text" v-model="suggestion.suggestion" />
@@ -24,9 +24,13 @@
 </template>
 <script>
 
+  import Vue from "vue";
   import { mapActions, mapGetters } from 'vuex';
   import lodash from 'lodash';
+  import v_modal from "vue-js-modal";
   import SelectTTSVoice from '../../../generic/SelectTTSVoice_el';
+
+  Vue.use(v_modal, { dialog: true, dynamic: true });
 
   export default {
     data() {
@@ -36,18 +40,29 @@
         audio_playing: false
       }
     },
-    props: ['suggestion'],
+    props: {
+      'suggestion': {
+        type: Object,
+        default() {
+          return {
+            text: "",
+            suggestion: ""
+          }
+        }
+      }
+    },
     components: {
       'select-tts-voice': SelectTTSVoice
     },
     computed: {
       saveDisabled: {
         get() {
-          this.suggestion.text.length === 0;
+          return this.suggestion.text.length === 0;
         },
         cache: false
       },
-      ...mapGetters('ttsModule', ['tts_voices'])
+      ...mapGetters('ttsModule', ['tts_voices']),
+      ...mapGetters('suggestionsModule', ['suggestions'])
     },
     mounted() {
       this.loadBookVoices();
@@ -128,10 +143,32 @@
         if (!this.suggestion.text) {
           return;
         }
+        let suggestion = this.suggestions(this.suggestion.category).find(sugg => {
+          return sugg.text === this.suggestion.text && sugg.id !== this.suggestion.id;
+        });
+        if (suggestion && suggestion.id) {
+          this.$modal.show("dialog", {
+            title: 'Duplicated suggestion',
+            text: `“${this.suggestion.text}“ suggestion already exists.`,
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                },
+                class: 'btn btn-primary'
+              }
+            ]
+          });
+          return;
+        }
         this.$emit('save', this.suggestion);
       },
       cancel() {
         this.$emit('cancel');
+      },
+      textChange(ev) {
+        this.$forceUpdate();
       },
       ...mapActions('ttsModule', ['getTTSVoices', 'generateExample'])
     }
@@ -176,6 +213,9 @@
       border: none;
       margin: 0px 5px;
       vertical-align: middle;
+      &:disabled {
+        opacity: 0.5;
+      }
     }
   }
 </style>
