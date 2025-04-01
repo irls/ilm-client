@@ -192,7 +192,9 @@ export default {
     taskAddModalClose(create) {
       this.taskAddModalActive = false
       if (create) {
-        this.$store.dispatch('tc_loadBookTask')
+        this.$nextTick(()=>{
+          this.$store.dispatch('tc_loadBookTask')
+        })
       }
     },
     importBook(task) {
