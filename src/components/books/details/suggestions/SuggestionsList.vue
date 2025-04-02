@@ -24,7 +24,7 @@
         </div>
         <div>
           <button class="btn btn-primary" :disabled="!filter.length" v-on:click="add" v-if="editModeAllowed">
-            <i class="fa fa-plus"></i>
+            <i class="glyphicon glyphicon-remove-circle"></i>
           </button>
         </div>
       </div>
@@ -485,15 +485,18 @@
             }
           }
           button {
+            padding-top: 6px;
+            padding-bottom: 1px;
+
             i {
               color: white;
-              font-weight: 200;
-              font-size: 14px;
-              border: 1px solid white;
-              border-radius: 15px;
-              padding: 5px;
-              width: 26px;
-              height: 26px;
+              transform: rotate(45deg);
+              font-size: 22px;
+            }
+          }
+          button:disabled {
+            i {
+              cursor: not-allowed;
             }
           }
         }
