@@ -2,6 +2,47 @@ import MediumEditor from './medium-editor/js/medium-editor.js';
 require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
 
+const customFormAddListLabel = `<style>
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel {
+    height: 30px; width: 30px;
+    display: inline-block;
+    position: relative; top: 9px; left: 1px;
+    background-size: contain;
+    background-image: url(/static/MediumEditorButtons/playlist-add-white-svgrepo-com.svg);
+  }
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel:hover {
+    background-image: url(/static/MediumEditorButtons/playlist-add-gray-svgrepo-com.svg);
+  }
+</style>
+<i class="customFormAddListLabel"></i>`;
+
+const iconButtonsTmpl = {
+  'fontawesome': {
+    formSaveLabel:    '<i class="fa fa-check"></i>',
+    formCloseLabel:   '<i class="fa fa-times"></i>',
+    formRemoveLabel:  '<i class="fa fa-trash"></i>',
+    formDiscardLabel: '<i class="fa fa-times-circle-o"></i>',
+    formAddLabel:     '<i class="fa fa-check"></i>',
+    formAddListLabel: '<i class="fa fa-check"></i>'
+  },
+  'glyphicon': {
+    formSaveLabel:    '<i class="glyphicon glyphicon-ok-circle"></i>',
+    formCloseLabel:   '<i class="glyphicon glyphicon-remove-circle"></i>',
+    formRemoveLabel:  '<i class="glyphicon glyphicon-trash"></i>',
+    formDiscardLabel: '<i class="glyphicon glyphicon-ban-circle"></i>',
+    formAddLabel:     '<i class="glyphicon glyphicon-remove-circle" style="transform: rotate(45deg);"></i>',
+    formAddListLabel:  customFormAddListLabel
+  },
+  'default': {
+    formSaveLabel:    '&#10003;',
+    formCloseLabel:   '&times;',
+    formRemoveLabel:  '&#xf056;',
+    formDiscardLabel: '&times;',
+    formAddLabel:     '&times;',
+    formAddListLabel: '&times;'
+  }
+};
+
 const QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
   quoteForm: false,
@@ -9,12 +50,9 @@ const QuoteButton = MediumEditor.Extension.extend({
   quoteFormList: false,
   value: '',
   isListOpen: false,
+  iconButtonsStyle: 'glyphicon',
 
   wrapNode: 'qq',
-
-  formSaveLabel: '&#10003;',
-  formCloseLabel: '&times;',
-  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.button = this.document.createElement('button');
@@ -37,6 +75,12 @@ const QuoteButton = MediumEditor.Extension.extend({
 
   getButton: function () {
     return this.button;
+  },
+
+  getIconButton: function (buttonName) {
+    const buttonLabels = this.iconButtonsStyle || this.getEditorOption('buttonLabels') || 'default';
+    const iconButtons = iconButtonsTmpl[buttonLabels] || iconButtonsTmpl['default'];
+    return iconButtons[buttonName] || '<i>Wrong button name</i>';
   },
 
   isAlreadyApplied: function (node) {
@@ -286,19 +330,19 @@ const QuoteButton = MediumEditor.Extension.extend({
 
     template.push(
       '<a href="#" class="medium-editor-toolbar-save">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+      this.getIconButton('formSaveLabel'),
       '</a>'
     );
 
     if (this.value.length) {
       template.push(
         '<a href="#" class="medium-editor-toolbar-remove">',
-        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
+        this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
     template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+      this.getIconButton('formCloseLabel'),
       '</a>');
 
     return template.join('');
@@ -549,12 +593,11 @@ const SuggestButton = MediumEditor.Extension.extend({
   suggestFormInput: false,
   value: '',
   hasProp: false,
+  iconButtonsStyle: 'glyphicon',
+  selectedTextContent: '',
+  onAddListItemCallback: null,
 
   wrapNode: 'sg',
-
-  formSaveLabel: '&#10003;',
-  formCloseLabel: '&times;',
-  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.wrapNode = this.getEditorOption('suggestEl') || 'sg';
@@ -565,6 +608,8 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     this.on(this.button, 'click', this.handleClick.bind(this));
     this.subscribe('hideToolbar', this.handleHideToolbar.bind(this));
+
+    this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || null;
   },
 
   getForm: function () {
@@ -576,6 +621,12 @@ const SuggestButton = MediumEditor.Extension.extend({
 
   getButton: function () {
     return this.button;
+  },
+
+  getIconButton: function (buttonName) {
+    const buttonLabels = this.iconButtonsStyle || this.getEditorOption('buttonLabels') || 'default';
+    const iconButtons = iconButtonsTmpl[buttonLabels] || iconButtonsTmpl['default'];
+    return iconButtons[buttonName] || '<i>Wrong button name</i>';
   },
 
   isAlreadyApplied: function (node) {
@@ -593,6 +644,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     }
     this.value = '';
     this.hasProp = false;
+    this.selectedTextContent = '';
     return false;
   },
 
@@ -615,12 +667,14 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.hideToolbarDefaultActions();
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
+
+    console.log(`${__filename.substr(-30)}:showForm:this.value: `, this.value);
   },
 
-  doSuggestSave: function () {
+  doSuggestSave: function (value = false) {
     this.base.restoreSelection();
 
-    let value = this.suggestFormInput.value.trim();
+    value = value || this.suggestFormInput.value.trim();
 //     if (value.length) {
       let node = document.createElement(this.wrapNode);
       node.dataset.suggestion = value;
@@ -683,6 +737,69 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.base.checkSelection();
   },
 
+  doAddListItem: function (value = false) {
+    console.log(`doAddListItem::: `, this.selectedTextContent);
+    if (this.onAddListItemCallback && typeof this.onAddListItemCallback === 'function') {
+      this.onAddListItemCallback({
+        suggestion: this.value || this.suggestFormInput.value.trim(),
+        text: this.selectedTextContent
+      });
+    }
+  },
+
+  compareSelectedWordWithSuggestionsList: function() {
+    const suggestionsList = this.getEditorOption('suggestionsList')();
+    if (!suggestionsList || !Array.isArray(suggestionsList)) {
+      return false;
+    }
+    console.log(`:suggestionsList: `, suggestionsList);
+
+    //this.base.restoreSelection();
+    if (window.getSelection) {
+      const sel = window.getSelection();
+      const startNode = sel.anchorNode;
+      const endNode = sel.focusNode;
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0).cloneContents();
+        if (this.hasProp) {
+          // isAlreadyApplied
+          console.log(`isAlreadyApplied::: `, this.hasProp);
+          return false;
+        }
+
+        const div = document.createElement('div');
+        div.appendChild(range);
+
+        //-- Cleanup selected html -- { --//
+        let innerHTML = div.innerHTML;
+        innerHTML = innerHTML.replace(/<sup data-idx[^>]*>.*?<\/sup>/mig, '');
+        div.innerHTML = innerHTML;
+        //-- } -- end -- Cleanup selected html --//
+
+        const textContent = div.textContent.trim().toLowerCase();
+
+        const foundSuggestion = suggestionsList.find((sugg)=>{
+          return sugg.text.trim().toLowerCase() === textContent;
+        })
+
+        console.log(`foundSuggestion.suggestion::: `, foundSuggestion?.suggestion);
+
+        if (foundSuggestion) {
+          this.doSuggestSave(foundSuggestion.suggestion);
+          return true;
+        }
+
+        this.selectedTextContent = textContent;
+
+        console.log(`foundSuggestion: `, foundSuggestion);
+
+      }
+    }
+
+    return false;
+
+  },
+
   triggerEvent: function(el, type) {
     if ('createEvent' in document) {
       // modern browsers, IE9+
@@ -701,7 +818,10 @@ const SuggestButton = MediumEditor.Extension.extend({
     event.preventDefault();
     event.stopPropagation();
 
-    this.showForm({});
+    console.log(`${__filename.substr(-30)}::handleClick: `);
+    if (!this.compareSelectedWordWithSuggestionsList()) {
+      this.showForm({});
+    }
   },
 
   handleHideToolbar: function () {
@@ -714,6 +834,13 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.doSuggestSave();
     this.showToolbarDefaultActions();
     this.base.checkContentChanged();
+  },
+
+  handleAddListClick: function (event) {
+    event.preventDefault();
+    this.destroy();
+    this.doAddListItem();
+    //this.base.restoreSelection();
   },
 
   handleRemoveClick: function (event) {
@@ -761,19 +888,23 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     template.push(
       '<a href="#" class="medium-editor-toolbar-save">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+      this.getIconButton('formSaveLabel'),
       '</a>'
     );
+
+    template.push('<a href="#" class="medium-editor-toolbar-add-list-item">',
+      this.getIconButton('formAddListLabel'),
+      '</a>');
 
     if (this.value.length || this.hasProp) {
       template.push(
         '<a href="#" class="medium-editor-toolbar-remove">',
-        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
+        this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
     template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+      this.getIconButton('formCloseLabel'),
       '</a>');
 
     return template.join('');
@@ -785,16 +916,19 @@ const SuggestButton = MediumEditor.Extension.extend({
     toolbar.getToolbarElement().appendChild(this.getForm());
 
     this.suggestFormInput = this.getForm().querySelector('.medium-editor-toolbar-input');
-    var close = this.getForm().querySelector('.medium-editor-toolbar-close'),
-        save = this.getForm().querySelector('.medium-editor-toolbar-save'),
-        remove = this.getForm().querySelector('.medium-editor-toolbar-remove')
+    var close =   this.getForm().querySelector('.medium-editor-toolbar-close'),
+        save =    this.getForm().querySelector('.medium-editor-toolbar-save'),
+        remove =  this.getForm().querySelector('.medium-editor-toolbar-remove'),
+        addList = this.getForm().querySelector('.medium-editor-toolbar-add-list-item')
 
-    if (close) this.on(close, 'click', this.handleCloseClick.bind(this));
-    if (save) this.on(save, 'click', this.handleSaveClick.bind(this), true);
-    if (remove) this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+    if (close)   this.on(close, 'click', this.handleCloseClick.bind(this));
+    if (save)    this.on(save, 'click', this.handleSaveClick.bind(this), true);
+    if (remove)  this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+    if (addList) this.on(addList, 'click', this.handleAddListClick.bind(this));
   },
 
   onClick: function (ev) {
+    console.log(`${__filename.substr(-30)}:onClick:function:textContent: `, ev.target.textContent);
     this.suggestFormInput.value = ev.target.textContent;
   },
 

@@ -8,7 +8,7 @@
             <div class="process-preloader"></div>
           </template>
           <template v-else>
-            {{ applySuggestionData.total }} matching block(s) in range 
+            {{ applySuggestionData.total }} matching block(s) in range
             <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
             <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
           </template>
@@ -30,7 +30,7 @@
       </div>
     </div>
     <div v-if="addSuggestionMode" class="add-suggestion">
-      <EditSuggestion 
+      <EditSuggestion
         :suggestion="edit_suggestion"
         @save="createSuggestion"
         @cancel="cancelCreate" />
@@ -53,7 +53,7 @@
           </tr>
           <tr v-if="isEditingSuggestion(suggestion.id)">
             <td colspan="2">
-              <EditSuggestion 
+              <EditSuggestion
                 :suggestion="getEditingSuggestion(suggestion)"
                 @save="update"
                 @cancel="cancelUpdate(suggestion)" />
@@ -158,6 +158,11 @@
         this.setContainerHeight();
       });
       window.addEventListener('resize', this.setContainerHeight);
+
+      this.$root.$on('for-suggestions-list:add-suggestion', this.onAddEvent);
+    },
+    destroyed() {
+      this.$root.$off('for-suggestions-list:add-suggestion', this.onAddEvent);
     },
     activated() {
       console.log('activated', this.category);
@@ -170,6 +175,13 @@
         this.edit_suggestion.text = this.filter;
         this.edit_suggestion.category = this.category;
         this.addSuggestionMode = true;
+      },
+      onAddEvent(suggestionItem = {}) {
+        if (this.isActive) {
+          this.edit_suggestion.text = suggestionItem.text;
+          this.edit_suggestion.suggestion = suggestionItem.suggestion;
+          this.addSuggestionMode = true;
+        }
       },
       setEditSuggestion(suggestion) {
         //this.addSuggestionMode = false;
@@ -362,7 +374,7 @@
           title: 'Apply dictionary suggestions',
           text: `Applying ${this.categoryName} dictionary suggestions...`,
           buttons: [
-            
+
           ]
         });
         return this.postSuggestions([this.category])
