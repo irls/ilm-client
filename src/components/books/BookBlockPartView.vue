@@ -1302,28 +1302,7 @@ export default {
                 onAddListItemCallback: (suggestionItem)=>{
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
                 },
-                showApplyModalCallback: (suggestion)=>{
-
-                  // vue-js-modal workaround to get results of user choice
-                  return new Promise(resolve => {
-
-                    this.$modal.show(ApplySuggestionsModals, {
-                      suggestion: suggestion,
-                      userChoiceSelected: resolve
-                    }, {
-                      height: 'auto',
-                      width: '590px',
-                      clickToClose: false
-                    },
-                    {
-                      // 'closed': (result) => {
-                      //   console.log(`${__filename.substr(-30)}::closed: `, result);
-                      // },
-                      // 'before-close': (params) => { console.log("before-close this works! ", params);  }
-                    });
-
-                  });
-                }
+                showApplyModalCallback: this.suggestionShowApplyModalCallback
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log('editableInput', event, target);
@@ -1390,7 +1369,8 @@ export default {
                 suggestionsList: this.suggestions,
                 onAddListItemCallback: (suggestionItem)=>{
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
-                }
+                },
+                showApplyModalCallback: this.suggestionShowApplyModalCallback
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -4230,6 +4210,25 @@ Join subblocks?`,
           }
           this.hasEndLinebreak = false;
         }
+      },
+
+      suggestionShowApplyModalCallback(suggestion) {
+        // vue-js-modal workaround to get results of user choice
+        return new Promise(resolve => {
+
+          this.$modal.show(ApplySuggestionsModals, {
+            suggestion: suggestion,
+            userChoiceSelected: resolve
+          }, {
+            height: 'auto',
+            width: '480px',
+            clickToClose: false
+          },
+          { // 'closed': (result) => {},
+            // 'before-close': (params) => {}
+          });
+
+        });
       }
 
   },

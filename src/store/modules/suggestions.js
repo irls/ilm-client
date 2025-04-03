@@ -80,13 +80,17 @@ export default {
           return Promise.reject(err);
         });
     },
-    canApplySuggestions({rootState, state}, [category = null]) {
+    canApplySuggestions({rootState, state}, {category = null, start_id = null, end_id = null}) {
       let request = {};
       request.bookid = rootState.currentBookMeta.bookid;
       if (category) {
         request.category = category;
       }
-      if (rootState.blockSelection && rootState.blockSelection.start && rootState.blockSelection.start._id) {
+      if (start_id && end_id) {
+        request.start = start_id;
+        request.end = end_id;
+      }
+      else if (rootState.blockSelection && rootState.blockSelection.start && rootState.blockSelection.start._id) {
         request.start = rootState.blockSelection.start._id;
         request.end = rootState.blockSelection.end._id;
       }

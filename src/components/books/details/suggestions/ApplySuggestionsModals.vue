@@ -1,5 +1,5 @@
 <template>
-  <div class="apply-suggestions-modal">
+  <div class="apply-suggestions-modal" @click="onModalClick">
     <div class="modal-header">
       <div>
         <h4 class="modal-title">{{modalTitle}}</h4>
@@ -12,22 +12,28 @@
       <div>
         <span v-html="suggestionTitle"></span>
       </div>
-      <div>
-        <RadioButton v-model="updateSelection" inputId="ingredient1" name="pizza" value="Mushroom" />
-        <label for="ingredient1">Mushroom</label>
-        <RadioButton v-model="updateSelection" inputId="ingredient2" name="pizza" value="Mushroo" />
-        <label for="ingredient2">Mushroom</label>
-        <RadioButton v-model="updateSelection" inputId="ingredient3" name="pizza" value="Mushro" />
-        <label for="ingredient3">Mushroom</label>
+      <div class="apply-suggestions-radio-button-wrapper">
+        <div class="apply-suggestions-radio-button">
+          <RadioButton v-model="updateAction" id="apSugg1" name="apSugg" value="current" />
+          <label for="apSugg1">current selection</label>
+        </div>
+        <div class="apply-suggestions-radio-button">
+          <RadioButton v-model="updateAction" id="apSugg2" name="apSugg" value="allFirst" />
+          <label for="apSugg2">all matching blocks, first word(s) only ({{matchFirstWordBlocksCounter}})</label>
+        </div>
+        <div class="apply-suggestions-radio-button">
+          <RadioButton v-model="updateAction" id="apSugg3" name="apSugg" value="all" />
+          <label for="apSugg3">all matching blocks ({{matchBlocksCounter}})</label>
+        </div>
       </div>
-      <div>
-        <Checkbox v-model="isDontShow" inputId="ingredient4" binary />
-        <label for="ingredient4"> Onion </label>
+      <div class="apply-suggestions-checkbox-wrapper">
+        <Checkbox v-model="isDontShow" id="showSett" binary />
+        <label for="showSett"> Don't show this message again </label>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary modal-default-button">Import</button>
-      <button class="btn btn-default modal-default-button" @click="onClose">Cancel</button>
+    <div class="modal-footer apply-suggestions-button-wrapper">
+      <button class="btn btn-default apply-suggestions-button" @click="onClose">Cancel</button>
+      <button class="btn btn-primary apply-suggestions-button" @click="onApplySuggestion">{{suggestionButtonTitle}}</button>
     </div>
   </div>
 </template>
@@ -48,7 +54,10 @@ export default {
   data() {
     return {
       isDontShow: false,
-      updateSelection: 'Mushroom'
+      updateAction: 'current',
+      matchBlocksCounter: 0,
+      matchFirstWordBlocksCounter: 0,
+      isLoadingCounters: false
     }
   },
   components: {
@@ -68,6 +77,17 @@ export default {
   beforeMount: function() {
   },
   mounted: function () {
+    const start_id = this.parlistO.idsArray()[0];
+    const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
+    this.canApplySuggestions({ start_id, end_id })
+    .then((counters)=>{
+      console.log(`counters::: `, counters);
+      this.matchBlocksCounter = counters.blocks;
+      this.matchFirstWordBlocksCounter = counters.blocks;
+    })
+    .catch((err)=>{
+      console.error(err.message || err);
+    })
   },
   computed: {
     modalTitle: {
@@ -77,7 +97,7 @@ export default {
         }
         return 'Add suggestion';
       },
-      cache: false
+      cache: true
     },
     suggestionTitle: {
       get() {
@@ -106,10 +126,33 @@ export default {
         };
 
         return title;
-
       },
-      cache: false
+      cache: true
     },
+    suggestionButtonTitle: {
+      get() {
+
+        const suggLen = this.suggestion.suggestion.trim().length;
+        let title = '';
+
+        switch(this.suggestion.action) {
+          case 'add' : {
+            title = 'Add Suggestion';
+          } break;
+          case 'edit' : {
+            title = 'Update Suggestion';
+          } break;
+          case 'delete' : {
+            title = 'Delete Suggestion';
+          } break;
+          default : {
+          } break;
+        };
+        return title;
+      },
+      cache: true
+    },
+    ...mapGetters({ parlistO: 'storeListO' }),
     ...mapGetters('suggestionsModule', [
       'suggestions'
     ]),
@@ -121,7 +164,24 @@ export default {
       this.userChoiceSelected(contact);
 
       this.$emit('close');
-    }
+    },
+    onApplySuggestion: function() {
+
+      this.userChoiceSelected({
+        isApply: true,
+        action: this.updateAction
+      });
+
+      this.$emit('close');
+    },
+    onModalClick: function(event) {
+      // event.preventDefault();
+      // event.stopPropagation();
+      return false;
+    },
+    ...mapActions('suggestionsModule', [
+      'canApplySuggestions'
+    ]),
   },
   watch: {
 
@@ -136,6 +196,12 @@ export default {
     }
     .modal-header {
       padding: 10px 10px 10px 28px;
+      border-bottom: none;
+
+      h4 {
+        font-size: 16px;
+        font-weight: 700;
+      }
       button.close {
         margin-top: -25px;
       }
@@ -149,21 +215,48 @@ export default {
     }
     .modal-body {
       padding: 0px 30px;
-    }
-    .modal-header {
-      border-bottom: none;
-      h4 {
-        font-size: 16px;
-        font-weight: 700;
+
+      .apply-suggestions-radio-button-wrapper {
+        display: flex;
+        flex-flow: column;
+        margin: 15px 0px;
+
+        label {
+          margin-bottom: 0px;
+          font-weight: normal;
+          cursor: pointer;
+          margin-left: 10px;
+        }
+
+        .apply-suggestions-radio-button {
+          margin: 7px 0px;
+        }
+      }
+
+      .apply-suggestions-checkbox-wrapper {
+        label {
+          margin-bottom: 0px;
+          margin-left: 10px;
+          font-weight: normal;
+          cursor: pointer;
+        }
       }
     }
     .modal-footer {
       border-top: none;
-      .btn-default {
-        width: 88px;
-      }
-      .btn-primary {
-        width: 84px;
+
+      &.apply-suggestions-button-wrapper {
+        display: flex;
+        flex-flow: row nowrap;
+        height: 46px;
+        margin: 20px 0px 0px 0px;
+        padding: 0px;
+
+        .apply-suggestions-button {
+          height: 100%;
+          width: 50%;
+          margin: 0px;
+        }
       }
       .btn {
         margin: 0px 7px;

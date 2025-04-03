@@ -296,7 +296,7 @@
         if (this.isActive) {
           this.calculate_apply = true;
           this.applySuggestionData.total = 0;
-          return this.canApplySuggestions([this.category])
+          return this.canApplySuggestions({category: this.category})
             .then(response => {
               let suggestions = this.applySuggestions(this.category);
               this.applySuggestionData.total = suggestions.total;

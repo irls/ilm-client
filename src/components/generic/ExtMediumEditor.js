@@ -829,13 +829,21 @@ const SuggestButton = MediumEditor.Extension.extend({
 
   handleSaveClick: async function (event) {
     event.preventDefault();
+    this.destroy();
     var res = await this.showApplyModalCallback({
       suggestion: this.value || this.suggestFormInput.value.trim(),
       text: this.selectedTextContent,
       action: 'edit'
     });
-    console.log(`${__filename.substr(-30)}::handleSaveClick: `, res);
-    // this.destroy();
+    console.log(`:handleSaveClick: `, res);
+
+    if (res.isApply && res.action === 'current') {
+      this.doSuggestSave();
+      this.showToolbarDefaultActions();
+      this.base.checkContentChanged();
+      return;
+    }
+
     // this.doSuggestSave();
     // this.showToolbarDefaultActions();
     // this.base.checkContentChanged();
