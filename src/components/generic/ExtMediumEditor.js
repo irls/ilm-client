@@ -595,7 +595,8 @@ const SuggestButton = MediumEditor.Extension.extend({
   hasProp: false,
   iconButtonsStyle: 'glyphicon',
   selectedTextContent: '',
-  onAddListItemCallback: null,
+  onAddListItemCallback: ()=>{},
+  showApplyModalCallback: ()=>{},
 
   wrapNode: 'sg',
 
@@ -609,7 +610,8 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.on(this.button, 'click', this.handleClick.bind(this));
     this.subscribe('hideToolbar', this.handleHideToolbar.bind(this));
 
-    this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || null;
+    this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || this.onAddListItemCallback;
+    this.showApplyModalCallback = this.getEditorOption('showApplyModalCallback') || this.onAddListItemCallback;
   },
 
   getForm: function () {
@@ -739,12 +741,10 @@ const SuggestButton = MediumEditor.Extension.extend({
 
   doAddListItem: function (value = false) {
     console.log(`doAddListItem::: `, this.selectedTextContent);
-    if (this.onAddListItemCallback && typeof this.onAddListItemCallback === 'function') {
-      this.onAddListItemCallback({
-        suggestion: this.value || this.suggestFormInput.value.trim(),
-        text: this.selectedTextContent
-      });
-    }
+    this.onAddListItemCallback({
+      suggestion: this.value || this.suggestFormInput.value.trim(),
+      text: this.selectedTextContent
+    });
   },
 
   compareSelectedWordWithSuggestionsList: function() {
@@ -818,7 +818,6 @@ const SuggestButton = MediumEditor.Extension.extend({
     event.preventDefault();
     event.stopPropagation();
 
-    console.log(`${__filename.substr(-30)}::handleClick: `);
     if (!this.compareSelectedWordWithSuggestionsList()) {
       this.showForm({});
     }
@@ -830,10 +829,11 @@ const SuggestButton = MediumEditor.Extension.extend({
 
   handleSaveClick: function (event) {
     event.preventDefault();
-    this.destroy();
-    this.doSuggestSave();
-    this.showToolbarDefaultActions();
-    this.base.checkContentChanged();
+    this.showApplyModalCallback();
+    // this.destroy();
+    // this.doSuggestSave();
+    // this.showToolbarDefaultActions();
+    // this.base.checkContentChanged();
   },
 
   handleAddListClick: function (event) {

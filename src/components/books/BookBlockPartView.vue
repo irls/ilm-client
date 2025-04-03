@@ -390,6 +390,7 @@ const BPromise = require('bluebird');
 import narrationBlockContent from './narrationBlockContent.js'
 import SplitBlockMenu from '../generic/SplitBlockMenu';
 import CoupletWarningPopup from "./CoupletWarningPopup.vue";
+import ApplySuggestionsModals from './details/suggestions/ApplySuggestionsModals.vue';
 
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -1299,8 +1300,16 @@ export default {
                 keyboardCommands: keyboardCommands,
                 suggestionsList: this.suggestions,
                 onAddListItemCallback: (suggestionItem)=>{
-                  console.log(`suggestionItem::: `, suggestionItem);
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                },
+                showApplyModalCallback: ()=>{
+                  this.$modal.show(ApplySuggestionsModals, {
+                    book: this.currentBookMeta
+                  }, {
+                    height: 'auto',
+                    width: '590px',
+                    clickToClose: false
+                  });
                 }
             });
             this.editor.subscribe('editableInput', (event, target) => {
@@ -1367,7 +1376,6 @@ export default {
                 keyboardCommands: keyboardCommands,
                 suggestionsList: this.suggestions,
                 onAddListItemCallback: (suggestionItem)=>{
-                  console.log(`suggestionItem::: `, suggestionItem);
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
                 }
             });
