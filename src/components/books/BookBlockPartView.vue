@@ -1302,13 +1302,26 @@ export default {
                 onAddListItemCallback: (suggestionItem)=>{
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
                 },
-                showApplyModalCallback: ()=>{
-                  this.$modal.show(ApplySuggestionsModals, {
-                    book: this.currentBookMeta
-                  }, {
-                    height: 'auto',
-                    width: '590px',
-                    clickToClose: false
+                showApplyModalCallback: (suggestion)=>{
+
+                  // vue-js-modal workaround to get results of user choice
+                  return new Promise(resolve => {
+
+                    this.$modal.show(ApplySuggestionsModals, {
+                      suggestion: suggestion,
+                      userChoiceSelected: resolve
+                    }, {
+                      height: 'auto',
+                      width: '590px',
+                      clickToClose: false
+                    },
+                    {
+                      // 'closed': (result) => {
+                      //   console.log(`${__filename.substr(-30)}::closed: `, result);
+                      // },
+                      // 'before-close': (params) => { console.log("before-close this works! ", params);  }
+                    });
+
                   });
                 }
             });
