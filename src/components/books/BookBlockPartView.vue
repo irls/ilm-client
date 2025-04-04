@@ -823,7 +823,7 @@ export default {
         tempImage: 'file'
       }),
       ...mapGetters('suggestionsModule', [
-        'suggestions'
+        'getAllSuggestions'
       ]),
       getBlockLang: {
         cache: false,
@@ -1298,7 +1298,7 @@ export default {
                 imageDragging: false,
                 spellcheck: false,
                 keyboardCommands: keyboardCommands,
-                suggestionsList: this.suggestions,
+                suggestionsList: this.getAllSuggestions,
                 onAddListItemCallback: (suggestionItem)=>{
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
                 },
@@ -1366,7 +1366,7 @@ export default {
                 disableEditing: true,
                 imageDragging: false,
                 keyboardCommands: keyboardCommands,
-                suggestionsList: this.suggestions,
+                suggestionsList: this.getAllSuggestions,
                 onAddListItemCallback: (suggestionItem)=>{
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
                 },

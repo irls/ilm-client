@@ -27,7 +27,7 @@
         </div>
       </div>
       <div class="apply-suggestions-checkbox-wrapper">
-        <Checkbox v-model="isDontShow" id="showSett" binary />
+        <Checkbox v-model="isDoNotDisturb" id="showSett" binary />
         <label for="showSett"> Don't show this message again </label>
       </div>
     </div>
@@ -46,14 +46,14 @@ import RadioButton from 'primevue/radiobutton';
 import Checkbox from 'primevue/checkbox';
 import api_config from '../../../../mixins/api_config.js';
 import access from '../../../../mixins/access.js';
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { BookBlock }     from '../../../../store/bookBlock.js'
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
 export default {
   data() {
     return {
-      isDontShow: false,
+      isDoNotDisturb: false,
       updateAction: 'current',
       matchBlocksCounter: 0,
       matchFirstWordBlocksCounter: 0,
@@ -84,10 +84,15 @@ export default {
       console.log(`counters::: `, counters);
       this.matchBlocksCounter = counters.blocks;
       this.matchFirstWordBlocksCounter = counters.blocks;
+      if (this.isDoNotDisturb) {
+        this.updateAction = this.getLastAction;
+      }
     })
     .catch((err)=>{
       console.error(err.message || err);
-    })
+    });
+    this.isDoNotDisturb = this.getIsDoNotDisturb;
+    document.getElementById("apSugg1").focus();
   },
   computed: {
     modalTitle: {
@@ -154,7 +159,9 @@ export default {
     },
     ...mapGetters({ parlistO: 'storeListO' }),
     ...mapGetters('suggestionsModule', [
-      'suggestions'
+      'suggestions',
+      'getIsDoNotDisturb',
+      'getLastAction'
     ]),
   },
   methods: {
@@ -182,9 +189,22 @@ export default {
     ...mapActions('suggestionsModule', [
       'canApplySuggestions'
     ]),
+    ...mapMutations('suggestionsModule', [
+      'setDoNotDisturb',
+      'setLastAction'
+    ]),
   },
   watch: {
-
+    isDoNotDisturb: {
+      handler(newVal, oldVal) {
+        this.setDoNotDisturb(newVal);
+      }
+    },
+    updateAction: {
+      handler(newVal, oldVal) {
+        this.setLastAction(newVal);
+      }
+    }
   }
 }
 </script>

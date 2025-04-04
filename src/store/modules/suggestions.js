@@ -4,7 +4,9 @@ export default {
   namespaced: true,
   state: {
     suggestions: [],
-    applySuggestions: []
+    applySuggestions: [],
+    isDoNotDisturb: false,
+    lastAction: ''
   },
   getters: {
     suggestions: state => (category = null) => {
@@ -17,7 +19,10 @@ export default {
         return suggestions.category === category;
       });
       return applySuggestions ? applySuggestions : {};
-    }
+    },
+    getAllSuggestions: state => state.suggestions,
+    getIsDoNotDisturb: state => state.isDoNotDisturb,
+    getLastAction: state => state.lastAction,
   },
   mutations: {
     setSuggestions(state, suggestions) {
@@ -25,7 +30,13 @@ export default {
     },
     createdSuggestion(state, suggestion) {
       state.suggestions.unshift(suggestion);
-    }
+    },
+    setDoNotDisturb(state, value) {
+      state.isDoNotDisturb = !!value;
+    },
+    setLastAction(state, value) {
+      state.lastAction = value;
+    },
   },
   actions: {
     get({rootState}, [id]) {

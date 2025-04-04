@@ -669,8 +669,6 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.hideToolbarDefaultActions();
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
-
-    console.log(`${__filename.substr(-30)}:showForm:this.value: `, this.value);
   },
 
   doSuggestSave: function (value = false) {
@@ -748,12 +746,10 @@ const SuggestButton = MediumEditor.Extension.extend({
   },
 
   compareSelectedWordWithSuggestionsList: function() {
-    const suggestionsList = this.getEditorOption('suggestionsList')();
+    const suggestionsList = this.getEditorOption('suggestionsList');
     if (!suggestionsList || !Array.isArray(suggestionsList)) {
       return false;
     }
-    console.log(`:suggestionsList: `, suggestionsList);
-
     //this.base.restoreSelection();
     if (window.getSelection) {
       const sel = window.getSelection();
