@@ -103,7 +103,7 @@
 
                 <tr class='author-link-container'>
                   <td colspan="2">
-                    <BookAuthors 
+                    <BookAuthors
                       :allowMetadataEdit="allowMetadataEdit"
                       :requiredFields="requiredFields[currentBook.bookid] ? requiredFields[currentBook.bookid] : {}"
                       :author_link="currentBook.author_link"
@@ -545,9 +545,9 @@
 
             </div>
         </vue-tab>
-        <vue-tab title="Suggestions" id="suggestions" 
+        <vue-tab title="Suggestions" id="suggestions"
           :disabled="!tc_displaySuggestionsTab()">
-          <Suggestions 
+          <Suggestions
           :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
         </vue-tab>
       </vue-tabs>
@@ -1058,6 +1058,8 @@ export default {
       }
     }
     this.jobDescription = this.currentJobInfo.description;
+
+    this.$root.$on('for-suggestions-list:add-suggestion', this.activateSuggestionsTab);
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1066,6 +1068,7 @@ export default {
     //this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
+    this.$root.$off('for-suggestions-list:add-suggestion', this.activateSuggestionsTab);
   },
 
   watch: {
@@ -2558,6 +2561,10 @@ export default {
       return this.debounceUpdate('author_link', [...this.currentBook.author_link], false);
     },
 
+    activateSuggestionsTab() {
+      this.$refs.panelTabs.navigateToTab(5);
+      // maybe need to use findAndActivate method...
+    },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }

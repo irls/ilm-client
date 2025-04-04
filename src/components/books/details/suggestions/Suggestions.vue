@@ -2,8 +2,8 @@
   <div class="suggestions-dictionary">
     <VueTabs ref="categoriesTabs" v-model="activeTab">
       <VTab v-for="(category, categoryIdx) in categoryTabs" :title="category.title" :key="category.title" :id="category.title">
-        <SuggestionsList 
-          :suggestions="suggestions(category.category)" 
+        <SuggestionsList
+          :suggestions="suggestions(category.category)"
           :category="category.category"
           :isActive="isActive && $refs.categoriesTabs.activeTabIndex === categoryIdx"
           :categoryName="category.title" />
@@ -33,6 +33,10 @@
         .then(() => {
           this.resetTab();
         });
+      this.$root.$on('for-suggestions-list:add-suggestion', this.activateSuggestionsTab);
+    },
+    beforeDestroy: function () {
+      this.$root.$off('for-suggestions-list:add-suggestion', this.activateSuggestionsTab);
     },
     computed: {
       categoryTabs: {
@@ -54,6 +58,17 @@
       resetTab() {
         this.activeTab = this.categoryTabs[0].title;
         document.getElementById(`p-${this.activeTab}`).style.removeProperty('display');
+      },
+      activateSuggestionsTab(suggestionItem = {}) {
+        this.$refs.categoriesTabs.navigateToTab(0);
+        const tabs = this.$refs.categoriesTabs.getTabs();
+        if (tabs && tabs.length) {
+          const tabComponent = tabs[0]?.child?.$children;
+          if (tabComponent && tabComponent.length) {
+            tabComponent[0].onAddEvent(suggestionItem);
+
+          }
+        }
       },
       ...mapActions('suggestionsModule', {
         getAllSuggestions: 'getAll'

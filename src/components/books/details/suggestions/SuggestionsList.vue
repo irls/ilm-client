@@ -158,11 +158,9 @@
         this.setContainerHeight();
       });
       window.addEventListener('resize', this.setContainerHeight);
-
-      this.$root.$on('for-suggestions-list:add-suggestion', this.onAddEvent);
     },
     destroyed() {
-      this.$root.$off('for-suggestions-list:add-suggestion', this.onAddEvent);
+      //this.$root.$off('for-suggestions-list:add-suggestion', this.onAddEvent);
     },
     activated() {
       console.log('activated', this.category);
@@ -177,11 +175,10 @@
         this.addSuggestionMode = true;
       },
       onAddEvent(suggestionItem = {}) {
-        if (this.isActive) {
-          this.edit_suggestion.text = suggestionItem.text;
-          this.edit_suggestion.suggestion = suggestionItem.suggestion;
-          this.addSuggestionMode = true;
-        }
+        this.edit_suggestion.text = suggestionItem.text;
+        this.edit_suggestion.suggestion = suggestionItem.suggestion;
+        this.filter = suggestionItem.text;
+        this.addSuggestionMode = true;
       },
       setEditSuggestion(suggestion) {
         //this.addSuggestionMode = false;
