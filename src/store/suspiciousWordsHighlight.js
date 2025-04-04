@@ -129,6 +129,7 @@ class SuspiciousWordsHighlight {
   addElementSuspiciousSilenceHighlight(el, silences) {
     el.querySelectorAll('w').forEach(wordEl => {
       //console.log(wordEl.dataset, silences);
+      wordEl.classList.remove(SUSPICIOUS_SILENCE_CLASS);
       if (wordEl.dataset.map) {
         let map = wordEl.dataset.map.split(',');
         if (map && map.length === 2) {

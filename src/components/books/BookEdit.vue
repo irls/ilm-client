@@ -1689,6 +1689,9 @@ export default {
               //refContainer.showPinnedInText();
               refContainer.reloadBlockPart();
               refContainer.isAudioChanged = false;
+              Vue.nextTick(() => {
+                refContainer.$parent.highlightSuspiciousWords();
+              })
               refContainer.$parent.$forceUpdate();
             }
             let block = this.audioTasksQueueBlock();
@@ -2103,6 +2106,9 @@ export default {
                 refContainer.blockAudio.map = block.getIsSplittedBlock() ? block.parts[queueBlock.partIdx].content : block.content;
               }
               refContainer.isAudioChanged = false;
+              Vue.nextTick(() => {
+                refContainer.$parent.highlightSuspiciousWords();
+              });
               refContainer.$parent.$forceUpdate();
             }
             return Promise.resolve();
