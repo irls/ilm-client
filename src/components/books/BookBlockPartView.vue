@@ -1118,7 +1118,6 @@ export default {
         'updateBlockToc',
         'checkError',
         'getBookAlign',
-        'revertAudio',
         'addAudioTask',
         'clearAudioTasks',
         'shiftAudioTask',
