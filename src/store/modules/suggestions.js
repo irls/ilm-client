@@ -91,7 +91,11 @@ export default {
           return Promise.reject(err);
         });
     },
-    canApplySuggestions({rootState, state}, {category = null, start_id = null, end_id = null}) {
+    canApplySuggestions({rootState, state}, {
+      category = null,
+      start_id = null,
+      end_id = null
+    }) {
       let request = {};
       request.bookid = rootState.currentBookMeta.bookid;
       if (category) {
@@ -107,13 +111,60 @@ export default {
       }
       let modifiedIds = rootState.modifiedBlockids;
       if (modifiedIds.length > 0) {
-        request.exclude_ids=modifiedIds.join(',');
+        request.exclude_ids = modifiedIds;
       }
-      let request_query = [];
-      Object.keys(request).forEach(key => {
-        request_query.push(`${key}=${request[key]}`);
-      });
-      return axios.get(`${rootState.API_URL}suggestions/apply?${request_query.join("&")}`)
+
+      return axios.get(`${rootState.API_URL}suggestions/apply`, { params: request })
+        .then(response => {
+          let suggestionsIndex = state.applySuggestions.findIndex(suggestion => {
+            return suggestion.category === category;
+          });
+          if (suggestionsIndex >= 0) {
+            state.applySuggestions[suggestionsIndex] = response.data;
+          } else {
+            state.applySuggestions.push(response.data);
+          }
+          return response.data;
+        })
+        .catch(err => {
+          console.log(err.message);
+          return Promise.reject(err);
+        });
+    },
+    countApplicableSuggestions({rootState, state}, {
+      category = null,
+      start_id = null,
+      end_id = null,
+      exclude_ids = [],
+      text = '',
+      suggestion = ''
+    }) {
+      let request = {};
+      request.bookid = rootState.currentBookMeta.bookid;
+      if (category) {
+        request.category = category;
+      }
+      if (start_id && end_id) {
+        request.start = start_id;
+        request.end = end_id;
+      }
+      else if (rootState.blockSelection && rootState.blockSelection.start && rootState.blockSelection.start._id) {
+        request.start = rootState.blockSelection.start._id;
+        request.end = rootState.blockSelection.end._id;
+      }
+      let modifiedIds = rootState.modifiedBlockids;
+      if (modifiedIds.length > 0) {
+        exclude_ids = [...exclude_ids, ...modifiedIds];
+      }
+      if (exclude_ids.length) {
+        request.exclude_ids = exclude_ids;
+      }
+      if (text && text.length) {
+        request.text = text;
+        request.suggestion = suggestion;
+      }
+
+      return axios.get(`${rootState.API_URL}suggestions/count`, { params: request })
         .then(response => {
           let suggestionsIndex = state.applySuggestions.findIndex(suggestion => {
             return suggestion.category === category;

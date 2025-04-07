@@ -72,6 +72,10 @@ export default {
     'userChoiceSelected': {
       type: Function,
       default: ()=>Promise.resolve({})
+    },
+    'currentBlockId': {
+      type: String,
+      default: ''
     }
   },
   beforeMount: function() {
@@ -79,11 +83,20 @@ export default {
   mounted: function () {
     const start_id = this.parlistO.idsArray()[0];
     const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
-    this.canApplySuggestions({ start_id, end_id })
-    .then((counters)=>{
-      console.log(`counters::: `, counters);
-      this.matchBlocksCounter = counters.blocks;
-      this.matchFirstWordBlocksCounter = counters.blocks;
+    const exclude_ids = [];
+    //const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
+
+    this.countApplicableSuggestions({
+      start_id,
+      end_id,
+      exclude_ids,
+      text: this.suggestion.text,
+      suggestion: this.suggestion.suggestion
+    })
+    .then((fullBlockCounters)=>{
+      console.log(`fullBlockCounters::: `, fullBlockCounters);
+      this.matchBlocksCounter = fullBlockCounters.blocks;
+      this.matchFirstWordBlocksCounter = fullBlockCounters.firstWordBlocks;
       if (this.isDoNotDisturb) {
         this.updateAction = this.getLastAction;
       }
@@ -187,7 +200,8 @@ export default {
       return false;
     },
     ...mapActions('suggestionsModule', [
-      'canApplySuggestions'
+      'canApplySuggestions',
+      'countApplicableSuggestions'
     ]),
     ...mapMutations('suggestionsModule', [
       'setDoNotDisturb',
