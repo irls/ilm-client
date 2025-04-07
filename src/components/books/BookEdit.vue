@@ -2165,6 +2165,9 @@ export default {
               refContainer.$parent.isAudioChanged = false;
             }*/
           }
+          Vue.nextTick(() => {
+            refContainer.$parent.highlightSuspiciousWords();
+          });
           refContainer.$parent.$forceUpdate();
         }
       },
