@@ -750,13 +750,12 @@ const SuggestButton = MediumEditor.Extension.extend({
     if (!suggestionsList || !Array.isArray(suggestionsList)) {
       return false;
     }
-    //this.base.restoreSelection();
+
     if (window.getSelection) {
       const sel = window.getSelection();
-      const startNode = sel.anchorNode;
-      const endNode = sel.focusNode;
       if (sel.rangeCount) {
         const range = sel.getRangeAt(0).cloneContents();
+
         if (this.hasProp) {
           // isAlreadyApplied
           console.log(`isAlreadyApplied::: `, this.hasProp);
@@ -813,6 +812,8 @@ const SuggestButton = MediumEditor.Extension.extend({
   handleClick: function (event) {
     event.preventDefault();
     event.stopPropagation();
+    this.base.checkSelection();
+    this.base.saveSelection();
 
     if (!this.compareSelectedWordWithSuggestionsList()) {
       this.showForm({});
