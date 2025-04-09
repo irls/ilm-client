@@ -17,7 +17,8 @@
           <RadioButton v-model="updateAction" id="apSugg1" name="apSugg" value="current" />
           <label for="apSugg1">current selection</label>
         </div>
-        <div class="apply-suggestions-radio-button">
+        <div class="apply-suggestions-radio-button"
+             v-show="matchFirstWordBlocksCounter > 0">
           <RadioButton v-model="updateAction" id="apSugg2" name="apSugg" value="allFirst" />
           <label for="apSugg2">all matching blocks, first word(s) only ({{matchFirstWordBlocksCounter}})</label>
         </div>

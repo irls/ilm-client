@@ -641,6 +641,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     //-- } -- end --//
     if (node.nodeName.toLowerCase() === this.wrapNode && node.dataset.hasOwnProperty('suggestion')) {
       this.value = node.dataset.suggestion;
+      this.selectedTextContent = node.textContent.trim().toLowerCase();
       this.hasProp = node.dataset.hasOwnProperty('suggestion');
       return true
     }
@@ -827,10 +828,11 @@ const SuggestButton = MediumEditor.Extension.extend({
   handleSaveClick: async function (event) {
     event.preventDefault();
     this.destroy();
+
     var res = await this.showApplyModalCallback({
       suggestion: this.value || this.suggestFormInput.value.trim(),
       text: this.selectedTextContent,
-      action: 'edit'
+      action: this.hasProp ? 'edit': 'add'
     });
     console.log(`:handleSaveClick: `, res);
 
@@ -840,10 +842,6 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.base.checkContentChanged();
       return;
     }
-
-    // this.doSuggestSave();
-    // this.showToolbarDefaultActions();
-    // this.base.checkContentChanged();
   },
 
   handleAddListClick: function (event) {
@@ -853,12 +851,22 @@ const SuggestButton = MediumEditor.Extension.extend({
     //this.base.restoreSelection();
   },
 
-  handleRemoveClick: function (event) {
+  handleRemoveClick: async function (event) {
     event.preventDefault();
     this.destroy();
-    this.doSuggestRemove();
-    this.showToolbarDefaultActions();
-    this.base.checkContentChanged();
+
+    var res = await this.showApplyModalCallback({
+      suggestion: this.value || this.suggestFormInput.value.trim(),
+      text: this.selectedTextContent,
+      action: 'delete'
+    });
+
+    if (res.isApply && res.action === 'current') {
+      this.doSuggestRemove();
+      this.showToolbarDefaultActions();
+      this.base.checkContentChanged();
+      return;
+    }
   },
 
   handleCloseClick: function (event) {
