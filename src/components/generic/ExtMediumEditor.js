@@ -592,6 +592,7 @@ const SuggestButton = MediumEditor.Extension.extend({
   suggestForm: false,
   suggestFormInput: false,
   value: '',
+  prevValue: '',
   hasProp: false,
   iconButtonsStyle: 'glyphicon',
   selectedTextContent: '',
@@ -670,6 +671,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.hideToolbarDefaultActions();
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
+    this.prevValue = this.value;
   },
 
   doSuggestSave: function (value = false) {
@@ -829,12 +831,17 @@ const SuggestButton = MediumEditor.Extension.extend({
     event.preventDefault();
     this.destroy();
 
-    var res = await this.showApplyModalCallback({
-      suggestion: this.value || this.suggestFormInput.value.trim(),
-      text: this.selectedTextContent,
-      action: this.hasProp ? 'edit': 'add'
-    });
-    console.log(`:handleSaveClick: `, res);
+    const suggestion = this.suggestFormInput.value.trim();
+    let res = {};
+
+    if (!this.hasProp || this.prevValue !== suggestion) {
+      res = await this.showApplyModalCallback({
+        suggestion: suggestion,
+        text: this.selectedTextContent,
+        action: this.hasProp ? 'edit': 'add'
+      });
+      console.log(`:handleSaveClick: `, res);
+    }
 
     if (res.isApply && res.action === 'current') {
       this.doSuggestSave();

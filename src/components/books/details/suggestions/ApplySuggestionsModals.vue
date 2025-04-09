@@ -111,10 +111,20 @@ export default {
   computed: {
     modalTitle: {
       get() {
-        if (this.suggestion.isEdit) {
-          return 'Edit suggestion'
-        }
-        return 'Add suggestion';
+        switch(this.suggestion.action) {
+          case 'add' : {
+            return 'Add suggestion';
+          } break;
+          case 'edit' : {
+            return 'Update suggestion'
+          } break;
+          case 'delete' : {
+            return 'Delete suggestion'
+          } break;
+          default : {
+            return 'Add suggestion';
+          } break;
+        };
       },
       cache: true
     },
@@ -131,7 +141,7 @@ export default {
             title += ` <b>"${this.suggestion.text}"</b> to:`
           } break;
           case 'edit' : {
-            title = 'Update suggestion';
+            title = 'Update' + (suggLen > 0 ? ' suggestion' : ' empty suggestion');
             title += suggLen > 0 ? ` <i>"${this.suggestion.suggestion}"</i> for` : ' for';
             title += ` <b>"${this.suggestion.text}"</b> in:`
           } break;
