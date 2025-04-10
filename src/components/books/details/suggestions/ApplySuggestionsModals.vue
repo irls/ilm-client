@@ -247,35 +247,24 @@ export default {
           };
         } break;
         case 'edit' : {
+          requestParams.method = 'PUT';
           switch(this.updateAction) {
             case 'allFirst' : {
-              this.postApplySuggestionsFromBlock({
-                start_id,
-                end_id,
-                exclude_ids,
-                text: this.suggestion.text,
-                suggestion: this.suggestion.suggestion,
-                first_word: true
-              })
+              requestParams.first_word = true;
+              this.postApplySuggestionsFromBlock(requestParams)
               .then(()=>{
-                this.$emit('close');
+                closeCallback()
               })
             } break;
             case 'all' : {
-              this.postApplySuggestionsFromBlock({
-                start_id,
-                end_id,
-                exclude_ids,
-                text: this.suggestion.text,
-                suggestion: this.suggestion.suggestion,
-                first_word: false
-              })
+              requestParams.first_word = false;
+              this.postApplySuggestionsFromBlock(requestParams)
               .then(()=>{
-                this.$emit('close');
+                closeCallback()
               })
             } break;
             default : {
-              this.$emit('close');
+              closeCallback()
             } break;
           };
         } break;
