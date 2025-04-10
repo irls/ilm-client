@@ -85,14 +85,18 @@ export default {
     const start_id = this.parlistO.idsArray()[0];
     const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
     const exclude_ids = [];
+    const isAddNew = this.suggestion.action === 'add';
     //const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
+
+    console.log(`${__filename.substr(-30)}:this.suggestion.action:: `, this.suggestion.action);
 
     this.countApplicableSuggestions({
       start_id,
       end_id,
       exclude_ids,
       text: this.suggestion.text,
-      suggestion: this.suggestion.suggestion
+      suggestion: this.suggestion.suggestion,
+      isAddNew
     })
     .then((fullBlockCounters)=>{
       console.log(`fullBlockCounters::: `, fullBlockCounters);
@@ -203,13 +207,46 @@ export default {
       const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
       const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
 
-      this.userChoiceSelected({
-        isApply: true,
-        action: this.updateAction
-      });
+      const closeCallback = ()=>{
+        this.userChoiceSelected({
+          isApply: true,
+          action: this.updateAction
+        });
+        this.$emit('close');
+      }
+
+      const requestParams = {
+        start_id,
+        end_id,
+        exclude_ids,
+        text: this.suggestion.text,
+        suggestion: this.suggestion.suggestion
+      }
 
       switch(this.suggestion.action) {
         case 'add' : {
+          requestParams.method = 'POST';
+          switch(this.updateAction) {
+            case 'allFirst' : {
+              requestParams.first_word = true;
+              this.postApplySuggestionsFromBlock(requestParams)
+              .then(()=>{
+                closeCallback()
+              })
+            } break;
+            case 'all' : {
+              requestParams.first_word = false;
+              this.postApplySuggestionsFromBlock(requestParams)
+              .then(()=>{
+                closeCallback()
+              })
+            } break;
+            default : {
+              closeCallback()
+            } break;
+          };
+        } break;
+        case 'edit' : {
           switch(this.updateAction) {
             case 'allFirst' : {
               this.postApplySuggestionsFromBlock({
@@ -242,15 +279,28 @@ export default {
             } break;
           };
         } break;
-        case 'edit' : {
-          return 'Update suggestion'
-        } break;
         case 'delete' : {
-          return 'Delete suggestion'
-        } break;
-        default : {
-          return 'Add suggestion';
-        } break;
+          requestParams.method = 'DELETE';
+          switch(this.updateAction) {
+            case 'allFirst' : {
+              requestParams.first_word = true;
+              this.postApplySuggestionsFromBlock(requestParams)
+              .then(()=>{
+                closeCallback()
+              })
+            } break;
+            case 'all' : {
+              requestParams.first_word = false;
+              this.postApplySuggestionsFromBlock(requestParams)
+              .then(()=>{
+                closeCallback()
+              })
+            } break;
+            default : {
+              closeCallback()
+            } break;
+          }
+        }
       };
 
 

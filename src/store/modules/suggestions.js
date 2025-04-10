@@ -137,8 +137,10 @@ export default {
       end_id = null,
       exclude_ids = [],
       text = '',
-      suggestion = ''
+      suggestion = '',
+      isAddNew = false
     }) {
+      const queryPath = isAddNew ? 'count' : 'count-already-applied';
       let request = {};
       request.bookid = rootState.currentBookMeta.bookid;
       if (category) {
@@ -164,7 +166,7 @@ export default {
         request.suggestion = suggestion;
       }
 
-      return axios.get(`${rootState.API_URL}suggestions/count`, { params: request })
+      return axios.get(`${rootState.API_URL}suggestions/${queryPath}`, { params: request })
         .then(response => {
           let suggestionsIndex = state.applySuggestions.findIndex(suggestion => {
             return suggestion.category === category;
@@ -213,6 +215,7 @@ export default {
     },
 
     postApplySuggestionsFromBlock({rootState, dispatch}, {
+      method = 'POST',
       category = null,
       start_id = null,
       end_id = null,
@@ -244,7 +247,21 @@ export default {
 
       console.log(`postApplySuggestionsFromBlock:params:: `, request);
 
-      return axios.post(`${rootState.API_URL}suggestions/from-block`, request)
+      let axiosRequest = Promise.resolve({});
+
+      switch(method) {
+        case 'POST' : {
+          axiosRequest = axios.post(`${rootState.API_URL}suggestions/from-block`, request)
+        } break;
+        case 'PUT' : {
+          axiosRequest = axios.put(`${rootState.API_URL}suggestions/from-block`, request)
+        } break;
+        case 'DELETE' : {
+          axiosRequest = axios.delete(`${rootState.API_URL}suggestions/from-block`, { params: request })
+        } break;
+      };
+
+      return axiosRequest
         .then(response => {
           return dispatch('getProcessQueue', {}, {root: true})
             .then(() => {

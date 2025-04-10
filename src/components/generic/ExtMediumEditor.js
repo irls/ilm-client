@@ -869,7 +869,8 @@ const SuggestButton = MediumEditor.Extension.extend({
       action: 'delete'
     });
 
-    if (res.isApply && res.action === 'current') {
+    // && res.action === 'current'
+    if (res.isApply) {
       this.doSuggestRemove();
       this.showToolbarDefaultActions();
       this.base.checkContentChanged();
