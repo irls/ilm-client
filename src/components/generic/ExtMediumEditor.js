@@ -843,7 +843,8 @@ const SuggestButton = MediumEditor.Extension.extend({
       console.log(`:handleSaveClick: `, res);
     }
 
-    if (res.isApply && res.action === 'current') {
+    // && res.action === 'current'
+    if (res.isApply) {
       this.doSuggestSave();
       this.showToolbarDefaultActions();
       this.base.checkContentChanged();

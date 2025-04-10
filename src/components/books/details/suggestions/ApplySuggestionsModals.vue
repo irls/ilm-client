@@ -190,20 +190,74 @@ export default {
   },
   methods: {
     onClose: function() {
-
-      const contact = 'Suuuuuuggestion';
-      this.userChoiceSelected(contact);
+      this.userChoiceSelected({
+        isApply: false,
+        action: this.updateAction
+      });
 
       this.$emit('close');
     },
     onApplySuggestion: function() {
+
+      const start_id = this.parlistO.idsArray()[0];
+      const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
+      const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
 
       this.userChoiceSelected({
         isApply: true,
         action: this.updateAction
       });
 
-      this.$emit('close');
+      switch(this.suggestion.action) {
+        case 'add' : {
+          switch(this.updateAction) {
+            case 'allFirst' : {
+              this.postApplySuggestionsFromBlock({
+                start_id,
+                end_id,
+                exclude_ids,
+                text: this.suggestion.text,
+                suggestion: this.suggestion.suggestion,
+                first_word: true
+              })
+              .then(()=>{
+                this.$emit('close');
+              })
+            } break;
+            case 'all' : {
+              this.postApplySuggestionsFromBlock({
+                start_id,
+                end_id,
+                exclude_ids,
+                text: this.suggestion.text,
+                suggestion: this.suggestion.suggestion,
+                first_word: false
+              })
+              .then(()=>{
+                this.$emit('close');
+              })
+            } break;
+            default : {
+              this.$emit('close');
+            } break;
+          };
+        } break;
+        case 'edit' : {
+          return 'Update suggestion'
+        } break;
+        case 'delete' : {
+          return 'Delete suggestion'
+        } break;
+        default : {
+          return 'Add suggestion';
+        } break;
+      };
+
+
+
+
+
+
     },
     onModalClick: function(event) {
       // event.preventDefault();
@@ -212,7 +266,8 @@ export default {
     },
     ...mapActions('suggestionsModule', [
       'canApplySuggestions',
-      'countApplicableSuggestions'
+      'countApplicableSuggestions',
+      'postApplySuggestionsFromBlock'
     ]),
     ...mapMutations('suggestionsModule', [
       'setDoNotDisturb',

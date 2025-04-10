@@ -210,6 +210,51 @@ export default {
           console.log(err.message);
           return Promise.reject(err);
         });
+    },
+
+    postApplySuggestionsFromBlock({rootState, dispatch}, {
+      category = null,
+      start_id = null,
+      end_id = null,
+      exclude_ids = [],
+      text = '',
+      suggestion = '',
+      first_word = false
+    }) {
+      let request = { first_word, bookid: rootState.currentBookMeta.bookid };
+      if (start_id && end_id) {
+        request.start = start_id;
+        request.end = end_id;
+      }
+      else if (rootState.blockSelection && rootState.blockSelection.start && rootState.blockSelection.start._id) {
+        request.start = rootState.blockSelection.start._id;
+        request.end = rootState.blockSelection.end._id;
+      }
+      let modifiedIds = rootState.modifiedBlockids;
+      if (modifiedIds.length > 0) {
+        exclude_ids = [...exclude_ids, ...modifiedIds];
+      }
+      if (exclude_ids.length) {
+        request.exclude_ids = exclude_ids;
+      }
+      if (text && text.length) {
+        request.text = text;
+        request.suggestion = suggestion;
+      }
+
+      console.log(`postApplySuggestionsFromBlock:params:: `, request);
+
+      return axios.post(`${rootState.API_URL}suggestions/from-block`, request)
+        .then(response => {
+          return dispatch('getProcessQueue', {}, {root: true})
+            .then(() => {
+              return response.data;
+            });
+        })
+        .catch(err => {
+          console.log(err.message);
+          return Promise.reject(err);
+        });
     }
   }
 }
