@@ -205,7 +205,8 @@ export default {
 
       const start_id = this.parlistO.idsArray()[0];
       const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
-      const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
+      const exclude_ids = [];
+      //const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
 
       const closeCallback = ()=>{
         this.userChoiceSelected({
