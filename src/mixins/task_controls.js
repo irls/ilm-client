@@ -266,6 +266,17 @@ export default {
       }
       return false;
     },
+    tc_displaySuggestionsTab() {
+      if (!['edit', 'proofread', 'narrate'].includes(this.bookMode) || [
+        'BookEdit', 'CollectionBookEdit', 'BookProofread', 'BookNarrate'
+      ].indexOf(this.$route.name) === -1) {
+        return false;
+      }
+      if (this.adminOrLibrarian || this._is('editor', true) || this._is('narrator', true) || this._is('proofer', true)) {
+        return true;
+      }
+      return false;
+    },
     tc_displayStylesTab() {
       if ( ['edit', 'proofread', 'narrate'].indexOf(this.bookMode) === -1 || ['BookEdit', 'CollectionBookEdit',"BookProofread", 'BookNarrate', 'CollectionBookNarrate'].indexOf(this.$route.name) === -1) {
         return false;

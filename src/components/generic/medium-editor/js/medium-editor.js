@@ -7103,8 +7103,9 @@ MediumEditor.extensions = {};
             }
             return false;
         } else {
-            let element = document.getSelection().anchorNode,
-            rootNode = element.parentNode;
+            let element = document.getSelection().anchorNode;
+            if (!element) return false;
+            let rootNode = element.parentNode;
             while (rootNode.nodeName !== 'DIV') {
                 rootNode = rootNode.parentNode;
             }
@@ -7385,8 +7386,9 @@ MediumEditor.extensions = {};
 
             rootNode.dispatchEvent(eventInput);// run event for the element events handling
         } else {
-            let element = document.getSelection().anchorNode,
-            rootNode = element.parentNode;
+            let element = document.getSelection().anchorNode;
+            if (!element) return false;
+            let rootNode = element.parentNode;
             while (rootNode.nodeName !== 'DIV') {
                 rootNode = rootNode.parentNode;
             }

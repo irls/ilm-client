@@ -390,6 +390,7 @@ const BPromise = require('bluebird');
 import narrationBlockContent from './narrationBlockContent.js'
 import SplitBlockMenu from '../generic/SplitBlockMenu';
 import CoupletWarningPopup from "./CoupletWarningPopup.vue";
+import ApplySuggestionsModals from './details/suggestions/ApplySuggestionsModals.vue';
 
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -818,9 +819,12 @@ export default {
           storeListById: 'storeListById',
           blockAudiosrcConfig: 'blockAudiosrcConfig'
       }),
-    ...mapGetters('uploadImage', {
-      tempImage: 'file'
-    }),
+      ...mapGetters('uploadImage', {
+        tempImage: 'file'
+      }),
+      ...mapGetters('suggestionsModule', [
+        'getAllSuggestions'
+      ]),
       getBlockLang: {
         cache: false,
         get() {
@@ -1132,6 +1136,7 @@ export default {
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
+    ...mapMutations(['add_modified_block', 'remove_modified_block']),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -1291,7 +1296,12 @@ export default {
                 disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
                 spellcheck: false,
-                keyboardCommands: keyboardCommands
+                keyboardCommands: keyboardCommands,
+                suggestionsList: this.getAllSuggestions,
+                onAddListItemCallback: (suggestionItem)=>{
+                  this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                },
+                showApplyModalCallback: this.suggestionShowApplyModalCallback
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log('editableInput', event, target);
@@ -1354,7 +1364,12 @@ export default {
                 extensions: extensions,
                 disableEditing: true,
                 imageDragging: false,
-                keyboardCommands: keyboardCommands
+                keyboardCommands: keyboardCommands,
+                suggestionsList: this.getAllSuggestions,
+                onAddListItemCallback: (suggestionItem)=>{
+                  this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                },
+                showApplyModalCallback: this.suggestionShowApplyModalCallback
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -4200,6 +4215,25 @@ Join subblocks?`,
           }
           this.hasEndLinebreak = false;
         }
+      },
+
+      suggestionShowApplyModalCallback(suggestion) {
+        // vue-js-modal workaround to get results of user choice
+        return new Promise(resolve => {
+          this.$modal.show(ApplySuggestionsModals, {
+            suggestion: suggestion,
+            currentBlockId: this.block.blockid,
+            userChoiceSelected: resolve
+          }, {
+            height: 'auto',
+            width: '480px',
+            clickToClose: false
+          },
+          { // 'closed': (result) => {},
+            // 'before-close': (params) => {}
+          });
+
+        });
       }
 
   },
@@ -4317,6 +4351,14 @@ Join subblocks?`,
           this.recountApprovedInRange();
           if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx !== null && this.blockPartIdx === this.audioTasksQueue.block.partIdx) {
             this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
+          }
+          let hasChangedPart = this.block.isChanged || this.block.parts.find(part => {
+            return part.isChanged;
+          });
+          if (hasChangedPart) {
+            this.add_modified_block(this.block.blockid);
+          } else {
+            this.remove_modified_block(this.block.blockid);
           }
         }
       },
