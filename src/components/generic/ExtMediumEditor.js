@@ -674,9 +674,9 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.prevValue = this.value;
   },
 
-  doSuggestSave: function (value = false) {
+  doSuggestSave: function (value = false, updateAction = 'current') {
+    let textContent = '';
     this.base.restoreSelection();
-
     value = value || this.suggestFormInput.value.trim();
 //     if (value.length) {
       let node = document.createElement(this.wrapNode);
@@ -688,6 +688,7 @@ const SuggestButton = MediumEditor.Extension.extend({
         if (sel.rangeCount) {
           let range = sel.getRangeAt(0);
           node.appendChild(range.extractContents());
+          textContent = node.textContent.trim().toLowerCase();
           range.insertNode(node);
           let prev = node.previousSibling;
           if (prev.textContent.length == 0) {
@@ -709,35 +710,66 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.base.restoreSelection();
       MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
 //     }
+
+    if (updateAction === 'all') {
+      const MEditor = this.base.elements[0];
+      const suggestions = MEditor.querySelectorAll('sg[data-suggestion]');
+      if (textContent.length) {
+        for (const sg of suggestions) {
+          const checkTextContent = sg.textContent.trim().toLowerCase();
+          if (checkTextContent === textContent) {
+            sg.dataset.suggestion = value;
+          }
+        }
+        this.base.restoreSelection();
+      }
+    }
     this.base.checkSelection();
   },
 
-  doSuggestRemove: function () {
-      this.base.restoreSelection();
-      if (window.getSelection) {
-        let sel = window.getSelection();
-        if (sel.rangeCount) {
-          let range = sel.getRangeAt(0).cloneRange();
-          let node = range.startContainer;
-          while (node && node.nodeName.toLowerCase() !== this.wrapNode) {
-            node = node.parentNode;
-          }
-          let parent = node.parentNode;
-          node.childNodes.forEach(n => {
-            if (n.dataset) {
-              delete n.dataset.sugg;
-            }
-          });
-          while (node.firstChild) parent.insertBefore(node.firstChild, node);
-          parent.removeChild(node);
-          this.value = '';
-          this.setInactive();
-          this.triggerEvent(this.base.getFocusedElement(), 'input');
-          this.base.restoreSelection();
-          MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
+  doSuggestRemove: function (updateAction = 'current') {
+    let textContent = '';
+    this.base.restoreSelection();
+    if (window.getSelection) {
+      let sel = window.getSelection();
+      if (sel.rangeCount) {
+        let range = sel.getRangeAt(0).cloneRange();
+        let node = range.startContainer;
+        while (node && node.nodeName.toLowerCase() !== this.wrapNode) {
+          node = node.parentNode;
         }
+        let parent = node.parentNode;
+        node.childNodes.forEach(n => {
+          if (n.dataset) {
+            delete n.dataset.sugg;
+          }
+        });
+        textContent = node.textContent.trim().toLowerCase();
+        while (node.firstChild) parent.insertBefore(node.firstChild, node);
+        parent.removeChild(node);
+        this.value = '';
+        this.setInactive();
+        this.triggerEvent(this.base.getFocusedElement(), 'input');
+        this.base.restoreSelection();
+        MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
       }
-      this.base.checkSelection();
+    }
+    if (updateAction === 'all') {
+      const MEditor = this.base.elements[0];
+      const suggestions = MEditor.querySelectorAll('sg[data-suggestion]');
+      if (textContent.length) {
+        for (const sg of suggestions) {
+          const checkTextContent = sg.textContent.trim().toLowerCase();
+          if (checkTextContent === textContent) {
+            const parent = sg.parentNode;
+            while (sg.firstChild) parent.insertBefore(sg.firstChild, sg);
+            parent.removeChild(sg);
+          }
+        }
+        this.base.restoreSelection();
+      }
+    }
+    this.base.checkSelection();
   },
 
   doAddListItem: function (value = false) {
@@ -761,7 +793,6 @@ const SuggestButton = MediumEditor.Extension.extend({
 
         if (this.hasProp) {
           // isAlreadyApplied
-          console.log(`isAlreadyApplied::: `, this.hasProp);
           return false;
         }
 
@@ -780,17 +811,12 @@ const SuggestButton = MediumEditor.Extension.extend({
           return sugg.text.trim().toLowerCase() === textContent;
         })
 
-        console.log(`foundSuggestion.suggestion::: `, foundSuggestion?.suggestion);
-
         if (foundSuggestion) {
           this.doSuggestSave(foundSuggestion.suggestion);
           return true;
         }
 
         this.selectedTextContent = textContent;
-
-        console.log(`foundSuggestion: `, foundSuggestion);
-
       }
     }
 
@@ -840,16 +866,17 @@ const SuggestButton = MediumEditor.Extension.extend({
         text: this.selectedTextContent,
         action: this.hasProp ? 'edit': 'add'
       });
-      console.log(`:handleSaveClick: `, res);
     }
 
-    // && res.action === 'current'
     if (res.isApply) {
-      this.doSuggestSave();
-      this.showToolbarDefaultActions();
-      this.base.checkContentChanged();
-      return;
+      if (res.isEdited || res.updateAction === 'current') {
+        this.doSuggestSave(false, res.updateAction);
+        this.showToolbarDefaultActions();
+        this.base.checkContentChanged();
+      }
     }
+
+    return;
   },
 
   handleAddListClick: function (event) {
@@ -869,13 +896,15 @@ const SuggestButton = MediumEditor.Extension.extend({
       action: 'delete'
     });
 
-    // && res.action === 'current'
     if (res.isApply) {
-      this.doSuggestRemove();
-      this.showToolbarDefaultActions();
-      this.base.checkContentChanged();
-      return;
+      if (res.isEdited || res.updateAction === 'current') {
+        this.doSuggestRemove(res.updateAction);
+        this.showToolbarDefaultActions();
+        this.base.checkContentChanged();
+      }
     }
+
+    return;
   },
 
   handleCloseClick: function (event) {

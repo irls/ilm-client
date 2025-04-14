@@ -4214,11 +4214,11 @@ Join subblocks?`,
 
       suggestionShowApplyModalCallback(suggestion) {
         // vue-js-modal workaround to get results of user choice
-        return new Promise(resolve => {
+        return new Promise(resolvePromise => {
           this.$modal.show(ApplySuggestionsModals, {
             suggestion: suggestion,
             currentBlockId: this.block.blockid,
-            userChoiceSelected: resolve
+            userChoiceSelected: resolvePromise
           }, {
             height: 'auto',
             width: '480px',

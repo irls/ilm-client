@@ -185,7 +185,10 @@ export default {
       },
       cache: true
     },
-    ...mapGetters({ parlistO: 'storeListO' }),
+    ...mapGetters({
+      parlistO: 'storeListO',
+      modifiedBlockids: 'modifiedBlockids'
+    }),
     ...mapGetters('suggestionsModule', [
       'suggestions',
       'getIsDoNotDisturb',
@@ -196,7 +199,8 @@ export default {
     onClose: function() {
       this.userChoiceSelected({
         isApply: false,
-        action: this.updateAction
+        action: this.suggestion.action,
+        updateAction: this.updateAction
       });
 
       this.$emit('close');
@@ -211,7 +215,10 @@ export default {
       const closeCallback = ()=>{
         this.userChoiceSelected({
           isApply: true,
-          action: this.updateAction
+          action: this.suggestion.action,
+          updateAction: this.updateAction,
+          // do not apply suggestion changes if block was edited
+          isEdited: this.modifiedBlockids.indexOf(this.currentBlockId) > -1
         });
         this.$emit('close');
       }
@@ -292,11 +299,6 @@ export default {
           }
         }
       };
-
-
-
-
-
 
     },
     onModalClick: function(event) {
