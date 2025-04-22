@@ -27,6 +27,7 @@ import authorsModule from './modules/authors';
 import authorsMapModule from './modules/authorsMap';
 import calculateLevelsModule from "./modules/calculateLevels";
 import suggestionsModule from './modules/suggestions';
+import booksModule from "./modules/book";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -97,7 +98,8 @@ export const store = new Vuex.Store({
     authorsModule,
     authorsMapModule,
     calculateLevelsModule,
-    suggestionsModule
+    suggestionsModule,
+    booksModule
   },
   state: {
     SelectionModalProgress:0,
