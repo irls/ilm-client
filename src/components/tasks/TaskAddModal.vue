@@ -7,7 +7,7 @@
     @closed="closed">
     <div slot="modal-header" class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancel"><span aria-hidden="true">×</span></button>
-      <h4 class="modal-title">Add Job</h4>
+      <h4 class="modal-title">{{ modalTitle }}</h4>
       <alert
         :show="bookUploadCommonError !== false"
         placement="top"
@@ -55,13 +55,13 @@
       <div class="col-sm-3 pull-right non-modal-submit">
         <button class="btn btn-primary" type="button" @click.prevent="save" :disabled="saveDisabled" v-show='!isUploading'>Submit</button>
       </div>
-      <div class="col-sm-9 pull-right non-modal-form">
+      <div class="col-sm-9 pull-right non-modal-form" v-if="!parentBook.bookid">
         <!-- Import Books Modal Popup -->
         <BookImport :isModal="false"
           ref="bookImport"
           :bookId="createdJob.bookid"
           :multiple="false"
-          :forceUpload="typeof createdJob.bookid != 'undefined'"
+          :forceUpload="createdJob.bookid && createdJob.bookid.length > 0"
           @close_modal="bookImportFinished"
           @books_changed="bookListChanged"
           @upload_error="uploadError"/>
@@ -76,7 +76,6 @@ import { modal, alert } from 'vue-strap'
 import { mapGetters, mapActions } from 'vuex'
 import modalMixin from './../../mixins/modal'
 import axios from 'axios'
-import superlogin from 'superlogin-client'
 import BookImport from '../books/BookImport'
 import { Languages } from "../../mixins/lang_config.js"
 var getSlug = require('speakingurl')
@@ -91,7 +90,13 @@ export default {
   },
   mixins: [modalMixin, api_config],
   props: {
-    show: Boolean
+    show: Boolean,
+    parentBook: {
+      type: Object,
+      default() {
+        return {};
+      }
+    }
   },
   data() {
     return {
@@ -147,6 +152,7 @@ export default {
     ...mapActions([
       'createDummyBook', 'getTaskUsers', 'updateBooksList'
     ]),
+    ...mapActions('booksModule', ['createCopy', 'getCopyBookid']),
     cancel() {
       this.$emit('closed', false)
     },
@@ -165,6 +171,9 @@ export default {
         id: this.id,
         hasBooks: this.importingBooksList.length > 0,
         language: this.lang
+      }
+      if (this.parentBook.bookid) {
+        task.parentBook = this.parentBook['@rid'];
       }
       axios.post(TASKS_URL, task)
         .then(response => {
@@ -187,43 +196,57 @@ export default {
           } else {
             this.createdJob = response.data.insert_jobs[0]
             this.$nextTick(()=>{
-              if (!this.$refs.bookImport.saveDisabled) {
-                this.$refs.bookImport.onFormSubmit()
-                .then((res)=>{
-                  this.updateBooksList().then(()=>{
-                    if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
-                      this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
-                    } else {
-                      this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
-                      this.$store.commit('gridFilters/set_fltrChangeTrigger');
-                    }
-                    this.isUploading = false;
-                    this.$emit('closed', true);
-                  })
-                }).catch(error => {
-                  this.isUploading = false;
-                  this.deleteTask();
-                })
-              } else {
-                if (this.$refs.bookImport.isDummyBook == true) {
-                  this.createDummyBook({book_id: this.createdJob.bookid, jobId: this.createdJob['@rid']})
+              if (this.$refs.bookImport) {
+                if (!this.$refs.bookImport.saveDisabled) {
+                  this.$refs.bookImport.onFormSubmit()
                   .then((res)=>{
                     this.updateBooksList().then(()=>{
-                    if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
-                      this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
-                    } else {
-                      this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
-                      this.$store.commit('gridFilters/set_fltrChangeTrigger');
-                    }
-                    this.isUploading = false;
-                    this.$emit('closed', true);
-                  })
+                      if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                        this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                      } else {
+                        this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
+                        this.$store.commit('gridFilters/set_fltrChangeTrigger');
+                      }
+                      this.isUploading = false;
+                      this.$emit('closed', true);
+                    })
                   }).catch(error => {
-                    this.deleteTask()
-                  });
+                    this.isUploading = false;
+                    this.deleteTask();
+                  })
                 } else {
-                  this.$emit('closed', true);
+                  if (this.$refs.bookImport.isDummyBook == true) {
+                    this.createDummyBook({book_id: this.createdJob.bookid, jobId: this.createdJob['@rid']})
+                    .then((res)=>{
+                      this.updateBooksList().then(()=>{
+                      if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                        this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                      } else {
+                        this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
+                        this.$store.commit('gridFilters/set_fltrChangeTrigger');
+                      }
+                      this.isUploading = false;
+                      this.$emit('closed', true);
+                    })
+                    }).catch(error => {
+                      this.deleteTask()
+                    });
+                  }
                 }
+              } else if (this.parentBook.bookid) {
+                return this.createCopy([this.parentBook.bookid, this.createdJob.bookid])
+                  .then(() => {
+                    this.updateBooksList().then(()=>{
+                      if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                        this.$router.push({ path: `/books/${this.createdJob.bookid}/edit` });
+                        this.$root.$emit("book-reimported");// emit to reload book and blocks
+                      }
+                      this.isUploading = false;
+                      this.$emit('closed', true);
+                    })
+                  });
+              } else {
+                this.$emit('closed', true);
               }
             })
           }
@@ -306,10 +329,12 @@ export default {
       return cleanId;
     },
     generateIds() {
-      this.id = ['']
-      for (let i in this.name) {
-        let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''))
-        this.id[i] = _id
+      if (!this.parentBook.bookid || !this.id[0]) {
+        this.id = ['']
+        for (let i in this.name) {
+          let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''))
+          this.id[i] = _id
+        }
       }
     },
     bookImportFinished() {
@@ -383,6 +408,11 @@ export default {
       //return false; // while we need to create job without book
       return this.bookUploadError && this.importingBooksList.length == 0;
     },
+    modalTitle: {
+      get() {
+        return this.parentBook.bookid ? "Add book copy" : "Add Job"
+      },
+    },
     ...mapGetters(['auth', 'taskUsers'])
   },
   watch: {
@@ -397,7 +427,20 @@ export default {
       this.createdJob = {}
       this.bookUploadError = false;
       this.isUploading = false;
-      this.$refs.bookImport.isDummyBook = true;
+      if (this.$refs.bookImport) {
+        this.$refs.bookImport.isDummyBook = true;
+      }
+      if (this.show) {
+        if (this.parentBook.language) {
+          this.lang = this.parentBook.language;
+          this.name[0] = this.parentBook.title;
+          this.getCopyBookid([this.parentBook.bookid])
+            .then(copy_bookid => {
+              this.id[0] = copy_bookid;
+              this.$forceUpdate();
+            })
+        }
+      }
     },
     'name': {
       handler(val) {
