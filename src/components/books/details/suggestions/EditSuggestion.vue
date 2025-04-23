@@ -57,7 +57,7 @@
     computed: {
       saveDisabled: {
         get() {
-          return this.suggestion.text.length === 0;
+          return this.suggestion.text.trim().length === 0;
         },
         cache: false
       },
@@ -140,7 +140,7 @@
         this.audio_playing = false;
       },
       save() {
-        if (!this.suggestion.text) {
+        if (!this.suggestion.text.trim()) {
           return;
         }
         let suggestion = this.suggestions(this.suggestion.category).find(sugg => {

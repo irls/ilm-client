@@ -23,7 +23,7 @@
           <i v-if="filter.length > 0" class="ico ico-clear-filter btn-inside" v-on:click="clearFilter"></i>
         </div>
         <div>
-          <button class="btn btn-primary" :disabled="!filter.length" v-on:click="add" v-if="editModeAllowed">
+          <button class="btn btn-primary" :disabled="!filter.trim().length" v-on:click="add" v-if="editModeAllowed">
             <i class="glyphicon glyphicon-remove-circle"></i>
           </button>
         </div>
@@ -35,7 +35,7 @@
         @save="createSuggestion"
         @cancel="cancelCreate" />
     </div>
-    <div class="suggestions-list">
+    <div class="suggestions-list" v-if="filteredSuggestions.length > 0">
       <table>
         <template v-for="suggestion in filteredSuggestions">
           <tr>
@@ -451,6 +451,7 @@
       top: 0;
       background-color: white;
       z-index: 999;
+      border-bottom: @border-color;
       .apply-suggestion {
         padding: 10px 3px;
         button {
@@ -502,7 +503,6 @@
     .suggestions-list  {
       padding: 10px 5px;
       margin: 5px 0px;
-      border-top: @border-color;
       border-bottom: @border-color;
       table {
         width: 100%;
