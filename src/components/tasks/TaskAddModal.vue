@@ -1,7 +1,7 @@
 <template>
   <modal
     id="taskAddModal"
-    :show="show"
+    :show="isShow"
     effect="fade"
     :backdrop="false"
     @closed="closed">
@@ -22,10 +22,10 @@
     <div slot="modal-body" class="modal-body">
       <div class="form-group" v-if="showField('name')">
         <label>Title</label>
-        <div v-for="n in Object.keys(name)" class="form-group book-row">
-          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name[n]" v-on:keypress="clearErrors('name')" />
-          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i><br/>
-          <input type="text" class="form-control" v-model="id[n]" disabled />
+        <div v-for="(val, idx) in name" class="form-group book-row">
+          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name[idx]" v-on:keypress="clearErrors('name')" />
+          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(idx)"></i><br/>
+          <input type="text" class="form-control" :value="id[idx]" disabled />
         </div>
         <!-- <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i> -->
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
@@ -82,6 +82,8 @@ import { Languages } from "../../mixins/lang_config.js"
 var getSlug = require('speakingurl')
 const TASKS_URL = process.env.ILM_API + '/api/v1/task'
 import api_config from '../../mixins/api_config.js';
+import _ from 'lodash';
+
 export default {
   name: 'TaskAddModal',
   components: {
@@ -91,10 +93,14 @@ export default {
   },
   mixins: [modalMixin, api_config],
   props: {
-    show: Boolean
+    'show': {
+      type: Boolean,
+      default: false
+    },
   },
   data() {
     return {
+      isShow: false,
       type: '',
       roles: {},
       name: [''],
@@ -146,6 +152,9 @@ export default {
   methods: {
     ...mapActions([
       'createDummyBook', 'getTaskUsers', 'updateBooksList'
+    ]),
+    ...mapActions('tasks', [
+      'getUniqBookId'
     ]),
     cancel() {
       this.$emit('closed', false)
@@ -305,13 +314,33 @@ export default {
       //console.log('cleanId', cleanId);
       return cleanId;
     },
-    generateIds() {
-      this.id = ['']
+
+    async generateIds() {
+      const newBookIds = [];
       for (let i in this.name) {
-        let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''))
-        this.id[i] = _id
+        // old method for fallback
+        let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''));
+        try {
+          var response = await this.getUniqBookId({
+            title: this.name[i],
+            language: this.lang
+          });
+          if (response && response.bookId) {
+            _id = response.bookId;
+          }
+        } catch (err) {
+          console.error('Error:', (err.message || err));
+        }
+        newBookIds[i] = _id;
       }
+
+      this.id = newBookIds;
     },
+
+    generateIdsDebounced: _.debounce(function() {
+      this.generateIds();
+    }, 300),
+
     bookImportFinished() {
       this.$emit('closed', true)
     },
@@ -386,27 +415,37 @@ export default {
     ...mapGetters(['auth', 'taskUsers'])
   },
   watch: {
-    show() {
-      this.type = 'with-audio'
-      this.roles = {}
-      this.name = ['']
-      this.errors = {}
-      this.description = ''
-      this.lang = 'en'
-      this.createdJob = null
-      this.createdJob = {}
-      this.bookUploadError = false;
-      this.isUploading = false;
-      this.$refs.bookImport.isDummyBook = true;
+    'show': {
+      handler(val, oldVal) {
+        console.log(`show:handler:: `, val, oldVal);
+        this.isShow = false;
+
+        this.type = 'with-audio'
+        this.roles = {}
+        this.name = [''];
+        this.id = [''];
+        this.errors = {}
+        this.description = ''
+        this.lang = 'en'
+        this.createdJob = null
+        this.createdJob = {}
+        this.bookUploadError = false;
+        this.isUploading = false;
+        this.$refs.bookImport.isDummyBook = true;
+
+        this.isShow = val;
+
+      },
+      cache: false
     },
     'name': {
       handler(val) {
-        this.generateIds()
+        this.generateIdsDebounced()
       },
       deep: true
     },
     lang() {
-      this.generateIds()
+      this.generateIdsDebounced()
     }
   }
 }
