@@ -1,10 +1,10 @@
 <template>
   <div class="edit-suggestion">
     <div>
-      <input type="text" v-model="suggestion.text" v-on:change="textChange" />
+      <input type="text" v-model="suggestion.text" v-on:change="textChange" placeholder="Add text" />
     </div>
     <div>
-      <input type="text" v-model="suggestion.suggestion" />
+      <input type="text" v-model="suggestion.suggestion" placeholder="Add Suggestion" />
     </div>
     <div>
       <select-tts-voice
