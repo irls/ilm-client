@@ -94,7 +94,7 @@
     </div>
 
     <div class="toolbar-second-row-buttons">
-      <button class="btn btn-primary add-book-button" v-on:click="taskAddModalActive = true" v-if="(isAdmin || isLibrarian)">
+      <button class="btn btn-primary add-book-button" v-on:click="setTaskAddModalActive" v-if="(isAdmin || isLibrarian)">
         <i class="fa fa-plus"></i>&nbsp;Add Book
       </button>
       <button class="btn btn-primary add-collection-button" v-on:click="addCollection" v-if="(isAdmin || isLibrarian) && allowCollectionsEdit">
@@ -401,6 +401,13 @@ export default {
       if (this.showCollectionsFilters) {
         this.$refs['collectionsFilters.filter'].value = this.collectionsFilters.filter;
       }
+    },
+    async setTaskAddModalActive() {
+      console.log(`setTaskAddModalActive:1:: `, this.taskAddModalActive);
+      this.taskAddModalActive = false;
+      await Vue.nextTick();
+      this.taskAddModalActive = true;
+      console.log(`setTaskAddModalActive:2:: `, this.taskAddModalActive);
     }
   },
 
