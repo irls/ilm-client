@@ -4350,6 +4350,7 @@ Join subblocks?`,
           } else {
             this.remove_modified_block(this.block.blockid);
           }
+          this.$root.$emit("from-block-part-view:changed", this.block.blockid, val);
         }
       },
       'isAudioChanged': {

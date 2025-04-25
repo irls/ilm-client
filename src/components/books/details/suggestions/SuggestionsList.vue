@@ -19,7 +19,7 @@
       </div>
       <div class="filter-suggestion">
         <div>
-          <input type="text" v-model="filter" />
+          <input type="text" v-model="filter" placeholder="Filter by text / Suggestion" />
           <i v-if="filter.length > 0" class="ico ico-clear-filter btn-inside" v-on:click="clearFilter"></i>
         </div>
         <div>
@@ -158,12 +158,11 @@
         this.setContainerHeight();
       });
       window.addEventListener('resize', this.setContainerHeight);
+      this.$root.$on("from-block-part-view:changed", this.getApplySuggestions);
     },
     destroyed() {
       //this.$root.$off('for-suggestions-list:add-suggestion', this.onAddEvent);
-    },
-    activated() {
-      console.log('activated', this.category);
+      this.$root.$off("from-block-part-view:changed", this.getApplySuggestions);
     },
     methods: {
       clearFilter() {
