@@ -30,6 +30,19 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         })
-    }
+    },
+    getUniqBookId({state, rootState}, { title, language, author = null } = {}) {
+      const reqParams = { title, language, author };
+      if (title.length == 0) {
+        return Promise.resolve({});
+      }
+      return axios.post(`${rootState.API_URL}task/uniqBookId`, reqParams)
+      .then(response => {
+        return response.data;
+      })
+      .catch(err => {
+        return Promise.reject(err);
+      })
+  }
   }
 }

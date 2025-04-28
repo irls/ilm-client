@@ -1,7 +1,7 @@
 <template>
   <modal
     id="taskAddModal"
-    :show="show"
+    :show="isShow"
     effect="fade"
     :backdrop="false"
     @closed="closed">
@@ -22,10 +22,10 @@
     <div slot="modal-body" class="modal-body">
       <div class="form-group" v-if="showField('name')">
         <label>Title</label>
-        <div v-for="n in Object.keys(name)" class="form-group book-row">
-          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name[n]" v-on:keypress="clearErrors('name')" />
-          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(n)"></i><br/>
-          <input type="text" class="form-control" v-model="id[n]" disabled />
+        <div v-for="(val, idx) in name" class="form-group book-row">
+          <input type="text" :class="['form-control', {'has-error': errors.name}]" v-model="name[idx]" v-on:keypress="clearErrors('name')" />
+          <i class="fa fa-minus-circle" v-if="name.length > 1" v-on:click="removeBook(idx)"></i><br/>
+          <input type="text" class="form-control" :value="id[idx]" disabled />
         </div>
         <!-- <i class="fa fa-plus-circle add-book" v-on:click="addBook()"></i> -->
         <div v-if="errors.name" v-for="err in errors.name" class="error-message" v-text="err"></div>
@@ -81,6 +81,8 @@ import { Languages } from "../../mixins/lang_config.js"
 var getSlug = require('speakingurl')
 const TASKS_URL = process.env.ILM_API + '/api/v1/task'
 import api_config from '../../mixins/api_config.js';
+import _ from 'lodash';
+
 export default {
   name: 'TaskAddModal',
   components: {
@@ -90,7 +92,10 @@ export default {
   },
   mixins: [modalMixin, api_config],
   props: {
-    show: Boolean,
+    'show': {
+      type: Boolean,
+      default: false
+    },
     parentBook: {
       type: Object,
       default() {
@@ -100,6 +105,7 @@ export default {
   },
   data() {
     return {
+      isShow: false,
       type: '',
       roles: {},
       name: [''],
@@ -153,6 +159,9 @@ export default {
       'createDummyBook', 'getTaskUsers', 'updateBooksList'
     ]),
     ...mapActions('booksModule', ['createCopy', 'getCopyBookid']),
+    ...mapActions('tasks', [
+      'getUniqBookId'
+    ]),
     cancel() {
       this.$emit('closed', false)
     },
@@ -328,15 +337,34 @@ export default {
       //console.log('cleanId', cleanId);
       return cleanId;
     },
-    generateIds() {
-      if (!this.parentBook.bookid || !this.id[0]) {
-        this.id = ['']
-        for (let i in this.name) {
-          let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''))
-          this.id[i] = _id
+
+    async generateIds() {
+      //if (!this.parentBook.bookid || !this.id[0]) {
+      const newBookIds = [];
+      for (let i in this.name) {
+        // old method for fallback
+        let _id = this.cleanBookId((getSlug(this.name[i])) + '_' + (this.lang ? this.lang : ''));
+        try {
+          var response = await this.getUniqBookId({
+            title: this.name[i],
+            language: this.lang
+          });
+          if (response && response.bookId) {
+            _id = response.bookId;
+          }
+        } catch (err) {
+          console.error('Error:', (err.message || err));
         }
+        newBookIds[i] = _id;
       }
+
+      this.id = newBookIds;
     },
+
+    generateIdsDebounced: _.debounce(function() {
+      this.generateIds();
+    }, 300),
+
     bookImportFinished() {
       this.$emit('closed', true)
     },
@@ -416,40 +444,51 @@ export default {
     ...mapGetters(['auth', 'taskUsers'])
   },
   watch: {
-    show() {
-      this.type = 'with-audio'
-      this.roles = {}
-      this.name = ['']
-      this.errors = {}
-      this.description = ''
-      this.lang = 'en'
-      this.createdJob = null
-      this.createdJob = {}
-      this.bookUploadError = false;
-      this.isUploading = false;
-      if (this.$refs.bookImport) {
-        this.$refs.bookImport.isDummyBook = true;
-      }
-      if (this.show) {
-        if (this.parentBook.language) {
-          this.lang = this.parentBook.language;
-          this.name[0] = this.parentBook.title;
-          this.getCopyBookid([this.parentBook.bookid])
-            .then(copy_bookid => {
-              this.id[0] = copy_bookid;
-              this.$forceUpdate();
-            })
+    'show': {
+      handler(val, oldVal) {
+
+        this.isShow = false;
+
+        this.type = 'with-audio'
+        this.roles = {}
+        this.name = [''];
+        this.id = [''];
+        this.errors = {}
+        this.description = ''
+        this.lang = 'en'
+        this.createdJob = null
+        this.createdJob = {}
+        this.bookUploadError = false;
+        this.isUploading = false;
+
+        if (this.$refs.bookImport) {
+          this.$refs.bookImport.isDummyBook = true;
         }
-      }
+        if (val === true) {
+          if (this.parentBook.language) {
+            this.lang = this.parentBook.language;
+            this.name[0] = this.parentBook.title;
+            this.getCopyBookid([this.parentBook.bookid])
+              .then(copy_bookid => {
+                this.id[0] = copy_bookid;
+                this.$forceUpdate();
+              })
+          }
+        }
+
+        this.isShow = val;
+
+      },
+      cache: false
     },
     'name': {
       handler(val) {
-        this.generateIds()
+        this.generateIdsDebounced()
       },
       deep: true
     },
     lang() {
-      this.generateIds()
+      this.generateIdsDebounced()
     }
   }
 }
