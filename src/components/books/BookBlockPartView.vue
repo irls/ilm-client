@@ -4223,7 +4223,10 @@ Join subblocks?`,
           this.$modal.show(ApplySuggestionsModals, {
             suggestion: suggestion,
             currentBlockId: this.block.blockid,
-            userChoiceSelected: resolvePromise
+            userChoiceSelected: resolvePromise,
+            sourceBlock: {
+              blockid: this.block.blockid,
+            }
           }, {
             height: 'auto',
             width: '480px',

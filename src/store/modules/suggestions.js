@@ -138,7 +138,8 @@ export default {
       exclude_ids = [],
       text = '',
       suggestion = '',
-      isAddNew = false
+      isAddNew = false,
+      sourceBlock = {}
     }) {
       const queryPath = isAddNew ? 'count' : 'count-already-applied';
       let request = {};
@@ -164,6 +165,10 @@ export default {
       if (text && text.length) {
         request.text = text;
         request.suggestion = suggestion;
+      }
+
+      if (sourceBlock.blockid) {
+        request.source_blockid = sourceBlock.blockid;
       }
 
       return axios.get(`${rootState.API_URL}suggestions/${queryPath}`, { params: request })

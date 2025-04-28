@@ -77,6 +77,10 @@ export default {
     'currentBlockId': {
       type: String,
       default: ''
+    },
+    'sourceBlock': {
+      type: Object,
+      default: {}
     }
   },
   beforeMount: function() {
@@ -96,7 +100,8 @@ export default {
       exclude_ids,
       text: this.suggestion.text,
       suggestion: this.suggestion.suggestion,
-      isAddNew
+      isAddNew,
+      sourceBlock: this.sourceBlock
     })
     .then((fullBlockCounters)=>{
       console.log(`fullBlockCounters::: `, fullBlockCounters);
