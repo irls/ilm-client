@@ -29,6 +29,23 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+
+    getUniqBookId({state, rootState}, { title, language, author = null, parentId = null } = {}, ) {
+      const reqParams = { title, language, author };
+      if (title.length == 0) {
+        return Promise.resolve({});
+      }
+      if (parentId && parentId.length) {
+        reqParams.parentId = parentId;
+      }
+      return axios.post(`${rootState.API_URL}books/uniqBookId`, reqParams)
+      .then(response => {
+        return response.data;
+      })
+      .catch(err => {
+        return Promise.reject(err);
+      })
     }
   }
 }

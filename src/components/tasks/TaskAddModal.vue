@@ -158,8 +158,9 @@ export default {
     ...mapActions([
       'createDummyBook', 'getTaskUsers', 'updateBooksList'
     ]),
-    ...mapActions('booksModule', ['createCopy', 'getCopyBookid']),
-    ...mapActions('tasks', [
+    ...mapActions('booksModule', [
+      'createCopy',
+      'getCopyBookid',
       'getUniqBookId'
     ]),
     cancel() {
@@ -347,7 +348,8 @@ export default {
         try {
           var response = await this.getUniqBookId({
             title: this.name[i],
-            language: this.lang
+            language: this.lang,
+            parentId: this.parentBook.bookid || null
           });
           if (response && response.bookId) {
             _id = response.bookId;
