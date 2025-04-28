@@ -943,23 +943,23 @@ const SuggestButton = MediumEditor.Extension.extend({
     let template = ['<input type="text" class="medium-editor-toolbar-input suggest-input"></input>'];
 
     template.push(
-      '<a href="#" class="medium-editor-toolbar-save">',
+      '<a href="#" class="medium-editor-toolbar-save" title="Add Suggestion">',
       this.getIconButton('formSaveLabel'),
       '</a>'
     );
 
-    template.push('<a href="#" class="medium-editor-toolbar-add-list-item">',
+    template.push('<a href="#" class="medium-editor-toolbar-add-list-item" title="Add to Suggestions Dictionary">',
       this.getIconButton('formAddListLabel'),
       '</a>');
 
     if (this.value.length || this.hasProp) {
       template.push(
-        '<a href="#" class="medium-editor-toolbar-remove">',
+        '<a href="#" class="medium-editor-toolbar-remove" title="Delete suggestion">',
         this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
-    template.push('<a href="#" class="medium-editor-toolbar-close">',
+    template.push('<a href="#" class="medium-editor-toolbar-close" title="Cancel">',
       this.getIconButton('formCloseLabel'),
       '</a>');
 
