@@ -724,7 +724,7 @@ const SuggestButton = MediumEditor.Extension.extend({
         this.base.restoreSelection();
       }
     }
-    this.base.checkSelection();
+    //this.base.checkSelection();
   },
 
   doSuggestRemove: function (updateAction = 'current') {
@@ -813,6 +813,11 @@ const SuggestButton = MediumEditor.Extension.extend({
 
         if (foundSuggestion) {
           this.doSuggestSave(foundSuggestion.suggestion);
+
+          sel.empty();
+          this.base.checkSelection();
+          this.destroy();
+
           return true;
         }
 
@@ -841,7 +846,6 @@ const SuggestButton = MediumEditor.Extension.extend({
   handleClick: function (event) {
     event.preventDefault();
     event.stopPropagation();
-    this.base.checkSelection();
     this.base.saveSelection();
 
     if (!this.compareSelectedWordWithSuggestionsList()) {
