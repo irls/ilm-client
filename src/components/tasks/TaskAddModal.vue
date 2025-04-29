@@ -470,11 +470,11 @@ export default {
           if (this.parentBook.language) {
             this.lang = this.parentBook.language;
             this.name[0] = this.parentBook.title;
-            this.getCopyBookid([this.parentBook.bookid])
-              .then(copy_bookid => {
-                this.id[0] = copy_bookid;
-                this.$forceUpdate();
-              })
+            // this.getCopyBookid([this.parentBook.bookid])
+            //   .then(copy_bookid => {
+            //     this.id[0] = copy_bookid;
+            //     this.$forceUpdate();
+            //   })
           }
         }
 
