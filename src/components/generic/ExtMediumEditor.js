@@ -677,7 +677,7 @@ const SuggestButton = MediumEditor.Extension.extend({
   doSuggestSave: function (value = false, updateAction = 'current') {
     let textContent = '';
     this.base.restoreSelection();
-    value = value || this.suggestFormInput.value.trim();
+    value = value || this.suggestFormInput?.value?.trim() || '';
 //     if (value.length) {
       let node = document.createElement(this.wrapNode);
       node.dataset.suggestion = value;
