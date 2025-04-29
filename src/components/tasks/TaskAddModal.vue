@@ -158,8 +158,9 @@ export default {
     ...mapActions([
       'createDummyBook', 'getTaskUsers', 'updateBooksList'
     ]),
-    ...mapActions('booksModule', ['createCopy', 'getCopyBookid']),
-    ...mapActions('tasks', [
+    ...mapActions('booksModule', [
+      'createCopy',
+      'getCopyBookid',
       'getUniqBookId'
     ]),
     cancel() {
@@ -339,6 +340,7 @@ export default {
     },
 
     async generateIds() {
+      //if (!this.parentBook.bookid || !this.id[0]) {
       const newBookIds = [];
       for (let i in this.name) {
         // old method for fallback
@@ -346,7 +348,8 @@ export default {
         try {
           var response = await this.getUniqBookId({
             title: this.name[i],
-            language: this.lang
+            language: this.lang,
+            parentId: this.parentBook.bookid || null
           });
           if (response && response.bookId) {
             _id = response.bookId;
@@ -445,7 +448,7 @@ export default {
   watch: {
     'show': {
       handler(val, oldVal) {
-        console.log(`show:handler:: `, val, oldVal);
+
         this.isShow = false;
 
         this.type = 'with-audio'
@@ -459,23 +462,24 @@ export default {
         this.createdJob = {}
         this.bookUploadError = false;
         this.isUploading = false;
+
         if (this.$refs.bookImport) {
           this.$refs.bookImport.isDummyBook = true;
         }
 
-        this.isShow = val;
-
-        if (this.show) {
+        if (val === true) {
           if (this.parentBook.language) {
             this.lang = this.parentBook.language;
             this.name[0] = this.parentBook.title;
-            this.getCopyBookid([this.parentBook.bookid])
-              .then(copy_bookid => {
-                this.id[0] = copy_bookid;
-                this.$forceUpdate();
-              })
+            // this.getCopyBookid([this.parentBook.bookid])
+            //   .then(copy_bookid => {
+            //     this.id[0] = copy_bookid;
+            //     this.$forceUpdate();
+            //   })
           }
         }
+
+        this.isShow = val;
 
       },
       cache: false
