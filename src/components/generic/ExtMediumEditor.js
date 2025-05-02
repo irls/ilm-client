@@ -812,11 +812,22 @@ const SuggestButton = MediumEditor.Extension.extend({
         })
 
         if (foundSuggestion) {
-          this.doSuggestSave(foundSuggestion.suggestion);
 
           sel.empty();
           this.base.checkSelection();
           this.destroy();
+          
+          this.showApplyModalCallback({
+            suggestion: foundSuggestion.suggestion,
+            text: foundSuggestion.text,
+            action: 'add',
+            hideIfSingle: true
+          })
+            .then(res => {
+              if (res.isApply && res.isEdited) {
+                this.doSuggestSave(foundSuggestion.suggestion);
+              }
+            });
 
           return true;
         }
