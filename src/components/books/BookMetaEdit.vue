@@ -1166,14 +1166,17 @@ export default {
           case this.TAB_META_INDEX:
             break;
           case this.TAB_AUDIO_INDEX:
-          case this.TAB_SUGGESTION_INDEX:
             if (!this.tc_displayAudiointegrationTab()) {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
-              //console.log('HERE')
             }
             break;
           case this.TAB_STYLE_INDEX:
             if (!this.tc_displayStylesTab()) {
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
+            }
+            break;
+          case this.TAB_SUGGESTION_INDEX:
+            if (!this.tc_displaySuggestionsTab()) {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
