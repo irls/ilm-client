@@ -1,6 +1,7 @@
 import MediumEditor from './medium-editor/js/medium-editor.js';
 require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
+import { cleanFilter } from "../../filters/search.js";
 
 const customFormAddListLabel = `<style>
   .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel {
@@ -805,10 +806,10 @@ const SuggestButton = MediumEditor.Extension.extend({
         div.innerHTML = innerHTML;
         //-- } -- end -- Cleanup selected html --//
 
-        const textContent = div.textContent.trim().toLowerCase();
+        const textContent = cleanFilter(div.textContent.trim().toLowerCase());
 
         const foundSuggestion = suggestionsList.find((sugg)=>{
-          return sugg.text.trim().toLowerCase() === textContent;
+          return cleanFilter(sugg.text.trim().toLowerCase()) === textContent;
         })
 
         if (foundSuggestion) {
@@ -816,7 +817,7 @@ const SuggestButton = MediumEditor.Extension.extend({
           sel.empty();
           this.base.checkSelection();
           this.destroy();
-          
+
           this.showApplyModalCallback({
             suggestion: foundSuggestion.suggestion,
             text: foundSuggestion.text,
@@ -908,11 +909,12 @@ const SuggestButton = MediumEditor.Extension.extend({
     var res = await this.showApplyModalCallback({
       suggestion: this.value || this.suggestFormInput.value.trim(),
       text: this.selectedTextContent,
-      action: 'delete'
+      action: 'delete',
+      hideIfSingle: true
     });
 
     if (res.isApply) {
-      if (res.isEdited || res.updateAction === 'current') {
+      if (res.isEdited) {
         this.doSuggestRemove(res.updateAction);
         this.showToolbarDefaultActions();
         this.base.checkContentChanged();

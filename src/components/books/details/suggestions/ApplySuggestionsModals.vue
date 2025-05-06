@@ -85,11 +85,24 @@ export default {
   },
   beforeMount: function() {
     this.isLoadingCounters = true;
-    console.log(this.suggestion);
+    let isEdited = this.modifiedBlockids.indexOf(this.currentBlockId) > -1;
+    if (isEdited) {
+      const closeCallback = ()=>{
+        this.userChoiceSelected({
+          isApply: true,
+          action: this.suggestion.action,
+          updateAction: this.updateAction,
+          // do not apply suggestion changes if block was edited
+          isEdited: isEdited
+        });
+        this.onClose();
+      }
+      closeCallback();
+      return;
+    }
     this.getCounters()
       .then(() => {
-        if (this.suggestion.hideIfSingle && this.matchBlocksCounter <= 1 && this.suggestion.action === "add") {
-          let isEdited = this.modifiedBlockids.indexOf(this.currentBlockId) > -1;
+        if (this.suggestion.hideIfSingle && this.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
           const closeCallback = ()=>{
             this.userChoiceSelected({
               isApply: true,
@@ -107,7 +120,7 @@ export default {
               exclude_ids: [],
               text: this.suggestion.text,
               suggestion: this.suggestion.suggestion,
-              method: 'POST',
+              method: this.suggestion.action === "add" ? 'POST' : 'DELETE',
               first_word: false
             }
             this.postApplySuggestionsFromBlock(requestParams)
@@ -265,6 +278,15 @@ export default {
                 closeCallback()
               })
             } break;
+            case 'current': {
+              requestParams.start_id = this.sourceBlock.blockid;
+              requestParams.end_id = this.sourceBlock.blockid;
+              requestParams.first_word = false;
+              this.postApplySuggestionsFromBlock(requestParams)
+              .then(()=>{
+                closeCallback()
+              })
+            } break;
             default : {
               closeCallback()
             } break;
@@ -301,6 +323,15 @@ export default {
               .then(()=>{
                 closeCallback()
               })
+            } break;
+            case 'current': {
+              requestParams.start_id = this.sourceBlock.blockid;
+              requestParams.end_id = this.sourceBlock.blockid;
+              requestParams.first_word = false;
+              this.postApplySuggestionsFromBlock(requestParams)
+              .then(()=>{
+                closeCallback()
+              });
             } break;
             case 'all' : {
               requestParams.first_word = false;
