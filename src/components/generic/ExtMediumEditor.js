@@ -825,7 +825,7 @@ const SuggestButton = MediumEditor.Extension.extend({
             hideIfSingle: true
           })
             .then(res => {
-              if (res.isApply && res.isEdited) {
+              if (res.isApply && res.applyLocally) {
                 this.doSuggestSave(foundSuggestion.suggestion);
               }
             });
@@ -880,12 +880,13 @@ const SuggestButton = MediumEditor.Extension.extend({
       res = await this.showApplyModalCallback({
         suggestion: suggestion,
         text: this.selectedTextContent,
-        action: this.hasProp ? 'edit': 'add'
+        action: this.hasProp ? 'edit': 'add',
+        hideIfSingle: true
       });
     }
 
     if (res.isApply) {
-      if (res.isEdited || res.updateAction === 'current') {
+      if (res.applyLocally) {
         this.doSuggestSave(false, res.updateAction);
         this.showToolbarDefaultActions();
         this.base.checkContentChanged();
@@ -906,6 +907,12 @@ const SuggestButton = MediumEditor.Extension.extend({
     event.preventDefault();
     this.destroy();
 
+    const sel = window.getSelection();
+    if (sel) {
+      sel.empty();
+      this.base.checkSelection();
+    }
+
     var res = await this.showApplyModalCallback({
       suggestion: this.value || this.suggestFormInput.value.trim(),
       text: this.selectedTextContent,
@@ -914,7 +921,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     });
 
     if (res.isApply) {
-      if (res.isEdited) {
+      if (res.applyLocally) {
         this.doSuggestRemove(res.updateAction);
         this.showToolbarDefaultActions();
         this.base.checkContentChanged();

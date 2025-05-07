@@ -86,14 +86,15 @@ export default {
   beforeMount: function() {
     this.isLoadingCounters = true;
     let isEdited = this.modifiedBlockids.indexOf(this.currentBlockId) > -1;
-    if (isEdited) {
+    if (isEdited || this.sourceBlock.hasAudio) {
       const closeCallback = ()=>{
         this.userChoiceSelected({
           isApply: true,
           action: this.suggestion.action,
           updateAction: this.updateAction,
           // do not apply suggestion changes if block was edited
-          isEdited: isEdited
+          isEdited: isEdited,
+          applyLocally: this.sourceBlock.hasAudio || isEdited
         });
         this.onClose();
       }
