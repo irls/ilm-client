@@ -703,6 +703,15 @@ export const store = new Vuex.Store({
     },
     modifiedBlockids: state => {
       return state.modifiedBlockids;
+    },
+    getBookByIdAlias: state => (bookid_alias = null) => {
+      console.log(`bookid_alias::state.books_meta.length: `, bookid_alias, state.books_meta.length);
+      if (bookid_alias && state.books_meta.length) {
+        return state.books_meta.find((book)=>{
+          return bookid_alias === book.bookid_alias
+        })
+      }
+      return null;
     }
   },
 
@@ -1887,6 +1896,7 @@ export const store = new Vuex.Store({
       if (typeof params.onPage === 'undefined') {
         params.onPage = 10;
       }
+
       let req = state.API_URL + `books/blocks/${params.bookId}/onpage/${params.onPage}`;
       if (params.block) {
         if (params.block === 'unresolved' && params.taskType) {
@@ -1907,11 +1917,15 @@ export const store = new Vuex.Store({
       return state.partOfBookBlocksXHR;
     },
 
-    loadBook ({commit, state, dispatch}, book_id) {
+    loadBook ({commit, state, dispatch, getters}, book_id) {
       if (state.loadBookWait) {
         return state.loadBookWait
       }
-      console.log('loading currentBook: ', book_id);
+
+      const actualBookID = getters.getBookByIdAlias(book_id)?.bookid;
+      if (actualBookID) {
+        book_id = actualBookID;
+      }
 
       // if (!book_id) return  // if no currentbookid, exit
       // if (book_id === context.state.currentBookid) return // skip if already loaded

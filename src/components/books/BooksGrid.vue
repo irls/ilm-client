@@ -265,11 +265,12 @@ export default {
           this.$store.dispatch('loadCollection', false);
         }
         this.selectedBooks = [book.bookid];
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+        const routeBookId = book.bookid_alias || book.bookid;
+        this.$router.replace({ path: '/books/' + routeBookId }) // this triggers update to loadBook
       }
     },
     openBook (book) {
-      const bookid = book.bookid;
+      const bookid = book.bookid_alias || book.bookid;
       if (bookid) {
         switch(true) {
           case this.adminOrLibrarian : case this.isEditor : {
@@ -338,5 +339,5 @@ export default {
 
 
 <style>
-  
+
 </style>

@@ -72,7 +72,7 @@
                 <tr class='bookid'>
                   <td>Book ID</td>
                   <td class='disabled'>
-                    {{currentBook.bookid}}
+                    {{currentBook.bookid_alias || currentBook.bookid}}
                     <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid)"></span>
                   </td>
                 </tr>
@@ -141,7 +141,7 @@
 
                 <tr class='author-link-container'>
                   <td colspan="2">
-                    <BookAuthors 
+                    <BookAuthors
                       :allowMetadataEdit="allowMetadataEdit"
                       :requiredFields="requiredFields[currentBook.bookid] ? requiredFields[currentBook.bookid] : {}"
                       :author_link="currentBook.author_link"
