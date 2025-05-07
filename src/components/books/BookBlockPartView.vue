@@ -4221,6 +4221,7 @@ Join subblocks?`,
             userChoiceSelected: resolvePromise,
             sourceBlock: {
               blockid: this.block.blockid,
+              hasAudio: this.blockPart.audiosrc ? true : false
             }
           }, {
             height: 'auto',
