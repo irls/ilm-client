@@ -26,7 +26,8 @@ export default {
   },
   mutations: {
     setSuggestions(state, suggestions) {
-      state.suggestions = suggestions;
+      state.suggestions.length = 0;
+      state.suggestions.push.apply(state.suggestions, suggestions);
     },
     createdSuggestion(state, suggestion) {
       state.suggestions.unshift(suggestion);
