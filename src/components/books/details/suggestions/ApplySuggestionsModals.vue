@@ -98,9 +98,12 @@ export default {
         });
         this.onClose();
       }
-      closeCallback();
-      return;
-    }
+      Vue.nextTick(() => {
+        closeCallback();
+      });
+      this.isLoadingCounters = false;
+      //return;
+    } else {
     this.getCounters()
       .then(() => {
         if (this.suggestion.hideIfSingle && this.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
@@ -133,6 +136,7 @@ export default {
         }
         this.isLoadingCounters = false;
       });
+    }
   },
   mounted: function () {
     //this.getCounters();
