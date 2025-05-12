@@ -49,7 +49,8 @@ export default {
       'adminOrLibrarian',
       'isEditor',
       'isNarrator',
-      'isProofer'
+      'isProofer',
+      'getBookByIdAlias'
     ]),
     ...mapGetters({
       fltrChangeTrigger: 'gridFilters/fltrChangeTrigger',
@@ -194,7 +195,11 @@ export default {
       Vue.nextTick(()=>{
         if (this.$route && this.$route.params) {
           if (this.$route.params.hasOwnProperty('bookid')) {
-            const selectedBookId = this.$route.params.bookid;
+            let selectedBookId = this.$route.params.bookid;
+            const actualBookID = this.getBookByIdAlias(selectedBookId);
+            if (actualBookID) {
+              selectedBookId = actualBookID;
+            }
             this.initScroll(selectedBookId)
             .then((isOk)=>{
               if (isOk !== true) {

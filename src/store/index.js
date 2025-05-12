@@ -705,11 +705,11 @@ export const store = new Vuex.Store({
       return state.modifiedBlockids;
     },
     getBookByIdAlias: state => (bookid_alias = null) => {
-      console.log(`bookid_alias::state.books_meta.length: `, bookid_alias, state.books_meta.length);
       if (bookid_alias && state.books_meta.length) {
-        return state.books_meta.find((book)=>{
+        const book = state.books_meta.find((book)=>{
           return bookid_alias === book.bookid_alias
         })
+        return book && book.bookid ? book.bookid : null;
       }
       return null;
     }
@@ -1922,7 +1922,7 @@ export const store = new Vuex.Store({
         return state.loadBookWait
       }
 
-      const actualBookID = getters.getBookByIdAlias(book_id)?.bookid;
+      const actualBookID = getters.getBookByIdAlias(book_id);
       if (actualBookID) {
         book_id = actualBookID;
       }
