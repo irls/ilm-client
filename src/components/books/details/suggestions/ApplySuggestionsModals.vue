@@ -18,13 +18,13 @@
           <label for="apSugg1">current selection</label>
         </div>
         <div class="apply-suggestions-radio-button"
-             v-show="matchFirstWordBlocksCounter > 0">
+             v-show="counters.matchFirstWordBlocksCounter > 0">
           <RadioButton v-model="updateAction" id="apSugg2" name="apSugg" value="allFirst" />
-          <label for="apSugg2">all matching blocks, first word(s) only ({{matchFirstWordBlocksCounter}})</label>
+          <label for="apSugg2">all matching blocks, first word(s) only ({{counters.matchFirstWordBlocksCounter}})</label>
         </div>
         <div class="apply-suggestions-radio-button">
           <RadioButton v-model="updateAction" id="apSugg3" name="apSugg" value="all" />
-          <label for="apSugg3">all matching blocks ({{matchBlocksCounter}})</label>
+          <label for="apSugg3">all matching blocks ({{counters.matchBlocksCounter}})</label>
         </div>
       </div>
       <div class="apply-suggestions-checkbox-wrapper">
@@ -84,57 +84,29 @@ export default {
     }
   },
   beforeMount: function() {
-    this.isLoadingCounters = true;
-    let isEdited = this.modifiedBlockids.indexOf(this.currentBlockId) > -1;
-    if (isEdited || this.sourceBlock.hasAudio) {
+    if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
       const closeCallback = ()=>{
         this.userChoiceSelected({
           isApply: true,
           action: this.suggestion.action,
           updateAction: this.updateAction,
           // do not apply suggestion changes if block was edited
-          isEdited: isEdited,
-          applyLocally: this.sourceBlock.hasAudio || isEdited
+          isEdited: false
         });
         this.onClose();
       }
+      const requestParams = {
+        start_id: this.sourceBlock.blockid,
+        end_id: this.sourceBlock.blockid,
+        exclude_ids: [],
+        text: this.suggestion.text,
+        suggestion: this.suggestion.suggestion,
+        method: this.suggestion.action === "add" ? 'POST' : 'DELETE',
+        first_word: false
+      }
+      this.postApplySuggestionsFromBlock(requestParams)
       Vue.nextTick(() => {
         closeCallback();
-      });
-      this.isLoadingCounters = false;
-      //return;
-    } else {
-    this.getCounters()
-      .then(() => {
-        if (this.suggestion.hideIfSingle && this.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
-          const closeCallback = ()=>{
-            this.userChoiceSelected({
-              isApply: true,
-              action: this.suggestion.action,
-              updateAction: this.updateAction,
-              // do not apply suggestion changes if block was edited
-              isEdited: isEdited
-            });
-            this.onClose();
-          }
-          if (!isEdited) {
-            const requestParams = {
-              start_id: this.sourceBlock.blockid,
-              end_id: this.sourceBlock.blockid,
-              exclude_ids: [],
-              text: this.suggestion.text,
-              suggestion: this.suggestion.suggestion,
-              method: this.suggestion.action === "add" ? 'POST' : 'DELETE',
-              first_word: false
-            }
-            this.postApplySuggestionsFromBlock(requestParams)
-                    //.then(()=>{
-                      //closeCallback()
-                    //})
-          }
-          closeCallback();
-        }
-        this.isLoadingCounters = false;
       });
     }
   },
@@ -144,6 +116,9 @@ export default {
     let suggestionElement = document.getElementById("apSugg1");
     if (suggestionElement) {
       suggestionElement.focus();
+    }
+    if (this.isDoNotDisturb) {
+      this.updateAction = this.getLastAction;
     }
   },
   computed: {
@@ -226,7 +201,8 @@ export default {
     ...mapGetters('suggestionsModule', [
       'suggestions',
       'getIsDoNotDisturb',
-      'getLastAction'
+      'getLastAction',
+      'counters'
     ]),
   },
   methods: {
@@ -359,27 +335,12 @@ export default {
       return false;
     },
     getCounters() {
-      const start_id = this.parlistO.idsArray()[0];
-      const end_id = this.parlistO.idsArray()[this.parlistO.idsArray().length - 1];
-      const exclude_ids = [];
-      const isAddNew = this.suggestion.action === 'add';
-      //const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
 
-      console.log(`${__filename.substr(-30)}:this.suggestion.action:: `, this.suggestion.action);
-
-      return this.countApplicableSuggestions({
-        start_id,
-        end_id,
-        exclude_ids,
-        text: this.suggestion.text,
-        suggestion: this.suggestion.suggestion,
-        isAddNew,
-        sourceBlock: this.sourceBlock
-      })
-      .then((fullBlockCounters)=>{
-        console.log(`fullBlockCounters::: `, fullBlockCounters);
-        this.matchBlocksCounter = fullBlockCounters.blocks;
-        this.matchFirstWordBlocksCounter = fullBlockCounters.firstWordBlocks;
+      return this.getSuggestionCounters([
+        this.suggestion,
+        this.sourceBlock
+      ])
+      .then(() => {
         if (this.isDoNotDisturb) {
           this.updateAction = this.getLastAction;
         }
