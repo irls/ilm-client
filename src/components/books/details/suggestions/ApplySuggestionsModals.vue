@@ -84,6 +84,10 @@ export default {
     }
   },
   beforeMount: function() {
+    this.isDoNotDisturb = this.getIsDoNotDisturb;
+    if (this.isDoNotDisturb) {
+      this.updateAction = this.getLastAction;
+    }
     if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
       const closeCallback = ()=>{
         this.userChoiceSelected({
@@ -108,17 +112,18 @@ export default {
       Vue.nextTick(() => {
         closeCallback();
       });
+    } else if (this.isDoNotDisturb) {
+      this.onApplySuggestion();
+      Vue.nextTick(() => {
+        this.onClose();
+      });
     }
   },
   mounted: function () {
     //this.getCounters();
-    this.isDoNotDisturb = this.getIsDoNotDisturb;
     let suggestionElement = document.getElementById("apSugg1");
     if (suggestionElement) {
       suggestionElement.focus();
-    }
-    if (this.isDoNotDisturb) {
-      this.updateAction = this.getLastAction;
     }
   },
   computed: {
@@ -240,6 +245,7 @@ export default {
         text: this.suggestion.text,
         suggestion: this.suggestion.suggestion
       }
+      this.setLastAction(this.updateAction);
 
       switch(this.suggestion.action) {
         case 'add' : {
