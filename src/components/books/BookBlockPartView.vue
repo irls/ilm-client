@@ -817,7 +817,8 @@ export default {
           isBlockOrPartLocked: 'isBlockOrPartLocked',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
           storeListById: 'storeListById',
-          blockAudiosrcConfig: 'blockAudiosrcConfig'
+          blockAudiosrcConfig: 'blockAudiosrcConfig',
+          modifiedBlockids: 'modifiedBlockids'
       }),
       ...mapGetters('uploadImage', {
         tempImage: 'file'
@@ -1134,6 +1135,7 @@ export default {
         'splitBySubblock',
         'mergeAllBlockParts'
       ]),
+    ...mapActions('suggestionsModule', ['getSuggestionCounters']),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
@@ -4215,23 +4217,61 @@ Join subblocks?`,
       suggestionShowApplyModalCallback(suggestion) {
         // vue-js-modal workaround to get results of user choice
         return new Promise(resolvePromise => {
-          this.$modal.show(ApplySuggestionsModals, {
-            suggestion: suggestion,
-            currentBlockId: this.block.blockid,
-            userChoiceSelected: resolvePromise,
-            sourceBlock: {
-              blockid: this.block.blockid,
-              hasAudio: this.blockPart.audiosrc ? true : false
-            }
-          }, {
-            height: 'auto',
-            width: '480px',
-            clickToClose: false
-          },
-          { // 'closed': (result) => {},
-            // 'before-close': (params) => {}
-          });
-
+          let isEdited = this.modifiedBlockids.includes(this.block.blockid);
+          if (isEdited || this.blockPart.audiosrc) {
+            return resolvePromise({
+              isApply: true,
+              action: suggestion.action,
+              updateAction: 'current',
+              // do not apply suggestion changes if block was edited
+              isEdited: isEdited,
+              applyLocally: this.blockPart.audiosrc || isEdited
+            });
+          }
+          let sourceBlock = {
+            blockid: this.block.blockid,
+            hasAudio: this.blockPart.audiosrc ? true : false
+          };
+          return this.getSuggestionCounters([
+            suggestion, sourceBlock
+          ])
+            .then((counters) => {
+              /*if (suggestion.hideIfSingle && counters.matchBlocksCounter <= 1 && ["add", "delete"].includes(suggestion.action)) {
+                const requestParams = {
+                  start_id: this.sourceBlock.blockid,
+                  end_id: this.sourceBlock.blockid,
+                  exclude_ids: [],
+                  text: this.suggestion.text,
+                  suggestion: this.suggestion.suggestion,
+                  method: this.suggestion.action === "add" ? 'POST' : 'DELETE',
+                  first_word: false
+                }
+                this.postApplySuggestionsFromBlock(requestParams)
+                  .then(()=>{
+                    
+                    return resolvePromise({
+                      isApply: true,
+                      action: this.suggestion.action,
+                      updateAction: this.updateAction,
+                      // do not apply suggestion changes if block was edited
+                      isEdited: isEdited
+                    });
+                  })
+              }*/
+              this.$modal.show(ApplySuggestionsModals, {
+                suggestion: suggestion,
+                currentBlockId: this.block.blockid,
+                userChoiceSelected: resolvePromise,
+                sourceBlock: sourceBlock
+              }, {
+                height: 'auto',
+                width: '480px',
+                clickToClose: false
+              },
+              { // 'closed': (result) => {},
+                // 'before-close': (params) => {}
+              });
+            });
         });
       }
 

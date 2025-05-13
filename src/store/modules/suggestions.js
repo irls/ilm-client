@@ -6,7 +6,11 @@ export default {
     suggestions: [],
     applySuggestions: [],
     isDoNotDisturb: false,
-    lastAction: ''
+    lastAction: '',
+    counters: {
+      matchBlocksCounter: 0,
+      matchFirstWordBlocksCounter: 0
+    }
   },
   getters: {
     suggestions: state => (category = null) => {
@@ -23,6 +27,7 @@ export default {
     getAllSuggestions: state => state.suggestions,
     getIsDoNotDisturb: state => state.isDoNotDisturb,
     getLastAction: state => state.lastAction,
+    counters: state => state.counters,
   },
   mutations: {
     setSuggestions(state, suggestions) {
@@ -278,6 +283,37 @@ export default {
           console.log(err.message);
           return Promise.reject(err);
         });
+    },
+
+    getSuggestionCounters({state, rootState, dispatch}, [suggestion, sourceBlock]) {
+      const start_id = rootState.storeListO.idsArray()[0];
+      const end_id = rootState.storeListO.idsArray()[rootState.storeListO.idsArray().length - 1];
+      const exclude_ids = [];
+      const isAddNew = suggestion.action === 'add';
+      //const exclude_ids = this.currentBlockId.length ? [this.currentBlockId] : [];
+
+      return dispatch('countApplicableSuggestions', {
+        start_id,
+        end_id,
+        exclude_ids,
+        text: suggestion.text,
+        suggestion: suggestion.suggestion,
+        isAddNew,
+        sourceBlock: sourceBlock
+      })
+      .then((fullBlockCounters)=>{
+        console.log(`fullBlockCounters::: `, fullBlockCounters);
+        state.counters.matchBlocksCounter = fullBlockCounters.blocks;
+        state.counters.matchFirstWordBlocksCounter = fullBlockCounters.firstWordBlocks;
+        //if (this.isDoNotDisturb) {
+          //this.updateAction = this.getLastAction;
+        //}
+        return {};
+      })
+      .catch((err)=>{
+        console.error(err.message || err);
+        return {};
+      });
     }
   }
 }
