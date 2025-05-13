@@ -169,12 +169,12 @@ export default {
       let path = '/books';
       if (this.isBookRoute) {
         if (this.currentBookMeta) {
-          const currentBookid = this.$store.state.currentBookid;
+          const currentBookid = this.currentBookMeta.bookid_alias || this.$store.state.currentBookid;
           path = '/books' + (currentBookid?'/'+currentBookid:'')
         }
       }
       if (this.isCollectionRoute && this.$route.params && this.$route.params.collectionid) {
-        const currentBookid = this.$store.state.currentBookid;
+        const currentBookid = this.currentBookMeta.bookid_alias || this.$store.state.currentBookid;
         path = '/collections/books/' + this.$route.params.collectionid + '/' + (currentBookid?currentBookid:'')
       }
       this.$router.replace(path);

@@ -49,7 +49,8 @@ export default {
       'adminOrLibrarian',
       'isEditor',
       'isNarrator',
-      'isProofer'
+      'isProofer',
+      'getBookByIdAlias'
     ]),
     ...mapGetters({
       fltrChangeTrigger: 'gridFilters/fltrChangeTrigger',
@@ -194,7 +195,11 @@ export default {
       Vue.nextTick(()=>{
         if (this.$route && this.$route.params) {
           if (this.$route.params.hasOwnProperty('bookid')) {
-            const selectedBookId = this.$route.params.bookid;
+            let selectedBookId = this.$route.params.bookid;
+            const actualBookID = this.getBookByIdAlias(selectedBookId);
+            if (actualBookID) {
+              selectedBookId = actualBookID;
+            }
             this.initScroll(selectedBookId)
             .then((isOk)=>{
               if (isOk !== true) {
@@ -265,11 +270,12 @@ export default {
           this.$store.dispatch('loadCollection', false);
         }
         this.selectedBooks = [book.bookid];
-        this.$router.replace({ path: '/books/' + bookid }) // this triggers update to loadBook
+        const routeBookId = book.bookid_alias || book.bookid;
+        this.$router.replace({ path: '/books/' + routeBookId }) // this triggers update to loadBook
       }
     },
     openBook (book) {
-      const bookid = book.bookid;
+      const bookid = book.bookid_alias || book.bookid;
       if (bookid) {
         switch(true) {
           case this.adminOrLibrarian : case this.isEditor : {
@@ -338,5 +344,5 @@ export default {
 
 
 <style>
-  
+
 </style>

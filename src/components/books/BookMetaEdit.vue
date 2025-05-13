@@ -72,8 +72,8 @@
                 <tr class='bookid'>
                   <td>Book ID</td>
                   <td class='disabled'>
-                    {{currentBook.bookid}}
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid)"></span>
+                    {{currentBook.bookid_alias || currentBook.bookid}}
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid_alias || currentBook.bookid)"></span>
                   </td>
                 </tr>
 

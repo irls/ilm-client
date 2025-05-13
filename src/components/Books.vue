@@ -112,7 +112,8 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian', 'hashTagsSuggestions']),
+    ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian',
+    'hashTagsSuggestions', 'getBookByIdAlias']),
 
     getBookid() {
       return this.$store.state.currentBookid
@@ -238,22 +239,27 @@ export default {
   props: ['listing'],
 
   mounted() {
-        // load intial book
-        // this.$router.replace({ path: '/books/' + this.$route.params.bookid })
-        if (this.$route.params.hasOwnProperty('bookid')) {
-          if (!this.currentBookMeta._id || this.currentBookMeta._id != this.$route.params.bookid) {
-            this.loadBook(this.$route.params.bookid);
-          }
-        }
+    // load intial book
+    // this.$router.replace({ path: '/books/' + this.$route.params.bookid })
+    if (this.$route.params.hasOwnProperty('bookid')) {
+      let book_id = this.$route.params.bookid;
+      const actualBookID = this.getBookByIdAlias(book_id);
+      if (actualBookID) {
+        book_id = actualBookID;
+      }
+      if (!this.currentBookMeta._id || this.currentBookMeta._id != book_id) {
+        this.loadBook(book_id);
+      }
+    }
 
-        this.$root.$on('show-modal', (params) => {this.showModal(params)})
-        this.$root.$on('hide-modal', () => {this.hideModal()})
-        this.$root.$on('book-reimport-modal', this.evOnReimportModal);
-        this.$root.$on('set-error-alert', this.setErrorAlert);
-        this.$root.$on('set-alert', this.setAlert);
-        this.$root.$on('for-bookedit:scroll-to-block', this.goToBlock);
+    this.$root.$on('show-modal', (params) => {this.showModal(params)})
+    this.$root.$on('hide-modal', () => {this.hideModal()})
+    this.$root.$on('book-reimport-modal', this.evOnReimportModal);
+    this.$root.$on('set-error-alert', this.setErrorAlert);
+    this.$root.$on('set-alert', this.setAlert);
+    this.$root.$on('for-bookedit:scroll-to-block', this.goToBlock);
 
-//         this.loadTTSVoices();
+    //this.loadTTSVoices();
   },
 
   methods: {
