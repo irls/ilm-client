@@ -88,7 +88,7 @@ export default {
     if (this.isDoNotDisturb) {
       this.updateAction = this.getLastAction(this.suggestion.action, this.suggestion.text);
     }
-    if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
+    if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && ["add", "delete", "edit"].includes(this.suggestion.action)) {
       const closeCallback = ()=>{
         this.userChoiceSelected({
           isApply: true,
@@ -105,7 +105,7 @@ export default {
         exclude_ids: [],
         text: this.suggestion.text,
         suggestion: this.suggestion.suggestion,
-        method: this.suggestion.action === "add" ? 'POST' : 'DELETE',
+        method: this.suggestion.action === "add" ? 'POST' : (this.suggestion.action === "delete" ? 'DELETE' : 'PUT'),
         first_word: false
       }
       this.postApplySuggestionsFromBlock(requestParams)
