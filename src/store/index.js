@@ -4316,6 +4316,11 @@ export const store = new Vuex.Store({
               }
               //console.log(state.lockedBlocks)
             }
+            return response.data;
+          })
+          .catch(err => {
+            console.log(err.message, err.stack);
+            return Promise.reject(err);
           });
       }
     },
