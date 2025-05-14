@@ -84,9 +84,9 @@ export default {
     }
   },
   beforeMount: function() {
-    this.isDoNotDisturb = this.getIsDoNotDisturb;
+    this.isDoNotDisturb = this.getIsDoNotDisturb(this.suggestion.action, this.suggestion.text) ? true : false;
     if (this.isDoNotDisturb) {
-      this.updateAction = this.getLastAction;
+      this.updateAction = this.getLastAction(this.suggestion.action, this.suggestion.text);
     }
     if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && ["add", "delete"].includes(this.suggestion.action)) {
       const closeCallback = ()=>{
@@ -245,7 +245,9 @@ export default {
         text: this.suggestion.text,
         suggestion: this.suggestion.suggestion
       }
-      this.setLastAction(this.updateAction);
+      if (this.isDoNotDisturb) {
+        this.setDoNotDisturb([this.suggestion.action, this.suggestion.text, this.updateAction]);
+      }
 
       switch(this.suggestion.action) {
         case 'add' : {
@@ -363,21 +365,11 @@ export default {
       'postApplySuggestionsFromBlock'
     ]),
     ...mapMutations('suggestionsModule', [
-      'setDoNotDisturb',
-      'setLastAction'
+      'setDoNotDisturb'
     ]),
   },
   watch: {
-    isDoNotDisturb: {
-      handler(newVal, oldVal) {
-        this.setDoNotDisturb(newVal);
-      }
-    },
-    updateAction: {
-      handler(newVal, oldVal) {
-        this.setLastAction(newVal);
-      }
-    }
+    
   }
 }
 </script>

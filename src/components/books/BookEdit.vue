@@ -2614,7 +2614,7 @@ export default {
         };
       });
 
-      this.setDoNotDisturb(false); // apply suggestions modal param
+      this.setDoNotDisturb([false]); // apply suggestions modal param
   },
 
   beforeDestroy:  function() {

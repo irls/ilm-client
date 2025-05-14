@@ -1,11 +1,16 @@
 import axios from 'axios';
+import { cleanFilter } from "../../filters/search";
 
 export default {
   namespaced: true,
   state: {
     suggestions: [],
     applySuggestions: [],
-    isDoNotDisturb: false,
+    isDoNotDisturb: {
+      add: [],
+      edit: [],
+      delete: []
+    },
     lastAction: '',
     counters: {
       matchBlocksCounter: 0,
@@ -25,8 +30,25 @@ export default {
       return applySuggestions ? applySuggestions : {};
     },
     getAllSuggestions: state => state.suggestions,
-    getIsDoNotDisturb: state => state.isDoNotDisturb,
-    getLastAction: state => state.lastAction,
+    getIsDoNotDisturb: state => (action, word) => {
+      if (!state.isDoNotDisturb.hasOwnProperty(action)) {
+        return false;
+      }
+      let checkWord = cleanFilter(word);
+      return state.isDoNotDisturb[action].find(record => {
+        return record.word === checkWord && record.matchBlocksCounter === state.counters.matchBlocksCounter > 0 && record.matchFirstWordBlocksCounter === state.counters.matchFirstWordBlocksCounter > 0;
+      });
+    },
+    getLastAction: (state, getters) => (action, word) => {
+      if (!state.isDoNotDisturb.hasOwnProperty(action)) {
+        return '';
+      }
+      let actionRecord = getters.getIsDoNotDisturb(action, word);
+      if (actionRecord) {
+        return actionRecord.updateAction;
+      }
+      return '';
+    },
     counters: state => state.counters,
   },
   mutations: {
@@ -37,8 +59,24 @@ export default {
     createdSuggestion(state, suggestion) {
       state.suggestions.unshift(suggestion);
     },
-    setDoNotDisturb(state, value) {
-      state.isDoNotDisturb = !!value;
+    setDoNotDisturb(state, [action, word, updateAction]) {
+      if (action === false) {
+        Object.keys(state.isDoNotDisturb).forEach(action => {
+          state.isDoNotDisturb[action] = [];
+        });
+      } else {
+        let checkWord = cleanFilter(word);
+        if (state.isDoNotDisturb.hasOwnProperty(action)) {
+          if (!this.getters["suggestionsModule/getIsDoNotDisturb"](action, word)) {
+            state.isDoNotDisturb[action].push({
+              word: checkWord, 
+              matchBlocksCounter: state.counters.matchBlocksCounter > 0, 
+              matchFirstWordBlocksCounter: state.counters.matchFirstWordBlocksCounter > 0,
+              updateAction: updateAction
+            });
+          }
+        }
+      }
     },
     setLastAction(state, value) {
       state.lastAction = value;
