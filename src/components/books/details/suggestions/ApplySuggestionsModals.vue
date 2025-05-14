@@ -298,6 +298,15 @@ export default {
                 closeCallback()
               })
             } break;
+            case 'current': {
+              requestParams.start_id = this.sourceBlock.blockid;
+              requestParams.end_id = this.sourceBlock.blockid;
+              requestParams.first_word = false;
+              this.postApplySuggestionsFromBlock(requestParams)
+                .then(()=>{
+                  closeCallback();
+                });
+            } break;
             default : {
               closeCallback()
             } break;
