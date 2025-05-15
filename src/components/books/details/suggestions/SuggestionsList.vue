@@ -176,6 +176,9 @@
       onAddEvent(suggestionItem = {}) {
         this.edit_suggestion.text = suggestionItem.text;
         this.edit_suggestion.suggestion = suggestionItem.suggestion;
+        if (this.category) {
+          this.edit_suggestion.category = this.category;
+        }
         this.filter = suggestionItem.text;
         this.addSuggestionMode = true;
       },
