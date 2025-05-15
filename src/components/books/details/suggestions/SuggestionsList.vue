@@ -30,7 +30,7 @@
       </div>
     </div>
     <div v-if="addSuggestionMode" class="add-suggestion">
-      <EditSuggestion
+      <EditSuggestion ref="addSuggestion"
         :suggestion="edit_suggestion"
         @save="createSuggestion"
         @cancel="cancelCreate" />
@@ -171,7 +171,13 @@
       add() {
         this.edit_suggestion.text = this.filter;
         this.edit_suggestion.category = this.category;
+        this.edit_suggestion.suggestion = '';
+        this.edit_suggestion.voice_id = null;
+        this.edit_suggestion.voice_example = '';
         this.addSuggestionMode = true;
+        if (this.$refs['addSuggestion']) {
+          this.$refs['addSuggestion'].reset = true;
+        }
       },
       onAddEvent(suggestionItem = {}) {
         this.edit_suggestion.text = suggestionItem.text;
