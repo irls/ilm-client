@@ -7,7 +7,7 @@
       <input type="text" v-model="suggestion.suggestion" placeholder="Add Suggestion" />
     </div>
     <div>
-      <select-tts-voice
+      <select-tts-voice ref="voice_select"
         :pre_selected="suggestion.voice_id ? suggestion.voice_id : ''"
         :voices="all_voices"
         :block_type="'paragraph'"
@@ -37,7 +37,8 @@
       return {
         all_voices: [],
         audio_element: null,
-        audio_playing: false
+        audio_playing: false,
+        reset: false
       }
     },
     props: {
@@ -171,6 +172,16 @@
         this.$forceUpdate();
       },
       ...mapActions('ttsModule', ['getTTSVoices', 'generateExample'])
+    },
+    watch: {
+      "reset": {
+        handler(val) {
+          if (val) {
+            this.$refs['voice_select'].value = '';// trick to reset selection
+            this.reset = false;
+          }
+        }
+      }
     }
   }
 </script>
