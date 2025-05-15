@@ -294,8 +294,6 @@ export default {
         request.suggestion = suggestion;
       }
 
-      console.log(`postApplySuggestionsFromBlock:params:: `, request);
-
       let axiosRequest = Promise.resolve({});
 
       switch(method) {
@@ -340,7 +338,6 @@ export default {
         sourceBlock: sourceBlock
       })
       .then((fullBlockCounters)=>{
-        console.log(`fullBlockCounters::: `, fullBlockCounters);
         state.counters.matchBlocksCounter = fullBlockCounters.blocks;
         state.counters.matchFirstWordBlocksCounter = fullBlockCounters.firstWordBlocks;
         //if (this.isDoNotDisturb) {
