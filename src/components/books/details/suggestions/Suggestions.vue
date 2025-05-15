@@ -60,13 +60,16 @@
         document.getElementById(`p-${this.activeTab}`).style.removeProperty('display');
       },
       activateSuggestionsTab(suggestionItem = {}) {
-        this.$refs.categoriesTabs.navigateToTab(0);
+        if (!this.isActive) {
+          this.$refs.categoriesTabs.navigateToTab(0);
+        }
         const tabs = this.$refs.categoriesTabs.getTabs();
         if (tabs && tabs.length) {
-          const tabComponent = tabs[0]?.child?.$children;
-          if (tabComponent && tabComponent.length) {
-            tabComponent[0].onAddEvent(suggestionItem);
-
+          for (const tab of tabs) {
+            const tabComponent = tab?.child?.$children;
+            if (tabComponent && tabComponent.length) {
+              tabComponent[0].onAddEvent(suggestionItem);
+            }
           }
         }
       },
