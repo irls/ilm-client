@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
+import lodash from 'lodash'
 import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
@@ -4275,12 +4276,13 @@ export const store = new Vuex.Store({
     },
     getProcessQueue({state, dispatch, commit}) {
       if (state.currentBookMeta.bookid) {
+        let lockedBlocks = lodash.cloneDeep(state.lockedBlocks);
         return axios.get(state.API_URL + 'process_queue/' + state.currentBookMeta.bookid)
           .then(response => {
             //locks
             let oldIds = {};
             if (typeof response.data !== 'undefined' && Array.isArray(response.data)) {
-              state.lockedBlocks.forEach(b => {
+              lockedBlocks.forEach(b => {
                 let r = response.data.find(_r => {
                   return _r.blockid === b._id && _r.taskType === b.type;
                 });
@@ -4318,7 +4320,8 @@ export const store = new Vuex.Store({
                       });
                     });
                     dispatch('startProcessQueueWatch');
-                  } else {
+                  }
+                  if (state.lockedBlocks.length === 0) {
                     dispatch('stopProcessQueueWatch');
                     dispatch('tc_loadBookTask');
                   }

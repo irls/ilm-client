@@ -263,7 +263,7 @@ export default {
         });
     },
 
-    postApplySuggestionsFromBlock({rootState, dispatch}, {
+    postApplySuggestionsFromBlock({rootState, dispatch, commit}, {
       method = 'POST',
       category = null,
       start_id = null,
@@ -310,6 +310,15 @@ export default {
 
       return axiosRequest
         .then(response => {
+          if (Array.isArray(response.data)) {
+            response.data.forEach(r => {
+              commit('add_block_lock', {
+                block: r,
+                type: r.taskType,
+                inProcess: true
+              }, {root: true});
+            })
+          }
           return dispatch('getProcessQueue', {}, {root: true})
             .then(() => {
               return response.data;
