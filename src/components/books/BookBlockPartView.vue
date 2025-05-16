@@ -1016,7 +1016,7 @@ export default {
 
       //this.voiceworkSel = this.block.voicework;
       if (Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
-        this.isChanged = this.block.parts[this.blockPartIdx].isChanged || false;
+        this.isChanged = this.block.parts[this.blockPartIdx].isChanged ? true : false;
         this.isAudioChanged = this.block.parts[this.blockPartIdx].isAudioChanged;
         this.isIllustrationChanged = this.block.parts[this.blockPartIdx].isIllustrationChanged;
         if (this.block.parts[this.blockPartIdx].changes) {
@@ -1745,6 +1745,15 @@ export default {
                           this.blockPart.content = storeBlock.getPartContent(pIdx);
                         }
                       });
+                      if (this._isDestroyed) {
+                        let hasChangedPart = this.block.isChanged || this.block.parts.find((part, partIdx) => {
+                          return partIdx !== this.blockPartIdx && part.isChanged;
+                        });
+                        if (!hasChangedPart) {// force not changed state for destroyed component
+                          this.remove_modified_block(this.block.blockid);
+                          this.$root.$emit("from-block-part-view:changed", this.block.blockid, false);
+                        }
+                      }
                     }
                     if (this.blockAudio.map) {
                       this.blockAudio.map = this.blockPart.content;
@@ -2901,7 +2910,7 @@ export default {
       },
       setChanged(val, type = null, event = null) {
         //console.log('BookBlockPartView.setChanged', val, type, event, this.block.classes);
-        this.isChanged = val;
+        this.isChanged = val ? true : false;
         if (val && type) {
           this.pushChange(type);
           if (this.block) {
@@ -2927,7 +2936,7 @@ export default {
       setChangedByClass(val) {
         //console.log('setChangedByClass', this.block.type, val);
         if (this.block.type === 'title') {
-          this.isChanged = val;
+          this.isChanged = val ? true : false;
           this.pushChange('class');
         }
       },
@@ -4405,7 +4414,8 @@ Join subblocks?`,
             this.remove_modified_block(this.block.blockid);
           }
           this.$root.$emit("from-block-part-view:changed", this.block.blockid, val);
-        }
+        },
+        //immediate: true
       },
       'isAudioChanged': {
         handler(val) {
@@ -4493,13 +4503,13 @@ Join subblocks?`,
           //console.log(this.block._id, 'approveWaiting', val);
         }
       },
-      /*'hasChanges' :{
+      /*'hasChanges': {
         handler(val) {
-          if (!this.isSplittedBlock) {
-            this.$emit('hasChanges', val);
+          if (this.isSplittedBlock) {
+            this.$root.$emit("from-block-part-view:changed", this.block.blockid, val);
           }
         }
-      }*/
+      },*/
       'block.language' : {
         handler(val) {
           this.destroyEditor();
