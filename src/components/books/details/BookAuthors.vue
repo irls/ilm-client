@@ -66,12 +66,12 @@
                 <input v-model='author_link[i].name_en'
                       @change="editAuthorLink($event, i, 'name_en')"
                       @input="startInput('name_en_' + i)"
-                      :disabled="authorEnDisabled(author_link[i])"
+                      :disabled="authorEnDisabled(i)"
                       :class="['author-name', { '-has-error': hasError(i, 'name_en') }]" />
                 <DropdownILM
                   :value="author_link[i]"
                   :options="authorsEnList"
-                  :disabled="authorEnDisabled(author_link[i])"
+                  :disabled="authorEnDisabled(i)"
                   :filter="true"
                   :showClear="false&&author_link[i].id !== null"
                   :optionDisabled="getDisabledAuthorsEn"
@@ -232,8 +232,12 @@
         }
         return false;
       },
-      authorEnDisabled(author) {
-        if (!this.allowMetadataEdit) {
+      authorEnDisabled(idx) {
+        if (!this.allowMetadataEdit || idx === this.updatingIndex) {
+          return true;
+        }
+        let author = this.author_link[idx];
+        if (!author) {
           return true;
         }
         if (author.id && author.id.length > 0 && author.name && author.name.length > 0 && !author.name_added) {
