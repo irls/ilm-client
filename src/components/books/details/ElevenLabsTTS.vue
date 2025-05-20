@@ -467,7 +467,7 @@
         }
         if (voice && !voice.example) {
           this.generating_example = voice.voice_id;
-          return this.generateExample(voice.id)
+          return this.generateExample([voice.id])
             .then(response => {
               this.generating_example = null;
               return this.loadBookVoices();

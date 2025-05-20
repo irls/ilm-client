@@ -102,7 +102,7 @@
 
 <script>
 import SelectionModal from './SelectionModal'
-import { mapGetters, mapState, mapActions } from 'vuex'
+import { mapGetters, mapState, mapActions, mapMutations } from 'vuex'
 import BookBlockView from './BookBlockView'
 import BookBlockPreview   from './BookBlockPreview';
 import InfiniteLoading from 'vue-infinite-loading'
@@ -317,8 +317,15 @@ export default {
     'putNumBlockOBatch',
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges', 'findNextAudioblock']),
-    ...mapActions('setBlocksDisabled', ['getDisabledBlocks']),
-    ...mapActions('tocSections', ['loadBookTocSections']),
+    ...mapActions('setBlocksDisabled', [
+      'getDisabledBlocks'
+    ]),
+    ...mapActions('tocSections', [
+      'loadBookTocSections'
+    ]),
+    ...mapMutations('suggestionsModule', [
+      'setDoNotDisturb'
+    ]),
 
     test(ev) {
         console.log('test', ev);
@@ -2615,6 +2622,8 @@ export default {
           } break;
         };
       });
+
+      this.setDoNotDisturb([false]); // apply suggestions modal param
   },
 
   beforeDestroy:  function() {
