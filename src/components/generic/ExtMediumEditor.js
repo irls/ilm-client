@@ -1,6 +1,48 @@
 import MediumEditor from './medium-editor/js/medium-editor.js';
 require('./medium-editor/css/medium-editor.min.css');
 require('./medium-editor/css/themes/flat.min.css');
+import { cleanFilter } from "../../filters/search.js";
+
+const customFormAddListLabel = `<style>
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel {
+    height: 30px; width: 30px;
+    display: inline-block;
+    position: relative; top: 9px; left: 1px;
+    background-size: contain;
+    background-image: url(/static/MediumEditorButtons/playlist-add-white-svgrepo-com.svg);
+  }
+  .medium-editor-toolbar-form .medium-editor-toolbar-add-list-item i.customFormAddListLabel:hover {
+    background-image: url(/static/MediumEditorButtons/playlist-add-gray-svgrepo-com.svg);
+  }
+</style>
+<i class="customFormAddListLabel"></i>`;
+
+const iconButtonsTmpl = {
+  'fontawesome': {
+    formSaveLabel:    '<i class="fa fa-check"></i>',
+    formCloseLabel:   '<i class="fa fa-times"></i>',
+    formRemoveLabel:  '<i class="fa fa-trash"></i>',
+    formDiscardLabel: '<i class="fa fa-times-circle-o"></i>',
+    formAddLabel:     '<i class="fa fa-check"></i>',
+    formAddListLabel: '<i class="fa fa-check"></i>'
+  },
+  'glyphicon': {
+    formSaveLabel:    '<i class="glyphicon glyphicon-ok-circle"></i>',
+    formCloseLabel:   '<i class="glyphicon glyphicon-remove-circle"></i>',
+    formRemoveLabel:  '<i class="glyphicon glyphicon-trash"></i>',
+    formDiscardLabel: '<i class="glyphicon glyphicon-ban-circle"></i>',
+    formAddLabel:     '<i class="glyphicon glyphicon-remove-circle" style="transform: rotate(45deg);"></i>',
+    formAddListLabel:  customFormAddListLabel
+  },
+  'default': {
+    formSaveLabel:    '&#10003;',
+    formCloseLabel:   '&times;',
+    formRemoveLabel:  '&#xf056;',
+    formDiscardLabel: '&times;',
+    formAddLabel:     '&times;',
+    formAddListLabel: '&times;'
+  }
+};
 
 const QuoteButton = MediumEditor.Extension.extend({
   name: 'quoteButton',
@@ -9,12 +51,9 @@ const QuoteButton = MediumEditor.Extension.extend({
   quoteFormList: false,
   value: '',
   isListOpen: false,
+  iconButtonsStyle: 'glyphicon',
 
   wrapNode: 'qq',
-
-  formSaveLabel: '&#10003;',
-  formCloseLabel: '&times;',
-  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.button = this.document.createElement('button');
@@ -37,6 +76,12 @@ const QuoteButton = MediumEditor.Extension.extend({
 
   getButton: function () {
     return this.button;
+  },
+
+  getIconButton: function (buttonName) {
+    const buttonLabels = this.iconButtonsStyle || this.getEditorOption('buttonLabels') || 'default';
+    const iconButtons = iconButtonsTmpl[buttonLabels] || iconButtonsTmpl['default'];
+    return iconButtons[buttonName] || '<i>Wrong button name</i>';
   },
 
   isAlreadyApplied: function (node) {
@@ -286,19 +331,19 @@ const QuoteButton = MediumEditor.Extension.extend({
 
     template.push(
       '<a href="#" class="medium-editor-toolbar-save">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+      this.getIconButton('formSaveLabel'),
       '</a>'
     );
 
     if (this.value.length) {
       template.push(
         '<a href="#" class="medium-editor-toolbar-remove">',
-        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
+        this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
     template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+      this.getIconButton('formCloseLabel'),
       '</a>');
 
     return template.join('');
@@ -548,13 +593,14 @@ const SuggestButton = MediumEditor.Extension.extend({
   suggestForm: false,
   suggestFormInput: false,
   value: '',
+  prevValue: '',
   hasProp: false,
+  iconButtonsStyle: 'glyphicon',
+  selectedTextContent: '',
+  onAddListItemCallback: ()=>{},
+  showApplyModalCallback: ()=>{},
 
   wrapNode: 'sg',
-
-  formSaveLabel: '&#10003;',
-  formCloseLabel: '&times;',
-  formRemoveLabel: '&#xf056;',
 
   init: function (params) {
     this.wrapNode = this.getEditorOption('suggestEl') || 'sg';
@@ -565,6 +611,9 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     this.on(this.button, 'click', this.handleClick.bind(this));
     this.subscribe('hideToolbar', this.handleHideToolbar.bind(this));
+
+    this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || this.onAddListItemCallback;
+    this.showApplyModalCallback = this.getEditorOption('showApplyModalCallback') || this.onAddListItemCallback;
   },
 
   getForm: function () {
@@ -578,6 +627,12 @@ const SuggestButton = MediumEditor.Extension.extend({
     return this.button;
   },
 
+  getIconButton: function (buttonName) {
+    const buttonLabels = this.iconButtonsStyle || this.getEditorOption('buttonLabels') || 'default';
+    const iconButtons = iconButtonsTmpl[buttonLabels] || iconButtonsTmpl['default'];
+    return iconButtons[buttonName] || '<i>Wrong button name</i>';
+  },
+
   isAlreadyApplied: function (node) {
     if (this.suggestForm) this.destroy();
     //-- A trick to keep right selection for Mozilla -- { --//
@@ -588,11 +643,13 @@ const SuggestButton = MediumEditor.Extension.extend({
     //-- } -- end --//
     if (node.nodeName.toLowerCase() === this.wrapNode && node.dataset.hasOwnProperty('suggestion')) {
       this.value = node.dataset.suggestion;
+      this.selectedTextContent = node.textContent.trim().toLowerCase();
       this.hasProp = node.dataset.hasOwnProperty('suggestion');
       return true
     }
     this.value = '';
     this.hasProp = false;
+    this.selectedTextContent = '';
     return false;
   },
 
@@ -615,12 +672,13 @@ const SuggestButton = MediumEditor.Extension.extend({
     this.hideToolbarDefaultActions();
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
+    this.prevValue = this.value;
   },
 
-  doSuggestSave: function () {
+  doSuggestSave: function (value = false, updateAction = 'current') {
+    let textContent = '';
     this.base.restoreSelection();
-
-    let value = this.suggestFormInput.value.trim();
+    value = value || this.suggestFormInput?.value?.trim() || '';
 //     if (value.length) {
       let node = document.createElement(this.wrapNode);
       node.dataset.suggestion = value;
@@ -631,6 +689,7 @@ const SuggestButton = MediumEditor.Extension.extend({
         if (sel.rangeCount) {
           let range = sel.getRangeAt(0);
           node.appendChild(range.extractContents());
+          textContent = node.textContent.trim().toLowerCase();
           range.insertNode(node);
           let prev = node.previousSibling;
           if (prev.textContent.length == 0) {
@@ -652,35 +711,134 @@ const SuggestButton = MediumEditor.Extension.extend({
       this.base.restoreSelection();
       MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
 //     }
+
+    if (updateAction === 'all') {
+      const MEditor = this.base.elements[0];
+      const suggestions = MEditor.querySelectorAll('sg[data-suggestion]');
+      if (textContent.length) {
+        for (const sg of suggestions) {
+          const checkTextContent = sg.textContent.trim().toLowerCase();
+          if (checkTextContent === textContent) {
+            sg.dataset.suggestion = value;
+          }
+        }
+        this.base.restoreSelection();
+      }
+    }
+    //this.base.checkSelection();
+  },
+
+  doSuggestRemove: function (updateAction = 'current') {
+    let textContent = '';
+    this.base.restoreSelection();
+    if (window.getSelection) {
+      let sel = window.getSelection();
+      if (sel.rangeCount) {
+        let range = sel.getRangeAt(0).cloneRange();
+        let node = range.startContainer;
+        while (node && node.nodeName.toLowerCase() !== this.wrapNode) {
+          node = node.parentNode;
+        }
+        let parent = node.parentNode;
+        node.childNodes.forEach(n => {
+          if (n.dataset) {
+            delete n.dataset.sugg;
+          }
+        });
+        textContent = node.textContent.trim().toLowerCase();
+        while (node.firstChild) parent.insertBefore(node.firstChild, node);
+        parent.removeChild(node);
+        this.value = '';
+        this.setInactive();
+        this.triggerEvent(this.base.getFocusedElement(), 'input');
+        this.base.restoreSelection();
+        MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
+      }
+    }
+    if (updateAction === 'all') {
+      const MEditor = this.base.elements[0];
+      const suggestions = MEditor.querySelectorAll('sg[data-suggestion]');
+      if (textContent.length) {
+        for (const sg of suggestions) {
+          const checkTextContent = sg.textContent.trim().toLowerCase();
+          if (checkTextContent === textContent) {
+            const parent = sg.parentNode;
+            while (sg.firstChild) parent.insertBefore(sg.firstChild, sg);
+            parent.removeChild(sg);
+          }
+        }
+        this.base.restoreSelection();
+      }
+    }
     this.base.checkSelection();
   },
 
-  doSuggestRemove: function () {
-      this.base.restoreSelection();
-      if (window.getSelection) {
-        let sel = window.getSelection();
-        if (sel.rangeCount) {
-          let range = sel.getRangeAt(0).cloneRange();
-          let node = range.startContainer;
-          while (node && node.nodeName.toLowerCase() !== this.wrapNode) {
-            node = node.parentNode;
-          }
-          let parent = node.parentNode;
-          node.childNodes.forEach(n => {
-            if (n.dataset) {
-              delete n.dataset.sugg;
-            }
-          });
-          while (node.firstChild) parent.insertBefore(node.firstChild, node);
-          parent.removeChild(node);
-          this.value = '';
-          this.setInactive();
-          this.triggerEvent(this.base.getFocusedElement(), 'input');
-          this.base.restoreSelection();
-          MediumEditor.util.getContainerEditorElement(this.base.getFocusedElement()).dataset.has_suggestion = true;
+  doAddListItem: function (value = false) {
+    console.log(`doAddListItem::: `, this.selectedTextContent);
+    this.onAddListItemCallback({
+      suggestion: this.value || this.suggestFormInput.value.trim(),
+      text: this.selectedTextContent
+    });
+  },
+
+  compareSelectedWordWithSuggestionsList: function() {
+    const suggestionsList = this.getEditorOption('suggestionsList');
+    if (!suggestionsList || !Array.isArray(suggestionsList)) {
+      return false;
+    }
+
+    if (window.getSelection) {
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0).cloneContents();
+
+        if (this.hasProp) {
+          // isAlreadyApplied
+          return false;
         }
+
+        const div = document.createElement('div');
+        div.appendChild(range);
+
+        //-- Cleanup selected html -- { --//
+        let innerHTML = div.innerHTML;
+        innerHTML = innerHTML.replace(/<sup data-idx[^>]*>.*?<\/sup>/mig, '');
+        div.innerHTML = innerHTML;
+        //-- } -- end -- Cleanup selected html --//
+
+        const textContent = cleanFilter(div.textContent.trim().toLowerCase());
+
+        const foundSuggestion = suggestionsList.find((sugg)=>{
+          return cleanFilter(sugg.text.trim().toLowerCase()) === textContent;
+        })
+
+        if (foundSuggestion) {
+
+          sel.empty();
+          this.base.checkSelection();
+          this.destroy();
+
+          this.showApplyModalCallback({
+            suggestion: foundSuggestion.suggestion,
+            text: foundSuggestion.text,
+            action: 'add',
+            hideIfSingle: true
+          })
+            .then(res => {
+              if (res.isApply && res.applyLocally) {
+                this.doSuggestSave(foundSuggestion.suggestion);
+              }
+            });
+
+          return true;
+        }
+
+        this.selectedTextContent = textContent;
       }
-      this.base.checkSelection();
+    }
+
+    return false;
+
   },
 
   triggerEvent: function(el, type) {
@@ -700,28 +858,77 @@ const SuggestButton = MediumEditor.Extension.extend({
   handleClick: function (event) {
     event.preventDefault();
     event.stopPropagation();
+    this.base.saveSelection();
 
-    this.showForm({});
+    if (!this.compareSelectedWordWithSuggestionsList()) {
+      this.showForm({});
+    }
   },
 
   handleHideToolbar: function () {
     this.destroy();
   },
 
-  handleSaveClick: function (event) {
+  handleSaveClick: async function (event) {
     event.preventDefault();
     this.destroy();
-    this.doSuggestSave();
-    this.showToolbarDefaultActions();
-    this.base.checkContentChanged();
+
+    const suggestion = this.suggestFormInput.value.trim();
+    let res = {};
+
+    if (!this.hasProp || this.prevValue !== suggestion) {
+      res = await this.showApplyModalCallback({
+        suggestion: suggestion,
+        text: this.selectedTextContent,
+        action: this.hasProp ? 'edit': 'add',
+        hideIfSingle: true
+      });
+    }
+
+    if (res.isApply) {
+      if (res.applyLocally) {
+        this.doSuggestSave(false, res.updateAction);
+        this.showToolbarDefaultActions();
+        this.base.checkContentChanged();
+      }
+    }
+
+    return;
   },
 
-  handleRemoveClick: function (event) {
+  handleAddListClick: function (event) {
     event.preventDefault();
     this.destroy();
-    this.doSuggestRemove();
-    this.showToolbarDefaultActions();
-    this.base.checkContentChanged();
+    this.doAddListItem();
+    //this.base.restoreSelection();
+  },
+
+  handleRemoveClick: async function (event) {
+    event.preventDefault();
+    this.destroy();
+
+    const sel = window.getSelection();
+    if (sel) {
+      sel.empty();
+      this.base.checkSelection();
+    }
+
+    var res = await this.showApplyModalCallback({
+      suggestion: this.value || this.suggestFormInput.value.trim(),
+      text: this.selectedTextContent,
+      action: 'delete',
+      hideIfSingle: true
+    });
+
+    if (res.isApply) {
+      if (res.applyLocally) {
+        this.doSuggestRemove(res.updateAction);
+        this.showToolbarDefaultActions();
+        this.base.checkContentChanged();
+      }
+    }
+
+    return;
   },
 
   handleCloseClick: function (event) {
@@ -760,20 +967,24 @@ const SuggestButton = MediumEditor.Extension.extend({
     let template = ['<input type="text" class="medium-editor-toolbar-input suggest-input"></input>'];
 
     template.push(
-      '<a href="#" class="medium-editor-toolbar-save">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+      '<a href="#" class="medium-editor-toolbar-save" title="Add Suggestion">',
+      this.getIconButton('formSaveLabel'),
       '</a>'
     );
 
+    template.push('<a href="#" class="medium-editor-toolbar-add-list-item" title="Add to Suggestions Dictionary">',
+      this.getIconButton('formAddListLabel'),
+      '</a>');
+
     if (this.value.length || this.hasProp) {
       template.push(
-        '<a href="#" class="medium-editor-toolbar-remove">',
-        this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-trash"></i>' : this.formCloseLabel,
+        '<a href="#" class="medium-editor-toolbar-remove" title="Delete suggestion">',
+        this.getIconButton('formRemoveLabel'),
         '</a>');
     }
 
-    template.push('<a href="#" class="medium-editor-toolbar-close">',
-      this.getEditorOption('buttonLabels') === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+    template.push('<a href="#" class="medium-editor-toolbar-close" title="Cancel">',
+      this.getIconButton('formCloseLabel'),
       '</a>');
 
     return template.join('');
@@ -785,16 +996,19 @@ const SuggestButton = MediumEditor.Extension.extend({
     toolbar.getToolbarElement().appendChild(this.getForm());
 
     this.suggestFormInput = this.getForm().querySelector('.medium-editor-toolbar-input');
-    var close = this.getForm().querySelector('.medium-editor-toolbar-close'),
-        save = this.getForm().querySelector('.medium-editor-toolbar-save'),
-        remove = this.getForm().querySelector('.medium-editor-toolbar-remove')
+    var close =   this.getForm().querySelector('.medium-editor-toolbar-close'),
+        save =    this.getForm().querySelector('.medium-editor-toolbar-save'),
+        remove =  this.getForm().querySelector('.medium-editor-toolbar-remove'),
+        addList = this.getForm().querySelector('.medium-editor-toolbar-add-list-item')
 
-    if (close) this.on(close, 'click', this.handleCloseClick.bind(this));
-    if (save) this.on(save, 'click', this.handleSaveClick.bind(this), true);
-    if (remove) this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+    if (close)   this.on(close, 'click', this.handleCloseClick.bind(this));
+    if (save)    this.on(save, 'click', this.handleSaveClick.bind(this), true);
+    if (remove)  this.on(remove, 'click', this.handleRemoveClick.bind(this), true);
+    if (addList) this.on(addList, 'click', this.handleAddListClick.bind(this));
   },
 
   onClick: function (ev) {
+    console.log(`${__filename.substr(-30)}:onClick:function:textContent: `, ev.target.textContent);
     this.suggestFormInput.value = ev.target.textContent;
   },
 
