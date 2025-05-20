@@ -1439,9 +1439,16 @@
                 }
                 //console.log('===========', silence[i]);
               }
-
-              this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
+            } else {
+              for (let i = 0; i <= fadeLength; ++i) {
+                let rangePos = rangeEnd.length - 1 - i;
+                if (rangeEnd[rangePos]) {
+                  fadeIn[rangePos] = maxRange;
+                }
+              }
             }
+
+            this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
           }
 
           // Fill middle part with fadePercent
