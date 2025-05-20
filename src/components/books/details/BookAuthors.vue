@@ -105,7 +105,7 @@
 
               <input v-model='author_link[i].slug'
                       @change="editAuthorLink($event, i, 'slug')"
-                    :disabled="authorSlugDisabled(author_link[i])"
+                    :disabled="authorSlugDisabled(i)"
                     :class="['author-slug']" />
               <!--, {'-has-error': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
 
@@ -213,8 +213,12 @@
       this.setAuthorsList();
     },
     methods: {
-      authorSlugDisabled(author) {
-        if (!this.allowMetadataEdit) {
+      authorSlugDisabled(idx) {
+        if (!this.allowMetadataEdit || this.updatingIndex === idx) {
+          return true;
+        }
+        let author = this.author_link[idx];
+        if (!author) {
           return true;
         }
         if (author.id && author.id.length > 0) {
