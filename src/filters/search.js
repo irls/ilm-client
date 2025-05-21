@@ -121,7 +121,7 @@ const splitPrepareForFilter = (str, isWithSpace = false) => {
 }
 
 const cleanFilter = (value) => {
-  return cleanDiacritics(value.toLowerCase().trim().replace(/[….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]\'\’]/img, '').replace(/\s{2,}/img, ' '));
+  return cleanDiacritics(value.toLowerCase().trim().replace(/[….,:;\/\|\\=+\‑\–\-\—*~_#!¡?¿$%^&{}()„‟”“"‚‘‛«»‹›\[\]\'\’\ʿ]/img, '').replace(/\s{2,}/img, ' '));
 }
 
 export {
