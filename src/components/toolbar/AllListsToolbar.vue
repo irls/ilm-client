@@ -403,11 +403,9 @@ export default {
       }
     },
     async setTaskAddModalActive() {
-      console.log(`setTaskAddModalActive:1:: `, this.taskAddModalActive);
       this.taskAddModalActive = false;
       await Vue.nextTick();
       this.taskAddModalActive = true;
-      console.log(`setTaskAddModalActive:2:: `, this.taskAddModalActive);
     }
   },
 
