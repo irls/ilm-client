@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { cleanFilter } from "../../filters/search";
+import { cleanFilter } from "@src/filters/search";
 
 export default {
   namespaced: true,
@@ -50,6 +50,12 @@ export default {
       return '';
     },
     counters: state => state.counters,
+    findSuggestion: (state, getters) => (category, text) => {
+      let getText = cleanFilter(text);
+      return getters.suggestions(category).find(suggestion => {
+        return cleanFilter(suggestion.text) === getText;
+      });
+    }
   },
   mutations: {
     setSuggestions(state, suggestions) {

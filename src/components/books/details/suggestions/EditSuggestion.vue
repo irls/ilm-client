@@ -28,7 +28,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import lodash from 'lodash';
   import v_modal from "vue-js-modal";
-  import SelectTTSVoice from '../../../generic/SelectTTSVoice_el';
+  import SelectTTSVoice from '@src/components/generic/SelectTTSVoice_el';
 
   Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -63,7 +63,7 @@
         cache: false
       },
       ...mapGetters('ttsModule', ['tts_voices']),
-      ...mapGetters('suggestionsModule', ['suggestions'])
+      ...mapGetters('suggestionsModule', ['suggestions', 'findSuggestion'])
     },
     mounted() {
       this.loadBookVoices();
@@ -144,10 +144,8 @@
         if (!this.suggestion.text.trim()) {
           return;
         }
-        let suggestion = this.suggestions(this.suggestion.category).find(sugg => {
-          return sugg.text === this.suggestion.text && sugg.id !== this.suggestion.id;
-        });
-        if (suggestion && suggestion.id) {
+        let suggestion = this.findSuggestion(this.suggestion.category, this.suggestion.text);
+        if (suggestion && suggestion.id && suggestion.id !== this.suggestion.id) {
           this.$modal.show("dialog", {
             title: 'Duplicated suggestion',
             text: `“${this.suggestion.text}“ suggestion already exists.`,
