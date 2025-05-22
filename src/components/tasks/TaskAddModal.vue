@@ -221,6 +221,7 @@ export default {
                       this.$emit('closed', true);
                     })
                   }).catch(error => {
+                    console.error(`error::: `, (error.message || error));
                     this.isUploading = false;
                     this.deleteTask();
                   })
@@ -228,19 +229,29 @@ export default {
                   if (this.$refs.bookImport.isDummyBook == true) {
                     this.createDummyBook({book_id: this.createdJob.bookid, jobId: this.createdJob['@rid']})
                     .then((res)=>{
-                      this.updateBooksList().then(()=>{
-                      if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
-                        this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
-                      } else {
-                        this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
-                        this.$store.commit('gridFilters/set_fltrChangeTrigger');
-                      }
-                      this.isUploading = false;
-                      this.$emit('closed', true);
+                      this.updateBooksList()
+                      .then(()=>{
+                        if (this.createdJob.executors.editor === this.auth.getSession().user_id) {
+                          this.$router.replace({ path: `/books/${this.createdJob.bookid}/edit` });
+                        } else {
+                          this.$router.replace({ path: `/books/${this.createdJob.bookid}` });
+                          this.$store.commit('gridFilters/set_fltrChangeTrigger');
+                        }
+                        this.isUploading = false;
+                        this.$emit('closed', true);
+                      })
+                      .catch(error => {
+                        console.error(`error::: `, (error.message || error));
+                        this.deleteTask()
+                      });
                     })
-                    }).catch(error => {
+                    .catch(error => {
+                      console.error(`error::: `, (error.message || error));
                       this.deleteTask()
                     });
+                  } else {
+                    this.isUploading = false;
+                    this.$emit('closed', true);
                   }
                 }
               } else if (this.parentBook.bookid) {
@@ -262,6 +273,8 @@ export default {
           }
         })
         .catch(error => {
+          console.error(`error::: `, (error.message || error));
+          this.$emit('closed', true);
         })
     },
     showField(name) {
