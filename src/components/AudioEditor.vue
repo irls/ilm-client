@@ -97,14 +97,11 @@
                 <button class="audio-btn -undo" :disabled="!isModifiedComputed" v-on:click="undo()" v-ilm-tooltip.top="'Undo'"></button>
               </div>
             </div>
-            <div class="controls-group">
+            <div class="controls-group -special-group">
               <div class="control-wrapper">
                 <button class="audio-btn -align" :disabled="!allowAlignSelection" v-on:click="align()" v-if="!alignProcess" v-ilm-tooltip.top="'Align'"></button>
                 <span v-else class="align-preloader -small"></span>
               </div>
-              <!--<div class="control-wrapper">
-                <button class="cancel-align" v-if="hasLocks('align')" v-on:click="cancelAlign()" title="Cancel aligning"><i class="fa fa-ban"></i></button>
-              </div>-->
               <div class="control-wrapper">
                 <span v-if="!hasAlignSelection" class="define-block-range" v-ilm-tooltip.top="{value: 'Define block range', classList: {tooltip: 'red-tooltip'}}">i</span>
                 <template v-else>
