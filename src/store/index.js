@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import superlogin from 'superlogin-client'
 import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
+import lodash from 'lodash'
 import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
 import {liveDB} from './liveDB'
@@ -26,6 +27,7 @@ import publishModule from './modules/publish';
 import authorsMapModule from './modules/authorsMap';
 import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
+import suggestionsModule from './modules/suggestions';
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -95,7 +97,8 @@ export const store = new Vuex.Store({
     publishModule,
     authorsMapModule,
     authorsModule,
-    calculateLevelsModule
+    calculateLevelsModule,
+    suggestionsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -1087,7 +1090,9 @@ export const store = new Vuex.Store({
             lock = data;
           }
           //localStorage.setItem('lock_' + data.block.blockid, JSON.stringify(lock));
-          let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
+          let r = state.lockedBlocks.find(l => {
+            return l._id === data.block.blockid && (!data.type || l.type === data.type);
+          });
           if (!r) {
             state.lockedBlocks.push({_id: data.block.blockid, type: lock.type});
           }
@@ -1097,9 +1102,11 @@ export const store = new Vuex.Store({
     clear_block_lock(state, data) {
       if (data.block.blockid) {
         let remove_lock = () => {
-          let r = state.lockedBlocks.find(l => l._id === data.block.blockid);
-          if (r) {
-            state.lockedBlocks.splice(state.lockedBlocks.indexOf(r), 1);
+          let rIndex = state.lockedBlocks.findIndex(l => {
+            return l._id === data.block.blockid && (!data.type || l.type === data.type);
+          });
+          if (rIndex >= 0) {
+            state.lockedBlocks.splice(rIndex, 1);
           }
         };
         if (typeof localStorage !== 'undefined') {
@@ -4271,51 +4278,63 @@ export const store = new Vuex.Store({
     },
     getProcessQueue({state, dispatch, commit}) {
       if (state.currentBookMeta.bookid) {
+        let lockedBlocks = lodash.cloneDeep(state.lockedBlocks);
         return axios.get(state.API_URL + 'process_queue/' + state.currentBookMeta.bookid)
           .then(response => {
             //locks
-            let oldIds = [];
+            let oldIds = {};
             if (typeof response.data !== 'undefined' && Array.isArray(response.data)) {
-              state.lockedBlocks.forEach(b => {
+              lockedBlocks.forEach(b => {
                 let r = response.data.find(_r => {
                   return _r.blockid === b._id && _r.taskType === b.type;
                 });
                 if (!r) {
-                  oldIds.push(b._id);
+                  oldIds[b._id] = b.type;
                 }
               });
-              if (oldIds.length > 0) {
-                dispatch('getBlocks', oldIds)
+              let clearLocks = Promise.resolve();
+              if (Object.keys(oldIds).length > 0) {
+                clearLocks = dispatch('getBlocks', Object.keys(oldIds))
                   .then((blocks) => {
                     blocks.forEach(block => {
                       commit('set_storeList', new BookBlock(block));
-                      dispatch('clearBlockLock', {block: {blockid: block.blockid}});
+                      commit('clear_block_lock', {block: {blockid: block.blockid}, type: oldIds[block.blockid]});
                     });
+                    return {};
                   });
               }
-              if (response.data.length > 0) {
-                response.data.forEach(r => {
-                  let voicework, updateType, blockType;
-                  if (r.taskType === 'changeVoiceWork') {
-                    ({updateType, voicework, blockType} = JSON.parse(r.content));
+              return clearLocks
+                .then(() => {
+                  if (response.data.length > 0) {
+                    response.data.forEach(r => {
+                      let voicework, updateType, blockType;
+                      if (r.taskType === 'changeVoiceWork') {
+                        ({updateType, voicework, blockType} = JSON.parse(r.content));
+                      }
+                      delete r.content;
+                      dispatch('addBlockLock', {
+                        block: r,
+                        type: r.taskType,
+                        inProcess: true,
+                        blockType,
+                        updateType,
+                        voicework
+                      });
+                    });
+                    dispatch('startProcessQueueWatch');
                   }
-                  delete r.content;
-                  dispatch('addBlockLock', {
-                    block: r,
-                    type: r.taskType,
-                    inProcess: true,
-                    blockType,
-                    updateType,
-                    voicework
-                  });
+                  if (state.lockedBlocks.length === 0) {
+                    dispatch('stopProcessQueueWatch');
+                    dispatch('tc_loadBookTask');
+                  }
+                  //console.log(state.lockedBlocks)
                 });
-                dispatch('startProcessQueueWatch');
-              } else {
-                dispatch('stopProcessQueueWatch');
-                dispatch('tc_loadBookTask');
-              }
-              //console.log(state.lockedBlocks)
             }
+            return response.data;
+          })
+          .catch(err => {
+            console.log(err.message, err.stack);
+            return Promise.reject(err);
           });
       }
     },

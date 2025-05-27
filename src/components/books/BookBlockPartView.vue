@@ -390,6 +390,7 @@ const BPromise = require('bluebird');
 import narrationBlockContent from './narrationBlockContent.js'
 import SplitBlockMenu from '../generic/SplitBlockMenu';
 import CoupletWarningPopup from "./CoupletWarningPopup.vue";
+import ApplySuggestionsModals from './details/suggestions/ApplySuggestionsModals.vue';
 
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
@@ -816,11 +817,15 @@ export default {
           isBlockOrPartLocked: 'isBlockOrPartLocked',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
           storeListById: 'storeListById',
-          blockAudiosrcConfig: 'blockAudiosrcConfig'
+          blockAudiosrcConfig: 'blockAudiosrcConfig',
+          modifiedBlockids: 'modifiedBlockids'
       }),
-    ...mapGetters('uploadImage', {
-      tempImage: 'file'
-    }),
+      ...mapGetters('uploadImage', {
+        tempImage: 'file'
+      }),
+      ...mapGetters('suggestionsModule', [
+        'getAllSuggestions'
+      ]),
       getBlockLang: {
         cache: false,
         get() {
@@ -1011,7 +1016,7 @@ export default {
 
       //this.voiceworkSel = this.block.voicework;
       if (Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
-        this.isChanged = this.block.parts[this.blockPartIdx].isChanged || false;
+        this.isChanged = this.block.parts[this.blockPartIdx].isChanged ? true : false;
         this.isAudioChanged = this.block.parts[this.blockPartIdx].isAudioChanged;
         this.isIllustrationChanged = this.block.parts[this.blockPartIdx].isIllustrationChanged;
         if (this.block.parts[this.blockPartIdx].changes) {
@@ -1129,9 +1134,11 @@ export default {
         'splitBySubblock',
         'mergeAllBlockParts'
       ]),
+    ...mapActions('suggestionsModule', ['getSuggestionCounters']),
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
+    ...mapMutations(['add_modified_block', 'remove_modified_block']),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -1291,7 +1298,12 @@ export default {
                 disableEditing: !this.allowEditing || this.editingLocked,
                 imageDragging: false,
                 spellcheck: false,
-                keyboardCommands: keyboardCommands
+                keyboardCommands: keyboardCommands,
+                suggestionsList: this.getAllSuggestions,
+                onAddListItemCallback: (suggestionItem)=>{
+                  this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                },
+                showApplyModalCallback: this.suggestionShowApplyModalCallback
             });
             this.editor.subscribe('editableInput', (event, target) => {
               //console.log('editableInput', event, target);
@@ -1354,7 +1366,12 @@ export default {
                 extensions: extensions,
                 disableEditing: true,
                 imageDragging: false,
-                keyboardCommands: keyboardCommands
+                keyboardCommands: keyboardCommands,
+                suggestionsList: this.getAllSuggestions,
+                onAddListItemCallback: (suggestionItem)=>{
+                  this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
+                },
+                showApplyModalCallback: this.suggestionShowApplyModalCallback
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
@@ -1728,6 +1745,15 @@ export default {
                           this.blockPart.content = storeBlock.getPartContent(pIdx);
                         }
                       });
+                      if (this._isDestroyed) {
+                        let hasChangedPart = this.block.isChanged || this.block.parts.find((part, partIdx) => {
+                          return partIdx !== this.blockPartIdx && part.isChanged;
+                        });
+                        if (!hasChangedPart) {// force not changed state for destroyed component
+                          this.remove_modified_block(this.block.blockid);
+                          this.$root.$emit("from-block-part-view:changed", this.block.blockid, false);
+                        }
+                      }
                     }
                     if (this.blockAudio.map) {
                       this.blockAudio.map = this.blockPart.content;
@@ -2881,7 +2907,7 @@ export default {
       },
       setChanged(val, type = null, event = null) {
         //console.log('BookBlockPartView.setChanged', val, type, event, this.block.classes);
-        this.isChanged = val;
+        this.isChanged = val ? true : false;
         if (val && type) {
           this.pushChange(type);
           if (this.block) {
@@ -2907,7 +2933,7 @@ export default {
       setChangedByClass(val) {
         //console.log('setChangedByClass', this.block.type, val);
         if (this.block.type === 'title') {
-          this.isChanged = val;
+          this.isChanged = val ? true : false;
           this.pushChange('class');
         }
       },
@@ -4197,6 +4223,67 @@ Join subblocks?`,
           }
           this.hasEndLinebreak = false;
         }
+      },
+
+      suggestionShowApplyModalCallback(suggestion) {
+        // vue-js-modal workaround to get results of user choice
+        return new Promise(resolvePromise => {
+          let isEdited = this.modifiedBlockids.includes(this.block.blockid);
+          if (isEdited || this.blockPart.audiosrc) {
+            return resolvePromise({
+              isApply: true,
+              action: suggestion.action,
+              updateAction: 'current',
+              // do not apply suggestion changes if block was edited
+              isEdited: isEdited,
+              applyLocally: this.blockPart.audiosrc || isEdited
+            });
+          }
+          let sourceBlock = {
+            blockid: this.block.blockid,
+            hasAudio: this.blockPart.audiosrc ? true : false
+          };
+          return this.getSuggestionCounters([
+            suggestion, sourceBlock
+          ])
+            .then((counters) => {
+              /*if (suggestion.hideIfSingle && counters.matchBlocksCounter <= 1 && ["add", "delete"].includes(suggestion.action)) {
+                const requestParams = {
+                  start_id: this.sourceBlock.blockid,
+                  end_id: this.sourceBlock.blockid,
+                  exclude_ids: [],
+                  text: this.suggestion.text,
+                  suggestion: this.suggestion.suggestion,
+                  method: this.suggestion.action === "add" ? 'POST' : 'DELETE',
+                  first_word: false
+                }
+                this.postApplySuggestionsFromBlock(requestParams)
+                  .then(()=>{
+                    
+                    return resolvePromise({
+                      isApply: true,
+                      action: this.suggestion.action,
+                      updateAction: this.updateAction,
+                      // do not apply suggestion changes if block was edited
+                      isEdited: isEdited
+                    });
+                  })
+              }*/
+              this.$modal.show(ApplySuggestionsModals, {
+                suggestion: suggestion,
+                currentBlockId: this.block.blockid,
+                userChoiceSelected: resolvePromise,
+                sourceBlock: sourceBlock
+              }, {
+                height: 'auto',
+                width: '480px',
+                clickToClose: false
+              },
+              { // 'closed': (result) => {},
+                // 'before-close': (params) => {}
+              });
+            });
+        });
       }
 
   },
@@ -4315,7 +4402,17 @@ Join subblocks?`,
           if (this.audioTasksQueue.block.blockId === this.block.blockid && this.blockPartIdx !== null && this.blockPartIdx === this.audioTasksQueue.block.partIdx) {
             this.$root.$emit('for-audioeditor:lock-editing', val, this.audioEditorLockedSimultaneous);
           }
-        }
+          let hasChangedPart = this.block.isChanged || this.block.parts.find(part => {
+            return part.isChanged;
+          });
+          if (hasChangedPart) {
+            this.add_modified_block(this.block.blockid);
+          } else {
+            this.remove_modified_block(this.block.blockid);
+          }
+          this.$root.$emit("from-block-part-view:changed", this.block.blockid, val);
+        },
+        //immediate: true
       },
       'isAudioChanged': {
         handler(val) {
@@ -4403,13 +4500,13 @@ Join subblocks?`,
           //console.log(this.block._id, 'approveWaiting', val);
         }
       },
-      /*'hasChanges' :{
+      /*'hasChanges': {
         handler(val) {
-          if (!this.isSplittedBlock) {
-            this.$emit('hasChanges', val);
+          if (this.isSplittedBlock) {
+            this.$root.$emit("from-block-part-view:changed", this.block.blockid, val);
           }
         }
-      }*/
+      },*/
       'block.language' : {
         handler(val) {
           this.destroyEditor();
