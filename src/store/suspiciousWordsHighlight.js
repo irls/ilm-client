@@ -19,8 +19,8 @@ class SuspiciousWordsHighlight {
       suspiciousCharacters = `\\${suspiciousCharacters}`;
     }
     this.suspiciousTextRegex = new RegExp(`[${suspiciousCharacters}]`, 'im');
-    this.clearRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS|SUSPICIOUS_SILENCE_CLASS}`, 'img');
-    this.checkRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS|SUSPICIOUS_SILENCE_CLASS}`, 'im');
+    this.clearRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}|${SUSPICIOUS_SILENCE_CLASS}`, 'img');
+    this.checkRegex = new RegExp(`(<[^>]+class=.*?)${SUSPICIOUS_WORD_CLASS}|${SUSPICIOUS_SILENCE_CLASS}`, 'im');
   }
   
   getSuspiciousTextRegex() {
