@@ -47,8 +47,8 @@ import RadioButton from 'primevue/radiobutton';
 import Checkbox from 'primevue/checkbox';
 import api_config from '../../../../mixins/api_config.js';
 import access from '../../../../mixins/access.js';
+import { cleanFilter } from '../../../../filters/search.js';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
-import { BookBlock }     from '../../../../store/bookBlock.js'
 Vue.use(v_modal, { dialog: true, dynamic: true });
 
 export default {
@@ -150,23 +150,24 @@ export default {
       get() {
 
         const suggLen = this.suggestion.suggestion.trim().length;
+        const suggText = cleanFilter(this.suggestion.text);
         let title = '';
 
         switch(this.suggestion.action) {
           case 'add' : {
             title = 'Add' + (suggLen > 0 ? ' suggestion' : ' empty suggestion');
             title += suggLen > 0 ? ` <i>"${this.suggestion.suggestion}"</i> for` : ' for';
-            title += ` <b>"${this.suggestion.text}"</b> to:`
+            title += ` <b>"${suggText}"</b> to:`
           } break;
           case 'edit' : {
             title = 'Update' + (suggLen > 0 ? ' suggestion' : ' empty suggestion');
             title += suggLen > 0 ? ` <i>"${this.suggestion.suggestion}"</i> for` : ' for';
-            title += ` <b>"${this.suggestion.text}"</b> in:`
+            title += ` <b>"${suggText}"</b> in:`
           } break;
           case 'delete' : {
             title = 'Delete suggestion';
             title += suggLen > 0 ? ` <i>"${this.suggestion.suggestion}"</i> for` : ' for';
-            title += ` <b>"${this.suggestion.text}"</b> from:`
+            title += ` <b>"${suggText}"</b> from:`
           } break;
           default : {
           } break;
