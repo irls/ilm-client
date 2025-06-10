@@ -272,6 +272,9 @@
             :allowMetadataEdit="allowMetadataEdit"
             :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
             @genresUpdate="checkGenresErrors" />
+          <FilterTag
+            :allowMetadataEdit="allowMetadataEdit"
+            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['filter_tags']" />
           <fieldset class='description brief'>
             <legend>Book cover</legend>
             <template v-if="allowMetadataEdit">
@@ -652,6 +655,7 @@ import Genre                from './details/Genre';
 import v_modal              from 'vue-js-modal';
 import BookAuthors          from './details/BookAuthors';
 import BookCopy             from './details/BookCopy';
+import FilterTag            from './details/FilterTag';
 
 Vue.use(v_modal, {dialog: true});
 
@@ -715,7 +719,8 @@ export default {
     CoupletWarningPopup,
     Genre,
     BookAuthors,
-    BookCopy
+    BookCopy,
+    FilterTag
   },
 
   data () {
@@ -2568,7 +2573,7 @@ export default {
         this.$forceUpdate();
       }
     },
-
+    
     /*getDisabledAuthors(val) {
       return this.selectedAuthorsIds.indexOf(val.id) >= 0;
     },
