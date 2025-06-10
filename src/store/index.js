@@ -798,6 +798,9 @@ export const store = new Vuex.Store({
             global: ''
           };
         }
+        if (!Array.isArray(meta.child_books)) {
+          meta.child_books = [];
+        }
         if (state.books_meta && Array.isArray(state.books_meta) && state.books_meta.length > 0) {
           let index = state.books_meta.findIndex(obj => {
             return obj.bookid === meta.bookid;
