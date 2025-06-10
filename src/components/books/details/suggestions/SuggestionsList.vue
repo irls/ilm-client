@@ -432,8 +432,14 @@
           }
         }
       },
-      'blockSelection': {
-        handler(val) {
+      'blockSelection.start': {
+        handler(val, oldVal) {
+          this.getApplySuggestions();
+        },
+        deep: true
+      },
+      'blockSelection.end': {
+        handler(val, oldVal) {
           this.getApplySuggestions();
         },
         deep: true
@@ -561,6 +567,12 @@
         tr:nth-child(odd) {
           background-color: #EFEFEF;
         }
+      }
+    }
+    input {
+      color: #555;
+      &::placeholder {
+        color: #999;
       }
     }
   }
