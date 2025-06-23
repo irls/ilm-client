@@ -23,46 +23,46 @@
             <BookAssignments
               @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
-          <fieldset class='description brief'>
-            <legend>Description </legend>
-            <textarea v-model='jobDescription' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000" class="jobinfo-description"></textarea>
-          </fieldset>
-          <fieldset class='hashtags' :disabled="!adminOrLibrarian">
-            <legend>Project tags</legend>
-            <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
-          </fieldset>
-            <BookWorkflow
-              v-if="adminOrLibrarian"
-              :isPublishingQueue="isPublishingQueue"
-              ></BookWorkflow>
-          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
-            <legend>Export book </legend>
-              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
-              <div>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
-              </div>
-              <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
-              <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
-                <template v-if="displayDownloadDemo">
-                  Download: <br />
-                  <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
-                  <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
-                  <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
-                </template>
-                <hr>
-                <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
-                <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
-                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
-              </div>
-          </fieldset>
-          <CompleteAudioExport
-            :convertTime="convertTime"
-            :goToBlock="goToBlock"></CompleteAudioExport>
-          <BookPublish @checkPublish="checkPublish" ></BookPublish>
-          <SplitPreview v-if="allowBookSplitPreview"
-            :convertTime="convertTime"></SplitPreview>
+            <fieldset class='description brief'>
+              <legend>Description </legend>
+              <textarea v-model='jobDescription' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000" class="jobinfo-description"></textarea>
+            </fieldset>
+            <fieldset class='hashtags' :disabled="!adminOrLibrarian">
+              <legend>Project tags</legend>
+              <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
+            </fieldset>
+              <BookWorkflow
+                v-if="adminOrLibrarian"
+                :isPublishingQueue="isPublishingQueue"
+                ></BookWorkflow>
+            <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
+              <legend>Export book </legend>
+                <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
+                <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
+                <div>
+                  <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
+                  <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
+                </div>
+                <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+                <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+                  <template v-if="displayDownloadDemo">
+                    Download: <br />
+                    <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
+                    <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
+                    <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
+                  </template>
+                  <hr>
+                  <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                  <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
+                  <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
+                </div>
+            </fieldset>
+            <CompleteAudioExport
+              :convertTime="convertTime"
+              :goToBlock="goToBlock"></CompleteAudioExport>
+            <BookPublish @checkPublish="checkPublish" ></BookPublish>
+            <SplitPreview v-if="allowBookSplitPreview"
+              :convertTime="convertTime"></SplitPreview>
           </vue-tab>
           <vue-tab title="Meta" id="book-content">
             <fieldset>
@@ -230,44 +230,45 @@
                 </tr>
               </table>
             </fieldset>
-          <Genre
-            :allowMetadataEdit="allowMetadataEdit"
-            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
-            @genresUpdate="checkGenresErrors" />
-          <fieldset class='description brief'>
-            <legend>Book cover</legend>
-            <template v-if="allowMetadataEdit">
-              <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
-                <div v-else class='coverimg-wrap'></div>
-              </div>
-              <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
-            </template>
-            <template v-else>
-              <div class="coverimg pull-right">
-                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
-              </div>
-            </template>
-          </fieldset>
 
-          <fieldset class='description brief'>
-            <legend>Brief description</legend>
-            <resizable-textarea @valueChanged="debounceUpdate('description_short', $event.target.value, $event)"
-              :initValue="currentBook.description_short"
-              ref="descriptionShort"
-              :disabled="!allowMetadataEdit">
-            </resizable-textarea>
-          </fieldset>
+            <Genre
+              :allowMetadataEdit="allowMetadataEdit"
+              :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
+              @genresUpdate="checkGenresErrors" />
+            <fieldset class='description brief'>
+              <legend>Book cover</legend>
+              <template v-if="allowMetadataEdit">
+                <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+                  <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
+                  <div v-else class='coverimg-wrap'></div>
+                </div>
+                <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+              </template>
+              <template v-else>
+                <div class="coverimg pull-right">
+                  <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
+                </div>
+              </template>
+            </fieldset>
 
-          <fieldset class='description long'>
-            <legend>Long description</legend>
-            <resizable-textarea @valueChanged="debounceUpdate('description', $event.target.value, $event)"
-              :initValue="currentBook.description"
-              ref="descriptionLong"
-              :disabled="!allowMetadataEdit">
-            </resizable-textarea>
-          </fieldset>
-        </vue-tab>
+            <fieldset class='description brief'>
+              <legend>Brief description</legend>
+              <resizable-textarea @valueChanged="debounceUpdate('description_short', $event.target.value, $event)"
+                :initValue="currentBook.description_short"
+                ref="descriptionShort"
+                :disabled="!allowMetadataEdit">
+              </resizable-textarea>
+            </fieldset>
+
+            <fieldset class='description long'>
+              <legend>Long description</legend>
+              <resizable-textarea @valueChanged="debounceUpdate('description', $event.target.value, $event)"
+                :initValue="currentBook.description"
+                ref="descriptionLong"
+                :disabled="!allowMetadataEdit">
+              </resizable-textarea>
+            </fieldset>
+          </vue-tab>
           <vue-tab title="TOC" id="book-toc">
             <BookToc ref="bookToc"
               :isActive="activeTabIndex === TAB_TOC_INDEX"
@@ -280,277 +281,276 @@
                 @goToBlock="goToBlock"
               ></BookAudioIntegration>
           </vue-tab>
+          <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
+              <div class="styles-catalogue">
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
-            <div class="styles-catalogue">
+                <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
+                  <vue-tab title="Book" :id="'global-styles-switcher'">
+                    <fieldset class="block-style-fieldset global-style">
+                    <legend>Book styles</legend>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', '') } : {}">
+                        <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      ILM</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ocean') } : {}">
+                        <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      Ocean</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ffa') } : {}">
+                        <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        FFA</label>
+                    </div>
+                    </fieldset>
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
-                <vue-tab title="Book" :id="'global-styles-switcher'">
-                  <fieldset class="block-style-fieldset global-style">
-                  <legend>Book styles</legend>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', '') } : {}">
-                      <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    ILM</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ocean') } : {}">
-                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    Ocean</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ffa') } : {}">
-                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      FFA</label>
-                  </div>
-                  </fieldset>
+                    <fieldset class="block-style-fieldset automatic-numeration">
+                    <legend>Automatic numeration</legend>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x') } : {}">
+                        <i v-if="currentBook.numbering === 'x'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      x</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x_x') } : {}">
+                        <i v-if="currentBook.numbering === 'x_x'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      x.x</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'none') } : {}">
+                        <i v-if="currentBook.numbering === 'none'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        Off</label>
+                    </div>
+                    </fieldset>
+                    <fieldset class="block-style-fieldset trim-silence-config">
+                      <legend>Trim silence</legend>
+                      <label class="block-style-label"
+                        v-on="trimSilenceConfigCalculated === 'audio_tts_narration' ?
+                        {click: () => setTrimSilenceConfig('tts_narration')} :
+                        {click: () => setTrimSilenceConfig('audio_tts_narration')}">
+                        <template>
+                          <i
+                            v-bind:class="{'fa fa-square-o': trimSilenceConfigCalculated === 'audio_tts_narration',
+                            'fa fa-check-square-o -checked': trimSilenceConfigCalculated === 'tts_narration'}"
+                          ></i>
+                        </template>
+                        Don’t trim file import blocks
+                      </label>
+                    </fieldset>
 
-                  <fieldset class="block-style-fieldset automatic-numeration">
-                  <legend>Automatic numeration</legend>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x') } : {}">
-                      <i v-if="currentBook.numbering === 'x'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    x</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x_x') } : {}">
-                      <i v-if="currentBook.numbering === 'x_x'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    x.x</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'none') } : {}">
-                      <i v-if="currentBook.numbering === 'none'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      Off</label>
-                  </div>
-                  </fieldset>
-                  <fieldset class="block-style-fieldset trim-silence-config">
-                    <legend>Trim silence</legend>
-                    <label class="block-style-label"
-                       v-on="trimSilenceConfigCalculated === 'audio_tts_narration' ?
-                      {click: () => setTrimSilenceConfig('tts_narration')} :
-                      {click: () => setTrimSilenceConfig('audio_tts_narration')}">
-                      <template>
-                        <i
-                          v-bind:class="{'fa fa-square-o': trimSilenceConfigCalculated === 'audio_tts_narration',
-                          'fa fa-check-square-o -checked': trimSilenceConfigCalculated === 'tts_narration'}"
-                        ></i>
-                      </template>
-                      Don’t trim file import blocks
-                    </label>
-                  </fieldset>
+                  </vue-tab>
 
-                </vue-tab>
+                  <vue-tab :title="prepareStyleTabLabel(blockType)"
+                    :disabled="!displayStyleTab(blockType)"
+                    v-for="(val, blockType) in blockTypesByMode"
+                    :id="'block-type-'+blockType" :key="blockType">
 
-                <vue-tab :title="prepareStyleTabLabel(blockType)"
-                  :disabled="!displayStyleTab(blockType)"
-                  v-for="(val, blockType) in blockTypesByMode"
-                  :id="'block-type-'+blockType" :key="blockType">
+                    <fieldset class="block-style-fieldset block-num-fieldset"
+                    v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
+                      <legend>Numeration</legend>
+                      <label class="block-style-label"
+                        @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
+                        <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
+                          <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Numbered section
+                      </label>
+                      <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
+                        <i class="fa fa-square-o"></i>
+                        Hide from display
+                      </label>
+                      <label v-else class="block-style-label"
+                        @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                        <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                          <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Hide from display
+                      </label>
+                    </fieldset>
 
-                  <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
-                    <legend>Numeration</legend>
-                    <label class="block-style-label"
-                      @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
-                      <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Numbered section
-                    </label>
-                    <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
-                      <i class="fa fa-square-o"></i>
-                      Hide from display
-                    </label>
-                    <label v-else class="block-style-label"
-                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
-                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Hide from display
-                    </label>
-                  </fieldset>
+                    <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
+                      <legend>{{styleCaption('header', 'level')}}</legend>
+                      <ul class="no-bullets">
+                        <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'level'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset" >
+                      <legend>{{styleCaption(blockType, 'style')}}</legend>
+                      <ul>
+                        <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'style'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
 
-                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
-                    <legend>{{styleCaption('header', 'level')}}</legend>
-                    <ul class="no-bullets">
-                      <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'level'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset" >
-                    <legend>{{styleCaption(blockType, 'style')}}</legend>
-                    <ul>
-                      <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'style'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
+                    <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                      <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
+                      <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']"  class="no-bullets">
+                        <li v-for="(sVal, sIdx) in styleObj">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents'+'.'+styleKey"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                      <legend>{{styleCaption(blockType, 'toc')}}</legend>
+                      <ul  class="no-bullets">
+                        <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents.isInToc'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                      <legend>{{styleCaption(blockType, 'toc level')}}</legend>
+                      <ul class="no-bullets">
+                        <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].tocLevel">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents.tocLevel'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset class="block-style-fieldset block-num-fieldset"
+                    v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
+                      <legend>Numeration</legend>
+                      <label class="block-style-label"
+                        @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
+                        <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
+                          <i class="fa fa-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Numbered
+                      </label>
+                      <label v-if="numProps.get(blockType).get('parNum') === false" class="block-style-label">
+                        <i class="fa fa-square-o"></i>
+                        Hide from display
+                      </label>
+                      <label v-else class="block-style-label"
+                        @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                        <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                          <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Hide from display
+                      </label>
+                    </fieldset>
+                    <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them</i>
+                    <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
+                    <fieldset v-if="pausesAfterProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
+                      <legend>Pause after block (sec.)</legend>
+                      <!-- <block-style-labels
+                        :blockType="blockType"
+                        :styleArr="['none', '0.6', '1', '2', '4']"
+                        :styleKey="'pause_before'"
+                        :styleTabs="pausesBeforeProps"
+                        :styleValue="styleValue"
+                        @selectStyleEv="selectPauseBefore"
+                      ></block-style-labels> -->
+                      <pause-after-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
+                        v-bind:key="blockType + 'pause_after_container'"
+                        :blockType="blockType"
+                        :styleValue="styleValue"
+                        :styleProps="pausesAfterProps"
+                        @setPauseAfter="selectPauseAfter"
+                        ref="pauseAfterControl"></pause-after-block>
+                    </fieldset>
+                    <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
-                    <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']"  class="no-bullets">
-                      <li v-for="(sVal, sIdx) in styleObj">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'table of contents'+'.'+styleKey"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
-                    <legend>{{styleCaption(blockType, 'toc')}}</legend>
-                    <ul  class="no-bullets">
-                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'table of contents.isInToc'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
-                    <legend>{{styleCaption(blockType, 'toc level')}}</legend>
-                    <ul class="no-bullets">
-                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].tocLevel">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'table of contents.tocLevel'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
-                    <legend>Numeration</legend>
-                    <label class="block-style-label"
-                      @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
-                      <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
-                        <i class="fa fa-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Numbered
-                    </label>
-                    <label v-if="numProps.get(blockType).get('parNum') === false" class="block-style-label">
-                      <i class="fa fa-square-o"></i>
-                      Hide from display
-                    </label>
-                    <label v-else class="block-style-label"
-                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
-                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Hide from display
-                    </label>
-                  </fieldset>
-                  <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them</i>
-                  <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
-                  <fieldset v-if="pausesAfterProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
-                    <legend>Pause after block (sec.)</legend>
-                    <!-- <block-style-labels
-                      :blockType="blockType"
-                      :styleArr="['none', '0.6', '1', '2', '4']"
-                      :styleKey="'pause_before'"
-                      :styleTabs="pausesBeforeProps"
-                      :styleValue="styleValue"
-                      @selectStyleEv="selectPauseBefore"
-                    ></block-style-labels> -->
-                    <pause-after-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
-                      v-bind:key="blockType + 'pause_after_container'"
-                      :blockType="blockType"
-                      :styleValue="styleValue"
-                      :styleProps="pausesAfterProps"
-                      @setPauseAfter="selectPauseAfter"
-                      ref="pauseAfterControl"></pause-after-block>
-                  </fieldset>
-                  <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
+                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
+                        <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
-                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
-                      <legend>{{styleCaption(blockType, styleKey)}}</legend>
-
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="styleArr"
-                          :styleKey="styleKey"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="styleArr"
+                            :styleKey="styleKey"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
 
 
-                      </fieldset>
+                        </fieldset>
 
-                  </template>
-                </vue-tab>
+                    </template>
+                  </vue-tab>
 
-              </vue-tabs>
+                </vue-tabs>
 
-            </div>
-        </vue-tab>
-        <vue-tab title="Suggestions" id="suggestions"
-          :disabled="!tc_displaySuggestionsTab()">
-          <Suggestions
-          :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
-        </vue-tab>
-      </vue-tabs>
+              </div>
+          </vue-tab>
+          <vue-tab title="Suggestions" id="suggestions"
+            :disabled="!tc_displaySuggestionsTab()">
+            <Suggestions
+            :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
+          </vue-tab>
+        </vue-tabs>
       </div>
     </div>
 
