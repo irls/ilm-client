@@ -64,7 +64,7 @@
         get() {
           if (this.selectedBlocks.length > 0) {
             return this.selectedBlocks.filter(blk => {
-              return !blk.disabled;
+              return !blk.disabled && (!this.currentBookMeta.parent_book || blk.adapted === true);
             }).length;
           } else {
             if (this.currentBookCounters.enabled_blocks !== null) {
@@ -72,7 +72,7 @@
             }
             let blocks = Array.from(this.storeList.values());
             return blocks.filter(blk => {
-              return !blk.disabled;
+              return !blk.disabled && (!this.currentBookMeta.parent_book || blk.adapted === true);
             }).length;
           }
         }
