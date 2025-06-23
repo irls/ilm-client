@@ -550,6 +550,9 @@
             <Suggestions
             :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
           </vue-tab>
+          <vue-tab title="Adapted" id="adapted_book">
+
+          </vue-tab>
         </vue-tabs>
       </div>
     </div>
@@ -2617,31 +2620,22 @@ select.text-danger#categorySelection, input.text-danger{
   background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
+  border: 1px solid white;
   position: sticky;
-  top: 43px;
+  top: -1px;
   background-color:white;
-  z-index: 1;
+  z-index: 2;
+}
+
+.meta-edit-tabs .nav-tabs-navigation .nav-tabs-wrapper ul.nav-tabs {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 #p-styles-switcher.tab-container {
   padding-top: 0px;
 }
-
-.meta-edit-tabs > .nav-tabs-navigation{
-  border: 1px solid white;
-  position: sticky;
-  top: -1px;
-  background-color: white;
-  z-index: 2;
-}
-
-/*.meta-edit-tabs .nav-tabs-navigation .nav > li {
-  position: inherit;
-}
-
-.meta-edit-tabs .nav-tabs-navigation .nav > li > a {
-  position: inherit;
-}*/
 
 </style>
 
