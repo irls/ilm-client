@@ -18,8 +18,11 @@
       <BookDownload v-if="showModal" @close="showModal = false" />
 
       <div class="book-listing">
-        <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Tasks" id="assignments">
+        <TabView ref="panelTabs" :scrollable="true"
+        v-model:activeIndex="panelTabsActiveIndex"
+        class="meta-edit-tabs"
+        @tab-change="metaTabChange">
+          <TabPanel header="Tasks" id="assignments">
             <BookAssignments
               @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
@@ -63,8 +66,8 @@
             <BookPublish @checkPublish="checkPublish" ></BookPublish>
             <SplitPreview v-if="allowBookSplitPreview"
               :convertTime="convertTime"></SplitPreview>
-          </vue-tab>
-          <vue-tab title="Meta" id="book-content">
+          </TabPanel>
+          <TabPanel header="Meta" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -268,24 +271,33 @@
                 :disabled="!allowMetadataEdit">
               </resizable-textarea>
             </fieldset>
-          </vue-tab>
-          <vue-tab title="TOC" id="book-toc">
+          </TabPanel>
+          <TabPanel header="TOC" id="book-toc">
             <BookToc ref="bookToc"
               :isActive="activeTabIndex === TAB_TOC_INDEX"
             ></BookToc>
-          </vue-tab>
-          <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
+          </TabPanel>
+          <TabPanel header="Audio" id="audio-integration" data-tab-class="hide-tab-if-disabled" :disabled="!tc_displayAudiointegrationTab()">
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
                 @goToBlock="goToBlock"
               ></BookAudioIntegration>
-          </vue-tab>
-          <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
+          </TabPanel>
+          <TabPanel header="Styles" :id="'styles-switcher'" data-tab-class="hide-tab-if-disabled" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
               <div class="styles-catalogue">
 
-                <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
-                  <vue-tab title="Book" :id="'global-styles-switcher'">
+                <TabView ref="blockTypesTabs"
+                  v-model:activeIndex="blockTypesTabsActiveIndex"
+                  :class="['block-style-tabs', {'disabled': proofreadModeReadOnly}]"
+                  @tab-change="styleTabChange" >
+
+                  <TabPanel header="Book"
+                    :disabled="isNarrateMode"
+                    id="global-styles-switcher"
+                    data-tab-class="hide-tab-if-disabled"
+                    :class="['global-styles-switcher', {'disabled': isNarrateMode}]">
+
                     <fieldset class="block-style-fieldset global-style">
                     <legend>Book styles</legend>
                     <div>
@@ -357,9 +369,9 @@
                       </label>
                     </fieldset>
 
-                  </vue-tab>
+                  </TabPanel>
 
-                  <vue-tab :title="prepareStyleTabLabel(blockType)"
+                  <TabPanel :header="prepareStyleTabLabel(blockType)"
                     :disabled="!displayStyleTab(blockType)"
                     v-for="(val, blockType) in blockTypesByMode"
                     :id="'block-type-'+blockType" :key="blockType">
@@ -395,7 +407,7 @@
                       </label>
                     </fieldset>
 
-                    <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
+                    <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset">
                       <legend>{{styleCaption('header', 'level')}}</legend>
                       <ul class="no-bullets">
                         <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
@@ -535,25 +547,24 @@
                             @selectStyleEv="dummySelectStyle"
                           ></block-style-labels>
 
-
                         </fieldset>
 
                     </template>
-                  </vue-tab>
-
-                </vue-tabs>
+                  </TabPanel>
+                </TabView>
 
               </div>
-          </vue-tab>
-          <vue-tab title="Suggestions" id="suggestions"
+          </TabPanel>
+          <TabPanel header="Suggestions" id="suggestions"
+            data-tab-class="hide-tab-if-disabled"
             :disabled="!tc_displaySuggestionsTab()">
             <Suggestions
             :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
-          </vue-tab>
-          <vue-tab title="Adapted" id="adapted_book">
+          </TabPanel>
+          <TabPanel header="Rewrite" id="adapted_book">
 
-          </vue-tab>
-        </vue-tabs>
+          </TabPanel>
+        </TabView>
       </div>
     </div>
 
@@ -599,6 +610,8 @@ import _                    from 'lodash'
 import axios                from 'axios'
 import { modal, accordion, panel } from 'vue-strap'
 import Dropdown             from 'primevue/dropdown';
+import TabView              from '../generic/components/TabViewILM.vue';
+import TabPanel             from 'primevue/tabpanel';
 import task_controls        from '../../mixins/task_controls.js'
 import api_config           from '../../mixins/api_config.js'
 import access               from '../../mixins/access.js'
@@ -606,7 +619,6 @@ import { Languages }        from "../../mixins/lang_config.js"
 import time_methods         from '../../mixins/time_methods.js';
 import number_methods       from "../../mixins/number_methods.js"
 import toc_methods          from '../../mixins/toc_methods.js';
-import { VueTabs, VTab }    from 'vue-nav-tabs'
 import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments      from './details/BookAssignments';
@@ -667,12 +679,12 @@ export default {
     BookEditCoverModal,
     BookToc,
     BookAudioIntegration,
-    'vue-tabs': VueTabs,
-    'vue-tab': VTab,
     modal,
     accordion,
     panel,
     Dropdown,
+    TabView,
+    TabPanel,
     BookAssignments,
     BookWorkflow,
     BookPublish,
@@ -748,6 +760,9 @@ export default {
       TAB_AUDIO_INDEX: 3,
       TAB_STYLE_INDEX: 4,
       TAB_SUGGESTION_INDEX: 5,
+      TAB_REWRITE_INDEX: 6,
+      panelTabsActiveIndex: 0,
+      blockTypesTabsActiveIndex: 0,
       users: {
         'editor': [],
         'proofer': [],
@@ -979,7 +994,16 @@ export default {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
       },
       cache: false
-    }
+    },
+
+
+    isNarrateMode: {
+      get() {
+        return this.bookMode === 'narrate';
+      },
+      cache: false
+    },
+
   },
 
   mixins: [task_controls, api_config, access, time_methods, number_methods, toc_methods],
@@ -999,66 +1023,6 @@ export default {
     /*document.addEventListener("click", this.onClickOutside);*/
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
-    }
-    $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
-      this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
-      if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
-        Vue.nextTick(() => {
-          this.$refs.descriptionShort.setValue(this.currentBook.description_short);
-          //this.$refs.descriptionShort.initSize();
-        });
-      }
-      if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
-        Vue.nextTick(() => {
-          this.$refs.descriptionLong.setValue(this.currentBook.description);
-          //this.$refs.descriptionLong.initSize();
-        });
-      }
-      if (this.activeTabIndex === this.TAB_STYLE_INDEX) {
-        if (this.bookMode === 'narrate') {
-          Vue.nextTick(() => {
-            if ($(`.block-style-tabs.vue-tabs .nav.nav-tabs li.hidden`).length === 0) {
-              this.$refs.blockTypesTabs.hideTab(0);
-            }
-          });
-        }
-      }
-    });
-    this.$refs.blockTypesTabs.hideTab = (index) => {
-      let container = this.$refs.blockTypesTabs.$children[index];
-      if (container && container.$el) {
-        let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
-        if (tab) {
-          tab.classList.add('hidden');
-          tab.setAttribute('disabled', true);
-          container.$el.classList.add('hidden');
-          container.$el.setAttribute('disabled', true);
-          if (this.$refs.blockTypesTabs.activeTabIndex === index) {
-            let activate = this.$refs.blockTypesTabs.tabs.find((t, i) => {
-              return i !== index && t.disabled === false;
-            });
-            if (activate) {
-              //this.$refs.blockTypesTabs.activateTab(this.$refs.blockTypesTabs.tabs.indexOf(activate));
-              $($(`.block-style-tabs.vue-tabs .nav.nav-tabs li`)[this.$refs.blockTypesTabs.tabs.indexOf(activate)]).trigger('click');
-            } else {
-              //this.$refs.blockTypesTabs.activateTab(index === 0 ? 1 : 0);
-              //$($(`.block-style-tabs.vue-tabs .nav.nav-tabs li`)[index === 0 ? 1 : 0]).trigger('click');
-            }
-          }
-        }
-      }
-    }
-    this.$refs.blockTypesTabs.showTab = (index) => {
-      let container = this.$refs.blockTypesTabs.$children[index];
-      if (container && container.$el) {
-        let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
-        if (tab) {
-          tab.classList.remove('hidden');
-          tab.removeAttribute('disabled');
-          container.$el.removeAttribute('disabled');
-          container.$el.classList.remove('hidden');
-        }
-      }
     }
     this.jobDescription = this.currentJobInfo.description;
 
@@ -1186,7 +1150,8 @@ export default {
         }
         if (newIndex !== false) {
           this.activeTabIndex = newIndex;
-          this.$refs.panelTabs.findTabAndActivate(newIndex);
+          //this.$refs.panelTabs.findTabAndActivate(newIndex);
+          this.panelTabsActiveIndex = newIndex;
         }
         this.$forceUpdate();
       }
@@ -1201,13 +1166,7 @@ export default {
     },
     'bookMode': {
       handler() {
-        if (this.bookMode === 'narrate') {
-          this.$refs.blockTypesTabs.hideTab(0);
-        } else {
-          this.$refs.blockTypesTabs.showTab(0);
-        }
         if (this.blockSelection.start._id && this.blockSelection.end._id) {
-          //this.$refs.blockTypesTabs.render();
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
       }
@@ -2047,20 +2006,24 @@ export default {
       Vue.nextTick(()=>{
 
         if (result.size == 0) {
-          $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+          const el = document.querySelector('.block-style-tabs a[role="tab"]');
+          if (el) el.click();
         } else if (isSwitch) {
-          //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
           if (this.bookMode !== 'narrate') {
             if (!this.activeStyleTab || !Array.from(result.keys()).includes(this.activeStyleTab)) {
-              $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+              const el = document.querySelector(`a#t-block-type-${result.keys().next().value}`)
+              if (el) el.click();
             }
           } else {
             if (pausesAfter.size > 0) {
               if (!this.activeStyleTab || !Array.from(pausesAfter.keys()).includes(this.activeStyleTab)) {
-                $(`li#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+                //$(`a#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+                const el = document.querySelector(`a#t-block-type-${pausesAfter.keys().next().value}`)
+                if (el) el.click();
               }
             } else {
-              $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+              const el = document.querySelector('.block-style-tabs a[role="tab"]');
+              if (el) el.click();
             }
           }
         }
@@ -2492,9 +2455,11 @@ export default {
     },
 
     checkAfterAudioImport() {
+      //TODO: check!!!
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
         this.activeTabIndex = this.TAB_AUDIO_INDEX;
-        this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
+        //this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
+        this.panelTabsActiveIndex = this.TAB_AUDIO_INDEX
         this.$forceUpdate();
       }
     },
@@ -2508,9 +2473,24 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
 
-    styleTabChange(index, component) {
-      //console.log('styleTabChange', index, component.id, component)
-      this.activeStyleTab = component.title === 'line' ? 'hr' : component.title;
+    metaTabChange(tab) {
+      this.activeTabIndex = tab.index;
+      if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
+        Vue.nextTick(() => {
+          this.$refs.descriptionShort.setValue(this.currentBook.description_short);
+          //this.$refs.descriptionShort.initSize();
+        });
+      }
+      if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
+        Vue.nextTick(() => {
+          this.$refs.descriptionLong.setValue(this.currentBook.description);
+          //this.$refs.descriptionLong.initSize();
+        });
+      }
+    },
+
+    styleTabChange(tab) {
+      this.activeStyleTab = tab.header === 'line' ? 'hr' : tab.header;
     },
 
     displayStyleTab(blockType) {
@@ -2568,7 +2548,8 @@ export default {
     },
 
     activateSuggestionsTab() {
-      this.$refs.panelTabs.navigateToTab(5);
+      //this.$refs.panelTabs.navigateToTab(5);
+      this.panelTabsActiveIndex = this.TAB_SUGGESTION_INDEX;
       // maybe need to use findAndActivate method...
     },
 
@@ -2898,7 +2879,8 @@ select.text-danger#categorySelection, input.text-danger{
     margin-top: 3px;
   }
 
-  .tab-content input[type=radio] {
+  .tab-content input[type=radio],
+  .p-tabview-panel input[type=radio] {
     width: auto;
     display: inline-block;
     margin-top: 8px;
@@ -2906,11 +2888,13 @@ select.text-danger#categorySelection, input.text-danger{
     padding-top: 5px;
   }
 
-  .tab-content input[type=radio]:focus {
+  .tab-content input[type=radio]:focus,
+  .p-tabview-panel input[type=radio]:focus{
     box-shadow: none;
   }
 
-  .tab-content .style-label {
+  .tab-content .style-label ,
+  .p-tabview-panel .style-label {
     margin-top: 4px;
     margin-bottom: 0px;
     display: inline-block;
@@ -3014,6 +2998,14 @@ select.text-danger#categorySelection, input.text-danger{
     }
   }
 
+/*  .block-style-tabs {
+    .p-tabview-panels {
+      .p-tabview-panel {
+
+      }
+    }
+  }*/
+
   .block-style-tabs {
     .block-style-fieldset {
       float: left;
@@ -3076,7 +3068,7 @@ select.text-danger#categorySelection, input.text-danger{
       }
     }
 
-    .tab-container {
+    .tab-container, .p-tabview-panel {
       display: flex;
       flex-direction: row;
       align-items: flex-start;
@@ -3104,6 +3096,7 @@ select.text-danger#categorySelection, input.text-danger{
       }
     }
   }
+
   .block-selection {
     a {
         cursor: pointer;
@@ -3126,13 +3119,23 @@ select.text-danger#categorySelection, input.text-danger{
 </style>
 
 <style lang="less">
-  div.block-style-tabs .nav-tabs > li > a {
-    margin: 0 !important;
+  div.block-style-tabs {
+    .nav-tabs, .p-tabview-panels {
+      & > li > a {
+        margin: 0 !important;
+      }
+    }
   }
 
   .styles-catalogue {
     li.tab {
       span.title {
+        text-transform: capitalize;
+      }
+    }
+
+    a.p-tabview-nav-link {
+      span.p-tabview-title {
         text-transform: capitalize;
       }
     }
@@ -3158,10 +3161,12 @@ select.text-danger#categorySelection, input.text-danger{
     outline: 0;
   }
 
-  .meta-edit-tabs.vue-tabs {
+  .meta-edit-tabs.vue-tabs,
+  .meta-edit-tabs.p-tabview-panels {
     height: 100%;
 
-    .tab-content {
+    .tab-content,
+    .p-tabview-panel {
       height: 100%;
       margin-top: -44px;
       padding-top: 44px;
