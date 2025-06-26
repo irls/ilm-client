@@ -975,7 +975,7 @@
             } else {
               this.$root.$emit('start-align');
               this.$root.$emit('for-audioeditor:check-close-realigning-block', 'tts');
-              return this.alignTTS()
+              return this.alignTTS([false])
                 .then((response) => {
                 this.$root.$emit('stop-align');
                 if (response.status===200) {
