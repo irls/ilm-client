@@ -109,7 +109,7 @@ export default {
         return Promise.resolve({});
       });
     },
-    alignTTS({rootState, dispatch}) {
+    alignTTS({rootState, dispatch}, [tts_and_align = false]) {
       // if user is updating custom speed before align - wait for updates to be applied
       return dispatch('waitAudioSpeedUpdate')
         .then(() => {
@@ -124,7 +124,8 @@ export default {
             realign: true,
             voicework: 'all_with_tts',
             voices: rootState.currentBookMeta.voices,
-            wpm_settings: wpm_settings
+            wpm_settings: wpm_settings,
+            tts_and_align: tts_and_align
           }, {
             validateStatus: function (status) {
               return status == 200 || status == 504;

@@ -74,6 +74,7 @@
         </div>
         <div class="align-blocks-section">
           <button :class="['align-blocks', {'align-blocks-gray':alignProcess}]" :disabled="isAlignButtonDisabled" v-on:click="startAlign" title="Align Text with TTS Audio"></button>
+          <button :class="['align-blocks -tts-and-align', {'align-blocks-gray':alignProcess}]" :disabled="isAlignButtonDisabled" v-on:click="alignTTS([true])" title="TTS & align">T&A</button>
           <!--<button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()" title="Cancel Alignment">
             <i class="fa fa-ban"></i>-->
           </button>
@@ -531,7 +532,8 @@
         this.alignWpmSettings.wpm = data.wpm;
       },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
+      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample']),
+      ...mapActions('alignActions', ['alignTTS'])
     },
 
     watch: {
@@ -664,6 +666,12 @@
           }
           &.align-blocks-gray:not([disabled]) {
             /*opacity: 0.7;*/
+          }
+          &.-tts-and-align {
+            background-color: #2070b7;
+            background-image: none;
+            color: white;
+            border-radius: 5px;
           }
         }
         .cancel-align {
