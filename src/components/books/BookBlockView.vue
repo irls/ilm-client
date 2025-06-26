@@ -39,7 +39,7 @@
           </div><!--<div class="table-cell">-->
         </div>
     </div>
-    <div :class="['table-cell', 'marks-block-left']"></div>
+    <div :class="['table-cell', 'marks-block-left', '-purple']"></div>
     <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
@@ -5246,8 +5246,16 @@ Save text changes and realign the Block?`,
     }
 
     &.marks-block-left {
-      width: 10px;
-      border-left: 3px solid green;
+      width: 8px;
+      border-left: 3px solid transparent;
+
+      &.-purple {
+        border-left-color: #BD00FC;
+      }
+
+      &.-blue {
+        border-left-color: #0084FF;
+      }
     }
 
     &.controls-right {
