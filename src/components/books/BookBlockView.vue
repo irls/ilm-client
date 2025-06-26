@@ -16,27 +16,30 @@
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
         </div> -->
+
         <div class="table-row check-row">
+          <div class="table-cell">
+            <div class="set-range">
+              <i class="fa fa-square-o -hidden" aria-hidden="true"
+              v-if="isChecked === false"
+              v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
+              <i class="fa fa-check-square-o" aria-hidden="true"
+              v-if="isChecked === true"
+              v-on:click="setRangeSelection('byOne', false)"></i>
 
-          <div class="set-range">
-            <i class="fa fa-square-o -hidden" aria-hidden="true"
-            v-if="isChecked === false"
-            v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
-            <i class="fa fa-check-square-o" aria-hidden="true"
-            v-if="isChecked === true"
-            v-on:click="setRangeSelection('byOne', false)"></i>
-
-            <template v-if="selectionStart && selectionStart !== selectionEnd">
-            <i v-if="selectionEnd && block._id == selectionStart"
-            class="fa fa-arrow-circle-down" aria-hidden="true"
-            v-on:click="scrollToBlock(selectionEnd)"></i>
-            <i v-if="selectionStart && block._id == selectionEnd"
-            class="fa fa-arrow-circle-up" aria-hidden="true"
-            v-on:click="scrollToBlock(selectionStart)"></i>
-            </template>
-          </div>
+              <template v-if="selectionStart && selectionStart !== selectionEnd">
+              <i v-if="selectionEnd && block._id == selectionStart"
+              class="fa fa-arrow-circle-down" aria-hidden="true"
+              v-on:click="scrollToBlock(selectionEnd)"></i>
+              <i v-if="selectionStart && block._id == selectionEnd"
+              class="fa fa-arrow-circle-up" aria-hidden="true"
+              v-on:click="scrollToBlock(selectionStart)"></i>
+              </template>
+            </div>
+          </div><!--<div class="table-cell">-->
         </div>
     </div>
+    <div :class="['table-cell', 'marks-block-left']"></div>
     <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
@@ -5154,16 +5157,11 @@ Save text changes and realign the Block?`,
     display: table-cell;
 
     &.controls-left {
-        width: 36px;
-        /*padding-left: 8px;*/
+        width: 26px;
         padding-top: 0px;
 
         &.-check-green {
-          /*border-left: 6px solid darkgreen;*/
-          /*background-color: lightgreen;*/
           background: linear-gradient(to right, lightgreen , white);
-          /*padding-left: 9px;
-          width: 48px;*/
         }
 
         .table-row.parnum-row {
@@ -5171,12 +5169,10 @@ Save text changes and realign the Block?`,
         }
 
         .table-row.check-row {
-          height: 25px;
-          width: 17px;
 
          .set-range {
             /*cursor: pointer;*/
-            margin: 5px 0 0 1px;
+            margin: auto;
             .fa {
               font-size: 20px;
             }
@@ -5184,7 +5180,7 @@ Save text changes and realign the Block?`,
 
           .fa {
             display: block;
-            margin: 5px 0 0 2px;
+            margin: 0 0 0 5px;
             cursor: pointer;
           }
         }
@@ -5249,8 +5245,13 @@ Save text changes and realign the Block?`,
         }
     }
 
+    &.marks-block-left {
+      width: 10px;
+      border-left: 3px solid green;
+    }
+
     &.controls-right {
-        width: 24px;
+      width: 24px;
     }
 
     &.completed {

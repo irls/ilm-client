@@ -12,10 +12,10 @@
         />
     </div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
-      <div class="table-row">
+      <div class="table-row check-row">
         <div class="table-cell">
           <span v-if="parnumComp.length" :class="[{'sub-parnum-main': !isSplittedBlock}]">{{parnumComp}}</span>
-        </div>
+        </div><!--<div class="table-cell">-->
       </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}">
@@ -4259,7 +4259,7 @@ Join subblocks?`,
                 }
                 this.postApplySuggestionsFromBlock(requestParams)
                   .then(()=>{
-                    
+
                     return resolvePromise({
                       isApply: true,
                       action: this.suggestion.action,

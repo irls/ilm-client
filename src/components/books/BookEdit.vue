@@ -3269,9 +3269,6 @@ export default {
       }
     }
 
-    .controls-left {
-      /*height: 123px;*/
-    }
     .table-row-flex.controls-top {
       .par-ctrl.-par-num {
         label.par-num, span.par-num {
