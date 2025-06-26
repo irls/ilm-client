@@ -1,20 +1,20 @@
 <template>
   <fieldset class="filter-tags">
     <legend>Filter tags</legend>
-    <div :class="['filter-tags-list selected-filter-tags', {'-has-error': requiredError}]">
+    <div :class="['filter-tags-list selected-filter-tags', {'-has-error': requiredError,  '-no-tags': bookFilterTags.length === 0}]">
       <span class="error-text" v-if="requiredError">Define tags</span>
       <template v-for="bookFilterTag in bookFilterTags">
         <div class="filter-tag-chip">
           <div>{{bookFilterTag}}<template v-if="canRemove(bookFilterTag)">&nbsp;<span class="remove-item" v-on:click="remove(bookFilterTag)">&times;</span></template></div>
         </div>
       </template>
-      <div class="filter-tag-options">
+      <div class="filter-tag-options" v-if="canEditTags">
         <div :class="['toggle-filter-tags-visible', {'-visible': filterTagsVisible}]" v-on:click="toggleFilterTagsVisible">
           <span>Tags</span><i class="arrow"></i></div>
       </div>
     </div>
     <template v-if="filterTagsVisible">
-      <div class="filter-tags-list">
+      <div :class="['filter-tags-list', { '-no-tags': notAssignedFilterTags.length === 0 }]">
         <template v-for="filterTag in notAssignedFilterTags">
           <div class="filter-tag-chip" v-on:click="selectFilterTag(filterTag.name)">
             <div>{{filterTag.name}}</div>
@@ -37,6 +37,11 @@
     },
     props: ['allowMetadataEdit', 'requiredError'],
     computed: {
+      canEditTags: {
+        get() {
+          return this.adminOrLibrarian;
+        }
+      },
       ...mapGetters(['currentBookMeta', 'bookCategories', 'adminOrLibrarian', 'isBookReaderCategory']),
       ...mapGetters('filterTagsModule', ['filterTags', 'notAssignedFilterTags']),
       bookFilterTags: {
@@ -105,6 +110,9 @@
           margin: 4px 0px;
         }
       }
+      &.-no-tags {
+        border: none;
+      }
     }
     .filter-tag-chip {
       display: inline-block;
@@ -115,6 +123,8 @@
       margin: 4px;
       cursor: pointer;
       user-select: none;
+      height: 30px;
+      vertical-align: middle;
       .remove-item {
         font-size: 16px;
       }
