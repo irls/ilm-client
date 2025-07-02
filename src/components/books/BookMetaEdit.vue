@@ -562,7 +562,8 @@
             :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
           </TabPanel>
           <TabPanel header="Rewrite" id="adapted_book">
-
+            <BookRewrite
+              />
           </TabPanel>
         </TabView>
       </div>
@@ -634,6 +635,7 @@ import Genre                from './details/Genre';
 import v_modal              from 'vue-js-modal';
 import BookAuthors          from './details/BookAuthors';
 import Suggestions          from './details/suggestions/Suggestions';
+import BookRewrite          from './details/BookRewrite';
 
 Vue.use(v_modal, {dialog: true});
 
@@ -697,7 +699,8 @@ export default {
     CoupletWarningPopup,
     Genre,
     BookAuthors,
-    Suggestions
+    Suggestions,
+    BookRewrite
   },
 
   data () {
