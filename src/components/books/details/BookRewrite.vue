@@ -19,7 +19,7 @@
     <template v-if="editModeAllowed">
       <button class="btn btn-primary"
         :disabled="false"
-        v-on:click="startApplySuggestions(true)">
+        v-on:click="startApplyAdaptation()">
         Adapt
       </button>
     </template>
@@ -59,7 +59,7 @@
         </div>
         <div>
           <label>
-            <input type="checkbox" v-model="rewriteBook.blocksBefore" /><span></span>{{3}} Blocks before
+            <input type="checkbox" v-model="rewriteBook.three_before" /><span></span>{{3}} Blocks before
           </label>
         </div>
 
@@ -72,8 +72,8 @@
           <label></label>
         </div>
         <div class="input-text-wrapper">
-          <input type="text" v-model="rewriteBook.do" name="rewriteBook.do"
-          placeholder="Simplify the text to A2 level"/>
+          <input type="text" v-model="rewriteBook.prompt_do" name="rewriteBook.prompt_do"
+          :placeholder="promptDoPlaceholder"/>
         </div>
 
     </div><!--<div class="rewrite-book-do-settings">-->
@@ -85,7 +85,7 @@
           <label></label>
         </div>
         <div class="input-text-wrapper">
-          <input type="text" v-model="rewriteBook.dont" name="rewriteBook.dont"
+          <input type="text" v-model="rewriteBook.prompt_dont" name="rewriteBook.prompt_dont"
           placeholder="Do not retell it, do not make it shorter"/>
         </div>
 
@@ -111,9 +111,9 @@
         rewriteBook : {
           title: false,
           author: false,
-          blocksBefore: false,
-          do: '',
-          dont: ''
+          three_before: false,
+          prompt_do: '',
+          prompt_do: ''
         },
         allowedBlockTypes: [
           'title',
@@ -132,6 +132,12 @@
       // DropdownILM
     },
     computed: {
+
+      promptDoPlaceholder: {
+        get() {
+          return true ? 'Simplify the text to A2 level': 'Translate the text';
+        }
+      },
 
       editModeAllowed: {
         get() {
@@ -202,6 +208,25 @@
 
     },
     methods: {
+      ...mapActions('booksModule', ["rewrite", "revert"]),
+
+      startApplyAdaptation() {
+        const prompt = {
+          title: this.rewriteBook.title,
+          author: this.rewriteBook.author,
+          three_before: this.rewriteBook.three_before
+        };
+
+        if (this.rewriteBook.prompt_do.trim().length) {
+          prompt.prompt_do = this.rewriteBook.prompt_do;
+        }
+
+        if (this.rewriteBook.prompt_do.trim().length) {
+          prompt.prompt_dont = this.rewriteBook.prompt_do;
+        }
+
+        this.rewrite(prompt);
+      },
       shortId(blockid) {
         const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
         let _id_short = blockIdRgx.exec(blockid);
@@ -213,9 +238,8 @@
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
-      },
+      }
 
-      ...mapActions('booksModule', ["rewrite", "revert"])
     },
     'watch': {
       updated: {

@@ -49,7 +49,7 @@ export default {
       })
     },
 
-    rewrite({rootState, dispatch}, request) {
+    rewrite({rootState, dispatch}, request = {}) {
       let postRequest = lodash.cloneDeep(request);
       if (rootState.blockSelection.start._id && rootState.blockSelection.end._id) {
         postRequest.start_id = rootState.blockSelection.start._id;
