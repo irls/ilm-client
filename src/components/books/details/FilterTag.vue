@@ -132,7 +132,8 @@
     .toggle-filter-tags-visible {
       cursor: pointer;
       color: #337ab7;
-      float: right;
+      width: 100%;
+      text-align: right;
       display: inline-block;
       user-select: none;
       span {
