@@ -196,8 +196,7 @@
         'storeListO',
         'storeList'
       ]),
-      //...mapGetters('authorsMapModule', ["authorsLangList", "isVariousId"]),
-      //...mapGetters('authorsModule', ['authors'])
+      //...mapGetters('booksModule', ["rewrite", "revert"])
     },
     created() {
 
@@ -215,6 +214,8 @@
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
       },
+
+      ...mapActions('booksModule', ["rewrite", "revert"])
     },
     'watch': {
       updated: {
