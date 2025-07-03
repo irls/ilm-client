@@ -9,7 +9,7 @@
       <div class="process-preloader"></div>
     </template>
     <template v-else>
-      {{ applyRewriteData.total }} matching block(s) in range
+      {{ applyRewriteDataCount }} text block(s) in range
       <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
       <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
     </template>
@@ -107,15 +107,19 @@
   export default {
     data() {
       return {
-        applyRewriteData: {
-          total: 0
-        },
         calculate_apply: false,
         rewriteBook : {
           title: false,
           author: false,
           blocksBefore: false,
-        }
+          do: '',
+          dont: ''
+        },
+        allowedBlockTypes: [
+          'title',
+          'header',
+          'par'
+        ]
       }
     },
     props: {
@@ -159,15 +163,41 @@
         },
         cache: false
       },
+      applyRewriteDataCount: {
+        get() {
+          let counter = 0;
+
+          const startId = this.blockSelection.start._id;
+          const endId = this.blockSelection.end._id;
+
+          if (this.storeListO.getBlock(startId)) {
+            const idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
+            for (const blockRid of idsArrayRange) {
+              //console.log(`${key}: ${value}`);
+              const oBlock = this.storeListO.get(blockRid);
+              if (oBlock) {
+                const pBlock = this.storeList.get(oBlock.blockid);
+                if (this.allowedBlockTypes.indexOf(pBlock.type) > -1) {
+                  counter++;
+                }
+              }
+            }
+          }
+
+          return counter;
+        },
+        cache: false
+      },
       ...mapGetters([
         'currentBookMeta',
         'currentCollection',
         'adminOrLibrarian',
         'blockSelection',
+        'storeListO',
         'storeList'
       ]),
-      ...mapGetters('authorsMapModule', ["authorsLangList", "isVariousId"]),
-      ...mapGetters('authorsModule', ['authors'])
+      //...mapGetters('authorsMapModule', ["authorsLangList", "isVariousId"]),
+      //...mapGetters('authorsModule', ['authors'])
     },
     created() {
 
