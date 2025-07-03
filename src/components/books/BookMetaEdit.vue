@@ -73,7 +73,9 @@
                   <td>Book ID</td>
                   <td class='disabled'>
                     {{currentBook.bookid}}
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid)"></span>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid)">
+                      <i class="fa fa-clone"></i>
+                    </span>
                   </td>
                 </tr>
 
@@ -83,7 +85,9 @@
                     <a :href="bookLink(currentBook.child_books[0])" target="_blank">
                       {{ currentBook.child_books[0] }}
                     </a>
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.child_books[0])"></span>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.child_books[0])">
+                      <i class="fa fa-clone"></i>
+                    </span>
                   </td>
                 </tr>
                 <template v-if="currentBook.child_books.length > 1">
@@ -93,7 +97,9 @@
                       <a :href="bookLink(bookid)" target="_blank">
                         {{ bookid }}
                       </a>
-                      <span class="copy-bookid" v-on:click="copyBookid(bookid)"></span>
+                      <span class="copy-bookid" v-on:click="copyBookid(bookid)">
+                        <i class="fa fa-clone"></i>
+                      </span>
                     </td>
                   </tr>
                 </template>
@@ -103,7 +109,9 @@
                     <a :href="bookLink(currentBook.parent_bookid)" target="_blank">
                       {{ currentBook.parent_bookid }}
                     </a>
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.parent_bookid)"></span>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.parent_bookid)">
+                      <i class="fa fa-clone"></i>
+                    </span>
                   </td>
                 </tr>
                 <tr v-if="adminOrLibrarian && !currentBook.parent_bookid">
@@ -3358,14 +3366,18 @@ select.text-danger#categorySelection, input.text-danger{
       }
     }
     .copy-bookid {
-      background: url(/static/copy.png);
-      background-repeat: no-repeat;
+      /*background: url(/static/copy.png);
+      background-repeat: no-repeat;*/
       width: 16px !important;
       height: 16px;
       cursor: pointer;
       vertical-align: middle;
       margin: 0px 2px;
       float: right;
+      transform: rotate(90deg);
+      i {
+        font-size: 14px;
+      }
     }
     tr.bookid {
       td:nth-child(2) {
