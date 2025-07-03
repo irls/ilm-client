@@ -28,6 +28,7 @@ import authorsMapModule from './modules/authorsMap';
 import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
 import suggestionsModule from './modules/suggestions';
+import booksModule from "./modules/book";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -98,7 +99,8 @@ export const store = new Vuex.Store({
     authorsMapModule,
     authorsModule,
     calculateLevelsModule,
-    suggestionsModule
+    suggestionsModule,
+    booksModule
   },
   state: {
     SelectionModalProgress:0,
@@ -798,6 +800,9 @@ export const store = new Vuex.Store({
           meta.styles = {
             global: ''
           };
+        }
+        if (!Array.isArray(meta.child_books)) {
+          meta.child_books = [];
         }
         if (state.books_meta && Array.isArray(state.books_meta) && state.books_meta.length > 0) {
           let index = state.books_meta.findIndex(obj => {

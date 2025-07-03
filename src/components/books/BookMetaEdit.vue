@@ -74,7 +74,45 @@
 
                 <tr class='bookid'>
                   <td>Book ID</td>
-                  <td class='disabled'>{{currentBook.bookid}}</td>
+                  <td class='disabled'>
+                    {{currentBook.bookid}}
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid)"></span>
+                  </td>
+                </tr>
+
+                <tr v-if="currentBook.child_books.length > 0" class="bookid">
+                  <td>Child book ID</td>
+                  <td>
+                    <a :href="bookLink(currentBook.child_books[0])" target="_blank">
+                      {{ currentBook.child_books[0] }}
+                    </a>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.child_books[0])"></span>
+                  </td>
+                </tr>
+                <template v-if="currentBook.child_books.length > 1">
+                  <tr v-if="index > 0" v-for="(bookid, index) in currentBook.child_books" class="bookid">
+                    <td></td>
+                    <td>
+                      <a :href="bookLink(bookid)" target="_blank">
+                        {{ bookid }}
+                      </a>
+                      <span class="copy-bookid" v-on:click="copyBookid(bookid)"></span>
+                    </td>
+                  </tr>
+                </template>
+                <tr v-if="currentBook.parent_bookid" class="bookid">
+                  <td>Parent book ID</td>
+                  <td>
+                    <a :href="bookLink(currentBook.parent_bookid)" target="_blank">
+                      {{ currentBook.parent_bookid }}
+                    </a>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.parent_bookid)"></span>
+                  </td>
+                </tr>
+                <tr v-if="adminOrLibrarian && !currentBook.parent_bookid">
+                  <td colspan="2">
+                    <BookCopy />
+                  </td>
                 </tr>
 
                 <tr class="extid">
@@ -636,6 +674,7 @@ import v_modal              from 'vue-js-modal';
 import BookAuthors          from './details/BookAuthors';
 import Suggestions          from './details/suggestions/Suggestions';
 import BookRewrite          from './details/BookRewrite';
+import BookCopy             from './details/BookCopy';
 
 Vue.use(v_modal, {dialog: true});
 
@@ -700,7 +739,8 @@ export default {
     Genre,
     BookAuthors,
     Suggestions,
-    BookRewrite
+    BookRewrite,
+    BookCopy
   },
 
   data () {
@@ -2556,6 +2596,24 @@ export default {
       // maybe need to use findAndActivate method...
     },
 
+    bookLink(bookid) {
+      return `/books/${bookid}/edit`;
+    },
+
+    copyBookid(bookid) {
+      let node = document.createElement("div");
+      node.id = "copy-clipboard";
+      node.innerHTML = bookid;
+      document.body.appendChild(node);
+      let range = document.createRange();
+      range.selectNode(document.getElementById("copy-clipboard"));
+      window.getSelection().removeAllRanges(); // clear current selection
+      window.getSelection().addRange(range); // to select text
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();// to deselect
+      document.body.removeChild(node);
+    },
+
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
 }
@@ -3304,6 +3362,21 @@ select.text-danger#categorySelection, input.text-danger{
       }
       div.p-dropdown-panel.p-component {
         /*margin-left: -40%;*/
+      }
+    }
+    .copy-bookid {
+      background: url(/static/copy.png);
+      background-repeat: no-repeat;
+      width: 16px !important;
+      height: 16px;
+      cursor: pointer;
+      vertical-align: middle;
+      margin: 0px 2px;
+      float: right;
+    }
+    tr.bookid {
+      td:nth-child(2) {
+        text-align: left;
       }
     }
   }

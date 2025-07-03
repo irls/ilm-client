@@ -50,7 +50,9 @@ let defBlock = [
   'tts_voice',
   'tts_voice_data',
   'recording_pauses',
-  'audio_silences'
+  'audio_silences',
+  'data_original',
+  'adapted'
 ];
 
 let BlockTypes = {
@@ -389,6 +391,8 @@ class BookBlock {
     this.audiocatalog_map = init.audiocatalog_map || {};
     this.html_errors = init.html_errors || {};
     this.audio_silences = init.audio_silences || [];
+    this.data_original = init.data_original || [];
+    this.adapted = init.adapted || false;
   }
 
   clean() {
