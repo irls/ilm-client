@@ -159,9 +159,9 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" :value='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
+                    <select class="form-control" :value='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="isLanguageDisabled">
                       <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
-                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                      <option v-for="(value, key) in bookLanguageList" :value="key">{{ value }}</option>
                     </select>
                   </td>
                 </tr>
@@ -1006,6 +1006,25 @@ export default {
     displayDownloadDemo: {
       get() {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
+      },
+      cache: false
+    },
+
+    isLanguageDisabled: {
+      get() {
+        return !this.allowMetadataEdit || this.currentBookMeta.collection_id || this.lockLanguage || this.currentBookMeta.copy_type === 'adapted';
+      },
+      cache: false
+    },
+
+    bookLanguageList: {
+      get() {
+        if (this.currentBookMeta.copy_type !== "translated") {
+          return this.languages;
+        }
+        let langs = _.cloneDeep(this.languages);
+        delete langs[this.currentBookMeta.parent_language];
+        return langs;
       },
       cache: false
     }
