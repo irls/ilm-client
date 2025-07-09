@@ -9,35 +9,36 @@
       <div class="process-preloader"></div>
     </template>
     <template v-else>
-      {{ applyRewriteDataCount }} text block(s) in range
+      <p>{{ applyRewriteDataCount }} text block(s) in range
       <a v-on:click="goToBlock(selectedRange.start.id)" class="go-to-block">{{ selectedRange.start.id_short }}</a>&nbsp;-&nbsp;
-      <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a>
+      <a v-on:click="goToBlock(selectedRange.end.id)" class="go-to-block">{{ selectedRange.end.id_short }}</a></p>
     </template>
   </div><!--<div class="rewrite-book-range">-->
 
   <div class="rewrite-book-controls">
-    <template v-if="editModeAllowed">
+    <p>
+      <template v-if="editModeAllowed">
+        <button class="btn btn-primary"
+          :disabled="applyRewriteDataCount == 0"
+          v-on:click="startApplyAdaptation()">
+          Adapt
+        </button>
+      </template>
+
+      <template v-if="editModeAllowed">
+        <button class="btn btn-primary"
+          :disabled="applyRewriteDataCount == 0"
+          v-on:click="startApplyTranslation()">
+          Translate
+        </button>
+      </template>
+
       <button class="btn btn-primary"
-        :disabled="false"
-        v-on:click="startApplyAdaptation()">
-        Adapt
+        :disabled="applyRewriteDataCount == 0"
+        v-on:click="revertBlock()">
+        Revert
       </button>
-    </template>
-
-    <template v-else>
-      <button class="btn btn-primary"
-        :disabled="true"
-        v-on:click="startApplySuggestions(true)">
-        Translate
-      </button>
-    </template>
-
-    <button class="btn btn-primary"
-      :disabled="true"
-      v-on:click="startApplySuggestions(true)">
-      Revert
-    </button>
-
+    </p>
   </div><!--<div class="rewrite-book-controls">-->
 
   <div class="rewrite-book-settings">
@@ -49,17 +50,17 @@
         </div>
         <div>
           <label>
-            <input type="checkbox" v-model="rewriteBook.title" /><span></span>Title
+            <input type="checkbox" name="rewriteBook.title" v-model="rewriteBook.title" /><span></span>Title
           </label>
         </div>
         <div>
           <label>
-            <input type="checkbox" v-model="rewriteBook.author" /><span></span>Author
+            <input type="checkbox" name="rewriteBook.author"  v-model="rewriteBook.author" /><span></span>Author
           </label>
         </div>
         <div>
           <label>
-            <input type="checkbox" v-model="rewriteBook.three_before" /><span></span>{{3}} Blocks before
+            <input type="checkbox" name="rewriteBook.three_before"  v-model="rewriteBook.three_before" /><span></span>{{3}} Blocks before
           </label>
         </div>
 
@@ -119,7 +120,8 @@
           'title',
           'header',
           'par'
-        ]
+        ],
+        allowedBlockVoicework: 'no_audio',
       }
     },
     props: {
@@ -179,11 +181,13 @@
           if (this.storeListO.getBlock(startId)) {
             const idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
             for (const blockRid of idsArrayRange) {
-              //console.log(`${key}: ${value}`);
               const oBlock = this.storeListO.get(blockRid);
               if (oBlock) {
                 const pBlock = this.storeList.get(oBlock.blockid);
-                if (this.allowedBlockTypes.indexOf(pBlock.type) > -1) {
+                const isAllowedBlockType = this.allowedBlockTypes.indexOf(pBlock.type) > -1
+                const allowedBlockVoicework = this.allowedBlockVoicework == pBlock.voicework;
+                const isBlockHasAudio = pBlock.audiosrc && pBlock.audiosrc.trim() !== '';
+                if (isAllowedBlockType && allowedBlockVoicework && !isBlockHasAudio) {
                   counter++;
                 }
               }
@@ -227,6 +231,27 @@
 
         this.rewrite(prompt);
       },
+      startApplyTranslation() {
+        const prompt = {
+          title: this.rewriteBook.title,
+          author: this.rewriteBook.author,
+          three_before: this.rewriteBook.three_before
+        };
+
+        if (this.rewriteBook.prompt_do.trim().length) {
+          prompt.prompt_do = this.rewriteBook.prompt_do;
+        }
+
+        if (this.rewriteBook.prompt_do.trim().length) {
+          prompt.prompt_dont = this.rewriteBook.prompt_do;
+        }
+
+        this.rewrite(prompt);
+      },
+      revertBlock() {
+        this.revert();
+      },
+
       shortId(blockid) {
         const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
         let _id_short = blockIdRgx.exec(blockid);
@@ -251,9 +276,10 @@
 </script>
 <style lang="less" scoped>
 .rewrite-book-wrapper {
+  display: flex;
+  flex-direction: column;
   padding: 10px 7px 5px 7px;
   position: sticky;
-  /*top: 80px;*/
   top: 29px;
   background-color: white;
   div {
@@ -276,8 +302,8 @@
     }
     input[type="checkbox"] + span {
       display: inline-block;
-      width: 18px;
-      height: 18px;
+      width: 19px;
+      height: 19px;
       border: 1px solid #CCCCCC;
       border-radius: 2px;
       vertical-align: middle;
@@ -291,12 +317,39 @@
         width: 11px;
         height: 6px;
         background: transparent;
-        top: 8px;
+        top: 6px;
         left: 4px;
         border: 2px solid white;
         border-top: none;
         border-right: none;
         transform: rotate(-45deg);
+      }
+    }
+
+    &.rewrite-book-header {
+      p {
+        margin: 20px 0 20px 0;
+      }
+    }
+
+    &.rewrite-book-range {
+      p {
+        margin: 0 0 25px 0;
+      }
+    }
+
+    &.rewrite-book-controls {
+      p {
+        margin: 0 0 20px 0;
+      }
+    }
+
+    &.rewrite-book-selectors {
+      label {
+        span {
+          margin-right: 15px;
+          margin-top: -4px;
+        }
       }
     }
 

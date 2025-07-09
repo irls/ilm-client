@@ -39,7 +39,7 @@
           </div><!--<div class="table-cell">-->
         </div>
     </div>
-    <div :class="['table-cell', 'marks-block-left', '-purple']"></div>
+    <div :class="['table-cell', 'marks-block-left', {'-purple': block.adapted}]"></div>
     <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"

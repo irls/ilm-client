@@ -269,6 +269,19 @@
                     dir="bottom"
                     :update="update"
                 >
+                  <template v-if="block.adapted">
+                    <li class="separator"></li>
+                    <li @click="viewAdaptedOriginal($event)"
+                      class="icon-menu-item"
+                      v-if="!block.contentAdapted">
+                      <i class="icon-menu -adapted-view"></i>View original
+                    </li>
+                    <li @click="viewAdapted($event)"
+                      class="icon-menu-item"
+                      v-if="block.contentAdapted">
+                      <i class="icon-menu -adapted-edit"></i>Edit adapted
+                    </li>
+                  </template>
                   <template v-if="isSplitPointAllowed()">
                     <li class="separator"></li>
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
@@ -4284,6 +4297,26 @@ Join subblocks?`,
               });
             });
         });
+      },
+
+      viewAdapted(ev) {
+        if (this.block.adapted) {
+          this.contentAdapted = false;
+          this.block.content = this.block.contentAdapted;
+          this.block.footnotes = [];
+          delete this.block.contentAdapted;
+          this.editingLocked = false;
+        }
+      },
+
+      viewAdaptedOriginal(ev) {
+        if (this.block.adapted) {
+          const { content, footnotes } = this.block.data_original;
+          this.block.contentAdapted = this.block.content;
+          this.block.content = content;
+          this.block.footnotes = footnotes;
+          this.editingLocked = true;
+        }
       }
 
   },
@@ -4643,6 +4676,20 @@ Join subblocks?`,
         &.-play-from {
           background-color: transparent;
           margin: 0px 4px 4px 0px;
+        }
+        &.-adapted-view {
+          background: url(/static/adapted/adapted-view.svg);
+          background-size: 14px;
+          background-color: transparent;
+          background-repeat: no-repeat;
+          margin: -3px 5px 0px 0px;
+        }
+        &.-adapted-edit {
+          background: url(/static/adapted/adapted-edit.svg);
+          background-size: 14px;
+          background-color: transparent;
+          background-repeat: no-repeat;
+          margin: -3px 5px 0px 0px;
         }
      }
     }
