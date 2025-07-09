@@ -81,7 +81,7 @@
         }
       },
       canRemove(filterTag) {
-        return !["Adapted", "Translated"].includes(filterTag) && this.allowMetadataEdit;
+        return !["Adapted", "Translated"].includes(filterTag) && this.adminOrLibrarian;
       }
     }
   }
