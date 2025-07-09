@@ -220,6 +220,25 @@ export default {
             return Promise.reject(err);
           });
         });
+    },
+    alignBookElevenLabs({dispatch, rootState}, data) {
+      data.voicework = 'eleven_labs';
+      return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/selection_alignment`, data, {
+        validateStatus: function (status) {
+          return status === 200 || status === 504;
+        }
+      })
+      .then((response) => {
+        dispatch('getBookAlign', {}, {root: true});
+        dispatch('setCurrentBookCounters', [], {root: true});
+        dispatch('resetSelectionAudiosrcConfig');
+        return Promise.resolve(response);
+      })
+      .catch((err) => {
+        dispatch('getBookAlign', {}, {root: true});
+        console.log('error: ', err);
+        return Promise.resolve({});
+      });
     }
   }
 }

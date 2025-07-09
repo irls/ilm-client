@@ -66,6 +66,8 @@
               <button class="btn btn-primary btn-small" :disabled="startAlignDisabled" v-on:click="align(null)" v-if="!alignProcess">Align&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
               <span v-else class="align-preloader -small"></span>
               <!--<button v-if="hasLocks('align')" class="cancel-align" v-on:click="cancelAlign(true)" title="Cancel aligning"><i class="fa fa-ban"></i></button>-->
+              <button class="btn btn-primary btn-small" :disabled="startAlignDisabled" v-on:click="alignElevenLabs(null)" v-if="!alignProcess">EL&nbsp;<span v-if="selectionLength > 0">({{selectionLength}})</span></button>
+              <span v-else class="align-preloader -small"></span>
             </div>
           </div>
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
@@ -865,6 +867,28 @@
             });
           });
       },
+      alignElevenLabs() {
+        this.$root.$emit('start-align');
+        this.$root.$emit('for-audioeditor:check-close-realigning-block', "audio_file");
+        return this.alignBookElevenLabs({
+          start: this.blockSelection.start._id,
+          end: this.blockSelection.end._id,
+          audiofiles: this.selections,
+          realign: true,
+          positions: this.positions_tmp
+        })
+        .then((response) => {
+          this.$root.$emit('stop-align');
+          this.selections = [];
+          if (response.status===200) {
+            //self.$root.$emit('bookBlocksUpdates', response.data);
+            this.$emit('alignmentFinished');
+            this.aligningBlocks = [];
+          } else if (response.status == 504) {
+            //self.checkAligningBlocks();
+          }
+        });
+      },
       callUnsavedChangesPopup(voicework, callback, callbackParams) {
         let callbackProps = {
           saved: false
@@ -1318,7 +1342,7 @@
       },
 
       ...mapActions(['setCurrentBookCounters', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
-      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment', 'checkBlockTTSForPattern'])
+      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment', 'checkBlockTTSForPattern', 'alignBookElevenLabs'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
