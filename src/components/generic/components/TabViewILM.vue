@@ -191,6 +191,13 @@ export default {
     position: relative;
 }
 
+.meta-edit-tabs .p-tabview-nav-container {
+    position: sticky;
+    top: -0px;
+    background-color:white;
+    z-index: 2;
+}
+
 .p-tabview-scrollable .p-tabview-nav-container {
     overflow: hidden;
 }

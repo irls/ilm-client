@@ -2667,17 +2667,17 @@ select.text-danger#categorySelection, input.text-danger{
   background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
-  border: 1px solid white;
+  /*border: 1px solid white;
   position: sticky;
   top: -1px;
   background-color:white;
-  z-index: 2;
+  z-index: 2;*/
 }
 
 .meta-edit-tabs .nav-tabs-navigation .nav-tabs-wrapper ul.nav-tabs {
-  display: flex;
+  /*display: flex;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: hidden;*/
 }
 
 #p-styles-switcher.tab-container {
