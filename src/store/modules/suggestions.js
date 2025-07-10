@@ -59,9 +59,11 @@ export default {
     }
   },
   mutations: {
-    setSuggestions(state, suggestions) {
+    setSuggestions(state, suggestions = []) {
       state.suggestions.length = 0;
-      state.suggestions.push.apply(state.suggestions, suggestions);
+      if (Array.isArray(suggestions)) {
+        state.suggestions.push.apply(state.suggestions, suggestions);
+      }
     },
     createdSuggestion(state, suggestion) {
       state.suggestions.unshift(suggestion);
@@ -76,8 +78,8 @@ export default {
         if (state.isDoNotDisturb.hasOwnProperty(action)) {
           if (!this.getters["suggestionsModule/getIsDoNotDisturb"](action, word)) {
             state.isDoNotDisturb[action].push({
-              word: checkWord, 
-              matchBlocksCounter: state.counters.matchBlocksCounter > 0, 
+              word: checkWord,
+              matchBlocksCounter: state.counters.matchBlocksCounter > 0,
               matchFirstWordBlocksCounter: state.counters.matchFirstWordBlocksCounter > 0,
               updateAction: updateAction
             });

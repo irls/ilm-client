@@ -8,10 +8,12 @@
 
           <div class="table-body -block -mode-{mode} -voicework-{block.voicework} {blockOutPaddings()}">
             <div class="table-cell controls-left">
-              <div class="table-row"></div>
-              <div class="table-row check-row"></div>
+              <!--<div class="table-row">/div>-->
+              <div class="table-body check-row"><div class="table-cell"></div></div>
             </div>
             <!--<div class="table-cell controls-left">-->
+
+            <div class="table-cell marks-block-left"></div>
 
             <div class="-content-block table-cell" class:completed="{isCompleted}">
               <div class="table-body -content -langblock-{getBlockLang()}">
