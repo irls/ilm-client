@@ -276,6 +276,11 @@
               :allowMetadataEdit="allowMetadataEdit"
               :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
               @genresUpdate="checkGenresErrors" />
+
+            <FilterTag
+              :allowMetadataEdit="allowMetadataEdit"
+              :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['filter_tags']" />
+
             <fieldset class='description brief'>
               <legend>Book cover</legend>
               <template v-if="allowMetadataEdit">
