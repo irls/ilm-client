@@ -28,7 +28,7 @@
         </div>
       </div>
       <div class="apply-suggestions-checkbox-wrapper">
-        <Checkbox v-model="isDoNotDisturb" id="showSett" binary />
+        <Checkbox v-model="isDoNotDisturb" id="showSett" binary :disabled="doNotDisturbDisabled" />
         <label for="showSett"> Don't show this message again </label>
       </div>
     </div>
@@ -199,6 +199,12 @@ export default {
         return title;
       },
       cache: true
+    },
+    doNotDisturbDisabled: {
+      get() {
+        return this.updateAction === "all";
+      },
+      cache: false
     },
     ...mapGetters({
       parlistO: 'storeListO',
@@ -379,7 +385,13 @@ export default {
     ]),
   },
   watch: {
-    
+    'updateAction': {
+      handler(val) {
+        if (val === "all") {
+          this.isDoNotDisturb = false;
+        }
+      }
+    }
   }
 }
 </script>
