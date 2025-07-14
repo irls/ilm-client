@@ -1,7 +1,7 @@
 <template>
 <div class="rewrite-book-wrapper" v-if="editModeAllowed">
   <div class="rewrite-book-header">
-    <p>Create adapted book version</p>
+    <p>{{tabPlaceholder}}</p>
   </div><!--<div class="rewrite-book-header">-->
 
   <div class="rewrite-book-range">
@@ -17,19 +17,19 @@
 
   <div class="rewrite-book-controls">
     <p>
-      <template v-if="editModeAllowed">
+      <template v-if="editModeAllowed && !isBookTranslated">
         <button class="btn btn-primary"
           :disabled="applyRewriteDataCount == 0"
           v-on:click="startApplyAdaptation()">
-          Adapt
+          Adapt <span v-if="applyRewriteDataCount > 0">({{ applyRewriteDataCount }})</span>
         </button>
       </template>
 
-      <template v-if="editModeAllowed">
+      <template v-if="editModeAllowed && isBookTranslated">
         <button class="btn btn-primary"
           :disabled="applyRewriteDataCount == 0"
           v-on:click="startApplyTranslation()">
-          Translate
+          Translate <span v-if="applyRewriteDataCount > 0">({{ applyRewriteDataCount }})</span>
         </button>
       </template>
 
@@ -135,15 +135,28 @@
     },
     computed: {
 
+      tabPlaceholder: {
+        get() {
+          return this.isBookTranslated ? 'Create translated book version' : 'Create adapted book version';
+        }
+      },
+
       promptDoPlaceholder: {
         get() {
-          return true ? 'Simplify the text to A2 level': 'Translate the text';
+          return this.isBookTranslated ? 'Translate the text' : 'Simplify the text to A2 level';
         }
       },
 
       editModeAllowed: {
         get() {
           return this.adminOrLibrarian || this._is('editor', true) || this._is('narrator', true);
+        },
+        cache: false
+      },
+
+      isBookTranslated: {
+        get() {
+          return this.currentBookMeta.parent_book && this.currentBookMeta.parent_language !== this.currentBookMeta.language;
         },
         cache: false
       },
