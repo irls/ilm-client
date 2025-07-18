@@ -320,14 +320,18 @@
               :isActive="activeTabIndex === TAB_TOC_INDEX"
             ></BookToc>
           </TabPanel>
-          <TabPanel header="Audio" id="audio-integration" data-tab-class="hide-tab-if-disabled" :disabled="!tc_displayAudiointegrationTab()">
+          <TabPanel header="Audio" id="audio-integration"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displayAudiointegrationTab()">
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
                 @goToBlock="goToBlock"
               ></BookAudioIntegration>
           </TabPanel>
-          <TabPanel header="Styles" :id="'styles-switcher'" data-tab-class="hide-tab-if-disabled" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
+          <TabPanel header="Styles" id="styles-switcher"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
               <div class="styles-catalogue">
 
                 <TabView ref="blockTypesTabs"
@@ -602,11 +606,12 @@
             data-tab-class="hide-tab-if-disabled"
             :disabled="!tc_displaySuggestionsTab()">
             <Suggestions
-            :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
+              :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
           </TabPanel>
-          <TabPanel header="Rewrite" id="adapted_book">
-            <BookRewrite
-              />
+          <TabPanel header="Rewrite" id="adapted_book"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displayRewriteTab() && !proofreadModeReadOnly">
+            <BookRewrite />
           </TabPanel>
         </TabView>
       </div>
