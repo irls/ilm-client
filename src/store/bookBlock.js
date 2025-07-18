@@ -391,7 +391,7 @@ class BookBlock {
     this.audiocatalog_map = init.audiocatalog_map || {};
     this.html_errors = init.html_errors || {};
     this.audio_silences = init.audio_silences || [];
-    this.data_original = init.data_original || [];
+    this.data_original = init.data_original || {};
     this.adapted = init.adapted || false;
   }
 
