@@ -34,9 +34,9 @@
       </template>
 
       <button class="btn btn-primary"
-        :disabled="applyRewriteDataCount == 0"
+        :disabled="applyRevertDataCount == 0"
         v-on:click="revertBlock()">
-        Revert
+        Revert <span v-if="applyRevertDataCount > 0">({{ applyRevertDataCount }})</span>
       </button>
     </p>
   </div><!--<div class="rewrite-book-controls">-->
@@ -158,7 +158,7 @@
         get() {
           return this.currentBookMeta.parent_book && this.currentBookMeta.parent_language !== this.currentBookMeta.language;
         },
-        cache: false
+        cache: true
       },
 
       selectedRange: {
@@ -200,7 +200,32 @@
                 const isAllowedBlockType = this.allowedBlockTypes.indexOf(pBlock.type) > -1
                 const allowedBlockVoicework = this.allowedBlockVoicework == pBlock.voicework;
                 const isBlockHasAudio = pBlock.audiosrc && pBlock.audiosrc.trim() !== '';
-                if (isAllowedBlockType && allowedBlockVoicework && !isBlockHasAudio) {
+                if (isAllowedBlockType && !isBlockHasAudio) {
+                  counter++;
+                }
+              }
+            }
+          }
+
+          return counter;
+        },
+        cache: false
+      },
+      applyRevertDataCount: {
+        get() {
+          let counter = 0;
+
+          const startId = this.blockSelection.start._id;
+          const endId = this.blockSelection.end._id;
+
+          if (this.storeListO.getBlock(startId)) {
+            const idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
+            for (const blockRid of idsArrayRange) {
+              const oBlock = this.storeListO.get(blockRid);
+              if (oBlock) {
+                const pBlock = this.storeList.get(oBlock.blockid);
+                const isBlockAdapted = pBlock.adapted && pBlock.data_original && pBlock.data_original.content;
+                if (isBlockAdapted) {
                   counter++;
                 }
               }
