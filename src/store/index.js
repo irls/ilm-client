@@ -4307,6 +4307,7 @@ export const store = new Vuex.Store({
                     });
                     return {};
                   });
+                dispatch('getAlignCount');
               }
               return clearLocks
                 .then(() => {
