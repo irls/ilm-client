@@ -495,7 +495,7 @@
         let element = document.querySelector('.eleven-labs-tts');
         if (container && element) {
           containerHeight = container.offsetHeight;
-          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          let tabs = container.querySelector('.p-tabview-nav-content');// menu tabs
           if (tabs) {
             containerHeight-= tabs.offsetHeight;
           }

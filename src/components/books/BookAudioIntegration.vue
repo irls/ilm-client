@@ -1288,7 +1288,7 @@
         let container = document.querySelector('.sidebar');// main container for all section
         if (container) {
           containerHeight = container.offsetHeight;
-          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          let tabs = container.querySelector('.p-tabview-nav-content');// menu tabs
           if (tabs) {
             containerHeight-= tabs.offsetHeight;
           }

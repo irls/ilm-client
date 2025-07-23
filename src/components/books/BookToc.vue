@@ -1074,7 +1074,7 @@ export default {
       let audioEditor = document.querySelector('.waveform-playlist');
       let elementsHeight = 15;
       let topMenu = document.querySelector('.top-menu-wrapper');
-      let navTabs = document.querySelector('.nav-tabs-navigation');
+      let navTabs = document.querySelector('.p-tabview-nav-content');
       if (topMenu) {
         elementsHeight+= topMenu.offsetHeight;
       }
