@@ -404,7 +404,7 @@
         Vue.nextTick(() => {
           let targetContainer = document.querySelector(`section[id="${'p-' + this.categoryName}"] .suggestions-list-options`);
           if (targetContainer) {
-            let containersHeight = document.querySelector('.nav-tabs-navigation').offsetHeight * 2 + document.querySelector('.top-menu-wrapper').offsetHeight/* + document.querySelector(`section[id="${'p-' + this.categoryName}"] .apply-suggestion`).offsetHeight + document.querySelector(`section[id="${'p-' + this.categoryName}"] .filter-suggestion`).offsetHeight*/ + 10;
+            let containersHeight = document.querySelector('.p-tabview-nav-content').offsetHeight * 2 + document.querySelector('.top-menu-wrapper').offsetHeight/* + document.querySelector(`section[id="${'p-' + this.categoryName}"] .apply-suggestion`).offsetHeight + document.querySelector(`section[id="${'p-' + this.categoryName}"] .filter-suggestion`).offsetHeight*/ + 10;
             targetContainer.style.height = window.innerHeight - parseInt(containersHeight) + 'px';
           }
         });
