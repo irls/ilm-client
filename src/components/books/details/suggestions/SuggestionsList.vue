@@ -158,11 +158,22 @@
         this.setContainerHeight();
       });
       window.addEventListener('resize', this.setContainerHeight);
+
       this.$root.$on("from-block-part-view:changed", this.getApplySuggestions);
+
+      this.$root.$on('for-audioeditor:load', this.setContainerHeight);
+      this.$root.$on('for-audioeditor:load-and-play', this.setContainerHeight);
+      this.$root.$on('from-audioeditor:visible', this.setContainerHeight);
+      this.$root.$on('from-audioeditor:content-loaded', this.setContainerHeight);
     },
     destroyed() {
       //this.$root.$off('for-suggestions-list:add-suggestion', this.onAddEvent);
       this.$root.$off("from-block-part-view:changed", this.getApplySuggestions);
+
+      this.$root.$off('for-audioeditor:load', this.setContainerHeight);
+      this.$root.$off('for-audioeditor:load-and-play', this.setContainerHeight);
+      this.$root.$off('from-audioeditor:visible', this.setContainerHeight);
+      this.$root.$off('from-audioeditor:content-loaded', this.setContainerHeight);
     },
     methods: {
       clearFilter() {
@@ -400,12 +411,33 @@
             return {};
           });
       },
-      setContainerHeight() {
+      setContainerHeight(editorClosed = false) {
         Vue.nextTick(() => {
-          let targetContainer = document.querySelector(`section[id="${'p-' + this.categoryName}"] .suggestions-list-options`);
+          const targetContainer = document.querySelector(`section[id="${'p-' + this.categoryName}"] .suggestions-list-options`);
           if (targetContainer) {
-            let containersHeight = document.querySelector('.p-tabview-nav-content').offsetHeight * 2 + document.querySelector('.top-menu-wrapper').offsetHeight/* + document.querySelector(`section[id="${'p-' + this.categoryName}"] .apply-suggestion`).offsetHeight + document.querySelector(`section[id="${'p-' + this.categoryName}"] .filter-suggestion`).offsetHeight*/ + 10;
-            targetContainer.style.height = window.innerHeight - parseInt(containersHeight) + 'px';
+
+            let audioEditor = document.querySelector('.waveform-playlist');
+            let elementsHeight = 15;
+            let topMenu = document.querySelector('.top-menu-wrapper');
+            let navTabs = document.querySelector('.p-tabview-nav-content');
+            let subNavTabs = document.querySelector('.suggestions-dictionary .nav-tabs-navigation');
+            if (topMenu) {
+              elementsHeight+= topMenu.offsetHeight;
+            }
+            if (navTabs) {
+              elementsHeight+= navTabs.offsetHeight;
+            }
+            if (subNavTabs) {
+              elementsHeight+= subNavTabs.offsetHeight;
+            }
+            Vue.nextTick(() => {
+              if (audioEditor && !editorClosed) {
+                if (audioEditor.offsetHeight) {
+                  elementsHeight+= audioEditor.offsetHeight;
+                }
+              }
+              targetContainer.style.height = `calc(100vh - ${elementsHeight}px)`;
+            });
           }
         });
       },
