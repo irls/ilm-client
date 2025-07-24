@@ -892,6 +892,9 @@ Save or discard your changes to continue editing`,
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
+          if (this.meta.parent_book && !this.block.adapted) {
+            return true;
+          }
           let disable_footnotes = false;
           /*if (this.block.footnotes) {
             this.block.footnotes.forEach(f => {
@@ -914,6 +917,9 @@ Save or discard your changes to continue editing`,
       },
       isApproveDisabled: { cache: false,
         get() {
+          if (this.meta.parent_book && !this.block.adapted) {
+            return true;
+          }
           let partsDisabled = false;
           if (this.$refs.blocks) {
             this.$refs.blocks.forEach(ref => {
