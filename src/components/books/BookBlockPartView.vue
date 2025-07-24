@@ -854,7 +854,10 @@ export default {
       },
       allowEditing: {
         get() {
-          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
+          if (this.meta.parent_book && this.block && !this.block.adapted) {
+            return false;
+          }
+          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit' && !this.editingLocked;
         }
       },
       blockTypeLabel: {
