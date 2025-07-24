@@ -16,10 +16,9 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-
       <div class="book-listing">
         <TabView ref="panelTabs" :scrollable="true"
-        v-model:activeIndex="panelTabsActiveIndex"
+        :activeIndex="panelTabsActiveIndex"
         class="meta-edit-tabs"
         @tab-change="metaTabChange">
           <TabPanel header="Tasks" id="assignments">
@@ -1197,6 +1196,11 @@ export default {
             break;
           case this.TAB_SUGGESTION_INDEX:
             if (!this.tc_displaySuggestionsTab()) {
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
+            }
+            break;
+          case this.TAB_REWRITE_INDEX:
+            if (!this.tc_displayRewriteTab()) {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
@@ -2528,6 +2532,7 @@ export default {
 
     metaTabChange(tab) {
       this.activeTabIndex = tab.index;
+      this.panelTabsActiveIndex = tab.index;
       if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
         Vue.nextTick(() => {
           this.$refs.descriptionShort.setValue(this.currentBook.description_short);
