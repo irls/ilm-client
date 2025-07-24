@@ -121,7 +121,8 @@
           'header',
           'par'
         ],
-        allowedBlockVoicework: 'no_audio',
+        applyRewriteDataCount: 0,
+        applyRevertDataCount: 0
       }
     },
     props: {
@@ -184,70 +185,23 @@
         },
         cache: false
       },
-      applyRewriteDataCount: {
-        get() {
-          let counter = 0;
-
-          const startId = this.blockSelection.start._id;
-          const endId = this.blockSelection.end._id;
-
-          if (this.storeListO.getBlock(startId)) {
-            const idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
-            for (const blockRid of idsArrayRange) {
-              const oBlock = this.storeListO.get(blockRid);
-              if (oBlock) {
-                const pBlock = this.storeList.get(oBlock.blockid);
-                const isAllowedBlockType = this.allowedBlockTypes.indexOf(pBlock.type) > -1
-                const allowedBlockVoicework = this.allowedBlockVoicework == pBlock.voicework;
-                const isBlockHasAudio = pBlock.audiosrc && pBlock.audiosrc.trim() !== '';
-                if (isAllowedBlockType && !isBlockHasAudio) {
-                  counter++;
-                }
-              }
-            }
-          }
-
-          return counter;
-        },
-        cache: false
-      },
-      applyRevertDataCount: {
-        get() {
-          let counter = 0;
-
-          const startId = this.blockSelection.start._id;
-          const endId = this.blockSelection.end._id;
-
-          if (this.storeListO.getBlock(startId)) {
-            const idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
-            for (const blockRid of idsArrayRange) {
-              const oBlock = this.storeListO.get(blockRid);
-              if (oBlock) {
-                const pBlock = this.storeList.get(oBlock.blockid);
-                const isBlockAdapted = pBlock.adapted && pBlock.data_original && pBlock.data_original.content;
-                if (isBlockAdapted) {
-                  counter++;
-                }
-              }
-            }
-          }
-
-          return counter;
-        },
-        cache: false
-      },
       ...mapGetters([
         'currentBookMeta',
         'currentCollection',
         'adminOrLibrarian',
         'blockSelection',
         'storeListO',
-        'storeList'
+        'storeList',
+        'lockedBlocks',
+        'aligningBlocks'
       ]),
       //...mapGetters('booksModule', ["rewrite", "revert"])
     },
     created() {
 
+    },
+    mounted() {
+      this.calculateCounters();
     },
     methods: {
       ...mapActions('booksModule', ["rewrite", "revert"]),
@@ -301,7 +255,41 @@
       },
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
-      }
+      },
+      calculateCounters() {
+        let counterAdapt = 0;
+        let counterRevert = 0;
+        let idsArrayRange = [];
+
+        if (this.blockSelection.start._id) {
+          const startId = this.blockSelection.start._id;
+          const endId = this.blockSelection.end._id;
+
+          if (this.storeListO.getBlock(startId)) {
+            idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
+          }
+        } else {
+          idsArrayRange = this.storeListO.rIdsArray();
+        }
+        for (const blockRid of idsArrayRange) {
+          const oBlock = this.storeListO.get(blockRid);
+          if (oBlock) {
+            const pBlock = this.storeList.get(oBlock.blockid);
+            const isAllowedBlockType = this.allowedBlockTypes.indexOf(pBlock.type) > -1
+            const isBlockHasAudio = pBlock.audiosrc && pBlock.audiosrc.trim() !== '';
+            if (isAllowedBlockType && !isBlockHasAudio) {
+              counterAdapt++;
+            }
+            const isBlockAdapted = pBlock.adapted && pBlock.data_original && pBlock.data_original.content;
+            if (isBlockAdapted) {
+              counterRevert++;
+            }
+          }
+        }
+
+        this.applyRewriteDataCount = counterAdapt;
+        this.applyRevertDataCount = counterRevert;
+      },
 
     },
     'watch': {
@@ -309,6 +297,35 @@
         handler(val) {
         }
       },
+      'lockedBlocks.length': {
+        handler(val, oldVal) {
+          if (val < oldVal) {
+            this.calculateCounters();
+          }
+        }
+      },
+      'aligningBlocks.length': {
+        handler(val, oldVal) {
+          if (val < oldVal) {
+            this.calculateCounters();
+          }
+        }
+      },
+      'storeList.size': {
+        handler(val) {
+          this.calculateCounters();
+        }
+      },
+      'blockSelection.start._id': {
+        handler(val) {
+          this.calculateCounters();
+        }
+      },
+      'blockSelection.end._id': {
+        handler(val) {
+          this.calculateCounters();
+        }
+      }
     }
   }
 </script>
