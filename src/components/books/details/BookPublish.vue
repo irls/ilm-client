@@ -407,7 +407,7 @@
         let publishErrorsContainer = document.querySelector('.publish-html-validation');
         let sidebar = document.querySelector('.sidebar');
         let errorsContainer = document.querySelector('.publish-html-validation .p-toggleable-content');
-        let tabsContainer = document.querySelector('.nav-tabs-navigation');
+        let tabsContainer = document.querySelector('.p-tabview-nav-content');
         if (publishErrorsContainer && sidebar && errorsContainer) {
           let lastTop = null;
           let scrolled = 0;
@@ -435,7 +435,7 @@
         let container = document.querySelector('.sidebar');// main container for all section
         if (container) {
           containerHeight = container.offsetHeight;
-          let tabs = container.querySelector('.nav-tabs-navigation');// menu tabs
+          let tabs = container.querySelector('.p-tabview-nav-content');// menu tabs
           if (tabs) {
             containerHeight-= tabs.offsetHeight;
           }
