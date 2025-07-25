@@ -301,6 +301,9 @@ export default {
       }
       return false;
     },
+    tc_isBookCopy() {
+      return this.currentBookMeta && this.currentBookMeta.parent_book && this.currentBookMeta.parent_book.length;
+    },
     tc_getBlockTaskOtherRole(blockid, mode = null) {
       let task = false;
       if (this.tc_currentBookTasks.can_resolve_tasks) {
