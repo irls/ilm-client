@@ -617,7 +617,7 @@
           </TabPanel>
           <TabPanel header="Rewrite" id="adapted_book"
             data-tab-class="hide-tab-if-disabled"
-            :disabled="!tc_displayRewriteTab() && !proofreadModeReadOnly">
+            :disabled="!tc_displayRewriteTab()">
             <BookRewrite />
           </TabPanel>
         </TabView>
