@@ -287,7 +287,7 @@ export default {
       return false;
     },
     tc_displayRewriteTab() {
-      if ( ['edit'].indexOf(this.bookMode) === -1 || ['BookEdit', 'CollectionBookEdit',"BookProofread", 'BookNarrate', 'CollectionBookNarrate'].indexOf(this.$route.name) === -1) {
+      if ( ['edit'].indexOf(this.bookMode) === -1) {
         return false;
       }
       // if (!this.currentBookMeta.copy_type || ['translated', 'adapted'].indexOf(this.currentBookMeta.copy_type) === -1) {
@@ -296,7 +296,7 @@ export default {
       if (!this.currentBookMeta.parent_book) {
         return false;
       }
-      if (this.adminOrLibrarian || this.adminOrProofer || this._is('editor', true) || (this._is('narrator', true) && this.bookMode === 'narrate')) {
+      if (this.adminOrLibrarian) {
         return true;
       }
       return false;
