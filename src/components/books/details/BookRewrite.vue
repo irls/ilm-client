@@ -157,6 +157,19 @@
 
       isBookTranslated: {
         get() {
+          if (this.currentBookMeta && this.currentBookMeta.copy_type) {
+            switch(this.currentBookMeta.copy_type) {
+                case 'adapted' : {
+                  return false;
+                } break;
+                case 'translated' : {
+                  return true;
+                } break;
+                default : {
+                  return false;
+                } break;
+            };
+          }
           return this.currentBookMeta.parent_book && this.currentBookMeta.parent_language !== this.currentBookMeta.language;
         },
         cache: true
