@@ -196,6 +196,25 @@
         },
         cache: false
       },
+      currentBookCounters_not_adapted_blocks_counter: {
+        get() {
+          let counterNotAdapted = 0;
+          const idsArrayRange = this.storeListO.rIdsArray();
+          for (const blockRid of idsArrayRange) {
+            const oBlock = this.storeListO.get(blockRid);
+            if (oBlock) {
+              const pBlock = this.storeList.get(oBlock.blockid);
+              const isAllowedBlockType = this.allowedAdaptedBlockTypes.indexOf(pBlock.type) > -1 || false;
+              const isBlockAdapted = pBlock.adapted && pBlock.data_original && !!pBlock.data_original.content;
+              if (!isBlockAdapted) {
+                counterNotAdapted++;
+              }
+            }
+          }
+          return counterNotAdapted;
+        },
+        cache: true
+      },
       ...mapGetters({
         tasks_counter: 'tasks_counter',
         adminOrLibrarian: 'adminOrLibrarian',
@@ -203,10 +222,12 @@
         currentBookMeta: 'currentBookMeta',
         currentCollectionId: 'currentCollectionId',
         storeListO: 'storeListO',
+        storeList: 'storeList',
         taskBlockMap: 'taskBlockMap',
         bookMode: 'bookMode',
         auth: 'auth',
-        taskUsers: 'taskUsers'
+        taskUsers: 'taskUsers',
+        allowedAdaptedBlockTypes: 'allowedAdaptedBlockTypes'
       })
     },
     methods: {
@@ -388,20 +409,31 @@
           },
         ];
 
-        //console.log('counter text cleanup 2', this.counterTextCleanup);
+        const is_not_adapted_blocks = this.currentBookCounters_not_adapted_blocks_counter > 0;
+        const is_not_marked_blocks_missed_audio = this.currentBookCounters.not_marked_blocks_missed_audio > 0;
 
-        if (this.currentBookCounters.not_marked_blocks_missed_audio === 0){
+        if (this.counterTextCleanup && (is_not_marked_blocks_missed_audio || is_not_adapted_blocks)) {
+          title = 'Unable to complete the Task';
+          text = '';
+          if (is_not_adapted_blocks) {
+            text += '' + this.currentBookCounters_not_adapted_blocks_counter + ' block(s) can not be approved because adapted text is missing</br>'
+          }
+
+          if (is_not_marked_blocks_missed_audio) {
+            text += '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>'
+          }
+
+          text += 'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' +
+            'Approve qualified blocks?';
+
+          buttons[1].title = 'Approve';
+
+        } else if (this.currentBookCounters.not_marked_blocks_missed_audio === 0) {
           title = 'Complete the Task';
           text = 'Approve ' + this.counterTextCleanup + ' block(s) and complete editing?';
           buttons[1].title = 'Complete';
         };
-        if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.counterTextCleanup){
-          title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>' +
-            'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' +
-            'Approve qualified blocks?';
-          buttons[1].title = 'Approve';
-        };
+
         if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
           title = 'Unable to complete the Task';
           text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";
@@ -754,12 +786,12 @@
         this.$modal.show(AudioImportModal, {
             book: this.currentBookMeta,
             uploadInfo: uploadInfo
-          }, 
+          },
           {
             height: 'auto',
             width: '590px',
             clickToClose: false
-          }, 
+          },
           {
             'closed': () => {
               if (uploadInfo && uploadInfo.success) {

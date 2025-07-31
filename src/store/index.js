@@ -165,7 +165,20 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0', total_blocks: '0', enabled_blocks: '0'},
+    currentBookCounters: {
+      not_marked_blocks: '0',
+      not_marked_blocks_missed_audio: '0',
+      narration_blocks: '0',
+      not_proofed_audio_blocks: '0',
+      approved_audio_in_range: '0',
+      approved_tts_in_range: '0',
+      changed_in_range_audio: '0',
+      change_in_range_tts: '0',
+      voiced_in_range: '0',
+      voiceworks_for_remove: '0',
+      total_blocks: '0',
+      enabled_blocks: '0'
+    },
 
     blockers: [],
     reqSignals: {
@@ -298,7 +311,12 @@ export const store = new Vuex.Store({
     pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: [],// blocks with pending updates, shall be skipped from liveDB updates
     selectionRecount: false,
-    modifiedBlockids: []
+    modifiedBlockids: [],
+    allowedAdaptedBlockTypes: [
+      'title',
+      'header',
+      'par'
+    ]
   }, // end state
 
   getters: {
@@ -706,6 +724,9 @@ export const store = new Vuex.Store({
     },
     modifiedBlockids: state => {
       return state.modifiedBlockids;
+    },
+    allowedAdaptedBlockTypes: state => {
+      return state.allowedAdaptedBlockTypes;
     }
   },
 
@@ -1978,7 +1999,14 @@ export const store = new Vuex.Store({
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'not_marked_blocks_missed_audio', 'not_marked_blocks', 'total_blocks', 'enabled_blocks']);
+          dispatch('setCurrentBookCounters', [
+            'narration_blocks',
+            'not_proofed_audio',
+            'not_marked_blocks_missed_audio',
+            'not_marked_blocks',
+            'total_blocks',
+            'enabled_blocks'
+          ]);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
