@@ -2,7 +2,7 @@
 <div>
 
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block -subblock block-preview', blockOutPaddings]">
+    :class="['table-body -block -subblock block-preview', blockOutPaddings, { '-original-content': block.contentAdapted && editingLocked }]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
 
       <LockedBlockActions
@@ -4307,13 +4307,7 @@ Join subblocks?`,
 
       viewAdapted(ev) {
         if (this.block.adapted) {
-          this.contentAdapted = false;
-          this.block.content = this.block.contentAdapted;
-          this.block.footnotes = [];
-          this.block.parts = this.block.partsAdapted;
-          delete this.block.contentAdapted;
-          delete this.block.partsAdapted;
-          this.editingLocked = false;
+          this.resetViewAdapted();
         }
       },
 
@@ -4322,11 +4316,27 @@ Join subblocks?`,
           const { content, footnotes, parts } = this.block.data_original;
           this.block.contentAdapted = this.block.content;
           this.block.partsAdapted = this.block.parts || [];
+          this.block.audiosrcAdapted = this.block.audiosrc;
+          this.block.audiosrc_verAdapted = this.block.audiosrc_ver;
+          this.block.audiosrc = '';
+          this.block.audiosrc_ver = {};
           this.block.content = content;
           this.block.footnotes = footnotes;
           this.block.parts = parts || [];
           this.editingLocked = true;
         }
+      },
+      resetViewAdapted() {
+        this.block.content = this.block.contentAdapted;
+        this.block.footnotes = [];
+        this.block.parts = this.block.partsAdapted || [];
+        this.block.audiosrc = this.block.audiosrcAdapted;
+        this.block.audiosrc_ver = this.block.audiosrc_verAdapted;
+        delete this.block.contentAdapted;
+        delete this.block.partsAdapted;
+        delete this.block.audiosrcAdapted;
+        delete this.block.audiosrc_verAdapted;
+        this.editingLocked = false;
       }
 
   },
@@ -4586,6 +4596,18 @@ Join subblocks?`,
           });
         },
         deep: true
+      },
+      'block.adapted': {
+        handler(val) {
+          if (!val && this.editingLocked) {
+            if (this.block.contentAdapted) {
+              this.resetViewAdapted();
+            } else {
+              this.editingLocked = false;
+              this.reInitEditor();
+            }
+          }
+        }
       }/*,
       'audioTasksQueue.running': {
         handler(val) {
