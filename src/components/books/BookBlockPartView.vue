@@ -4324,6 +4324,7 @@ Join subblocks?`,
           this.block.footnotes = footnotes;
           this.block.parts = parts || [];
           this.editingLocked = true;
+          this.$parent.$forceUpdate();
         }
       },
       resetViewAdapted() {
@@ -4337,6 +4338,7 @@ Join subblocks?`,
         delete this.block.audiosrcAdapted;
         delete this.block.audiosrc_verAdapted;
         this.editingLocked = false;
+        this.$parent.$forceUpdate();
       }
 
   },
