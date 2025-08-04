@@ -110,8 +110,8 @@
       return {
         calculate_apply: false,
         rewriteBook : {
-          title: false,
-          author: false,
+          title: true,
+          author: true,
           three_before: false,
           prompt_do: '',
           prompt_do: ''
