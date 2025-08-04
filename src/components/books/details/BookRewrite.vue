@@ -110,17 +110,12 @@
       return {
         calculate_apply: false,
         rewriteBook : {
-          title: false,
-          author: false,
+          title: true,
+          author: true,
           three_before: false,
           prompt_do: '',
           prompt_do: ''
         },
-        allowedBlockTypes: [
-          'title',
-          'header',
-          'par'
-        ],
         applyRewriteDataCount: 0,
         applyRevertDataCount: 0
       }
@@ -206,7 +201,8 @@
         'storeListO',
         'storeList',
         'lockedBlocks',
-        'aligningBlocks'
+        'aligningBlocks',
+        'allowedAdaptedBlockTypes'
       ]),
       //...mapGetters('booksModule', ["rewrite", "revert"])
     },
@@ -288,7 +284,7 @@
           const oBlock = this.storeListO.get(blockRid);
           if (oBlock) {
             const pBlock = this.storeList.get(oBlock.blockid);
-            const isAllowedBlockType = this.allowedBlockTypes.indexOf(pBlock.type) > -1
+            const isAllowedBlockType = this.allowedAdaptedBlockTypes.indexOf(pBlock.type) > -1
             const isBlockHasAudio = pBlock.audiosrc && pBlock.audiosrc.trim() !== '';
             if (isAllowedBlockType && !isBlockHasAudio) {
               counterAdapt++;
