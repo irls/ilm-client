@@ -199,15 +199,17 @@
       currentBookCounters_not_adapted_blocks_counter: {
         get() {
           let counterNotAdapted = 0;
-          const idsArrayRange = this.storeListO.rIdsArray();
-          for (const blockRid of idsArrayRange) {
-            const oBlock = this.storeListO.get(blockRid);
-            if (oBlock) {
-              const pBlock = this.storeList.get(oBlock.blockid);
-              const isAllowedBlockType = this.allowedAdaptedBlockTypes.indexOf(pBlock.type) > -1 || false;
-              const isBlockAdapted = pBlock.adapted && pBlock.data_original && !!pBlock.data_original.content;
-              if (!isBlockAdapted) {
-                counterNotAdapted++;
+          if (this.currentBookMeta && this.currentBookMeta.parent_book) {
+            const idsArrayRange = this.storeListO.rIdsArray();
+            for (const blockRid of idsArrayRange) {
+              const oBlock = this.storeListO.get(blockRid);
+              if (oBlock) {
+                const pBlock = this.storeList.get(oBlock.blockid);
+                const isAllowedBlockType = this.allowedAdaptedBlockTypes.indexOf(pBlock.type) > -1 || false;
+                const isBlockAdapted = pBlock.adapted && pBlock.data_original && !!pBlock.data_original.content;
+                if (!isBlockAdapted) {
+                  counterNotAdapted++;
+                }
               }
             }
           }
