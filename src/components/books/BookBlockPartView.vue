@@ -2,7 +2,7 @@
 <div>
 
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block -subblock block-preview', blockOutPaddings, { '-original-content': block.contentAdapted && editingLocked }]">
+    :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
 
       <LockedBlockActions
@@ -4318,6 +4318,7 @@ Join subblocks?`,
           this.block.partsAdapted = this.block.parts || [];
           this.block.audiosrcAdapted = this.block.audiosrc;
           this.block.audiosrc_verAdapted = this.block.audiosrc_ver;
+          this.block.footnotesAdapted = this.block.footnotes || [];
           this.block.audiosrc = '';
           this.block.audiosrc_ver = {};
           this.block.content = content;
@@ -4329,7 +4330,7 @@ Join subblocks?`,
       },
       resetViewAdapted() {
         this.block.content = this.block.contentAdapted;
-        this.block.footnotes = [];
+        this.block.footnotes = this.block.footnotesAdapted || [];
         this.block.parts = this.block.partsAdapted || [];
         this.block.audiosrc = this.block.audiosrcAdapted;
         this.block.audiosrc_ver = this.block.audiosrc_verAdapted;
@@ -4337,6 +4338,7 @@ Join subblocks?`,
         delete this.block.partsAdapted;
         delete this.block.audiosrcAdapted;
         delete this.block.audiosrc_verAdapted;
+        delete this.block.footnotesAdapted;
         this.editingLocked = false;
         this.$parent.$forceUpdate();
       }
