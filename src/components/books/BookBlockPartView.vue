@@ -273,7 +273,7 @@
                     <li class="separator"></li>
                     <li @click="viewAdaptedOriginal($event)"
                       class="icon-menu-item"
-                      v-if="!block.contentAdapted">
+                      v-if="!block.contentAdapted && !isAudioEditing">
                       <i class="icon-menu -adapted-view"></i>View original
                     </li>
                     <li @click="viewAdapted($event)"
