@@ -1,6 +1,6 @@
 <template>
   <div ref="viewBlock" :id="block.blockid"
-    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}, { '-original-content': block.contentAdapted }]">
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}, { '-original-content': block.contentAdapted }, { '-adapted': meta.parent_book && block.adapted }, { '-not-adapted': meta.parent_book && !block.adapted }]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
       <LockedBlockActions
         :block="block"
@@ -39,7 +39,7 @@
           </div><!--<div class="table-cell">-->
         </div>
     </div>
-    <div :class="['table-cell', 'marks-block-left', {'-purple': block.adapted}]"></div>
+    <div :class="['table-cell', 'marks-block-left']"></div>
     <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
@@ -5255,10 +5255,6 @@ Save text changes and realign the Block?`,
       width: 8px;
       border-left: 3px solid transparent;
 
-      &.-purple {
-        border-left-color: #BD00FC;
-      }
-
       &.-blue {
         border-left-color: #0084FF;
       }
@@ -6177,5 +6173,13 @@ div.content-wrap-footn.__unsave {
 div.content-wrap-footn.__unsave:focus {
   outline: none;
 } */
+
+.table-body.-block {
+  &.-adapted {
+    .marks-block-left {
+      border-left-color: #BD00FC;
+    }
+  }
+}
 
 </style>

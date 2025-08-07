@@ -225,9 +225,12 @@ export default {
       }
       return false;
     },
-    tc_showBlockNarrate(block, blockPart = null) {
+    tc_showBlockNarrate(block, blockPart = null, meta = {}) {
       if (this.bookMode === 'narrate' && block.voicework === 'narration' && this._is('narrator', true)) {
         if (this.currentJobInfo.mastering) {
+          return false;
+        }
+        if (meta.parent_book && !block.adapted) {
           return false;
         }
         return true;
