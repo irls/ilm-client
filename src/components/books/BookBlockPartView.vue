@@ -4321,8 +4321,8 @@ Join subblocks?`,
           this.block.footnotesAdapted = this.block.footnotes || [];
           this.block.audiosrc = '';
           this.block.audiosrc_ver = {};
-          this.block.content = content;
-          this.block.footnotes = footnotes;
+          this.block.content = content || '';
+          this.block.footnotes = footnotes || [];
           this.block.parts = parts || [];
           this.editingLocked = true;
           this.$parent.$forceUpdate();

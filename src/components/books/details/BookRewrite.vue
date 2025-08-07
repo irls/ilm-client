@@ -226,8 +226,8 @@
           prompt.prompt_do = this.rewriteBook.prompt_do;
         }
 
-        if (this.rewriteBook.prompt_do.trim().length) {
-          prompt.prompt_dont = this.rewriteBook.prompt_do;
+        if (this.rewriteBook.prompt_dont.trim().length) {
+          prompt.prompt_dont = this.rewriteBook.prompt_dont;
         }
 
         this.rewrite(prompt);
