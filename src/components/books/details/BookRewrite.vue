@@ -114,7 +114,7 @@
           author: true,
           three_before: false,
           prompt_do: '',
-          prompt_do: ''
+          prompt_dont: ''
         },
         applyRewriteDataCount: 0,
         applyRevertDataCount: 0
@@ -226,8 +226,8 @@
           prompt.prompt_do = this.rewriteBook.prompt_do;
         }
 
-        if (this.rewriteBook.prompt_do.trim().length) {
-          prompt.prompt_dont = this.rewriteBook.prompt_do;
+        if (this.rewriteBook.prompt_dont.trim().length) {
+          prompt.prompt_dont = this.rewriteBook.prompt_dont;
         }
 
         this.rewrite(prompt);
