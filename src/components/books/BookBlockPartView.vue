@@ -73,7 +73,7 @@
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()"></i>
                     </div>
-                    <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
+                    <template v-if="tc_showBlockNarrate(block, blockPart, meta) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
                         <i class="fa fa-microphone" data-show-editor v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
@@ -4425,7 +4425,7 @@ Join subblocks?`,
           if (newVal.indexOf('?') === -1) {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
-          if (this.tc_showBlockNarrate(this.block._id) || this.isEditor) {
+          if (this.tc_showBlockNarrate(this.block._id, null, this.meta) || this.isEditor) {
             /*let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift() && !(this.block.audiosrc && this.block.audiosrc.indexOf('_tmp.') !== -1 && newVal.indexOf('_tmp.') === -1);
             if (!this.isAudioEditing) {
               this.isAudioChanged = isChanged;

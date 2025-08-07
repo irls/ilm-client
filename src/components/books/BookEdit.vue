@@ -3226,7 +3226,7 @@ export default {
         }
       }
     }
-    &:not(.-voicework-narration) {
+    &:not(.-voicework-narration), &.-not-adapted {
       .completed {
         background: inherit;
       }
