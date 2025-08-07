@@ -114,7 +114,7 @@
           author: true,
           three_before: false,
           prompt_do: '',
-          prompt_do: ''
+          prompt_dont: ''
         },
         applyRewriteDataCount: 0,
         applyRevertDataCount: 0
