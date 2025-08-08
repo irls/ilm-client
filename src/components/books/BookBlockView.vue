@@ -1114,6 +1114,15 @@ Save or discard your changes to continue editing`,
           return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
+      allowHTMLEditing: {
+        get() {
+          if (this.block && this.block.contentAdapted && this.meta.parent_book) {
+            return false;
+          }
+          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
+        },
+        cache: false
+      },
       proofreadModeReadOnly: {
           get() {
               return this.mode === 'proofread';
@@ -4605,7 +4614,7 @@ Save text changes and realign the Block?`,
           block: this.block,
           audioUrl: this.audioUrl,
           compressedAudioUrl: this.compressedAudioUrl,
-          disabled: !this.adminOrLibrarian || this.isSplittedBlock,
+          disabled: !this.adminOrLibrarian || this.isSplittedBlock || !this.allowHTMLEditing,
           adminOrLibrarian: this.adminOrLibrarian,
           blockHtmlProps: blockHtmlProps,
           blockParts: this.blockParts,
