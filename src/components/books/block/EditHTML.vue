@@ -58,14 +58,14 @@
   import TabPanel from 'primevue/tabpanel';
   import { codemirror } from 'vue-codemirror';
   import Vue from 'vue';
-  
+
   import('codemirror/lib/codemirror.css');
   import('codemirror/mode/xml/xml.js');
   import('codemirror/theme/base16-light.css');
   export default {
     data() {
       return {
-        
+
       }
     },
     props: ['blockLang', 'editBlockHTMLLabel', 'parnumCompNotHidden', 'shortBlockid', 'wordsRange', 'block', 'audioUrl', 'compressedAudioUrl', 'disabled', 'adminOrLibrarian', 'blockHtmlProps', 'blockParts', 'subBlockParnumComp'],
@@ -84,7 +84,7 @@
           //mode: 'text/x-ceylon',
           theme: 'base16-light',
           lineWrapping: true,
-          readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null),
+          readOnly: !this.adminOrLibrarian || (this.block.getIsSplittedBlock() && partIdx === null) || this.disabled,
           //direction: ['ar', 'fa'].indexOf(this.getBlockLang) === -1 ? 'ltr' : 'rtl',
           //pollInterval: 50
           //htmlMode: true,
