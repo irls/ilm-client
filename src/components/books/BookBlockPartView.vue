@@ -269,11 +269,11 @@
                     dir="bottom"
                     :update="update"
                 >
-                  <template v-if="block.adapted">
+                  <template v-if="allowAdaptedContextMenu">
                     <li class="separator"></li>
                     <li @click="viewAdaptedOriginal($event)"
                       class="icon-menu-item"
-                      v-if="!block.contentAdapted && !isAudioEditing">
+                      v-if="allowViewAdaptedOriginal">
                       <i class="icon-menu -adapted-view"></i>View original
                     </li>
                     <li @click="viewAdapted($event)"
@@ -1013,6 +1013,18 @@ export default {
             return 'Compressed audio';
           }
           return '';
+        },
+        cache: false
+      },
+      allowViewAdaptedOriginal: {
+        get() {
+          return !this.block.contentAdapted && !this.isAudioEditing && !(['hr', 'illustration'].includes(this.block.type));
+        },
+        cache: false
+      },
+      allowAdaptedContextMenu: {
+        get() {
+          return this.block.adapted && !(['hr', 'illustration'].includes(this.block.type));
         },
         cache: false
       }

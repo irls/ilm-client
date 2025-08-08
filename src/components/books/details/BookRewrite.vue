@@ -58,7 +58,7 @@
             <input type="checkbox" name="rewriteBook.author"  v-model="rewriteBook.author" /><span></span>Author
           </label>
         </div>
-        <div>
+        <div style="display: none;">
           <label>
             <input type="checkbox" name="rewriteBook.three_before"  v-model="rewriteBook.three_before" /><span></span>{{3}} Blocks before
           </label>
