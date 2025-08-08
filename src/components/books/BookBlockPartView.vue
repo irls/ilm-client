@@ -279,7 +279,7 @@
                     <li @click="viewAdapted($event)"
                       class="icon-menu-item"
                       v-if="block.contentAdapted">
-                      <i class="icon-menu -adapted-edit"></i>Edit adapted
+                      <i class="icon-menu -adapted-edit"></i>{{ isBookTranslated ? 'Edit translated' : 'Edit adapted' }}
                     </li>
                   </template>
                   <template v-if="isSplitPointAllowed()">
@@ -1027,7 +1027,26 @@ export default {
           return this.block.adapted && !(['hr', 'illustration'].includes(this.block.type));
         },
         cache: false
-      }
+      },
+      isBookTranslated: {
+        get() {
+          if (this.currentBookMeta && this.currentBookMeta.copy_type) {
+            switch(this.currentBookMeta.copy_type) {
+                case 'adapted' : {
+                  return false;
+                } break;
+                case 'translated' : {
+                  return true;
+                } break;
+                default : {
+                  return false;
+                } break;
+            };
+          }
+          return this.currentBookMeta.parent_book && this.currentBookMeta.parent_language !== this.currentBookMeta.language;
+        },
+        cache: true
+      },
   },
   mounted: function() {
       //this.initEditor();
