@@ -19,7 +19,7 @@
 
       <div class="book-listing">
         <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Assignments" id="assignments">
+          <vue-tab title="Tasks" id="assignments">
             <BookAssignments
               @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
@@ -583,6 +583,11 @@
 
             </div>
         </vue-tab>
+        <vue-tab title="Suggestions" id="suggestions"
+          :disabled="!tc_displaySuggestionsTab()">
+          <Suggestions
+          :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
+        </vue-tab>
       </vue-tabs>
       </div>
     </div>
@@ -652,6 +657,7 @@ import Genre                from './details/Genre';
 import v_modal              from 'vue-js-modal';
 import BookAuthors          from './details/BookAuthors';
 import BookCopy             from './details/BookCopy';
+import Suggestions          from './details/suggestions/Suggestions';
 
 Vue.use(v_modal, {dialog: true});
 
@@ -715,7 +721,8 @@ export default {
     CoupletWarningPopup,
     Genre,
     BookAuthors,
-    BookCopy
+    BookCopy,
+    Suggestions
   },
 
   data () {
@@ -777,6 +784,7 @@ export default {
       TAB_TOC_INDEX: 2,
       TAB_AUDIO_INDEX: 3,
       TAB_STYLE_INDEX: 4,
+      TAB_SUGGESTION_INDEX: 5,
       users: {
         'editor': [],
         'proofer': [],
@@ -1090,6 +1098,8 @@ export default {
       }
     }
     this.jobDescription = this.currentJobInfo.description;
+
+    this.$root.$on('for-suggestions-list:add-suggestion', this.activateSuggestionsTab);
   },
   beforeDestroy: function () {
     this.$root.$off('uploadAudio');
@@ -1098,6 +1108,7 @@ export default {
     //this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
+    this.$root.$off('for-suggestions-list:add-suggestion', this.activateSuggestionsTab);
   },
 
   watch: {
@@ -1197,11 +1208,15 @@ export default {
           case this.TAB_AUDIO_INDEX:
             if (!this.tc_displayAudiointegrationTab()) {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
-              //console.log('HERE')
             }
             break;
           case this.TAB_STYLE_INDEX:
             if (!this.tc_displayStylesTab()) {
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
+            }
+            break;
+          case this.TAB_SUGGESTION_INDEX:
+            if (!this.tc_displaySuggestionsTab()) {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
@@ -2607,6 +2622,10 @@ export default {
       document.body.removeChild(node);
     },
 
+    activateSuggestionsTab() {
+      this.$refs.panelTabs.navigateToTab(5);
+      // maybe need to use findAndActivate method...
+    },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
@@ -3210,6 +3229,11 @@ select.text-danger#categorySelection, input.text-danger{
       height: 100%;
       margin-top: -44px;
       padding-top: 44px;
+    }
+    .nav-tabs {
+      &>li>a {
+        padding: 10px 12px;
+      }
     }
   }
 

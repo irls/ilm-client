@@ -158,8 +158,10 @@ export default {
         });
     },
     
-    generateExample({rootState}, id) {
-      return axios.post(`${rootState.API_URL}tts/eleven_labs/generate_example/${encodeURIComponent(id)}`)
+    generateExample({rootState}, [id, text = ""]) {
+      return axios.post(`${rootState.API_URL}tts/eleven_labs/generate_example/${encodeURIComponent(id)}`, {
+        text: text
+      })
         .then(response => {
           return response.data;
         })
