@@ -27,7 +27,7 @@
           <codemirror
             :ref="'block-html' + block.blockid"
             :options="getCodeMirrorOptions()"
-            :class="[{'-disabled': disabled || blockParts.length > 0}]"
+            :class="[{'-disabled': disabled || isSplittedBlock}]"
           />
           <div class="block-html-header">&lt;/div&gt;</div>
         </TabPanel>
@@ -68,7 +68,7 @@
 
       }
     },
-    props: ['blockLang', 'editBlockHTMLLabel', 'parnumCompNotHidden', 'shortBlockid', 'wordsRange', 'block', 'audioUrl', 'compressedAudioUrl', 'disabled', 'adminOrLibrarian', 'blockHtmlProps', 'blockParts', 'subBlockParnumComp'],
+    props: ['blockLang', 'editBlockHTMLLabel', 'parnumCompNotHidden', 'shortBlockid', 'wordsRange', 'block', 'audioUrl', 'compressedAudioUrl', 'disabled', 'isSplittedBlock', 'adminOrLibrarian', 'blockHtmlProps', 'blockParts', 'subBlockParnumComp'],
     components: {
       'TabView': TabView,
       'TabPanel': TabPanel,
