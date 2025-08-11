@@ -490,7 +490,7 @@ export default {
     //'modal': modal,
     'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason', 'showStopConfirmations'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason', 'showStopConfirmations', 'hasAudioEditingPart'],
   mixins: [taskControls, apiConfig, access, playing_block],
   computed: {
       isLocked: {
@@ -1018,7 +1018,7 @@ export default {
       },
       allowViewAdaptedOriginal: {
         get() {
-          return !this.block.contentAdapted && !this.isAudioEditing && !(['hr', 'illustration'].includes(this.block.type));
+          return !this.block.contentAdapted && !this.isAudioEditing && !(['hr', 'illustration'].includes(this.block.type)) && !this.hasAudioEditingPart;
         },
         cache: false
       },
