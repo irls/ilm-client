@@ -27,7 +27,7 @@
           <codemirror
             :ref="'block-html' + block.blockid"
             :options="getCodeMirrorOptions()"
-            :class="[{'-disabled': disabled}]"
+            :class="[{'-disabled': disabled || blockParts.length > 0}]"
           />
           <div class="block-html-header">&lt;/div&gt;</div>
         </TabPanel>
@@ -36,7 +36,7 @@
             <codemirror
               :ref="'block-part-' + blockPartIdx + '-html'"
               :options="getCodeMirrorOptions(blockPartIdx)"
-              :class="[{'-disabled': !adminOrLibrarian}]"
+              :class="[{'-disabled': disabled || !adminOrLibrarian}]"
             />
           </TabPanel>
         </template>
