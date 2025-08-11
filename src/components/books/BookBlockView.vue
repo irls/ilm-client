@@ -4615,6 +4615,7 @@ Save text changes and realign the Block?`,
           audioUrl: this.audioUrl,
           compressedAudioUrl: this.compressedAudioUrl,
           disabled: !this.adminOrLibrarian || !this.allowHTMLEditing, // || this.isSplittedBlock
+          isSplittedBlock: this.isSplittedBlock,
           adminOrLibrarian: this.adminOrLibrarian,
           blockHtmlProps: blockHtmlProps,
           blockParts: this.blockParts,
