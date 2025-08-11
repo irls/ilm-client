@@ -73,7 +73,9 @@
                   <td>Book ID</td>
                   <td class='disabled'>
                     {{currentBook.bookid_alias || currentBook.bookid}}
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid_alias || currentBook.bookid)"></span>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.bookid_alias || currentBook.bookid)">
+                      <i class="fa fa-clone"></i>
+                    </span>
                   </td>
                 </tr>
 
@@ -83,7 +85,9 @@
                     <a :href="bookLink(currentBook.child_books[0])" target="_blank">
                       {{ currentBook.child_books[0] }}
                     </a>
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.child_books[0])"></span>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.child_books[0])">
+                      <i class="fa fa-clone"></i>
+                    </span>
                   </td>
                 </tr>
                 <template v-if="currentBook.child_books.length > 1">
@@ -93,7 +97,9 @@
                       <a :href="bookLink(bookid)" target="_blank">
                         {{ bookid }}
                       </a>
-                      <span class="copy-bookid" v-on:click="copyBookid(bookid)"></span>
+                      <span class="copy-bookid" v-on:click="copyBookid(bookid)">
+                        <i class="fa fa-clone"></i>
+                      </span>
                     </td>
                   </tr>
                 </template>
@@ -103,7 +109,9 @@
                     <a :href="bookLink(currentBook.parent_bookid)" target="_blank">
                       {{ currentBook.parent_bookid }}
                     </a>
-                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.parent_bookid)"></span>
+                    <span class="copy-bookid" v-on:click="copyBookid(currentBook.parent_bookid)">
+                      <i class="fa fa-clone"></i>
+                    </span>
                   </td>
                 </tr>
                 <tr v-if="adminOrLibrarian && !currentBook.parent_bookid">
@@ -159,9 +167,9 @@
                 <tr class='language'>
                   <td>Language</td>
                   <td>
-                    <select class="form-control" :value='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="!allowMetadataEdit || currentBookMeta.collection_id || lockLanguage">
+                    <select class="form-control" :value='currentBook.language' @change="debounceUpdate('language', $event.target.value, $event)" :key="currentBookid" :disabled="isLanguageDisabled">
                       <option v-if="!languages.hasOwnProperty(currentBook.language)" :value="currentBook.language">{{ currentBook.language }}</option>
-                      <option v-for="(value, key) in languages" :value="key">{{ value }}</option>
+                      <option v-for="(value, key) in bookLanguageList" :value="key">{{ value }}</option>
                     </select>
                   </td>
                 </tr>
@@ -1014,6 +1022,25 @@ export default {
     displayDownloadDemo: {
       get() {
         return this.currentBook.demo_zip_mp3 && this.currentBook.demo_zip_flac;
+      },
+      cache: false
+    },
+
+    isLanguageDisabled: {
+      get() {
+        return !this.allowMetadataEdit || this.currentBookMeta.collection_id || this.lockLanguage || this.currentBookMeta.copy_type === 'adapted';
+      },
+      cache: false
+    },
+
+    bookLanguageList: {
+      get() {
+        if (this.currentBookMeta.copy_type !== "translated") {
+          return this.languages;
+        }
+        let langs = _.cloneDeep(this.languages);
+        delete langs[this.currentBookMeta.parent_language];
+        return langs;
       },
       cache: false
     }
@@ -3363,14 +3390,18 @@ select.text-danger#categorySelection, input.text-danger{
       }
     }
     .copy-bookid {
-      background: url(/static/copy.png);
-      background-repeat: no-repeat;
+      /*background: url(/static/copy.png);
+      background-repeat: no-repeat;*/
       width: 16px !important;
       height: 16px;
       cursor: pointer;
       vertical-align: middle;
       margin: 0px 2px;
       float: right;
+      transform: rotate(90deg);
+      i {
+        font-size: 14px;
+      }
     }
     tr.bookid {
       td:nth-child(2) {

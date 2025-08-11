@@ -100,7 +100,7 @@
         }
       },
       canRemove(genre) {
-        return this.adminOrLibrarian && genre !== "Adapted";
+        return this.adminOrLibrarian;
       }
     }
   }
