@@ -6,7 +6,7 @@
       <span class="error-text" v-if="requiredError">Define Genres</span>
       <template v-for="bookGenre in bookGenres">
         <div class="genre-chip">
-          <div>{{bookGenre}}<template v-if="adminOrLibrarian">&nbsp;<span class="remove-item" v-on:click="remove(bookGenre)">&times;</span></template></div>
+          <div>{{bookGenre}}<template v-if="canRemove(bookGenre)">&nbsp;<span class="remove-item" v-on:click="remove(bookGenre)">&times;</span></template></div>
         </div>
       </template>
       <div class="genres-options" v-if="adminOrLibrarian">
@@ -98,6 +98,9 @@
             return this.updateBookMeta({genres: genres, genres_manual: true});
           }
         }
+      },
+      canRemove(genre) {
+        return this.adminOrLibrarian && genre !== "Adapted";
       }
     }
   }

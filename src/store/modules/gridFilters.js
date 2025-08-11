@@ -188,7 +188,8 @@ export default {
           }, []);
           const strParts = [
             book.title, book.subtitle, book.slug,
-            bookAuthors, book.bookid, ...bookCategories,
+            bookAuthors, book.bookid, book.bookid_alias,
+            ...bookCategories,
             //book.hashTags, book.executors.editor._id,
             //book.executors.editor.name, book.executors.editor.title
             //book.description
@@ -297,7 +298,8 @@ export default {
           }, []);
           const strParts = [
             book.title, book.subtitle, book.slug,
-            bookAuthors, book.bookid, ...bookCategories,
+            bookAuthors, book.bookid, book.bookid_alias,
+            ...bookCategories,
             //book.hashTags, book.executors.editor._id,
             //book.executors.editor.name, book.executors.editor.title
             //book.description
