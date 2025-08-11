@@ -287,6 +287,7 @@
               :checkFullyVisible="checkFullyVisible"
               :editingLockedReason="editingLockedReason"
               :showStopConfirmations="showStopConfirmations"
+              :hasAudioEditingPart="hasAudioEditingPart"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
