@@ -4371,6 +4371,7 @@ export const store = new Vuex.Store({
                   if (state.lockedBlocks.length === 0) {
                     dispatch('stopProcessQueueWatch');
                     dispatch('tc_loadBookTask');
+                    dispatch('setCurrentBookCounters');
                   }
                   //console.log(state.lockedBlocks)
                 });
