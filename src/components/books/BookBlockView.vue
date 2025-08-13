@@ -1368,6 +1368,7 @@ Save or discard your changes to continue editing`,
 
       Vue.nextTick(() => {
         this.highlightSuspiciousWords();
+        this.$root.$emit(`block-view-mounted`, this.block.blockid);
       });
   },
   beforeDestroy: function () {
