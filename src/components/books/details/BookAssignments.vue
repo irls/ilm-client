@@ -216,7 +216,7 @@
           }
           return counterNotAdapted;
         },
-        cache: true
+        cache: false
       },
       ...mapGetters({
         tasks_counter: 'tasks_counter',
