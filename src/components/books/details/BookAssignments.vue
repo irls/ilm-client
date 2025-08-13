@@ -413,9 +413,9 @@
         ];
 
         const not_adapted_blocks = this.currentBookCounters_not_adapted_blocks_counter;
-        const available_for_approve = this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks
+        const available_for_approve = this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks;
         const is_not_adapted_blocks = not_adapted_blocks > 0;
-        const is_not_marked_blocks_missed_audio = this.currentBookCounters.not_marked_blocks_missed_audio > 0;
+        const is_not_marked_blocks_missed_audio = this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks > 0;
 
         if (this.counterTextCleanup && (is_not_marked_blocks_missed_audio || is_not_adapted_blocks)) {
           title = 'Unable to complete the Task';
@@ -425,11 +425,11 @@
           }
 
           if (is_not_marked_blocks_missed_audio) {
-            text += '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>'
+            text += '' + this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks + ' block(s) can not be approved because audio alignment is missing.</br>'
           }
 
           if (available_for_approve > 0) {
-            text += 'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks) + ' blocks and continue editing. </br>' +
+            text += 'In the meantime, you can approve ' + available_for_approve + ' blocks and continue editing. </br>' +
               'Approve qualified blocks?';
 
             buttons[1].title = 'Approve';
@@ -446,7 +446,9 @@
           if (is_not_adapted_blocks) {
             text += '' + this.currentBookCounters_not_adapted_blocks_counter + ' block(s) can not be approved because adapted text is missing</br>'
           }
-          text = '' + (this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks) + " block(s) can't be approved because audio alignment is missing.";
+          if (is_not_marked_blocks_missed_audio) {
+            text = '' + (this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks) + " block(s) can't be approved because audio alignment is missing.";
+          }
           buttons = [
             {
               title: 'Ok',

@@ -57,7 +57,10 @@ export default {
       }
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/rewrite`, postRequest)
         .then(response => {
-          return dispatch('getProcessQueue', {}, { root: true });
+          return Promise.all([
+            dispatch('getProcessQueue', {}, { root: true }),
+            dispatch('setCurrentBookCounters')
+          ]);
         });
     },
 
@@ -69,7 +72,10 @@ export default {
       }
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/revert`, request)
         .then(response => {
-          return dispatch('getProcessQueue', {}, { root: true });
+          return Promise.all([
+            dispatch('getProcessQueue', {}, { root: true }),
+            dispatch('setCurrentBookCounters')
+          ]);
         });
     },
 
