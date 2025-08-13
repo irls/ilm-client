@@ -200,18 +200,19 @@
         get() {
           let counterNotAdapted = 0;
           if (this.currentBookMeta && this.currentBookMeta.parent_book) {
-            const idsArrayRange = this.storeListO.rIdsArray();
-            for (const blockRid of idsArrayRange) {
-              const oBlock = this.storeListO.get(blockRid);
-              if (oBlock) {
-                const pBlock = this.storeList.get(oBlock.blockid);
-                const isAllowedBlockType = this.allowedAdaptedBlockTypes.indexOf(pBlock.type) > -1 || false;
-                const isBlockAdapted = pBlock.adapted && pBlock.data_original && !!pBlock.data_original.content;
-                if (!isBlockAdapted) {
-                  counterNotAdapted++;
-                }
-              }
-            }
+            return this.currentBookCounters.not_adapted_blocks;
+            // const idsArrayRange = this.storeListO.rIdsArray();
+            // for (const blockRid of idsArrayRange) {
+            //   const oBlock = this.storeListO.get(blockRid);
+            //   if (oBlock) {
+            //     const pBlock = this.storeList.get(oBlock.blockid);
+            //     const isAllowedBlockType = this.allowedAdaptedBlockTypes.indexOf(pBlock.type) > -1 || false;
+            //     const isBlockAdapted = pBlock.adapted && pBlock.data_original && !!pBlock.data_original.content;
+            //     if (isAllowedBlockType && !isBlockAdapted) {
+            //       counterNotAdapted++;
+            //     }
+            //   }
+            // }
           }
           return counterNotAdapted;
         },
@@ -411,7 +412,9 @@
           },
         ];
 
-        const is_not_adapted_blocks = this.currentBookCounters_not_adapted_blocks_counter > 0;
+        const not_adapted_blocks = this.currentBookCounters_not_adapted_blocks_counter;
+        const available_for_approve = this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks
+        const is_not_adapted_blocks = not_adapted_blocks > 0;
         const is_not_marked_blocks_missed_audio = this.currentBookCounters.not_marked_blocks_missed_audio > 0;
 
         if (this.counterTextCleanup && (is_not_marked_blocks_missed_audio || is_not_adapted_blocks)) {
@@ -425,10 +428,12 @@
             text += '' + this.currentBookCounters.not_marked_blocks_missed_audio + ' block(s) can not be approved because audio alignment is missing.</br>'
           }
 
-          text += 'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio) + ' blocks and continue editing. </br>' +
-            'Approve qualified blocks?';
+          if (available_for_approve > 0) {
+            text += 'In the meantime, you can approve ' + (this.counterTextCleanup - this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks) + ' blocks and continue editing. </br>' +
+              'Approve qualified blocks?';
 
-          buttons[1].title = 'Approve';
+            buttons[1].title = 'Approve';
+          }
 
         } else if (this.currentBookCounters.not_marked_blocks_missed_audio === 0) {
           title = 'Complete the Task';
@@ -438,7 +443,10 @@
 
         if (this.currentBookCounters.not_marked_blocks_missed_audio > 0 && this.currentBookCounters.not_marked_blocks_missed_audio == this.counterTextCleanup){
           title = 'Unable to complete the Task';
-          text = '' + this.currentBookCounters.not_marked_blocks_missed_audio + " block(s) can't be approved because audio alignment is missing.";
+          if (is_not_adapted_blocks) {
+            text += '' + this.currentBookCounters_not_adapted_blocks_counter + ' block(s) can not be approved because adapted text is missing</br>'
+          }
+          text = '' + (this.currentBookCounters.not_marked_blocks_missed_audio - not_adapted_blocks) + " block(s) can't be approved because audio alignment is missing.";
           buttons = [
             {
               title: 'Ok',
