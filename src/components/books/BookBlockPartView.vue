@@ -1104,7 +1104,9 @@ export default {
       })
   },
   beforeDestroy: function () {
-    this.viewAdapted();
+    if (this.mode === "display") {
+      this.viewAdapted();
+    }
     this.audioEditorEventsOff();
 
     document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
