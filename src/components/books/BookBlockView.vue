@@ -4680,6 +4680,9 @@ Save text changes and realign the Block?`,
               this.getCurrentJobInfo();
             }
           }
+          if (this.$refs.blocks && this.$refs.blocks[0]) {
+            this.$refs.blocks[0].viewAdapted();
+          }
         }
       },
       'hasLock': {

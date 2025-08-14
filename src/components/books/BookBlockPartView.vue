@@ -1104,6 +1104,7 @@ export default {
       })
   },
   beforeDestroy: function () {
+    this.viewAdapted();
     this.audioEditorEventsOff();
 
     document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
@@ -4360,16 +4361,18 @@ Join subblocks?`,
         }
       },
       resetViewAdapted() {
-        this.block.content = this.block.contentAdapted;
-        this.block.footnotes = this.block.footnotesAdapted || [];
-        this.block.parts = this.block.partsAdapted || [];
-        this.block.audiosrc = this.block.audiosrcAdapted;
-        this.block.audiosrc_ver = this.block.audiosrc_verAdapted;
-        delete this.block.contentAdapted;
-        delete this.block.partsAdapted;
-        delete this.block.audiosrcAdapted;
-        delete this.block.audiosrc_verAdapted;
-        delete this.block.footnotesAdapted;
+        if (this.block.hasOwnProperty('contentAdapted')) {
+          this.block.content = this.block.contentAdapted;
+          this.block.footnotes = this.block.footnotesAdapted || [];
+          this.block.parts = this.block.partsAdapted || [];
+          this.block.audiosrc = this.block.audiosrcAdapted;
+          this.block.audiosrc_ver = this.block.audiosrc_verAdapted;
+          delete this.block.contentAdapted;
+          delete this.block.partsAdapted;
+          delete this.block.audiosrcAdapted;
+          delete this.block.audiosrc_verAdapted;
+          delete this.block.footnotesAdapted;
+        }
         this.editingLocked = false;
         this.$parent.$forceUpdate();
       }
@@ -4432,6 +4435,7 @@ Join subblocks?`,
               this.getCurrentJobInfo();
             }
           }
+          this.viewAdapted();
         }
       },
       'classSel' (newVal, oldVal) {
@@ -4560,6 +4564,7 @@ Join subblocks?`,
           if (this.isAudStarted || this.isAudPaused) {
             this.audStop();
           }
+          this.viewAdapted();
         }
       },
       'isAudStarted': {
