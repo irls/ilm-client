@@ -4650,6 +4650,11 @@ Join subblocks?`,
             }
           }
         }
+      },
+      'meta.isInTheQueueOfPublication': {
+        handler(val) {
+          this.viewAdapted();
+        }
       }/*,
       'audioTasksQueue.running': {
         handler(val) {
