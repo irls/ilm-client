@@ -167,6 +167,7 @@ export const store = new Vuex.Store({
     user: {},
     currentBookCounters: {
       not_marked_blocks: '0',
+      not_adapted_blocks: '0',
       not_marked_blocks_missed_audio: '0',
       narration_blocks: '0',
       not_proofed_audio_blocks: '0',

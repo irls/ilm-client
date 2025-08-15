@@ -1,6 +1,6 @@
 <template>
   <div ref="viewBlock" :id="block.blockid"
-    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}, { '-original-content': block.contentAdapted }, { '-adapted': meta.parent_book && block.adapted }, { '-not-adapted': meta.parent_book && !block.adapted }]">
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}, { '-original-content': block.contentAdapted }, {'-adapted': isBlockAdapted}, {'-translated': isBlockTranslated}, { '-not-adapted': meta.parent_book && !block.adapted }]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
       <LockedBlockActions
         :block="block"
@@ -1289,6 +1289,44 @@ Save or discard your changes to continue editing`,
                 return block.blockid === this.block.blockid;
               }) ? true : false;
             }
+          }
+          return false;
+        },
+        cache: false
+      },
+      isBlockAdapted: {
+        get() {
+          if (this.mode !== 'narrate' && this.meta.parent_book && this.block.adapted) {
+            switch(this.meta.copy_type) {
+                case 'adapted' : {
+                  return true;
+                } break;
+                case 'translated' : {
+                  return false;
+                } break;
+                default : {
+                  return true;
+                } break;
+            };
+          }
+          return false;
+        },
+        cache: false
+      },
+      isBlockTranslated: {
+        get() {
+          if (this.mode !== 'narrate' && this.meta.parent_book && this.block.adapted) {
+            switch(this.meta.copy_type) {
+                case 'adapted' : {
+                  return false;
+                } break;
+                case 'translated' : {
+                  return true;
+                } break;
+                default : {
+                  return false;
+                } break;
+            };
           }
           return false;
         },
@@ -6192,6 +6230,11 @@ div.content-wrap-footn.__unsave:focus {
   &.-adapted {
     .marks-block-left {
       border-left-color: #BD00FC;
+    }
+  }
+  &.-translated {
+    .marks-block-left {
+      border-left-color: #0084FF;
     }
   }
 }
