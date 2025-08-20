@@ -27,8 +27,10 @@ import publishModule from './modules/publish';
 import authorsMapModule from './modules/authorsMap';
 import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
+import booksModule from "./modules/book";
 import suggestionsModule from './modules/suggestions';
 import booksModule from "./modules/book";
+import filterTagsModule from "./modules/filterTag";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -100,7 +102,8 @@ export const store = new Vuex.Store({
     authorsModule,
     calculateLevelsModule,
     suggestionsModule,
-    booksModule
+    booksModule,
+    filterTagsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -728,6 +731,15 @@ export const store = new Vuex.Store({
     },
     allowedAdaptedBlockTypes: state => {
       return state.allowedAdaptedBlockTypes;
+    },
+    getBookByIdAlias: state => (bookid_alias = null) => {
+      if (bookid_alias && state.books_meta.length) {
+        const book = state.books_meta.find((book)=>{
+          return bookid_alias === book.bookid_alias
+        })
+        return book && book.bookid ? book.bookid : null;
+      }
+      return null;
     }
   },
 
@@ -1919,6 +1931,7 @@ export const store = new Vuex.Store({
       if (typeof params.onPage === 'undefined') {
         params.onPage = 10;
       }
+
       let req = state.API_URL + `books/blocks/${params.bookId}/onpage/${params.onPage}`;
       if (params.block) {
         if (params.block === 'unresolved' && params.taskType) {
@@ -1939,11 +1952,15 @@ export const store = new Vuex.Store({
       return state.partOfBookBlocksXHR;
     },
 
-    loadBook ({commit, state, dispatch}, book_id) {
+    loadBook ({commit, state, dispatch, getters}, book_id) {
       if (state.loadBookWait) {
         return state.loadBookWait
       }
-      console.log('loading currentBook: ', book_id);
+
+      const actualBookID = getters.getBookByIdAlias(book_id);
+      if (actualBookID) {
+        book_id = actualBookID;
+      }
 
       // if (!book_id) return  // if no currentbookid, exit
       // if (book_id === context.state.currentBookid) return // skip if already loaded

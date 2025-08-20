@@ -188,7 +188,8 @@ export default {
           }, []);
           const strParts = [
             book.title, book.subtitle, book.slug,
-            bookAuthors, book.bookid, ...bookCategories,
+            bookAuthors, book.bookid, book.bookid_alias,
+            ...bookCategories,
             //book.hashTags, book.executors.editor._id,
             //book.executors.editor.name, book.executors.editor.title
             //book.description
@@ -202,7 +203,7 @@ export default {
           });
         })
         .filter(book => {
-         const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+         const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title} ${book.filter_tags}`);
          const find = splitPrepareForFilter(state.booksFilters.secFilter);
          return find.every((fString)=>str.indexOf(fString) >= 0);
         })
@@ -297,7 +298,8 @@ export default {
           }, []);
           const strParts = [
             book.title, book.subtitle, book.slug,
-            bookAuthors, book.bookid, ...bookCategories,
+            bookAuthors, book.bookid, book.bookid_alias,
+            ...bookCategories,
             //book.hashTags, book.executors.editor._id,
             //book.executors.editor.name, book.executors.editor.title
             //book.description
@@ -311,7 +313,7 @@ export default {
           });
         })
         .filter(book => {
-          const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title}`);
+          const str = prepareForFilter(`${book.hashTags} ${book.executors.editor._id} ${book.executors.editor.name} ${book.executors.editor.title} ${book.filter_tags}n`);
           const find = splitPrepareForFilter(state.booksFilters.secFilter);
           return find.every((fString)=>{
             const prepareWord = prepareRegexpForArFaLetters(fString);
