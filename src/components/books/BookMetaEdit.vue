@@ -692,7 +692,6 @@ import BookAuthors          from './details/BookAuthors';
 import BookCopy             from './details/BookCopy';
 import Suggestions          from './details/suggestions/Suggestions';
 import BookRewrite          from './details/BookRewrite';
-import BookCopy             from './details/BookCopy';
 import FilterTag            from './details/FilterTag';
 
 Vue.use(v_modal, {dialog: true});
@@ -2612,7 +2611,7 @@ export default {
         this.$forceUpdate();
       }
     },
-    
+
     /*getDisabledAuthors(val) {
       return this.selectedAuthorsIds.indexOf(val.id) >= 0;
     },
