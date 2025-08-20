@@ -225,9 +225,12 @@ export default {
       }
       return false;
     },
-    tc_showBlockNarrate(block, blockPart = null) {
+    tc_showBlockNarrate(block, blockPart = null, meta = {}) {
       if (this.bookMode === 'narrate' && block.voicework === 'narration' && this._is('narrator', true)) {
         if (this.currentJobInfo.mastering) {
+          return false;
+        }
+        if (meta.parent_book && !block.adapted) {
           return false;
         }
         return true;
@@ -285,6 +288,24 @@ export default {
         return true;
       }
       return false;
+    },
+    tc_displayRewriteTab() {
+      if ( ['edit'].indexOf(this.bookMode) === -1) {
+        return false;
+      }
+      // if (!this.currentBookMeta.copy_type || ['translated', 'adapted'].indexOf(this.currentBookMeta.copy_type) === -1) {
+      //   return false;
+      // }
+      if (!this.currentBookMeta.parent_book) {
+        return false;
+      }
+      if (this.adminOrLibrarian) {
+        return true;
+      }
+      return false;
+    },
+    tc_isBookCopy() {
+      return this.currentBookMeta && this.currentBookMeta.parent_book && this.currentBookMeta.parent_book.length;
     },
     tc_getBlockTaskOtherRole(blockid, mode = null) {
       let task = false;

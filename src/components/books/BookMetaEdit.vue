@@ -16,55 +16,57 @@
       </div>
 
       <BookDownload v-if="showModal" @close="showModal = false" />
-
       <div class="book-listing">
-        <vue-tabs ref="panelTabs" class="meta-edit-tabs">
-          <vue-tab title="Tasks" id="assignments">
+        <TabView ref="panelTabs" :scrollable="true"
+        :activeIndex="panelTabsActiveIndex"
+        class="meta-edit-tabs"
+        @tab-change="metaTabChange">
+          <TabPanel header="Tasks" id="assignments">
             <BookAssignments
               @audioImportOk="checkAfterAudioImport"
               ></BookAssignments>
-          <fieldset class='description brief'>
-            <legend>Description </legend>
-            <textarea v-model='jobDescription' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000" class="jobinfo-description"></textarea>
-          </fieldset>
-          <fieldset class='hashtags' :disabled="!adminOrLibrarian">
-            <legend>Project tags</legend>
-            <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
-          </fieldset>
-            <BookWorkflow
-              v-if="adminOrLibrarian"
-              :isPublishingQueue="isPublishingQueue"
-              ></BookWorkflow>
-          <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
-            <legend>Export book </legend>
-              <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
-              <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
-              <div>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
-                <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
-              </div>
-              <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
-              <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
-                <template v-if="displayDownloadDemo">
-                  Download: <br />
-                  <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
-                  <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
-                  <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
-                </template>
-                <hr>
-                <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
-                <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
-                <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
-              </div>
-          </fieldset>
-          <CompleteAudioExport
-            :convertTime="convertTime"
-            :goToBlock="goToBlock"></CompleteAudioExport>
-          <BookPublish @checkPublish="checkPublish" ></BookPublish>
-          <SplitPreview v-if="allowBookSplitPreview"
-            :convertTime="convertTime"></SplitPreview>
-          </vue-tab>
-          <vue-tab title="Meta" id="book-content">
+            <fieldset class='description brief'>
+              <legend>Description </legend>
+              <textarea v-model='jobDescription' @input="updateJobDescription($event)" :disabled="!adminOrLibrarian" maxlength="2000" class="jobinfo-description"></textarea>
+            </fieldset>
+            <fieldset class='hashtags' :disabled="!adminOrLibrarian">
+              <legend>Project tags</legend>
+              <VTagSuggestion :key="handleHashTags" ref="hashTags" :tags="currentBook.hashTags || []" :suggestions="hashTagsSuggestions" :suggestionLength="100" @removeItem="removeTag" @addItem="addTag"/>
+            </fieldset>
+              <BookWorkflow
+                v-if="adminOrLibrarian"
+                :isPublishingQueue="isPublishingQueue"
+                ></BookWorkflow>
+            <fieldset class='Export' v-if="isAllowExportAudio" :disabled="getDemoStatus == 'progress'">
+              <legend>Export book </legend>
+                <div v-if="getDemoStatus == 'progress' " class="align-preloader -small">&nbsp;</div>
+                <div v-if="getDemoStatus == 'rebuild'" style="margin-bottom: 5px;">Last build: {{this.convertTime(currentBook.demo_time)}}</div>
+                <div>
+                  <button class="btn btn-primary" v-if="getDemoStatus == 'build' || getDemoStatus == 'failed'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Build</button>
+                  <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" v-on:click="downloadDemo()" :disabled="!isAllowExportAudio || getDemoStatus == 'progress'">Rebuild</button>
+                </div>
+                <hr  v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+                <div v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'">
+                  <template v-if="displayDownloadDemo">
+                    Download: <br />
+                    <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportMp3'" target="_blank" v-if="currentBook.demo_zip_mp3">Compressed {{currentBook.demo_zip_mp3_size | prettyBytes }}</a>
+                    <a class="btn btn-primary" style="margin-bottom: 5px;" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportFlac'" target="_blank" v-if="currentBook.demo_zip_flac">Full Book {{currentBook.demo_zip_flac_size | prettyBytes }}</a>
+                    <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
+                  </template>
+                  <hr>
+                  <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                  <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
+                  <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
+                </div>
+            </fieldset>
+            <CompleteAudioExport
+              :convertTime="convertTime"
+              :goToBlock="goToBlock"></CompleteAudioExport>
+            <BookPublish @checkPublish="checkPublish" ></BookPublish>
+            <SplitPreview v-if="allowBookSplitPreview"
+              :convertTime="convertTime"></SplitPreview>
+          </TabPanel>
+          <TabPanel header="Meta" id="book-content">
             <fieldset>
               <legend>Book Metadata </legend>
               <table class='properties'>
@@ -276,330 +278,349 @@
                 </tr>
               </table>
             </fieldset>
-          <Genre
-            :allowMetadataEdit="allowMetadataEdit"
-            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
-            @genresUpdate="checkGenresErrors" />
-          <FilterTag
-            :allowMetadataEdit="allowMetadataEdit"
-            :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['filter_tags']" />
-          <fieldset class='description brief'>
-            <legend>Book cover</legend>
-            <template v-if="allowMetadataEdit">
-              <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
-                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
-                <div v-else class='coverimg-wrap'></div>
-              </div>
-              <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
-            </template>
-            <template v-else>
-              <div class="coverimg pull-right">
-                <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
-              </div>
-            </template>
-          </fieldset>
 
-          <fieldset class='description brief'>
-            <legend>Brief description</legend>
-            <resizable-textarea @valueChanged="debounceUpdate('description_short', $event.target.value, $event)"
-              :initValue="currentBook.description_short"
-              ref="descriptionShort"
-              :disabled="!allowMetadataEdit">
-            </resizable-textarea>
-          </fieldset>
+            <Genre
+              :allowMetadataEdit="allowMetadataEdit"
+              :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['genres']"
+              @genresUpdate="checkGenresErrors" />
 
-          <fieldset class='description long'>
-            <legend>Long description</legend>
-            <resizable-textarea @valueChanged="debounceUpdate('description', $event.target.value, $event)"
-              :initValue="currentBook.description"
-              ref="descriptionLong"
-              :disabled="!allowMetadataEdit">
-            </resizable-textarea>
-          </fieldset>
-        </vue-tab>
-          <vue-tab title="TOC" id="book-toc">
+            <FilterTag
+              :allowMetadataEdit="allowMetadataEdit"
+              :requiredError="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['filter_tags']" />
+
+            <fieldset class='description brief'>
+              <legend>Book cover</legend>
+              <template v-if="allowMetadataEdit">
+                <div class='coverimg pull-right' @click="bookEditCoverModalActive = true">
+                  <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
+                  <div v-else class='coverimg-wrap'></div>
+                </div>
+                <button class="btn btn-primary pull-right" @click="bookEditCoverModalActive = true"><i class="fa fa-pencil" style="color:white"></i></button>
+              </template>
+              <template v-else>
+                <div class="coverimg pull-right">
+                  <img height="80" v-if="currentBookFiles.coverimg" v-bind:src="currentBookFiles.coverimg" />
+                </div>
+              </template>
+            </fieldset>
+
+            <fieldset class='description brief'>
+              <legend>Brief description</legend>
+              <resizable-textarea @valueChanged="debounceUpdate('description_short', $event.target.value, $event)"
+                :initValue="currentBook.description_short"
+                ref="descriptionShort"
+                :disabled="!allowMetadataEdit">
+              </resizable-textarea>
+            </fieldset>
+
+            <fieldset class='description long'>
+              <legend>Long description</legend>
+              <resizable-textarea @valueChanged="debounceUpdate('description', $event.target.value, $event)"
+                :initValue="currentBook.description"
+                ref="descriptionLong"
+                :disabled="!allowMetadataEdit">
+              </resizable-textarea>
+            </fieldset>
+          </TabPanel>
+          <TabPanel header="TOC" id="book-toc">
             <BookToc ref="bookToc"
               :isActive="activeTabIndex === TAB_TOC_INDEX"
             ></BookToc>
-          </vue-tab>
-          <vue-tab title="Audio" id="audio-integration" :disabled="!tc_displayAudiointegrationTab()">
+          </TabPanel>
+          <TabPanel header="Audio" id="audio-integration"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displayAudiointegrationTab()">
             <BookAudioIntegration ref="audioIntegration"
                 :isActive="activeTabIndex == TAB_AUDIO_INDEX"
                 @onTtsSelect="ttsUpdate"
                 @goToBlock="goToBlock"
               ></BookAudioIntegration>
-          </vue-tab>
+          </TabPanel>
+          <TabPanel header="Styles" id="styles-switcher"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
+              <div class="styles-catalogue">
 
-        <vue-tab title="Styles" :id="'styles-switcher'" :disabled="!tc_displayStylesTab() && !proofreadModeReadOnly">
-            <div class="styles-catalogue">
+                <TabView ref="blockTypesTabs"
+                  v-model:activeIndex="blockTypesTabsActiveIndex"
+                  :class="['block-style-tabs', {'disabled': proofreadModeReadOnly}]"
+                  @tab-change="styleTabChange" >
 
-              <vue-tabs ref="blockTypesTabs" class="block-style-tabs" :class="{ disabled: proofreadModeReadOnly }" @tab-change="styleTabChange">
-                <vue-tab title="Book" :id="'global-styles-switcher'">
-                  <fieldset class="block-style-fieldset global-style">
-                  <legend>Book styles</legend>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', '') } : {}">
-                      <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    ILM</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ocean') } : {}">
-                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    Ocean</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ffa') } : {}">
-                      <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      FFA</label>
-                  </div>
-                  </fieldset>
+                  <TabPanel header="Book"
+                    :disabled="isNarrateMode"
+                    id="global-styles-switcher"
+                    data-tab-class="hide-tab-if-disabled"
+                    :class="['global-styles-switcher', {'disabled': isNarrateMode}]">
 
-                  <fieldset class="block-style-fieldset automatic-numeration">
-                  <legend>Automatic numeration</legend>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x') } : {}">
-                      <i v-if="currentBook.numbering === 'x'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    x</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x_x') } : {}">
-                      <i v-if="currentBook.numbering === 'x_x'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                    x.x</label>
-                  </div>
-                  <div>
-                    <label class="style-label"
-                      v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'none') } : {}">
-                      <i v-if="currentBook.numbering === 'none'"
-                        class="fa fa-check-circle-o"></i>
-                      <i v-else class="fa fa-circle-o"></i>
-                      Off</label>
-                  </div>
-                  </fieldset>
-                  <fieldset class="block-style-fieldset trim-silence-config">
-                    <legend>Trim silence</legend>
-                    <label class="block-style-label"
-                       v-on="trimSilenceConfigCalculated === 'audio_tts_narration' ?
-                      {click: () => setTrimSilenceConfig('tts_narration')} :
-                      {click: () => setTrimSilenceConfig('audio_tts_narration')}">
-                      <template>
-                        <i
-                          v-bind:class="{'fa fa-square-o': trimSilenceConfigCalculated === 'audio_tts_narration',
-                          'fa fa-check-square-o -checked': trimSilenceConfigCalculated === 'tts_narration'}"
-                        ></i>
-                      </template>
-                      Don’t trim file import blocks
-                    </label>
-                  </fieldset>
+                    <fieldset class="block-style-fieldset global-style">
+                    <legend>Book styles</legend>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', '') } : {}">
+                        <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      ILM</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ocean') } : {}">
+                        <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      Ocean</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('styles.global', 'global-ffa') } : {}">
+                        <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        FFA</label>
+                    </div>
+                    </fieldset>
 
-                </vue-tab>
+                    <fieldset class="block-style-fieldset automatic-numeration">
+                    <legend>Automatic numeration</legend>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x') } : {}">
+                        <i v-if="currentBook.numbering === 'x'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      x</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'x_x') } : {}">
+                        <i v-if="currentBook.numbering === 'x_x'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                      x.x</label>
+                    </div>
+                    <div>
+                      <label class="style-label"
+                        v-on="!proofreadModeReadOnly ? { click: () => debounceUpdate('numbering', 'none') } : {}">
+                        <i v-if="currentBook.numbering === 'none'"
+                          class="fa fa-check-circle-o"></i>
+                        <i v-else class="fa fa-circle-o"></i>
+                        Off</label>
+                    </div>
+                    </fieldset>
+                    <fieldset class="block-style-fieldset trim-silence-config">
+                      <legend>Trim silence</legend>
+                      <label class="block-style-label"
+                        v-on="trimSilenceConfigCalculated === 'audio_tts_narration' ?
+                        {click: () => setTrimSilenceConfig('tts_narration')} :
+                        {click: () => setTrimSilenceConfig('audio_tts_narration')}">
+                        <template>
+                          <i
+                            v-bind:class="{'fa fa-square-o': trimSilenceConfigCalculated === 'audio_tts_narration',
+                            'fa fa-check-square-o -checked': trimSilenceConfigCalculated === 'tts_narration'}"
+                          ></i>
+                        </template>
+                        Don’t trim file import blocks
+                      </label>
+                    </fieldset>
 
-                <vue-tab :title="prepareStyleTabLabel(blockType)"
-                  :disabled="!displayStyleTab(blockType)"
-                  v-for="(val, blockType) in blockTypesByMode"
-                  :id="'block-type-'+blockType" :key="blockType">
+                  </TabPanel>
 
-                  <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
-                    <legend>Numeration</legend>
-                    <label class="block-style-label"
-                      @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
-                      <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Numbered section
-                    </label>
-                    <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
-                      <i class="fa fa-square-o"></i>
-                      Hide from display
-                    </label>
-                    <label v-else class="block-style-label"
-                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
-                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Hide from display
-                    </label>
-                  </fieldset>
+                  <TabPanel :header="prepareStyleTabLabel(blockType)"
+                    :disabled="!displayStyleTab(blockType)"
+                    v-for="(val, blockType) in blockTypesByMode"
+                    :id="'block-type-'+blockType" :key="blockType">
 
-                  <fieldset v-if="blockType === 'header' && styleTabs.get(blockType)" class="block-style-fieldset">
-                    <legend>{{styleCaption('header', 'level')}}</legend>
-                    <ul class="no-bullets">
-                      <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'level'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset" >
-                    <legend>{{styleCaption(blockType, 'style')}}</legend>
-                    <ul>
-                      <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'style'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
+                    <fieldset class="block-style-fieldset block-num-fieldset"
+                    v-if="numProps.has(blockType) && ['header'].indexOf(blockType) > -1">
+                      <legend>Numeration</legend>
+                      <label class="block-style-label"
+                        @click="selSecNum(blockType, 'secNum', numProps.get(blockType).get('secNum'))">
+                        <template v-if="numProps.get(blockType).get('secNum') == 'mixed'">
+                          <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('secNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Numbered section
+                      </label>
+                      <label v-if="numProps.get(blockType).get('secNum') === false" class="block-style-label">
+                        <i class="fa fa-square-o"></i>
+                        Hide from display
+                      </label>
+                      <label v-else class="block-style-label"
+                        @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                        <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                          <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Hide from display
+                      </label>
+                    </fieldset>
 
-                  <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
-                    <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
-                    <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']"  class="no-bullets">
-                      <li v-for="(sVal, sIdx) in styleObj">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'table of contents'+'.'+styleKey"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
-                    <legend>{{styleCaption(blockType, 'toc')}}</legend>
-                    <ul  class="no-bullets">
-                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'table of contents.isInToc'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
-                    <legend>{{styleCaption(blockType, 'toc level')}}</legend>
-                    <ul class="no-bullets">
-                      <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].tocLevel">
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="[sVal]"
-                          :styleKey="'table of contents.tocLevel'"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
-                      </li>
-                    </ul>
-                  </fieldset>
-                  <fieldset class="block-style-fieldset block-num-fieldset"
-                  v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
-                    <legend>Numeration</legend>
-                    <label class="block-style-label"
-                      @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
-                      <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
-                        <i class="fa fa-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Numbered
-                    </label>
-                    <label v-if="numProps.get(blockType).get('parNum') === false" class="block-style-label">
-                      <i class="fa fa-square-o"></i>
-                      Hide from display
-                    </label>
-                    <label v-else class="block-style-label"
-                      @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
-                      <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
-                        <i class="fa fa-plus-square-o" aria-hidden="true"></i>
-                      </template>
-                      <template v-else>
-                        <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
-                        <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
-                      </template>
-                      Hide from display
-                    </label>
-                  </fieldset>
-                  <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them</i>
-                  <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
-                  <fieldset v-if="pausesAfterProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
-                    <legend>Pause after block (sec.)</legend>
-                    <!-- <block-style-labels
-                      :blockType="blockType"
-                      :styleArr="['none', '0.6', '1', '2', '4']"
-                      :styleKey="'pause_before'"
-                      :styleTabs="pausesBeforeProps"
-                      :styleValue="styleValue"
-                      @selectStyleEv="selectPauseBefore"
-                    ></block-style-labels> -->
-                    <pause-after-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
-                      v-bind:key="blockType + 'pause_after_container'"
-                      :blockType="blockType"
-                      :styleValue="styleValue"
-                      :styleProps="pausesAfterProps"
-                      @setPauseAfter="selectPauseAfter"
-                      ref="pauseAfterControl"></pause-after-block>
-                  </fieldset>
-                  <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
+                    <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset">
+                      <legend>{{styleCaption('header', 'level')}}</legend>
+                      <ul class="no-bullets">
+                        <li v-for="(sVal, styleKey) in blockTypes[blockType]['level']">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'level'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset" >
+                      <legend>{{styleCaption(blockType, 'style')}}</legend>
+                      <ul>
+                        <li v-for="(sVal, styleKey) in blockTypes[blockType]['style']">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'style'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
 
-                    <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
-                      <legend>{{styleCaption(blockType, styleKey)}}</legend>
+                    <fieldset v-if="(blockType === 'title') && styleTabs.get(blockType)" class="block-style-fieldset block-num-fieldset">
+                      <legend>{{styleCaption(blockType, 'table of contents')}}</legend>
+                      <ul v-for="(styleObj, styleKey) in blockTypes[blockType]['table of contents']"  class="no-bullets">
+                        <li v-for="(sVal, sIdx) in styleObj">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents'+'.'+styleKey"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                      <legend>{{styleCaption(blockType, 'toc')}}</legend>
+                      <ul  class="no-bullets">
+                        <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].isInToc">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents.isInToc'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset v-if="(blockType === 'header') && styleTabs.get(blockType)" class="block-style-fieldset" >
+                      <legend>{{styleCaption(blockType, 'toc level')}}</legend>
+                      <ul class="no-bullets">
+                        <li v-for="(sVal, sIdx) in blockTypes[blockType]['table of contents'].tocLevel">
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="[sVal]"
+                            :styleKey="'table of contents.tocLevel'"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
+                        </li>
+                      </ul>
+                    </fieldset>
+                    <fieldset class="block-style-fieldset block-num-fieldset"
+                    v-if="numProps.has(blockType) && ['par'].indexOf(blockType) > -1">
+                      <legend>Numeration</legend>
+                      <label class="block-style-label"
+                        @click="selSecNum(blockType, 'parNum', numProps.get(blockType).get('parNum'))">
+                        <template v-if="numProps.get(blockType).get('parNum') == 'mixed'">
+                          <i class="fa fa-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('parNum') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Numbered
+                      </label>
+                      <label v-if="numProps.get(blockType).get('parNum') === false" class="block-style-label">
+                        <i class="fa fa-square-o"></i>
+                        Hide from display
+                      </label>
+                      <label v-else class="block-style-label"
+                        @click="selSecNum(blockType, 'secHide', numProps.get(blockType).get('secHide'))">
+                        <template v-if="numProps.get(blockType).get('secHide') == 'mixed'">
+                          <i class="fa fa-plus-square-o" aria-hidden="true"></i>
+                        </template>
+                        <template v-else>
+                          <i v-if="numProps.get(blockType).get('secHide') == false" class="fa fa-square-o" aria-hidden="true"></i>
+                          <i v-else class="fa fa-check-square-o -checked" aria-hidden="true"></i>
+                        </template>
+                        Hide from display
+                      </label>
+                    </fieldset>
+                    <i v-if="bookMode !== 'narrate'">Please keep defaults unless you have a compelling reason to change them</i>
+                    <i v-else>Pause adjustment is only applicable to Narration blocks, which are not currently being edited</i>
+                    <fieldset v-if="pausesAfterProps.get(blockType) && blockType !== 'illustration'" class="block-style-fieldset block-num-fieldset block-pause-fieldset">
+                      <legend>Pause after block (sec.)</legend>
+                      <!-- <block-style-labels
+                        :blockType="blockType"
+                        :styleArr="['none', '0.6', '1', '2', '4']"
+                        :styleKey="'pause_before'"
+                        :styleTabs="pausesBeforeProps"
+                        :styleValue="styleValue"
+                        @selectStyleEv="selectPauseBefore"
+                      ></block-style-labels> -->
+                      <pause-after-block v-if="activeTabIndex === TAB_STYLE_INDEX && activeStyleTab === blockType"
+                        v-bind:key="blockType + 'pause_after_container'"
+                        :blockType="blockType"
+                        :styleValue="styleValue"
+                        :styleProps="pausesAfterProps"
+                        @setPauseAfter="selectPauseAfter"
+                        ref="pauseAfterControl"></pause-after-block>
+                    </fieldset>
+                    <template v-for="(styleArr, styleKey) in blockTypes[blockType]">
 
-                        <block-style-labels
-                          :blockType="blockType"
-                          :styleArr="styleArr"
-                          :styleKey="styleKey"
-                          :styleTabs="styleTabs"
-                          :styleValue="styleValue"
-                          @selectStyleEv="dummySelectStyle"
-                        ></block-style-labels>
+                      <fieldset v-if="styleTabs.has(blockType) && styleTabs.get(blockType).has(styleKey) && styleArr.length && styleKey !== 'table of contents' && !(styleKey == 'level' && blockType == 'header') && !(styleKey == 'style' && blockType == 'title')" :key="styleKey" class="block-style-fieldset">
+                        <legend>{{styleCaption(blockType, styleKey)}}</legend>
 
+                          <block-style-labels
+                            :blockType="blockType"
+                            :styleArr="styleArr"
+                            :styleKey="styleKey"
+                            :styleTabs="styleTabs"
+                            :styleValue="styleValue"
+                            @selectStyleEv="dummySelectStyle"
+                          ></block-style-labels>
 
-                      </fieldset>
+                        </fieldset>
 
-                  </template>
-                </vue-tab>
+                    </template>
+                  </TabPanel>
+                </TabView>
 
-              </vue-tabs>
-
-            </div>
-        </vue-tab>
-        <vue-tab title="Suggestions" id="suggestions"
-          :disabled="!tc_displaySuggestionsTab()">
-          <Suggestions
-          :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
-        </vue-tab>
-      </vue-tabs>
+              </div>
+          </TabPanel>
+          <TabPanel header="Suggestions" id="suggestions"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displaySuggestionsTab()">
+            <Suggestions
+              :isActive="activeTabIndex === TAB_SUGGESTION_INDEX" />
+          </TabPanel>
+          <TabPanel header="Rewrite" id="adapted_book"
+            data-tab-class="hide-tab-if-disabled"
+            :disabled="!tc_displayRewriteTab()">
+            <BookRewrite />
+          </TabPanel>
+        </TabView>
       </div>
     </div>
 
@@ -645,6 +666,8 @@ import _                    from 'lodash'
 import axios                from 'axios'
 import { modal, accordion, panel } from 'vue-strap'
 import Dropdown             from 'primevue/dropdown';
+import TabView              from '../generic/components/TabViewILM.vue';
+import TabPanel             from 'primevue/tabpanel';
 import task_controls        from '../../mixins/task_controls.js'
 import api_config           from '../../mixins/api_config.js'
 import access               from '../../mixins/access.js'
@@ -652,7 +675,6 @@ import { Languages }        from "../../mixins/lang_config.js"
 import time_methods         from '../../mixins/time_methods.js';
 import number_methods       from "../../mixins/number_methods.js"
 import toc_methods          from '../../mixins/toc_methods.js';
-import { VueTabs, VTab }    from 'vue-nav-tabs'
 import CoupletWarningPopup from "./CoupletWarningPopup.vue";
 //import VueTextareaAutosize from 'vue-textarea-autosize'
 import BookAssignments      from './details/BookAssignments';
@@ -669,6 +691,8 @@ import v_modal              from 'vue-js-modal';
 import BookAuthors          from './details/BookAuthors';
 import BookCopy             from './details/BookCopy';
 import Suggestions          from './details/suggestions/Suggestions';
+import BookRewrite          from './details/BookRewrite';
+import BookCopy             from './details/BookCopy';
 import FilterTag            from './details/FilterTag';
 
 Vue.use(v_modal, {dialog: true});
@@ -715,12 +739,12 @@ export default {
     BookEditCoverModal,
     BookToc,
     BookAudioIntegration,
-    'vue-tabs': VueTabs,
-    'vue-tab': VTab,
     modal,
     accordion,
     panel,
     Dropdown,
+    TabView,
+    TabPanel,
     BookAssignments,
     BookWorkflow,
     BookPublish,
@@ -733,8 +757,9 @@ export default {
     CoupletWarningPopup,
     Genre,
     BookAuthors,
-    BookCopy,
     Suggestions,
+    BookRewrite,
+    BookCopy,
     FilterTag
   },
 
@@ -798,6 +823,9 @@ export default {
       TAB_AUDIO_INDEX: 3,
       TAB_STYLE_INDEX: 4,
       TAB_SUGGESTION_INDEX: 5,
+      TAB_REWRITE_INDEX: 6,
+      panelTabsActiveIndex: 0,
+      blockTypesTabsActiveIndex: 0,
       users: {
         'editor': [],
         'proofer': [],
@@ -1031,6 +1059,13 @@ export default {
       cache: false
     },
 
+    isNarrateMode: {
+      get() {
+        return this.bookMode === 'narrate';
+      },
+      cache: false
+    },
+
     isLanguageDisabled: {
       get() {
         return !this.allowMetadataEdit || this.currentBookMeta.collection_id || this.lockLanguage || this.currentBookMeta.copy_type === 'adapted';
@@ -1068,66 +1103,6 @@ export default {
     /*document.addEventListener("click", this.onClickOutside);*/
     if (this.selectionStart && this.selectionEnd) {
       this.collectCheckedStyles(this.selectionStart, this.selectionEnd)
-    }
-    $('body').on('click', '.vue-tabs.meta-edit-tabs li.tab', () => {
-      this.activeTabIndex = this.$refs.panelTabs ? this.$refs.panelTabs.activeTabIndex : null;
-      if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
-        Vue.nextTick(() => {
-          this.$refs.descriptionShort.setValue(this.currentBook.description_short);
-          //this.$refs.descriptionShort.initSize();
-        });
-      }
-      if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
-        Vue.nextTick(() => {
-          this.$refs.descriptionLong.setValue(this.currentBook.description);
-          //this.$refs.descriptionLong.initSize();
-        });
-      }
-      if (this.activeTabIndex === this.TAB_STYLE_INDEX) {
-        if (this.bookMode === 'narrate') {
-          Vue.nextTick(() => {
-            if ($(`.block-style-tabs.vue-tabs .nav.nav-tabs li.hidden`).length === 0) {
-              this.$refs.blockTypesTabs.hideTab(0);
-            }
-          });
-        }
-      }
-    });
-    this.$refs.blockTypesTabs.hideTab = (index) => {
-      let container = this.$refs.blockTypesTabs.$children[index];
-      if (container && container.$el) {
-        let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
-        if (tab) {
-          tab.classList.add('hidden');
-          tab.setAttribute('disabled', true);
-          container.$el.classList.add('hidden');
-          container.$el.setAttribute('disabled', true);
-          if (this.$refs.blockTypesTabs.activeTabIndex === index) {
-            let activate = this.$refs.blockTypesTabs.tabs.find((t, i) => {
-              return i !== index && t.disabled === false;
-            });
-            if (activate) {
-              //this.$refs.blockTypesTabs.activateTab(this.$refs.blockTypesTabs.tabs.indexOf(activate));
-              $($(`.block-style-tabs.vue-tabs .nav.nav-tabs li`)[this.$refs.blockTypesTabs.tabs.indexOf(activate)]).trigger('click');
-            } else {
-              //this.$refs.blockTypesTabs.activateTab(index === 0 ? 1 : 0);
-              //$($(`.block-style-tabs.vue-tabs .nav.nav-tabs li`)[index === 0 ? 1 : 0]).trigger('click');
-            }
-          }
-        }
-      }
-    }
-    this.$refs.blockTypesTabs.showTab = (index) => {
-      let container = this.$refs.blockTypesTabs.$children[index];
-      if (container && container.$el) {
-        let tab = document.querySelector(`[aria-controls="${container.$el.id}"]`);
-        if (tab) {
-          tab.classList.remove('hidden');
-          tab.removeAttribute('disabled');
-          container.$el.removeAttribute('disabled');
-          container.$el.classList.remove('hidden');
-        }
-      }
     }
     this.jobDescription = this.currentJobInfo.description;
 
@@ -1252,10 +1227,16 @@ export default {
               newIndex = this.TAB_ASSIGNMENT_INDEX;
             }
             break;
+          case this.TAB_REWRITE_INDEX:
+            if (!this.tc_displayRewriteTab()) {
+              newIndex = this.TAB_ASSIGNMENT_INDEX;
+            }
+            break;
         }
         if (newIndex !== false) {
           this.activeTabIndex = newIndex;
-          this.$refs.panelTabs.findTabAndActivate(newIndex);
+          //this.$refs.panelTabs.findTabAndActivate(newIndex);
+          this.panelTabsActiveIndex = newIndex;
         }
         this.$forceUpdate();
       }
@@ -1270,13 +1251,7 @@ export default {
     },
     'bookMode': {
       handler() {
-        if (this.bookMode === 'narrate') {
-          this.$refs.blockTypesTabs.hideTab(0);
-        } else {
-          this.$refs.blockTypesTabs.showTab(0);
-        }
         if (this.blockSelection.start._id && this.blockSelection.end._id) {
-          //this.$refs.blockTypesTabs.render();
           this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
         }
       }
@@ -2116,20 +2091,24 @@ export default {
       Vue.nextTick(()=>{
 
         if (result.size == 0) {
-          $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+          const el = document.querySelector('.block-style-tabs a[role="tab"]');
+          if (el) el.click();
         } else if (isSwitch) {
-          //$(`a[aria-controls="#block-type-${result.keys().next().value}"]`).parent().trigger( "click" );
           if (this.bookMode !== 'narrate') {
             if (!this.activeStyleTab || !Array.from(result.keys()).includes(this.activeStyleTab)) {
-              $(`li#t-block-type-${result.keys().next().value}`).trigger( "click" );
+              const el = document.querySelector(`a#t-block-type-${result.keys().next().value}`)
+              if (el) el.click();
             }
           } else {
             if (pausesAfter.size > 0) {
               if (!this.activeStyleTab || !Array.from(pausesAfter.keys()).includes(this.activeStyleTab)) {
-                $(`li#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+                //$(`a#t-block-type-${pausesAfter.keys().next().value}`).trigger( "click" );
+                const el = document.querySelector(`a#t-block-type-${pausesAfter.keys().next().value}`)
+                if (el) el.click();
               }
             } else {
-              $('.block-style-tabs').find('li[name="tab"]').first().trigger( "click" );
+              const el = document.querySelector('.block-style-tabs a[role="tab"]');
+              if (el) el.click();
             }
           }
         }
@@ -2561,9 +2540,11 @@ export default {
     },
 
     checkAfterAudioImport() {
+      //TODO: check!!!
       if (this.activeTabIndex !== this.TAB_AUDIO_INDEX && this.$refs.panelTabs && this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX] && !this.$refs.panelTabs.tabs[this.TAB_AUDIO_INDEX].disabled) {
         this.activeTabIndex = this.TAB_AUDIO_INDEX;
-        this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
+        //this.$refs.panelTabs.findTabAndActivate(this.TAB_AUDIO_INDEX);
+        this.panelTabsActiveIndex = this.TAB_AUDIO_INDEX
         this.$forceUpdate();
       }
     },
@@ -2577,9 +2558,25 @@ export default {
       this.$router.push({name: this.$route.name, params:  { block: blockId }});
     },
 
-    styleTabChange(index, component) {
-      //console.log('styleTabChange', index, component.id, component)
-      this.activeStyleTab = component.title === 'line' ? 'hr' : component.title;
+    metaTabChange(tab) {
+      this.activeTabIndex = tab.index;
+      this.panelTabsActiveIndex = tab.index;
+      if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
+        Vue.nextTick(() => {
+          this.$refs.descriptionShort.setValue(this.currentBook.description_short);
+          //this.$refs.descriptionShort.initSize();
+        });
+      }
+      if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
+        Vue.nextTick(() => {
+          this.$refs.descriptionLong.setValue(this.currentBook.description);
+          //this.$refs.descriptionLong.initSize();
+        });
+      }
+    },
+
+    styleTabChange(tab) {
+      this.activeStyleTab = tab.header === 'line' ? 'hr' : tab.header;
     },
 
     displayStyleTab(blockType) {
@@ -2655,8 +2652,27 @@ export default {
     },
 
     activateSuggestionsTab() {
-      this.$refs.panelTabs.navigateToTab(5);
+      //this.$refs.panelTabs.navigateToTab(5);
+      this.panelTabsActiveIndex = this.TAB_SUGGESTION_INDEX;
       // maybe need to use findAndActivate method...
+    },
+
+    bookLink(bookid) {
+      return `/books/${bookid}/edit`;
+    },
+
+    copyBookid(bookid) {
+      let node = document.createElement("div");
+      node.id = "copy-clipboard";
+      node.innerHTML = bookid;
+      document.body.appendChild(node);
+      let range = document.createRange();
+      range.selectNode(document.getElementById("copy-clipboard"));
+      window.getSelection().removeAllRanges(); // clear current selection
+      window.getSelection().addRange(range); // to select text
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();// to deselect
+      document.body.removeChild(node);
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
@@ -2707,31 +2723,22 @@ select.text-danger#categorySelection, input.text-danger{
   background: white;
 }
 .meta-edit-tabs .nav-tabs-navigation {
+  /*border: 1px solid white;
   position: sticky;
-  top: 43px;
+  top: -1px;
   background-color:white;
-  z-index: 1;
+  z-index: 2;*/
+}
+
+.meta-edit-tabs .nav-tabs-navigation .nav-tabs-wrapper ul.nav-tabs {
+  /*display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;*/
 }
 
 #p-styles-switcher.tab-container {
   padding-top: 0px;
 }
-
-.meta-edit-tabs > .nav-tabs-navigation{
-  border: 1px solid white;
-  position: sticky;
-  top: -1px;
-  background-color: white;
-  z-index: 2;
-}
-
-/*.meta-edit-tabs .nav-tabs-navigation .nav > li {
-  position: inherit;
-}
-
-.meta-edit-tabs .nav-tabs-navigation .nav > li > a {
-  position: inherit;
-}*/
 
 </style>
 
@@ -2994,7 +3001,8 @@ select.text-danger#categorySelection, input.text-danger{
     margin-top: 3px;
   }
 
-  .tab-content input[type=radio] {
+  .tab-content input[type=radio],
+  .p-tabview-panel input[type=radio] {
     width: auto;
     display: inline-block;
     margin-top: 8px;
@@ -3002,11 +3010,13 @@ select.text-danger#categorySelection, input.text-danger{
     padding-top: 5px;
   }
 
-  .tab-content input[type=radio]:focus {
+  .tab-content input[type=radio]:focus,
+  .p-tabview-panel input[type=radio]:focus{
     box-shadow: none;
   }
 
-  .tab-content .style-label {
+  .tab-content .style-label ,
+  .p-tabview-panel .style-label {
     margin-top: 4px;
     margin-bottom: 0px;
     display: inline-block;
@@ -3110,6 +3120,14 @@ select.text-danger#categorySelection, input.text-danger{
     }
   }
 
+/*  .block-style-tabs {
+    .p-tabview-panels {
+      .p-tabview-panel {
+
+      }
+    }
+  }*/
+
   .block-style-tabs {
     .block-style-fieldset {
       float: left;
@@ -3172,7 +3190,7 @@ select.text-danger#categorySelection, input.text-danger{
       }
     }
 
-    .tab-container {
+    .tab-container, .p-tabview-panel {
       display: flex;
       flex-direction: row;
       align-items: flex-start;
@@ -3200,6 +3218,7 @@ select.text-danger#categorySelection, input.text-danger{
       }
     }
   }
+
   .block-selection {
     a {
         cursor: pointer;
@@ -3222,13 +3241,23 @@ select.text-danger#categorySelection, input.text-danger{
 </style>
 
 <style lang="less">
-  div.block-style-tabs .nav-tabs > li > a {
-    margin: 0 !important;
+  div.block-style-tabs {
+    .nav-tabs, .p-tabview-panels {
+      & > li > a {
+        margin: 0 !important;
+      }
+    }
   }
 
   .styles-catalogue {
     li.tab {
       span.title {
+        text-transform: capitalize;
+      }
+    }
+
+    a.p-tabview-nav-link {
+      span.p-tabview-title {
         text-transform: capitalize;
       }
     }
@@ -3254,10 +3283,12 @@ select.text-danger#categorySelection, input.text-danger{
     outline: 0;
   }
 
-  .meta-edit-tabs.vue-tabs {
+  .meta-edit-tabs.vue-tabs,
+  .meta-edit-tabs.p-tabview-panels {
     height: 100%;
 
-    .tab-content {
+    .tab-content,
+    .p-tabview-panel {
       height: 100%;
       margin-top: -44px;
       padding-top: 44px;

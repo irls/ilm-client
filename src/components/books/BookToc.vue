@@ -90,7 +90,7 @@
                     </div>
                     <div :class="['-option -name', '-lang-' + toc.section.firstSectionBlock.language]">
                       <template v-if="editingSectionId === toc.section.id && editingFieldName === 'slug'">
-                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug'][toc.section.id]}]" 
+                        <input type="text" :class="['edit-section-slug', {'-has-error': validationErrors['slug'][toc.section.id]}]"
                           v-model="editingFieldValue"
                           v-on:keyup.enter="blurEditingField(null)"
                           v-on:change="updateSectionField(editingFieldValue)"
@@ -293,11 +293,11 @@ export default {
     /*'bookId',*/
     'isActive'
   ],
-  
+
   components: {
     TOCSettingsModal
   },
-  
+
   mixins: [api_config, time_methods],
 
 
@@ -388,17 +388,17 @@ export default {
       this.loadBookTocSections([]);
       this.loadBookToc({bookId: this.currentBookid, isWait: isWait})
       .then((res)=>{
-        
+
       })
       .catch((err)=>{
-        
+
       });
     },
-    
+
     toggleSectionsMode() {
       this.sectionsMode = !this.sectionsMode;
     },
-    
+
     sectionEditMode(section, field, event) {
       if (event && event.target) {
         if (event.target.classList && event.target.classList.contains('fa')) {
@@ -472,7 +472,7 @@ export default {
           });
       });
     },
-    
+
     setEditingSection(section, field) {
       if (section && section.id) {
         this.editingSectionId = section.id;
@@ -490,7 +490,7 @@ export default {
         this.editingFieldName = '';
       }
     },
-    
+
     moveToNextField(event) {
       if (event) {
         let isPrev = event.key === 'ArrowUp';
@@ -621,7 +621,7 @@ export default {
         }
       }
     },
-    
+
     validateSectionField(value, field, section_id = null) {
       if (field !== 'slug') {// only slug now checked for unique and not empty
         return true;
@@ -655,7 +655,7 @@ export default {
       this.$forceUpdate();
       return true;
     },
-    
+
     updateSection(update) {
       if (this.editingSectionId) {
         let updateSectionId = this.editingSectionId;
@@ -672,7 +672,7 @@ export default {
           });
       }
     },
-    
+
     updateSectionField(value) {
       value = value.trim();
       let updateField = this.editingFieldName;
@@ -779,14 +779,14 @@ export default {
         }
       }
     },
-    
+
     createSectionFromItem(blockid) {
       if (this.tocSectionBook.isBuilding) {
         return false;
       }
       return this.createBookTocSection({startBlockid: blockid, bookid: this.currentBookToc.bookId});
     },
-    
+
     exportSection(id, ev) {
       let section = this.bookTocSections.find(se => {
         return se.id === id;
@@ -805,7 +805,7 @@ export default {
         return this.exportTocSection(id);
       }
     },
-    
+
     exportBook(ev) {
       let slugErrors = Object.keys(this.validationErrors.slug).length;
       if (slugErrors > 0 || !this.fullValidate()) {
@@ -836,15 +836,15 @@ export default {
       }
       this.exportTocSectionBook([{buildType: this.buildType}]);
     },
-    
+
     downloadSectionLink(sectionId) {
       return this.getAPILink(`toc_section_export/${encodeURIComponent(sectionId)}/download/${this.buildTypeSection}`);
     },
-    
+
     downloadBookLink() {
       return this.getAPILink(`toc_section_export/book/${this.currentBookToc.bookId}/download/${this.buildType}`);
     },
-    
+
     hasError(section_id = null, field = null) {
       let hasError = false;
       Object.keys(this.validationErrors).forEach(k => {
@@ -860,11 +860,11 @@ export default {
       });
       return hasError;
     },
-    
+
     editingFieldChanged(event) {
       delete this.validationErrors[this.editingFieldName][this.editingSectionId];
     },
-    
+
     checkOnAction(sectionId = null, ev = null) {
       if (this.hasError(sectionId)) {
         this.showNameError();
@@ -875,7 +875,7 @@ export default {
       }
       return true;
     },
-    
+
     showNameError() {
       let slugErrors = Object.keys(this.validationErrors.slug);
       if (slugErrors.length > 0) {
@@ -943,13 +943,13 @@ export default {
           }
         });
     },
-    
+
     clearErrors() {
       Object.keys(this.validationErrors).forEach(k => {
         this.validationErrors[k] = {};
       });
     },
-    
+
     focusEditingField(scrollTo = false, cursorPosition = null) {
       Vue.nextTick(() => {
         let el = document.getElementsByClassName('edit-section-' + this.editingFieldName);
@@ -968,7 +968,7 @@ export default {
         }
       });
     },
-    
+
     setCursorPosition(caretPos) {
       if (caretPos === null) {
         return;
@@ -992,7 +992,7 @@ export default {
         }
       }
     },
-    
+
     blurEditingField() {
       let tc = this.currentBookTocCombined.find(toc => {
         return toc.section && toc.section.id === this.editingSectionId;
@@ -1018,7 +1018,7 @@ export default {
       if (this.tocSectionBook.titlePattern !== settings.titlePattern) {
         this.tocSectionBook.titlePattern = settings.titlePattern;
         update.titlePattern = settings.titlePattern;
-      
+
       }
       return this.updateTocSectionBook([this.tocSectionBook.id, update])
         .then(updated => {
@@ -1039,19 +1039,19 @@ export default {
       });
       return errors > 0 ? false : true;
     },
-    
+
     displayTitleEnSection(section) {
       return this.displayTitleEn && section && section.id && section.firstSectionBlock.language !== 'en';
-      
+
     },
-    
+
     saveScrollPosition() {
       let list = document.querySelector('fieldset.toc-items-list');
       if (list) {
         this.listScrollPosition = list.scrollTop;
       }
     },
-    
+
     restoreScrollPosition() {
       if (this.listScrollPosition) {
         let list = document.querySelector('fieldset.toc-items-list');
@@ -1060,21 +1060,21 @@ export default {
         }
       }
     },
-    
+
     minimizeToc() {
       this.resizeToc(false);
     },
-    
+
     maximizeToc() {
       this.resizeToc(true);
     },
-    
+
     resizeToc(editorClosed = false) {
       // when section is activated or audio editor opened resize section to keep internal scroll and not display sidebar scroll
       let audioEditor = document.querySelector('.waveform-playlist');
       let elementsHeight = 15;
       let topMenu = document.querySelector('.top-menu-wrapper');
-      let navTabs = document.querySelector('.nav-tabs-navigation');
+      let navTabs = document.querySelector('.p-tabview-nav-content');
       if (topMenu) {
         elementsHeight+= topMenu.offsetHeight;
       }
@@ -1152,7 +1152,7 @@ export default {
         }
       }
     },
-    
+
     'isActive': {
       handler(val) {
         if (val) {
@@ -1160,7 +1160,7 @@ export default {
         }
       }
     },
-    
+
     'pendingSectionUpdate': {
       handler(val) {
         if (!val) {
@@ -1168,25 +1168,25 @@ export default {
         }
       }
     },
-    
+
     'displayTOC': {
       handler() {
         this.saveScrollPosition();
       }
     },
-    
+
     'displayTitle': {
       handler() {
         this.saveScrollPosition();
       }
     },
-    
+
     'displayTitleEn' : {
       handler() {
         this.saveScrollPosition();
       }
     },
-    
+
     'updatingToc': {
       handler() {
         this.listScrollPosition = 0;
@@ -1203,7 +1203,7 @@ export default {
   }
 }
 </script>
-<style lang="less">
+<style lang="less" scoped>
  fieldset.toc-items-list {
     padding-left: 5px;
     position: static;
@@ -1307,9 +1307,9 @@ export default {
           }
           &.-name {
             background: linear-gradient(
-                transparent, 
-                transparent 45%, 
-                rgb(93, 93, 93) 55%, 
+                transparent,
+                transparent 45%,
+                rgb(93, 93, 93) 55%,
                 transparent 55%, transparent
                 );
             /*padding: 3px 5px 3px 0px;*/
@@ -1394,9 +1394,9 @@ export default {
           }
           .-option.-name {
             background: linear-gradient(
-                transparent, 
-                transparent 45%, 
-                rgb(7, 7, 7) 55%, 
+                transparent,
+                transparent 45%,
+                rgb(7, 7, 7) 55%,
                 transparent 55%, transparent
                 );
           }
@@ -1658,7 +1658,7 @@ export default {
             width: 11px;
             height: 6px;
             background: transparent;
-            top: 5px;
+            top: 8px;
             left: 4px;
             border: 2px solid white;
             border-top: none;

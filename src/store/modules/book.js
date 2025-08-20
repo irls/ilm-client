@@ -1,4 +1,5 @@
 import axios from "axios";
+import lodash from "lodash";
 
 export default {
   namespaced: true,
@@ -46,6 +47,62 @@ export default {
       .catch(err => {
         return Promise.reject(err);
       })
+    },
+
+    rewrite({rootState, dispatch}, request = {}) {
+      let postRequest = lodash.cloneDeep(request);
+      if (rootState.blockSelection.start._id && rootState.blockSelection.end._id) {
+        postRequest.start_id = rootState.blockSelection.start._id;
+        postRequest.end_id = rootState.blockSelection.end._id;
+      }
+      return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/rewrite`, postRequest)
+        .then(response => {
+          return dispatch('getProcessQueue', {}, { root: true });
+            //dispatch('setCurrentBookCounters')
+        });
+    },
+
+    revert({rootState, dispatch}) {
+      let request = {};
+      if (rootState.blockSelection.start._id && rootState.blockSelection.end._id) {
+        request.start_id = rootState.blockSelection.start._id;
+        request.end_id = rootState.blockSelection.end._id;
+      }
+      return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/revert`, request)
+        .then(response => {
+          return dispatch('getProcessQueue', {}, { root: true });
+            //dispatch('setCurrentBookCounters')
+        });
+    },
+
+    getTextBlocks({rootState}) {
+      let url = `${rootState.API_URL}books/${rootState.currentBookid}/text_blocks`;
+      if (rootState.blockSelection.start._id && rootState.blockSelection.end._id) {
+        url+= `?start_id=${rootState.blockSelection.start._id}`;
+        url+= `&end_id=${rootState.blockSelection.end._id}`;
+      }
+      return axios.get(url)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+
+    getRewritedBlocks({rootState}) {
+      let url = `${rootState.API_URL}books/${rootState.currentBookid}/rewrited_blocks`;
+      if (rootState.blockSelection.start._id && rootState.blockSelection.end._id) {
+        url+= `?start_id=${rootState.blockSelection.start._id}`;
+        url+= `&end_id=${rootState.blockSelection.end._id}`;
+      }
+      return axios.get(url)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 }

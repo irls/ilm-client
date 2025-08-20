@@ -29,6 +29,7 @@ import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
 import booksModule from "./modules/book";
 import suggestionsModule from './modules/suggestions';
+import booksModule from "./modules/book";
 import filterTagsModule from "./modules/filterTag";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
@@ -100,8 +101,8 @@ export const store = new Vuex.Store({
     authorsMapModule,
     authorsModule,
     calculateLevelsModule,
-    booksModule,
     suggestionsModule,
+    booksModule,
     filterTagsModule
   },
   state: {
@@ -167,7 +168,21 @@ export const store = new Vuex.Store({
     currentLibraryId: false,
 
     user: {},
-    currentBookCounters: {not_marked_blocks: '0', not_marked_blocks_missed_audio: '0', narration_blocks: '0', not_proofed_audio_blocks: '0', approved_audio_in_range: '0', approved_tts_in_range: '0', changed_in_range_audio: '0', change_in_range_tts: '0', voiced_in_range: '0', voiceworks_for_remove: '0', total_blocks: '0', enabled_blocks: '0'},
+    currentBookCounters: {
+      not_marked_blocks: '0',
+      not_adapted_blocks: '0',
+      not_marked_blocks_missed_audio: '0',
+      narration_blocks: '0',
+      not_proofed_audio_blocks: '0',
+      approved_audio_in_range: '0',
+      approved_tts_in_range: '0',
+      changed_in_range_audio: '0',
+      change_in_range_tts: '0',
+      voiced_in_range: '0',
+      voiceworks_for_remove: '0',
+      total_blocks: '0',
+      enabled_blocks: '0'
+    },
 
     blockers: [],
     reqSignals: {
@@ -300,7 +315,12 @@ export const store = new Vuex.Store({
     pauseAfterBlockXhr: null,
     pauseLiveDBBlocks: [],// blocks with pending updates, shall be skipped from liveDB updates
     selectionRecount: false,
-    modifiedBlockids: []
+    modifiedBlockids: [],
+    allowedAdaptedBlockTypes: [
+      'title',
+      'header',
+      'par'
+    ]
   }, // end state
 
   getters: {
@@ -708,6 +728,9 @@ export const store = new Vuex.Store({
     },
     modifiedBlockids: state => {
       return state.modifiedBlockids;
+    },
+    allowedAdaptedBlockTypes: state => {
+      return state.allowedAdaptedBlockTypes;
     },
     getBookByIdAlias: state => (bookid_alias = null) => {
       if (bookid_alias && state.books_meta.length) {
@@ -1994,7 +2017,15 @@ export const store = new Vuex.Store({
           commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
           commit('TASK_LIST_LOADED')
-          dispatch('setCurrentBookCounters', ['narration_blocks', 'not_proofed_audio', 'not_marked_blocks_missed_audio', 'not_marked_blocks', 'total_blocks', 'enabled_blocks']);
+          dispatch('setCurrentBookCounters', [
+            'narration_blocks',
+            'not_proofed_audio',
+            'not_adapted_blocks',
+            'not_marked_blocks_missed_audio',
+            'not_marked_blocks',
+            'total_blocks',
+            'enabled_blocks'
+          ]);
           dispatch('startAlignWatch');
           dispatch('startAudiobookWatch');
           dispatch('getCurrentJobInfo', true);
@@ -3080,7 +3111,12 @@ export const store = new Vuex.Store({
         dispatch('_setNotProofedAudioBlocksCounter');
       }*/
       if (counters.length == 0) {
-        counters = ['narration_blocks', 'not_proofed_audio', 'not_marked_blocks'];
+        counters = [
+          'narration_blocks',
+          'not_proofed_audio',
+          'not_marked_blocks',
+          'not_adapted_blocks'
+        ];
       }
       if (state.currentBookid) {
         counters.forEach(c => {
@@ -3662,7 +3698,12 @@ export const store = new Vuex.Store({
       }
       if (bookid && (!watchId || watchId === state.currentBookid)) {
         let set = bookid === state.currentBookid;
-        let counters = dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
+        let counters = dispatch('setCurrentBookCounters', [
+          'narration_blocks',
+          'not_adapted_blocks',
+          'not_marked_blocks_missed_audio',
+          'not_marked_blocks'
+        ]);
 
         //console.log(state.API_URL + 'books/' + bookid + '/audiobooks');
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')
@@ -4323,6 +4364,7 @@ export const store = new Vuex.Store({
                     });
                     return {};
                   });
+                dispatch('getAlignCount');
               }
               return clearLocks
                 .then(() => {
@@ -4347,6 +4389,7 @@ export const store = new Vuex.Store({
                   if (state.lockedBlocks.length === 0) {
                     dispatch('stopProcessQueueWatch');
                     dispatch('tc_loadBookTask');
+                    dispatch('setCurrentBookCounters');
                   }
                   //console.log(state.lockedBlocks)
                 });

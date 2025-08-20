@@ -1067,6 +1067,10 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
+              if (this.meta.parent_book && block.adapted !== blockBefore.adapted) {
+                this.unableToJoinAdaptedMessage(this.meta.copy_type === "adapted");
+                return Promise.reject(new Error("adapted_mismatch"));
+              }
               this.sureToJoinBlocks('previous',elBlock, elNext, block, blockBefore);
             }
           })
@@ -1121,6 +1125,10 @@ export default {
               if (block.voicework !== blockAfter.voicework) {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
+              }
+              if (this.meta.parent_book && block.adapted !== blockAfter.adapted) {
+                this.unableToJoinAdaptedMessage(this.meta.copy_type === "adapted");
+                return Promise.reject(new Error("adapted_mismatch"));
               }
               this.sureToJoinBlocks('next',elBlock, elNext, block, blockAfter);
             }
@@ -1299,6 +1307,23 @@ export default {
       this.$root.$emit('show-modal', {
         title: 'Unsaved Changes',
         text: 'Blocks have unsaved changes.<br>Save or discard your changes before joining',
+        buttons: [
+          {
+            title: 'Ok',
+            handler: () => {
+              this.$root.$emit('hide-modal');
+            },
+            'class': 'btn btn-primary'
+          }
+        ],
+        class: ['align-modal']
+      });
+    },
+
+    unableToJoinAdaptedMessage(isAdapted = true) {
+      this.$root.$emit('show-modal', {
+        title: 'Different block version',
+        text: isAdapted ? 'Original block can’t be joined with Adapted' : 'Original block can’t be joined with Translated',
         buttons: [
           {
             title: 'Ok',
@@ -3226,7 +3251,7 @@ export default {
         }
       }
     }
-    &:not(.-voicework-narration) {
+    &:not(.-voicework-narration), &.-not-adapted {
       .completed {
         background: inherit;
       }
@@ -3269,9 +3294,6 @@ export default {
       }
     }
 
-    .controls-left {
-      /*height: 123px;*/
-    }
     .table-row-flex.controls-top {
       .par-ctrl.-par-num {
         label.par-num, span.par-num {

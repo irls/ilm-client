@@ -5,6 +5,7 @@
       :class="['table-body -block -subblock', blockOutPaddings]">
 
       <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'"></div>
+      <!--<div :class="['table-cell', 'marks-block-left']"></div>-->
       <div :class="['table-cell', {'completed': isCompleted}]">
         <div :class="['table-body', '-content']">
           <div class="table-row-flex controls-top" v-if="mode !== 'narrate'"></div>

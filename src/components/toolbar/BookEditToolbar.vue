@@ -16,7 +16,7 @@
       <i class="fa fa-chevron-left fa-lg"></i> Back <i class="fa fa-book "></i>
     </button>
 
-    <template v-if="tc_allowEditingComplete()">
+    <template v-if="tc_allowEditingComplete() && !tc_isBookCopy()">
       <button class="btn btn-default" @click="$root.$emit('book-reimport-modal')">Re-Import</button>
     </template>
 
