@@ -29,7 +29,6 @@ import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
 import booksModule from "./modules/book";
 import suggestionsModule from './modules/suggestions';
-import booksModule from "./modules/book";
 import filterTagsModule from "./modules/filterTag";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
