@@ -1394,8 +1394,13 @@
                   fadeOut[i] = currentValue;
                 }
               }
-              this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
+            } else {
+              // too low to fade out - add silence at fade range
+              for (let i = 0; i <= fadeLength; ++i) {
+                fadeOut[i] = maxRange;
+              }
             }
+            this.insertRangeAction(fadeOutStart, fadeOut, fadeTime);
           }
           // Fade in from fadePercent to original volume at the end of selection
           //let fadeInStart = range.length - fadeLength;
@@ -1436,9 +1441,17 @@
                 }
                 //console.log('===========', silence[i]);
               }
-
-              this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
+            } else {
+              // too low to fade in - insert silence in fade range
+              for (let i = 0; i <= fadeLength; ++i) {
+                let rangePos = rangeEnd.length - 1 - i;
+                if (rangeEnd[rangePos]) {
+                  fadeIn[rangePos] = maxRange;
+                }
+              }
             }
+
+            this.insertRangeAction(fadeInStart, fadeIn, fadeTime);
           }
 
           // Fill middle part with fadePercent
