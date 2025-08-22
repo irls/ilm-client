@@ -66,12 +66,12 @@
                 <input v-model='author_link[i].name_en'
                       @change="editAuthorLink($event, i, 'name_en')"
                       @input="startInput('name_en_' + i)"
-                      :disabled="authorEnDisabled(author_link[i])"
+                      :disabled="authorEnDisabled(i)"
                       :class="['author-name', { '-has-error': hasError(i, 'name_en') }]" />
                 <DropdownILM
                   :value="author_link[i]"
                   :options="authorsEnList"
-                  :disabled="authorEnDisabled(author_link[i])"
+                  :disabled="authorEnDisabled(i)"
                   :filter="true"
                   :showClear="false&&author_link[i].id !== null"
                   :optionDisabled="getDisabledAuthorsEn"
@@ -105,7 +105,7 @@
 
               <input v-model='author_link[i].slug'
                       @change="editAuthorLink($event, i, 'slug')"
-                    :disabled="authorSlugDisabled(author_link[i])"
+                    :disabled="authorSlugDisabled(i)"
                     :class="['author-slug']" />
               <!--, {'-has-error': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_link']}-->
 
@@ -213,8 +213,12 @@
       this.setAuthorsList();
     },
     methods: {
-      authorSlugDisabled(author) {
-        if (!this.allowMetadataEdit) {
+      authorSlugDisabled(idx) {
+        if (!this.allowMetadataEdit || this.updatingIndex === idx) {
+          return true;
+        }
+        let author = this.author_link[idx];
+        if (!author) {
           return true;
         }
         if (author.id && author.id.length > 0) {
@@ -228,8 +232,12 @@
         }
         return false;
       },
-      authorEnDisabled(author) {
-        if (!this.allowMetadataEdit) {
+      authorEnDisabled(idx) {
+        if (!this.allowMetadataEdit || idx === this.updatingIndex) {
+          return true;
+        }
+        let author = this.author_link[idx];
+        if (!author) {
           return true;
         }
         if (author.id && author.id.length > 0 && author.name && author.name.length > 0 && !author.name_added) {
