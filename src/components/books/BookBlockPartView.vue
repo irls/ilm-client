@@ -12,10 +12,10 @@
         />
     </div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
-      <div class="table-row">
+      <div class="table-row check-row">
         <div class="table-cell">
           <span v-if="parnumComp.length" :class="[{'sub-parnum-main': !isSplittedBlock}]">{{parnumComp}}</span>
-        </div>
+        </div><!--<div class="table-cell">-->
       </div>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}">
@@ -73,7 +73,7 @@
                     <div class="table-cell -hidden-subblock" v-if="tc_showBlockAudioEdit(block, blockPart) && !isAudioChanged">
                       <i class="fa fa-pencil" data-show-editor v-on:click="showAudioEditor()"></i>
                     </div>
-                    <template v-if="tc_showBlockNarrate(block, blockPart) && !isAudStarted">
+                    <template v-if="tc_showBlockNarrate(block, blockPart, meta) && !isAudStarted">
                       <div class="table-cell -hidden-subblock">
                         <i class="fa fa-microphone" data-show-editor v-if="!isChanged" @click="_startRecording(true)"></i>
                       </div>
@@ -269,6 +269,19 @@
                     dir="bottom"
                     :update="update"
                 >
+                  <template v-if="allowAdaptedContextMenu">
+                    <li class="separator"></li>
+                    <li @click="viewAdaptedOriginal($event)"
+                      class="icon-menu-item"
+                      v-if="allowViewAdaptedOriginal">
+                      <i class="icon-menu -adapted-view"></i>View original
+                    </li>
+                    <li @click="viewAdapted($event)"
+                      class="icon-menu-item"
+                      v-if="block.contentAdapted">
+                      <i class="icon-menu -adapted-edit"></i>{{ isBookTranslated ? 'Edit translated' : 'Edit adapted' }}
+                    </li>
+                  </template>
                   <template v-if="isSplitPointAllowed()">
                     <li class="separator"></li>
                     <li @click="splitIntoSubblocks($event)" class="icon-menu-item" v-if="splitForNarrationAllowed">
@@ -477,7 +490,7 @@ export default {
     //'modal': modal,
     'split-block-menu': SplitBlockMenu
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason', 'showStopConfirmations'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason', 'showStopConfirmations', 'hasAudioEditingPart'],
   mixins: [taskControls, apiConfig, access, playing_block],
   computed: {
       isLocked: {
@@ -841,6 +854,9 @@ export default {
       },
       allowEditing: {
         get() {
+          if (this.meta.parent_book && this.block && this.block.data_original && this.block.data_original.content && this.editingLocked) {
+            return false;
+          }
           return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
@@ -999,11 +1015,45 @@ export default {
           return '';
         },
         cache: false
-      }
+      },
+      allowViewAdaptedOriginal: {
+        get() {
+          return !this.block.contentAdapted && !this.isAudioEditing && !(['hr', 'illustration'].includes(this.block.type)) && !this.hasAudioEditingPart;
+        },
+        cache: false
+      },
+      allowAdaptedContextMenu: {
+        get() {
+          return this.block.adapted && !(['hr', 'illustration'].includes(this.block.type));
+        },
+        cache: false
+      },
+      isBookTranslated: {
+        get() {
+          if (this.currentBookMeta && this.currentBookMeta.copy_type) {
+            switch(this.currentBookMeta.copy_type) {
+                case 'adapted' : {
+                  return false;
+                } break;
+                case 'translated' : {
+                  return true;
+                } break;
+                default : {
+                  return false;
+                } break;
+            };
+          }
+          return this.currentBookMeta.parent_book && this.currentBookMeta.parent_language !== this.currentBookMeta.language;
+        },
+        cache: true
+      },
   },
   mounted: function() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
+      if (this.block && this.block.contentAdapted) {
+        this.editingLocked = true;
+      }
       if (this.block.getIsSplittedBlock()) {
         if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0) {
           this.blockPart.content = this.blockPart.content.replace(/<br[^>]*>$/, `\n`);
@@ -1054,6 +1104,9 @@ export default {
       })
   },
   beforeDestroy: function () {
+    if (this.mode === "display") {
+      this.viewAdapted();
+    }
     this.audioEditorEventsOff();
 
     document.body.removeEventListener('keydown', this.preventChromeScrollBySpace);
@@ -2169,6 +2222,9 @@ export default {
         this.range.insertNode(el);
         const parentW = el.parentNode;
         if (parentW && parentW.innerHTML) { // rearrange spaces
+          // ILM-6723 fix unexpected &nbsp;
+          parentW.innerHTML = parentW.innerHTML.replace('sup>&nbsp;<sup', 'sup> <sup');
+
           const supBeforeRegExp = new RegExp(`(<\\/(?:sup|sub)>)(\\s*?)(<sup data-idx="${idx}"><\\/sup>)`, 'i');
           const supAfterRegExp = new RegExp(`(<sup data-idx="${idx}"><\\/sup>)(\s*?)(<(?:sup|sub))`, 'i');
           if (supBeforeRegExp.test(parentW.innerHTML)) {
@@ -4259,7 +4315,7 @@ Join subblocks?`,
                 }
                 this.postApplySuggestionsFromBlock(requestParams)
                   .then(()=>{
-                    
+
                     return resolvePromise({
                       isApply: true,
                       action: this.suggestion.action,
@@ -4284,6 +4340,46 @@ Join subblocks?`,
               });
             });
         });
+      },
+
+      viewAdapted(ev) {
+        if (this.block.adapted) {
+          this.resetViewAdapted();
+        }
+      },
+
+      viewAdaptedOriginal(ev) {
+        if (this.block.adapted) {
+          const { content, footnotes, parts } = this.block.data_original;
+          this.block.contentAdapted = this.block.content;
+          this.block.partsAdapted = this.block.parts || [];
+          this.block.audiosrcAdapted = this.block.audiosrc;
+          this.block.audiosrc_verAdapted = this.block.audiosrc_ver;
+          this.block.footnotesAdapted = this.block.footnotes || [];
+          this.block.audiosrc = '';
+          this.block.audiosrc_ver = {};
+          this.block.content = content || '';
+          this.block.footnotes = footnotes || [];
+          this.block.parts = parts || [];
+          this.editingLocked = true;
+          this.$parent.$forceUpdate();
+        }
+      },
+      resetViewAdapted() {
+        if (this.block.hasOwnProperty('contentAdapted')) {
+          this.block.content = this.block.contentAdapted;
+          this.block.footnotes = this.block.footnotesAdapted || [];
+          this.block.parts = this.block.partsAdapted || [];
+          this.block.audiosrc = this.block.audiosrcAdapted;
+          this.block.audiosrc_ver = this.block.audiosrc_verAdapted;
+          delete this.block.contentAdapted;
+          delete this.block.partsAdapted;
+          delete this.block.audiosrcAdapted;
+          delete this.block.audiosrc_verAdapted;
+          delete this.block.footnotesAdapted;
+        }
+        this.editingLocked = false;
+        this.$parent.$forceUpdate();
       }
 
   },
@@ -4344,6 +4440,7 @@ Join subblocks?`,
               this.getCurrentJobInfo();
             }
           }
+          this.viewAdapted();
         }
       },
       'classSel' (newVal, oldVal) {
@@ -4368,7 +4465,7 @@ Join subblocks?`,
           if (newVal.indexOf('?') === -1) {
             this.blockAudio.src+= '?' + (new Date()).toJSON();
           }
-          if (this.tc_showBlockNarrate(this.block._id) || this.isEditor) {
+          if (this.tc_showBlockNarrate(this.block._id, null, this.meta) || this.isEditor) {
             /*let isChanged = newVal && this.block.audiosrc != newVal.split('?').shift() && !(this.block.audiosrc && this.block.audiosrc.indexOf('_tmp.') !== -1 && newVal.indexOf('_tmp.') === -1);
             if (!this.isAudioEditing) {
               this.isAudioChanged = isChanged;
@@ -4472,6 +4569,7 @@ Join subblocks?`,
           if (this.isAudStarted || this.isAudPaused) {
             this.audStop();
           }
+          this.viewAdapted();
         }
       },
       'isAudStarted': {
@@ -4543,6 +4641,23 @@ Join subblocks?`,
           });
         },
         deep: true
+      },
+      'block.adapted': {
+        handler(val) {
+          if (!val && this.editingLocked) {
+            if (this.block.contentAdapted) {
+              this.resetViewAdapted();
+            } else {
+              this.editingLocked = false;
+              this.reInitEditor();
+            }
+          }
+        }
+      },
+      'meta.isInTheQueueOfPublication': {
+        handler(val) {
+          this.viewAdapted();
+        }
       }/*,
       'audioTasksQueue.running': {
         handler(val) {
@@ -4643,6 +4758,20 @@ Join subblocks?`,
         &.-play-from {
           background-color: transparent;
           margin: 0px 4px 4px 0px;
+        }
+        &.-adapted-view {
+          background: url(/static/adapted/adapted-view.svg);
+          background-size: 14px;
+          background-color: transparent;
+          background-repeat: no-repeat;
+          margin: -3px 5px 0px 0px;
+        }
+        &.-adapted-edit {
+          background: url(/static/adapted/adapted-edit.svg);
+          background-size: 14px;
+          background-color: transparent;
+          background-repeat: no-repeat;
+          margin: -3px 5px 0px 0px;
         }
      }
     }

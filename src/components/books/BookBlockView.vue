@@ -1,6 +1,6 @@
 <template>
   <div ref="viewBlock" :id="block.blockid"
-    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}]">
+    :class="['table-body -block', '-mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework, {'-disabled-block': block.disabled}, { '-original-content': block.contentAdapted }, {'-adapted': isBlockAdapted}, {'-translated': isBlockTranslated}, { '-not-adapted': meta.parent_book && !block.adapted }]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]">
       <LockedBlockActions
         :block="block"
@@ -16,27 +16,30 @@
                 <i class="glyphicon glyphicon-volume-off"></i>
             </div>
         </div> -->
+
         <div class="table-row check-row">
+          <div class="table-cell">
+            <div class="set-range">
+              <i class="fa fa-square-o -hidden" aria-hidden="true"
+              v-if="isChecked === false"
+              v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
+              <i class="fa fa-check-square-o" aria-hidden="true"
+              v-if="isChecked === true"
+              v-on:click="setRangeSelection('byOne', false)"></i>
 
-          <div class="set-range">
-            <i class="fa fa-square-o -hidden" aria-hidden="true"
-            v-if="isChecked === false"
-            v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
-            <i class="fa fa-check-square-o" aria-hidden="true"
-            v-if="isChecked === true"
-            v-on:click="setRangeSelection('byOne', false)"></i>
-
-            <template v-if="selectionStart && selectionStart !== selectionEnd">
-            <i v-if="selectionEnd && block._id == selectionStart"
-            class="fa fa-arrow-circle-down" aria-hidden="true"
-            v-on:click="scrollToBlock(selectionEnd)"></i>
-            <i v-if="selectionStart && block._id == selectionEnd"
-            class="fa fa-arrow-circle-up" aria-hidden="true"
-            v-on:click="scrollToBlock(selectionStart)"></i>
-            </template>
-          </div>
+              <template v-if="selectionStart && selectionStart !== selectionEnd">
+              <i v-if="selectionEnd && block._id == selectionStart"
+              class="fa fa-arrow-circle-down" aria-hidden="true"
+              v-on:click="scrollToBlock(selectionEnd)"></i>
+              <i v-if="selectionStart && block._id == selectionEnd"
+              class="fa fa-arrow-circle-up" aria-hidden="true"
+              v-on:click="scrollToBlock(selectionStart)"></i>
+              </template>
+            </div>
+          </div><!--<div class="table-cell">-->
         </div>
     </div>
+    <div :class="['table-cell', 'marks-block-left']"></div>
     <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
@@ -284,6 +287,7 @@
               :checkFullyVisible="checkFullyVisible"
               :editingLockedReason="editingLockedReason"
               :showStopConfirmations="showStopConfirmations"
+              :hasAudioEditingPart="hasAudioEditingPart"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
@@ -889,6 +893,9 @@ Save or discard your changes to continue editing`,
           if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
             return true;
           }
+          if (this.meta.parent_book && !this.block.adapted) {
+            return true;
+          }
           let disable_footnotes = false;
           /*if (this.block.footnotes) {
             this.block.footnotes.forEach(f => {
@@ -911,6 +918,9 @@ Save or discard your changes to continue editing`,
       },
       isApproveDisabled: { cache: false,
         get() {
+          if (this.meta.parent_book && !this.block.adapted) {
+            return true;
+          }
           let partsDisabled = false;
           if (this.$refs.blocks) {
             this.$refs.blocks.forEach(ref => {
@@ -1105,6 +1115,15 @@ Save or discard your changes to continue editing`,
           return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
         }
       },
+      allowHTMLEditing: {
+        get() {
+          if (this.block && this.block.contentAdapted && this.meta.parent_book) {
+            return false;
+          }
+          return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
+        },
+        cache: false
+      },
       proofreadModeReadOnly: {
           get() {
               return this.mode === 'proofread';
@@ -1270,6 +1289,44 @@ Save or discard your changes to continue editing`,
                 return block.blockid === this.block.blockid;
               }) ? true : false;
             }
+          }
+          return false;
+        },
+        cache: false
+      },
+      isBlockAdapted: {
+        get() {
+          if (this.mode !== 'narrate' && this.meta.parent_book && this.block.adapted) {
+            switch(this.meta.copy_type) {
+                case 'adapted' : {
+                  return true;
+                } break;
+                case 'translated' : {
+                  return false;
+                } break;
+                default : {
+                  return true;
+                } break;
+            };
+          }
+          return false;
+        },
+        cache: false
+      },
+      isBlockTranslated: {
+        get() {
+          if (this.mode !== 'narrate' && this.meta.parent_book && this.block.adapted) {
+            switch(this.meta.copy_type) {
+                case 'adapted' : {
+                  return false;
+                } break;
+                case 'translated' : {
+                  return true;
+                } break;
+                default : {
+                  return false;
+                } break;
+            };
           }
           return false;
         },
@@ -4596,7 +4653,8 @@ Save text changes and realign the Block?`,
           block: this.block,
           audioUrl: this.audioUrl,
           compressedAudioUrl: this.compressedAudioUrl,
-          disabled: !this.adminOrLibrarian || this.isSplittedBlock,
+          disabled: !this.adminOrLibrarian || !this.allowHTMLEditing, // || this.isSplittedBlock
+          isSplittedBlock: this.isSplittedBlock,
           adminOrLibrarian: this.adminOrLibrarian,
           blockHtmlProps: blockHtmlProps,
           blockParts: this.blockParts,
@@ -4659,6 +4717,9 @@ Save text changes and realign the Block?`,
               //this.tc_loadBookTask();
               this.getCurrentJobInfo();
             }
+          }
+          if (this.$refs.blocks && this.$refs.blocks[0]) {
+            this.$refs.blocks[0].viewAdapted();
           }
         }
       },
@@ -5154,16 +5215,11 @@ Save text changes and realign the Block?`,
     display: table-cell;
 
     &.controls-left {
-        width: 36px;
-        /*padding-left: 8px;*/
+        width: 26px;
         padding-top: 0px;
 
         &.-check-green {
-          /*border-left: 6px solid darkgreen;*/
-          /*background-color: lightgreen;*/
           background: linear-gradient(to right, lightgreen , white);
-          /*padding-left: 9px;
-          width: 48px;*/
         }
 
         .table-row.parnum-row {
@@ -5171,12 +5227,10 @@ Save text changes and realign the Block?`,
         }
 
         .table-row.check-row {
-          height: 25px;
-          width: 17px;
 
          .set-range {
             /*cursor: pointer;*/
-            margin: 5px 0 0 1px;
+            margin: auto;
             .fa {
               font-size: 20px;
             }
@@ -5184,7 +5238,7 @@ Save text changes and realign the Block?`,
 
           .fa {
             display: block;
-            margin: 5px 0 0 2px;
+            margin: 0 0 0 5px;
             cursor: pointer;
           }
         }
@@ -5249,8 +5303,17 @@ Save text changes and realign the Block?`,
         }
     }
 
+    &.marks-block-left {
+      width: 8px;
+      border-left: 3px solid transparent;
+
+      &.-blue {
+        border-left-color: #0084FF;
+      }
+    }
+
     &.controls-right {
-        width: 24px;
+      width: 24px;
     }
 
     &.completed {
@@ -6162,5 +6225,18 @@ div.content-wrap-footn.__unsave {
 div.content-wrap-footn.__unsave:focus {
   outline: none;
 } */
+
+.table-body.-block {
+  &.-adapted {
+    .marks-block-left {
+      border-left-color: #BD00FC;
+    }
+  }
+  &.-translated {
+    .marks-block-left {
+      border-left-color: #0084FF;
+    }
+  }
+}
 
 </style>

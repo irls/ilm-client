@@ -15,7 +15,8 @@ export default {
     counters: {
       matchBlocksCounter: 0,
       matchFirstWordBlocksCounter: 0
-    }
+    },
+    canApplyXHR: null
   },
   getters: {
     suggestions: state => (category = null) => {
@@ -58,9 +59,11 @@ export default {
     }
   },
   mutations: {
-    setSuggestions(state, suggestions) {
+    setSuggestions(state, suggestions = []) {
       state.suggestions.length = 0;
-      state.suggestions.push.apply(state.suggestions, suggestions);
+      if (Array.isArray(suggestions)) {
+        state.suggestions.push.apply(state.suggestions, suggestions);
+      }
     },
     createdSuggestion(state, suggestion) {
       state.suggestions.unshift(suggestion);
@@ -75,8 +78,8 @@ export default {
         if (state.isDoNotDisturb.hasOwnProperty(action)) {
           if (!this.getters["suggestionsModule/getIsDoNotDisturb"](action, word)) {
             state.isDoNotDisturb[action].push({
-              word: checkWord, 
-              matchBlocksCounter: state.counters.matchBlocksCounter > 0, 
+              word: checkWord,
+              matchBlocksCounter: state.counters.matchBlocksCounter > 0,
               matchFirstWordBlocksCounter: state.counters.matchFirstWordBlocksCounter > 0,
               updateAction: updateAction
             });
@@ -146,6 +149,9 @@ export default {
       start_id = null,
       end_id = null
     }) {
+      if (state.canApplyXHR) {
+        return state.canApplyXHR;
+      }
       let request = {};
       request.bookid = rootState.currentBookMeta.bookid;
       if (category) {
@@ -163,9 +169,11 @@ export default {
       if (modifiedIds.length > 0) {
         request.exclude_ids = modifiedIds;
       }
-
-      return axios.get(`${rootState.API_URL}suggestions/apply`, { params: request })
+      state.canApplyXHR = axios.get(`${rootState.API_URL}suggestions/apply`, { params: request });
+      
+      return state.canApplyXHR
         .then(response => {
+          state.canApplyXHR = null;
           let suggestionsIndex = state.applySuggestions.findIndex(suggestion => {
             return suggestion.category === category;
           });
@@ -178,6 +186,7 @@ export default {
         })
         .catch(err => {
           console.log(err.message);
+          state.canApplyXHR = null;
           return Promise.reject(err);
         });
     },
