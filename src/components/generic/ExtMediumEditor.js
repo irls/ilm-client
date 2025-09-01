@@ -614,6 +614,8 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || this.onAddListItemCallback;
     this.showApplyModalCallback = this.getEditorOption('showApplyModalCallback') || this.onAddListItemCallback;
+
+    this.textSelection = {};
   },
 
   getForm: function () {
@@ -673,6 +675,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
     this.prevValue = this.value;
+    this.textSelection = this.getTextSelection();
   },
 
   doSuggestSave: function (value = false, updateAction = 'current') {
@@ -813,6 +816,7 @@ const SuggestButton = MediumEditor.Extension.extend({
         })
 
         if (foundSuggestion) {
+          this.textSelection = this.getTextSelection();
 
           sel.empty();
           this.base.checkSelection();
@@ -822,7 +826,8 @@ const SuggestButton = MediumEditor.Extension.extend({
             suggestion: foundSuggestion.suggestion,
             text: foundSuggestion.text,
             action: 'add',
-            hideIfSingle: true
+            hideIfSingle: true,
+            textSelection: this.textSelection
           })
             .then(res => {
               if (res.isApply && res.applyLocally) {
@@ -881,7 +886,8 @@ const SuggestButton = MediumEditor.Extension.extend({
         suggestion: suggestion,
         text: this.selectedTextContent,
         action: this.hasProp ? 'edit': 'add',
-        hideIfSingle: true
+        hideIfSingle: true,
+        textSelection: this.textSelection
       });
     }
 
@@ -1019,6 +1025,40 @@ const SuggestButton = MediumEditor.Extension.extend({
       }
       delete this.suggestForm;
     }
+  },
+
+  getTextSelection() {
+    let textSelection = {};
+    if (window.getSelection) {
+      let selection = window.getSelection();
+      if (selection.rangeCount) {
+        //console.log(selection.getRangeAt(0), this.base.exportSelection());
+        let selectedNodes = [];
+        let startWord = null;
+        if (selection.baseNode.nodeType === 3) {
+          startWord = selection.baseNode.parentNode;
+        }
+        if (startWord) {
+          selectedNodes.push(startWord);
+          if (!Array.from(startWord.childNodes).includes(selection.focusNode)) {
+            let nextSibling = null;
+            do {
+              nextSibling = (nextSibling || startWord).nextElementSibling;
+              selectedNodes.push(nextSibling);
+              if (Array.from(nextSibling.childNodes).includes(selection.focusNode)) {
+                break;
+              }
+            } while (nextSibling);
+          }
+          textSelection.start_id = selectedNodes[0].id;
+          textSelection.end_id = selectedNodes[selectedNodes.length - 1].id;
+          textSelection.start_offset = selection.baseOffset - 1;
+          textSelection.end_offset = selection.focusOffset - 1;
+        }
+      }
+    }
+
+    return textSelection;
   }
 
 
