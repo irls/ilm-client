@@ -1052,8 +1052,10 @@ const SuggestButton = MediumEditor.Extension.extend({
           }
           textSelection.start_id = selectedNodes[0].id;
           textSelection.end_id = selectedNodes[selectedNodes.length - 1].id;
-          textSelection.start_offset = selection.baseOffset - 1;
-          textSelection.end_offset = selection.focusOffset - 1;
+          let startOffset = selection.baseOffset - 1;
+          let endOffset = selection.focusOffset - 1;
+          textSelection.start_offset = Math.min(startOffset, endOffset);
+          textSelection.end_offset = Math.max(startOffset, endOffset);
         }
       }
     }
