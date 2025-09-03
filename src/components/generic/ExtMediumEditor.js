@@ -1042,20 +1042,26 @@ const SuggestButton = MediumEditor.Extension.extend({
           selectedNodes.push(startWord);
           if (!Array.from(startWord.childNodes).includes(selection.focusNode)) {
             let nextSibling = null;
+            let searchNodeType = selection.direction === "forward" ? "nextElementSibling" : "previousElementSibling";
             do {
-              nextSibling = (nextSibling || startWord).nextElementSibling;
+              nextSibling = (nextSibling || startWord)[searchNodeType];
               selectedNodes.push(nextSibling);
               if (Array.from(nextSibling.childNodes).includes(selection.focusNode)) {
                 break;
               }
             } while (nextSibling);
           }
-          textSelection.start_id = selectedNodes[0].id;
-          textSelection.end_id = selectedNodes[selectedNodes.length - 1].id;
+          if (selection.direction === "forward") {
+            textSelection.start_id = selectedNodes[0].id;
+            textSelection.end_id = selectedNodes[selectedNodes.length - 1].id;
+          } else {
+            textSelection.start_id = selectedNodes[selectedNodes.length - 1].id;
+            textSelection.end_id = selectedNodes[0].id;
+          }
           let startOffset = selection.baseOffset - 1;
           let endOffset = selection.focusOffset - 1;
-          textSelection.start_offset = Math.min(startOffset, endOffset);
-          textSelection.end_offset = Math.max(startOffset, endOffset);
+          textSelection.start_offset = selection.direction === "forward" ? startOffset : endOffset;
+          textSelection.end_offset = selection.direction === "forward" ? endOffset : startOffset;
         }
       }
     }
