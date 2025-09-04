@@ -1044,7 +1044,14 @@ const SuggestButton = MediumEditor.Extension.extend({
             let nextSibling = null;
             let searchNodeType = selection.direction === "forward" ? "nextElementSibling" : "previousElementSibling";
             do {
-              nextSibling = (nextSibling || startWord)[searchNodeType];
+              let baseElement = (nextSibling || startWord);
+              while (!baseElement[searchNodeType]) {
+                baseElement = baseElement.parentNode;
+              }
+              nextSibling = baseElement[searchNodeType];
+              while (nextSibling.nodeName !== "W") {
+                nextSibling = nextSibling.childNodes[0];
+              }
               selectedNodes.push(nextSibling);
               if (Array.from(nextSibling.childNodes).includes(selection.focusNode)) {
                 break;
