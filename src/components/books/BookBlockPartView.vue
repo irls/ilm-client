@@ -4297,7 +4297,8 @@ Join subblocks?`,
           }
           let sourceBlock = {
             blockid: this.block.blockid,
-            hasAudio: this.blockPart.audiosrc ? true : false
+            hasAudio: this.blockPart.audiosrc ? true : false,
+            partIdx: this.blockPartIdx
           };
           return this.getSuggestionCounters([
             suggestion, sourceBlock
