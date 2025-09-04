@@ -1033,6 +1033,15 @@ const SuggestButton = MediumEditor.Extension.extend({
       let selection = window.getSelection();
       if (selection.rangeCount) {
         //console.log(selection.getRangeAt(0), this.base.exportSelection());
+        let position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+        let direction = selection.direction;
+        if (!direction) {
+          if (!position && selection.anchorOffset > selection.focusOffset || position === Node.DOCUMENT_POSITION_PRECEDING) {
+            direction = "backward";
+          } else {
+            direction = "forward";
+          }
+        }
         let selectedNodes = [];
         let startWord = null;
         if (selection.baseNode.nodeType === 3) {
@@ -1042,7 +1051,7 @@ const SuggestButton = MediumEditor.Extension.extend({
           selectedNodes.push(startWord);
           if (!Array.from(startWord.childNodes).includes(selection.focusNode)) {
             let nextSibling = null;
-            let searchNodeType = selection.direction === "forward" ? "nextElementSibling" : "previousElementSibling";
+            let searchNodeType = direction === "forward" ? "nextElementSibling" : "previousElementSibling";
             do {
               let baseElement = (nextSibling || startWord);
               while (!baseElement[searchNodeType]) {
@@ -1058,7 +1067,7 @@ const SuggestButton = MediumEditor.Extension.extend({
               }
             } while (nextSibling);
           }
-          if (selection.direction === "forward") {
+          if (direction === "forward") {
             textSelection.start_id = selectedNodes[0].id;
             textSelection.end_id = selectedNodes[selectedNodes.length - 1].id;
           } else {
@@ -1067,8 +1076,8 @@ const SuggestButton = MediumEditor.Extension.extend({
           }
           let startOffset = selection.baseOffset - 1;
           let endOffset = selection.focusOffset - 1;
-          textSelection.start_offset = selection.direction === "forward" ? startOffset : endOffset;
-          textSelection.end_offset = selection.direction === "forward" ? endOffset : startOffset;
+          textSelection.start_offset = direction === "forward" ? startOffset : endOffset;
+          textSelection.end_offset = direction === "forward" ? endOffset : startOffset;
         }
       }
     }
