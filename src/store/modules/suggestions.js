@@ -372,6 +372,7 @@ export default {
       .then((fullBlockCounters)=>{
         state.counters.matchBlocksCounter = fullBlockCounters.blocks;
         state.counters.matchFirstWordBlocksCounter = fullBlockCounters.firstWordBlocks;
+        state.counters.currentBlockMatches = fullBlockCounters.currentBlockMatches;
         //if (this.isDoNotDisturb) {
           //this.updateAction = this.getLastAction;
         //}
