@@ -923,7 +923,8 @@ const SuggestButton = MediumEditor.Extension.extend({
       suggestion: this.value || this.suggestFormInput.value.trim(),
       text: this.selectedTextContent,
       action: 'delete',
-      hideIfSingle: true
+      hideIfSingle: true,
+      textSelection: this.textSelection
     });
 
     if (res.isApply) {
@@ -1078,6 +1079,19 @@ const SuggestButton = MediumEditor.Extension.extend({
           let endOffset = selection.focusOffset - 1;
           textSelection.start_offset = direction === "forward" ? startOffset : endOffset;
           textSelection.end_offset = direction === "forward" ? endOffset : startOffset;
+        } else if (selection.baseNode.nodeName === "SG") {
+          let selectedW = null;
+          let selectedEl = selection.baseNode;
+          while (selectedEl.childNodes.length > 0 && !selectedW) {
+            selectedEl = selectedEl.childNodes[0];
+            if (selectedEl.nodeName === "W") {
+              selectedW = selectedEl;
+            }
+          }
+          if (selectedW) {
+            textSelection.start_id = selectedW.id;
+            textSelection.end_id = selectedW.id;
+          }
         }
       }
     }
