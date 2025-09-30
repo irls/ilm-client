@@ -808,8 +808,9 @@ const SuggestButton = MediumEditor.Extension.extend({
 
         const textContent = cleanFilter(div.textContent.trim().toLowerCase());
 
-        const foundSuggestion = suggestionsList.find((sugg)=>{
-          return cleanFilter(sugg.text.trim().toLowerCase()) === textContent;
+        const bookCategory = this.getEditorOption("getBookCategory")();
+        const foundSuggestion = suggestionsList.find((sugg) => {
+          return cleanFilter(sugg.text.trim().toLowerCase()) === textContent && (sugg.category === bookCategory || !sugg.category);
         })
 
         if (foundSuggestion) {
@@ -881,7 +882,8 @@ const SuggestButton = MediumEditor.Extension.extend({
         suggestion: suggestion,
         text: this.selectedTextContent,
         action: this.hasProp ? 'edit': 'add',
-        hideIfSingle: true
+        hideIfSingle: true,
+        prevValue: this.prevValue
       });
     }
 

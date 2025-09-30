@@ -252,6 +252,9 @@ export default {
         text: this.suggestion.text,
         suggestion: this.suggestion.suggestion
       }
+      if (this.suggestion.hasOwnProperty('prevValue')) {
+        requestParams.prevValue = this.suggestion.prevValue;
+      }
       if (this.isDoNotDisturb) {
         this.setDoNotDisturb([this.suggestion.action, this.suggestion.text, this.updateAction]);
       }
