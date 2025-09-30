@@ -256,6 +256,9 @@ export default {
         source_block: this.sourceBlock,
         text_selection: this.suggestion.textSelection || {}
       }
+      if (this.suggestion.hasOwnProperty('prevValue')) {
+        requestParams.prevValue = this.suggestion.prevValue;
+      }
       if (this.isDoNotDisturb) {
         this.setDoNotDisturb([this.suggestion.action, this.suggestion.text, this.updateAction]);
       }
