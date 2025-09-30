@@ -199,7 +199,8 @@ export default {
       suggestion = '',
       isAddNew = false,
       sourceBlock = {},
-      textSelection = {}
+      textSelection = {},
+      prevValue = null
     }) {
       const queryPath = isAddNew ? 'count' : 'count-already-applied';
       let request = {};
@@ -233,6 +234,10 @@ export default {
       }
       if (textSelection) {
         request.text_selection = textSelection;
+      }
+
+      if (prevValue !== null) {
+        request.prev_value = prevValue;
       }
 
       return axios.get(`${rootState.API_URL}suggestions/${queryPath}`, { params: request })
@@ -293,7 +298,8 @@ export default {
       suggestion = '',
       first_word = false,
       source_block = {},
-      text_selection = {}
+      text_selection = {},
+      prevValue = null
     }) {
       let request = { first_word, bookid: rootState.currentBookMeta.bookid, source_block: source_block, text_selection: text_selection };
       if (start_id && end_id) {
@@ -314,6 +320,9 @@ export default {
       if (text && text.length) {
         request.text = text;
         request.suggestion = suggestion;
+      }
+      if (prevValue !== null) {
+        request.prev_value = prevValue;
       }
 
       let axiosRequest = Promise.resolve({});
@@ -367,7 +376,8 @@ export default {
         suggestion: suggestion.suggestion,
         isAddNew,
         sourceBlock: sourceBlock,
-        textSelection: suggestion.textSelection || {}
+        textSelection: suggestion.textSelection || {},
+        prevValue: suggestion.prevValue
       })
       .then((fullBlockCounters)=>{
         state.counters.matchBlocksCounter = fullBlockCounters.blocks;
