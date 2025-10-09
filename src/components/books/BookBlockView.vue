@@ -4542,16 +4542,17 @@ Save text changes and realign the Block?`,
       highlightSuspiciousWords() {
         if (this.mode === "edit" || (this.mode === "narrate" && this.block.voicework === "narration")) {
           if (this.$refs.blocks) {
-          this.$refs.blocks.forEach((blk, blkIdx) => {
-            if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
-              if (this.mode === "edit") {
-                this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent, this.blockParts[blkIdx].audio_silences);
-              } else {
-                this.suspiciousWordsHighlight.addElementSuspiciousSilenceHighlight(blk.$refs.blockContent, this.blockParts[blkIdx].audio_silences);
+            this.$refs.blocks.forEach((blk, blkIdx) => {
+              if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
+                let blkPart = this.blockParts[blk._props.blockPartIdx];
+                if (this.mode === "edit") {
+                  this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent, blkPart.audio_silences || []);
+                } else {
+                  this.suspiciousWordsHighlight.addElementSuspiciousSilenceHighlight(blk.$refs.blockContent, blkPart.audio_silences || []);
+                }
               }
-            }
-          });
-        }
+            });
+          }
         }
         if (this.mode !== 'edit') {
           return;
