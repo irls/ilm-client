@@ -103,6 +103,47 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+
+    filterBooks({rootState, dispatch}, {filter = '', secFilter = '', language = [], importStatus = [], jobStatus = [], page = 0, collection_id = null, onPage = 100, sort = {field: 'title', dir: 'asc'}}) {
+      let booksFilter = [];
+      if (filter) {
+        booksFilter.push(`filter[][title]=${filter}`);
+      }
+      if (secFilter) {
+        booksFilter.push(`filter[][hashTags]=${secFilter}`);
+      }
+      if (Array.isArray(language) && language.length > 0) {
+        booksFilter.push(`filter[][language]=${language}`);
+      }
+      if (Array.isArray(importStatus) && importStatus.length > 0) {
+        booksFilter.push(`filter[][importStatus]=${importStatus}`);
+      }
+      if (Array.isArray(jobStatus) && jobStatus.length > 0) {
+        booksFilter.push(`filter[][jobStatus]=${jobStatus}`);
+      }
+      if (collection_id) {
+        booksFilter.push(`filter[][collection_id]=${collection_id}`);
+      }
+      booksFilter.push(`sort=${JSON.stringify(sort)}`);
+      booksFilter.push(`page=${page}`);
+      booksFilter.push(`onpage=${onPage}`);
+      return axios.get(`${rootState.API_URL}books?${booksFilter.join('&')}`)
+        .then(response => {
+          return response.data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+
+    loadCurrentCollectionBooks({rootState, dispatch}, params) {
+      if (rootState.currentCollection && rootState.currentCollection._id) {
+        dispatch('filterBooks', Object.assign(params, { collection_id: rootState.currentCollection._id }))
+          .then(response => {
+            rootState.currentCollection.books_list = response.books;
+          });
+      }
     }
   }
 }
