@@ -2116,7 +2116,7 @@ Save or discard your changes to continue editing`,
                     }
                     if (!delCount) {
                       this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                        this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
+                        this.block.footnotes[footnoteIdx].content = this.clearBlockContent($(`[data-footnoteIdx="${this.block._id}_${footnoteIdx}"]`).html());
                       });
                     }
                   }
@@ -2439,7 +2439,7 @@ Save or discard your changes to continue editing`,
             }
             if (!delCount) {
               this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-                this.block.footnotes[footnoteIdx].content = this.clearBlockContent($('[data-footnoteIdx="'+this.block._id +'_'+ footnoteIdx+'"').html());
+                this.block.footnotes[footnoteIdx].content = this.clearBlockContent($(`[data-footnoteIdx="${this.block._id}_${footnoteIdx}"`).html());
               });
             } else {
               updatedFootnotes = this.block.footnotes;
