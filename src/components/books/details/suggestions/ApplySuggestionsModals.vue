@@ -88,7 +88,7 @@ export default {
     if (this.isDoNotDisturb) {
       this.updateAction = this.getLastAction(this.suggestion.action, this.suggestion.text);
     }
-    if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && ["add", "delete", "edit"].includes(this.suggestion.action)) {
+    if (this.suggestion.hideIfSingle && this.counters.matchBlocksCounter <= 1 && this.counters.currentBlockMatches <= 1 && ["add", "delete", "edit"].includes(this.suggestion.action)) {
       const closeCallback = ()=>{
         this.userChoiceSelected({
           isApply: true,
@@ -106,7 +106,9 @@ export default {
         text: this.suggestion.text,
         suggestion: this.suggestion.suggestion,
         method: this.suggestion.action === "add" ? 'POST' : (this.suggestion.action === "delete" ? 'DELETE' : 'PUT'),
-        first_word: false
+        first_word: false,
+        source_block: this.sourceBlock,
+        text_selection: this.suggestion.textSelection || {}
       }
       this.postApplySuggestionsFromBlock(requestParams)
       Vue.nextTick(() => {
@@ -250,7 +252,12 @@ export default {
         end_id,
         exclude_ids,
         text: this.suggestion.text,
-        suggestion: this.suggestion.suggestion
+        suggestion: this.suggestion.suggestion,
+        source_block: this.sourceBlock,
+        text_selection: this.suggestion.textSelection || {}
+      }
+      if (this.suggestion.hasOwnProperty('prevValue')) {
+        requestParams.prevValue = this.suggestion.prevValue;
       }
       if (this.isDoNotDisturb) {
         this.setDoNotDisturb([this.suggestion.action, this.suggestion.text, this.updateAction]);

@@ -614,6 +614,8 @@ const SuggestButton = MediumEditor.Extension.extend({
 
     this.onAddListItemCallback = this.getEditorOption('onAddListItemCallback') || this.onAddListItemCallback;
     this.showApplyModalCallback = this.getEditorOption('showApplyModalCallback') || this.onAddListItemCallback;
+
+    this.textSelection = {};
   },
 
   getForm: function () {
@@ -673,6 +675,7 @@ const SuggestButton = MediumEditor.Extension.extend({
     if (opts.value) this.suggestFormInput.value = opts.value;
     else this.suggestFormInput.value = this.value;
     this.prevValue = this.value;
+    this.textSelection = this.getTextSelection();
   },
 
   doSuggestSave: function (value = false, updateAction = 'current') {
@@ -808,11 +811,13 @@ const SuggestButton = MediumEditor.Extension.extend({
 
         const textContent = cleanFilter(div.textContent.trim().toLowerCase());
 
-        const foundSuggestion = suggestionsList.find((sugg)=>{
-          return cleanFilter(sugg.text.trim().toLowerCase()) === textContent;
+        const bookCategory = this.getEditorOption("getBookCategory")();
+        const foundSuggestion = suggestionsList.find((sugg) => {
+          return cleanFilter(sugg.text.trim().toLowerCase()) === textContent && (sugg.category === bookCategory || !sugg.category);
         })
 
         if (foundSuggestion) {
+          this.textSelection = this.getTextSelection();
 
           sel.empty();
           this.base.checkSelection();
@@ -822,7 +827,8 @@ const SuggestButton = MediumEditor.Extension.extend({
             suggestion: foundSuggestion.suggestion,
             text: foundSuggestion.text,
             action: 'add',
-            hideIfSingle: true
+            hideIfSingle: true,
+            textSelection: this.textSelection
           })
             .then(res => {
               if (res.isApply && res.applyLocally) {
@@ -881,7 +887,9 @@ const SuggestButton = MediumEditor.Extension.extend({
         suggestion: suggestion,
         text: this.selectedTextContent,
         action: this.hasProp ? 'edit': 'add',
-        hideIfSingle: true
+        hideIfSingle: true,
+        textSelection: this.textSelection,
+        prevValue: this.prevValue
       });
     }
 
@@ -917,7 +925,8 @@ const SuggestButton = MediumEditor.Extension.extend({
       suggestion: this.value || this.suggestFormInput.value.trim(),
       text: this.selectedTextContent,
       action: 'delete',
-      hideIfSingle: true
+      hideIfSingle: true,
+      textSelection: this.textSelection
     });
 
     if (res.isApply) {
@@ -1019,6 +1028,77 @@ const SuggestButton = MediumEditor.Extension.extend({
       }
       delete this.suggestForm;
     }
+  },
+
+  getTextSelection() {
+    let textSelection = {};
+    if (window.getSelection) {
+      let selection = window.getSelection();
+      if (selection.rangeCount) {
+        //console.log(selection.getRangeAt(0), this.base.exportSelection());
+        let position = selection.anchorNode.compareDocumentPosition(selection.focusNode);
+        let direction = selection.direction;
+        if (!direction) {
+          if (!position && selection.anchorOffset > selection.focusOffset || position === Node.DOCUMENT_POSITION_PRECEDING) {
+            direction = "backward";
+          } else {
+            direction = "forward";
+          }
+        }
+        let selectedNodes = [];
+        let startWord = null;
+        if (selection.baseNode.nodeType === 3) {
+          startWord = selection.baseNode.parentNode;
+        }
+        if (startWord) {
+          selectedNodes.push(startWord);
+          if (!Array.from(startWord.childNodes).includes(selection.focusNode)) {
+            let nextSibling = null;
+            let searchNodeType = direction === "forward" ? "nextElementSibling" : "previousElementSibling";
+            do {
+              let baseElement = (nextSibling || startWord);
+              while (!baseElement[searchNodeType]) {
+                baseElement = baseElement.parentNode;
+              }
+              nextSibling = baseElement[searchNodeType];
+              while (nextSibling.nodeName !== "W") {
+                nextSibling = nextSibling.childNodes[0];
+              }
+              selectedNodes.push(nextSibling);
+              if (Array.from(nextSibling.childNodes).includes(selection.focusNode)) {
+                break;
+              }
+            } while (nextSibling);
+          }
+          if (direction === "forward") {
+            textSelection.start_id = selectedNodes[0].id;
+            textSelection.end_id = selectedNodes[selectedNodes.length - 1].id;
+          } else {
+            textSelection.start_id = selectedNodes[selectedNodes.length - 1].id;
+            textSelection.end_id = selectedNodes[0].id;
+          }
+          let startOffset = selection.baseOffset - 1;
+          let endOffset = selection.focusOffset - 1;
+          textSelection.start_offset = direction === "forward" ? startOffset : endOffset;
+          textSelection.end_offset = direction === "forward" ? endOffset : startOffset;
+        } else if (selection.baseNode.nodeName === "SG") {
+          let selectedW = null;
+          let selectedEl = selection.baseNode;
+          while (selectedEl.childNodes.length > 0 && !selectedW) {
+            selectedEl = selectedEl.childNodes[0];
+            if (selectedEl.nodeName === "W") {
+              selectedW = selectedEl;
+            }
+          }
+          if (selectedW) {
+            textSelection.start_id = selectedW.id;
+            textSelection.end_id = selectedW.id;
+          }
+        }
+      }
+    }
+
+    return textSelection;
   }
 
 

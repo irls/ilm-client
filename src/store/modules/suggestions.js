@@ -198,7 +198,9 @@ export default {
       text = '',
       suggestion = '',
       isAddNew = false,
-      sourceBlock = {}
+      sourceBlock = {},
+      textSelection = {},
+      prevValue = null
     }) {
       const queryPath = isAddNew ? 'count' : 'count-already-applied';
       let request = {};
@@ -228,6 +230,14 @@ export default {
 
       if (sourceBlock.blockid) {
         request.source_blockid = sourceBlock.blockid;
+        request.source_block = sourceBlock;
+      }
+      if (textSelection) {
+        request.text_selection = textSelection;
+      }
+
+      if (prevValue !== null) {
+        request.prev_value = prevValue;
       }
 
       return axios.get(`${rootState.API_URL}suggestions/${queryPath}`, { params: request })
@@ -286,9 +296,12 @@ export default {
       exclude_ids = [],
       text = '',
       suggestion = '',
-      first_word = false
+      first_word = false,
+      source_block = {},
+      text_selection = {},
+      prevValue = null
     }) {
-      let request = { first_word, bookid: rootState.currentBookMeta.bookid };
+      let request = { first_word, bookid: rootState.currentBookMeta.bookid, source_block: source_block, text_selection: text_selection };
       if (start_id && end_id) {
         request.start = start_id;
         request.end = end_id;
@@ -307,6 +320,9 @@ export default {
       if (text && text.length) {
         request.text = text;
         request.suggestion = suggestion;
+      }
+      if (prevValue !== null) {
+        request.prev_value = prevValue;
       }
 
       let axiosRequest = Promise.resolve({});
@@ -359,11 +375,14 @@ export default {
         text: suggestion.text,
         suggestion: suggestion.suggestion,
         isAddNew,
-        sourceBlock: sourceBlock
+        sourceBlock: sourceBlock,
+        textSelection: suggestion.textSelection || {},
+        prevValue: suggestion.prevValue
       })
       .then((fullBlockCounters)=>{
         state.counters.matchBlocksCounter = fullBlockCounters.blocks;
         state.counters.matchFirstWordBlocksCounter = fullBlockCounters.firstWordBlocks;
+        state.counters.currentBlockMatches = fullBlockCounters.currentBlockMatches || 0;
         //if (this.isDoNotDisturb) {
           //this.updateAction = this.getLastAction;
         //}

@@ -4375,7 +4375,9 @@ Save text changes and realign the Block?`,
       },
       partAudioComplete(partIdx) {
         if (this.block.voicework === 'narration' && this.block.parts && this.block.parts[partIdx + 1] && this.block.parts[partIdx + 1].audiosrc) {
-          let ref = this.$refs.blocks[partIdx + 1];
+          let ref = this.$refs.blocks.find(refPart => {
+            return refPart._props.blockPartIdx === partIdx + 1;
+          });
           if (ref) {
             //let lastW = ref.$el.querySelector('w:first-child');
             //let visible = lastW && this.checkFullyVisible(lastW);
@@ -4531,23 +4533,26 @@ Save text changes and realign the Block?`,
       },
       getSubblockRef(index = 0) {
         if (Array.isArray(this.$refs.blocks) && this.$refs.blocks.length > 0 && this.$refs.blocks[index]) {
-          return this.$refs.blocks[index];
+          return this.$refs.blocks.find(refBlock => {
+            return refBlock._props.blockPartIdx === index;
+          });
         }
         return null;
       },
       highlightSuspiciousWords() {
         if (this.mode === "edit" || (this.mode === "narrate" && this.block.voicework === "narration")) {
           if (this.$refs.blocks) {
-          this.$refs.blocks.forEach((blk, blkIdx) => {
-            if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
-              if (this.mode === "edit") {
-                this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent, this.blockParts[blkIdx].audio_silences);
-              } else {
-                this.suspiciousWordsHighlight.addElementSuspiciousSilenceHighlight(blk.$refs.blockContent, this.blockParts[blkIdx].audio_silences);
+            this.$refs.blocks.forEach((blk, blkIdx) => {
+              if (blk.$refs.blockContent && blk.$refs.blockContent.innerText) {
+                let blkPart = this.blockParts[blk._props.blockPartIdx];
+                if (this.mode === "edit") {
+                  this.suspiciousWordsHighlight.addElementHighlight(blk.$refs.blockContent, blkPart.audio_silences || []);
+                } else {
+                  this.suspiciousWordsHighlight.addElementSuspiciousSilenceHighlight(blk.$refs.blockContent, blkPart.audio_silences || []);
+                }
               }
-            }
-          });
-        }
+            });
+          }
         }
         if (this.mode !== 'edit') {
           return;
