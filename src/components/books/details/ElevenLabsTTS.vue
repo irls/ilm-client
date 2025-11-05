@@ -7,7 +7,24 @@
       <AlignAudioSpeed
         :audio_type="'tts'"
         :is_catalog_active="is_active"/>
-      <table class="table table-striped table-bordered table-voices">
+
+      <div v-if="all_voices.length > 0">
+        <h4 class="audio-voice-caption">Character voice:</h4>
+        <div class="audio-voice-selection">
+          <select-tts-voice
+            :pre_selected="defaultVoice('title')"
+            :voices="all_voices"
+            :block_type="'title'"
+            :generating_example="generating_example"
+            :playing_type="audio_playing_type"
+            @onSelect="onVoiceChange"
+            @play="playVoiceExample"
+            @stop="stopVoiceExample"
+          ></select-tts-voice>
+        </div>
+      </div>
+
+      <table v-if="false" class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
             <th>Block</th><th>Voice</th>
@@ -577,6 +594,19 @@
     }
   }
 </script>
+<style lang="less" scoped>
+      .audio-voice-selection {
+        background-color: rgb(238, 238, 238);
+        padding-top: 4px;
+        padding-bottom: 4px;
+
+        .voice-select-el {
+          margin-left: 20px;
+           display: flex;
+          align-items: center;
+        }
+      }
+</style>
 <style lang="less">
   .eleven-labs-tts {
     overflow-y: auto;
@@ -603,6 +633,10 @@
         font-size: 1.2rem;
       }
     }
+    .audio-voice-caption {
+      margin-left: 20px;
+    }
+
     table {
       width: 95%;
       max-width: 95%;
