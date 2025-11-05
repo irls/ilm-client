@@ -12,9 +12,9 @@
         <h4 class="audio-voice-caption">Character voice:</h4>
         <div class="audio-voice-selection">
           <select-tts-voice
-            :pre_selected="defaultVoice('title')"
+            :pre_selected="defaultVoice('paragraph')"
             :voices="all_voices"
-            :block_type="'title'"
+            :block_type="'paragraph'"
             :generating_example="generating_example"
             :playing_type="audio_playing_type"
             @onSelect="onVoiceChange"
