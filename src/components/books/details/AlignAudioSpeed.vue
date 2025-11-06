@@ -1,7 +1,20 @@
 <template>
   <div class="audio-speed-data" v-if="isComponentEnabled">
     <Accordion :activeIndex="accordionContainerExpanded">
-      <AccordionTab :header="audioSpeedSettingLabel">
+      <AccordionTab >
+        <template #header>
+          <span class="">
+            <span class="">{{audioSpeedSettingLabel}}</span>
+          </span>
+          <div v-if="selected_voice_params && !selected_voice_params.wpm"
+            class="calculate-voice-wpm-button">
+            <div v-if="!is_voice_wpm_calculating"
+              class="calculate-voice-wpm-button-caption"
+              @click="calculateVoiceWpm"
+              >Calculate wpm</div>
+            <div v-else class="dot-flashing"></div>
+          </div>
+        </template>
         <div class="audio-speed-type">
           <div class="audio-speed-option">
             <label>
@@ -57,7 +70,9 @@
         custom_wpm: 0,
         custom_wpm_min: 100,
         custom_wpm_max: 180,
-        accordionContainerExpanded: 1
+        accordionContainerExpanded: 1,
+        elevenLabsMinSpeed: 0.7,
+        elevenLabsMaxSpeed: 1.2
       }
     },
     components: {
@@ -65,16 +80,23 @@
       'Accordion': Accordion,
       'AccordionTab': AccordionTab
     },
-    props: ['audio_type', 'is_catalog_active'],
+    props: ['audio_type', 'is_catalog_active', 'selected_voice_params', 'is_voice_wpm_calculating'],
     mixins: [access],
     mounted() {
       this.loadUserWpmSettings();
-      this.setUserWpmSettings(false);
+      //this.setUserWpmSettings(false);
     },
     computed: {
       audioSpeedSettingLabel: {
         get() {
-          return `Audio speed: ${this.align_wpm_type}` + (this.align_wpm_type === 'custom' ? ` ${this.custom_wpm}` + ' wpm' : '');
+          if (this.align_wpm_type === 'custom') {
+            return `Audio speed: ${this.align_wpm_type} ${this.custom_wpm} wpm`;
+          }
+          if (this.selected_voice_params) {
+            const wpm = this.selected_voice_params.wpm ? `${this.selected_voice_params.wpm} wpm` : '';
+            return `Audio speed: ${this.align_wpm_type} ${wpm}`;
+          }
+          return `Audio speed: ${this.align_wpm_type}`;
         },
         cache: false
       },
@@ -143,6 +165,7 @@
         this.settingsChanged();
         this.setUserWpmSettings();
       }, 300),
+
       setUserWpmSettings(save = true) {
         this.user.alignWpmSettings = this.user.alignWpmSettings || {};
         this.user.alignWpmSettings[this.currentBookid] = this.user.alignWpmSettings[this.currentBookid] || {};
@@ -165,6 +188,11 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
         this.align_wpm_type = alignWpmSettings.type;
         this.custom_wpm = alignWpmSettings.wpm;
       },
+      calculateVoiceWpm($ev) {
+        $ev.stopPropagation();
+        $ev.preventDefault();
+        this.$emit('onCalculateVoiceWpm');
+      },
       ...mapActions('userActions', ['updateUser']),
       ...mapMutations('userActions', ['set_updatingAudioSpeed'])
     },
@@ -179,13 +207,26 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
           this.custom_wpm = this.wpm;
         }
       }*/
+      'selected_voice_params' :{
+        handler(val, oldVal) {
+          if (oldVal) {
+            this.align_wpm_type = 'original'; // new voice selected_voice_params
+          }
+
+          const wpmMin = Math.ceil(this.elevenLabsMinSpeed * val.wpm);
+          const wpmMax = Math.floor(this.elevenLabsMaxSpeed * val.wpm);
+
+          this.custom_wpm_min = wpmMin;
+          this.custom_wpm_max = wpmMax;
+        }
+      },
       'align_wpm_type': {
         handler(val, oldVal) {
           if (oldVal) {
             if (this.align_wpm_type === 'original') {// to set slider to position
               this.custom_wpm = 0;
             } else {
-              this.custom_wpm = 140;
+              this.custom_wpm = this.selected_voice_params ? this.selected_voice_params.wpm : 140;
             }
           }
           this.setUserWpmSettings();
@@ -233,6 +274,59 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
           border: none !important;
           box-shadow: none !important;
           text-decoration: none;
+        }
+      }
+      .calculate-voice-wpm-button-caption {
+        margin-left: 10px;
+        color: #337ab7;
+      }
+      .calculate-voice-wpm-button {
+         .dot-flashing {
+          position: relative;
+          top: 2px;
+          margin-left: 40px;
+          width: 10px;
+          height: 10px;
+          border-radius: 5px;
+          background-color: black; /*#9880ff;*/
+          color: black; /*#9880ff;*/
+          animation: dot-flashing 1s infinite linear alternate;
+          animation-delay: 0.5s;
+        }
+        .dot-flashing::before, .dot-flashing::after {
+          content: "";
+          display: inline-block;
+          position: absolute;
+          top: 0;
+        }
+        .dot-flashing::before {
+          left: -15px;
+          width: 10px;
+          height: 10px;
+          border-radius: 5px;
+          background-color: black; /*#9880ff;*/
+          color: black; /*#9880ff;*/
+          animation: dot-flashing 1s infinite alternate;
+          animation-delay: 0s;
+        }
+        .dot-flashing::after {
+          left: 15px;
+          width: 10px;
+          height: 10px;
+          border-radius: 5px;
+          background-color: black; /*#9880ff;*/
+          color: black; /*#9880ff;*/
+          animation: dot-flashing 1s infinite alternate;
+          animation-delay: 1s;
+        }
+
+        @keyframes dot-flashing {
+          0% {
+            background-color: black; /*#9880ff;*/
+          }
+          50%, 100% {
+            background-color: rgba(0, 0, 0, 0.2); /*rgba(152, 128, 255, 0.2);*/
+          }
         }
       }
     }
