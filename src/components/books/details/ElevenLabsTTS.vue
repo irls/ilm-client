@@ -6,7 +6,8 @@
       </legend>
       <AlignAudioSpeed
         :audio_type="'tts'"
-        :is_catalog_active="is_active"/>
+        :is_catalog_active="is_active"
+        :selected_voice_params="this.selected_voice_params"/>
 
       <div v-if="all_voices.length > 0">
         <h4 class="audio-voice-caption">Character voice:</h4>
@@ -24,6 +25,9 @@
         </div>
       </div>
 
+      <!--https://isddesign.atlassian.net/wiki/spaces/ILM/pages/4186407098/TTS+Audio+speed#11Labs-TTS-audio-speed
+      https://isddesign.atlassian.net/browse/ILM-7167
+      Reduce selected voice to the one-->
       <table v-if="false" class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
@@ -254,6 +258,11 @@
       isAlignButtonDisabled: {
         get() {
           return this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null;
+        }
+      },
+      selected_voice_params: {
+        get() {
+          return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
         }
       }
     },

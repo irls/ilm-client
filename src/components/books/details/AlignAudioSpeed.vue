@@ -57,7 +57,9 @@
         custom_wpm: 0,
         custom_wpm_min: 100,
         custom_wpm_max: 180,
-        accordionContainerExpanded: 1
+        accordionContainerExpanded: 1,
+        elevenLabsMinSpeed: 0.7,
+        elevenLabsMaxSpeed: 1.2
       }
     },
     components: {
@@ -65,16 +67,22 @@
       'Accordion': Accordion,
       'AccordionTab': AccordionTab
     },
-    props: ['audio_type', 'is_catalog_active'],
+    props: ['audio_type', 'is_catalog_active', 'selected_voice_params'],
     mixins: [access],
     mounted() {
       this.loadUserWpmSettings();
-      this.setUserWpmSettings(false);
+      //this.setUserWpmSettings(false);
     },
     computed: {
       audioSpeedSettingLabel: {
         get() {
-          return `Audio speed: ${this.align_wpm_type}` + (this.align_wpm_type === 'custom' ? ` ${this.custom_wpm}` + ' wpm' : '');
+          if (this.align_wpm_type === 'custom') {
+            return `Audio speed: ${this.align_wpm_type} ${this.custom_wpm} wpm`;
+          }
+          if (this.selected_voice_params) {
+            return `Audio speed: ${this.align_wpm_type} ${this.selected_voice_params.wpm} wpm`;
+          }
+          return `Audio speed: ${this.align_wpm_type}`;
         },
         cache: false
       },
@@ -143,6 +151,7 @@
         this.settingsChanged();
         this.setUserWpmSettings();
       }, 300),
+
       setUserWpmSettings(save = true) {
         this.user.alignWpmSettings = this.user.alignWpmSettings || {};
         this.user.alignWpmSettings[this.currentBookid] = this.user.alignWpmSettings[this.currentBookid] || {};
@@ -179,13 +188,26 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
           this.custom_wpm = this.wpm;
         }
       }*/
+      'selected_voice_params' :{
+        handler(val, oldVal) {
+          if (oldVal) {
+            this.align_wpm_type = 'original'; // new voice selected_voice_params
+          }
+
+          const wpmMin = Math.ceil(this.elevenLabsMinSpeed * val.wpm);
+          const wpmMax = Math.floor(this.elevenLabsMaxSpeed * val.wpm);
+
+          this.custom_wpm_min = wpmMin;
+          this.custom_wpm_max = wpmMax;
+        }
+      },
       'align_wpm_type': {
         handler(val, oldVal) {
           if (oldVal) {
             if (this.align_wpm_type === 'original') {// to set slider to position
               this.custom_wpm = 0;
             } else {
-              this.custom_wpm = 140;
+              this.custom_wpm = this.selected_voice_params ? this.selected_voice_params.wpm : 140;
             }
           }
           this.setUserWpmSettings();
