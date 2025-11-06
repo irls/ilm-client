@@ -182,6 +182,16 @@ export default {
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+
+    calculateVoiceWpm({rootState}, [voiceId]) {
+      return axios.get(`${rootState.API_URL}tts/calculate_voice_wpm/${encodeURIComponent(voiceId)}`)
+      .then(response => {
+        return response.data;
+      })
+      .catch(err => {
+        return Promise.reject(err);
+      });
     }
   }
 }

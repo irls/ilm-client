@@ -7,7 +7,9 @@
       <AlignAudioSpeed
         :audio_type="'tts'"
         :is_catalog_active="is_active"
-        :selected_voice_params="this.selected_voice_params"/>
+        :selected_voice_params="selected_voice_params"
+        :is_voice_wpm_calculating="is_voice_wpm_calculating"
+        @onCalculateVoiceWpm = "onCalculateVoiceWpm"/>
 
       <div v-if="all_voices.length > 0">
         <h4 class="audio-voice-caption">Character voice:</h4>
@@ -228,7 +230,8 @@
           type: 'custom',
           wpm: 140
         },
-        alignStartedTimeout: null
+        alignStartedTimeout: null,
+        is_voice_wpm_calculating: false
       }
     },
     components: {
@@ -295,12 +298,39 @@
       defaultVoice(type) {
         return this.currentBookMeta.voices ? this.currentBookMeta.voices[type] : '';
       },
-      onVoiceChange(type, value) {
+      onVoiceChange(type, voice_id) {
         if (this.audio_playing_type === type) {
           this.stopVoiceExample();
         }
-        this.currentBookMeta.voices[type] = value;
+        this.currentBookMeta.voices[type] = voice_id;
         this.updateBookMeta({voices: this.currentBookMeta.voices});
+
+        //if (this.selected_voice_params && !this.selected_voice_params.wpm) {
+          // this.calculateVoiceWpm([this.selected_voice_params.voice_id])
+          // .then((voice)=>{
+          //   this.all_voices = this.all_voices.map((_v)=>{
+          //     if (_v.voice_id === voice.voice_id) {
+          //       _v.wpm = voice.wpm;
+          //     }
+          //     return _v;
+          //   });
+          // });
+        //}
+      },
+      onCalculateVoiceWpm() {
+        if (this.selected_voice_params && !this.selected_voice_params.wpm) {
+          this.is_voice_wpm_calculating = true;
+          this.calculateVoiceWpm([this.selected_voice_params.voice_id])
+          .then((voice)=>{
+            this.all_voices = this.all_voices.map((_v)=>{
+              if (_v.voice_id === voice.voice_id) {
+                _v.wpm = voice.wpm;
+              }
+              return _v;
+            });
+            this.is_voice_wpm_calculating = false;
+          });
+        }
       },
       startAlign() {
         this.$emit('alignTts');
@@ -557,7 +587,7 @@
         this.alignWpmSettings.wpm = data.wpm;
       },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
+      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample', 'calculateVoiceWpm'])
     },
 
     watch: {
