@@ -38,7 +38,7 @@
               </div>
 
               <div class="table-row">
-                <div class="table-cell -num">{{ftnIdx+1}}.</div>
+                <div class="table-cell -num">{{translateNumberMetaLang(ftnIdx+1)}}.</div>
                 <div
                   :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}, '-langftn-' + getFtnLang(footnote.language)]"
                   v-html="footnote.content">
@@ -83,11 +83,12 @@
 </template>
 
 <script>
-import taskControls       from '../../mixins/task_controls.js';
-import apiConfig          from '../../mixins/api_config.js';
-import access             from '../../mixins/access.js';
+import taskControls         from '../../mixins/task_controls.js';
+import apiConfig            from '../../mixins/api_config.js';
+import access               from '../../mixins/access.js';
+import numerationMixin      from '../../mixins/numeration_config.js';
 import BookBlockPartPreview from './BookBlockPartPreview';
-import { mapGetters }     from 'vuex';
+import { mapGetters }       from 'vuex';
 
   export default {
     name: 'book-block-preview',
@@ -201,6 +202,9 @@ import { mapGetters }     from 'vuex';
         } else {
           return this.meta.language;
         }
+      },
+      translateNumberMetaLang: function (num) {
+        return numerationMixin.translateNumber(num, this.meta.language);
       }
     }
   }

@@ -453,7 +453,7 @@
                 </div>
 
                 <div class="table-row">
-                  <div class="table-cell -num">{{ftnIdx+1}}.</div>
+                  <div class="table-cell -num">{{translateNumberMetaLang(ftnIdx+1)}}.</div>
                   <div
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
@@ -543,15 +543,21 @@ import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 import toc_methods        from '../../mixins/toc_methods.js'
+import numerationMixin    from '../../mixins/numeration_config.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
-import { BookBlock, BlockTypes, BlockTypesAlias, FootNote }     from '../../store/bookBlock'
-import BookBlockPartView from './BookBlockPartView';
-import LockedBlockActions from './block/LockedBlockActions';
-import FlagComment        from './block/FlagComment';
-import EditHTMLModal      from './block/EditHTML';
-import CoupletWarningPopup from "./CoupletWarningPopup.vue";
-import DeleteBlockModal   from './block/DeleteBlockModal';
+import {
+        BookBlock,
+        BlockTypes,
+        BlockTypesAlias,
+        FootNote
+      }                     from '../../store/bookBlock'
+import BookBlockPartView    from './BookBlockPartView';
+import LockedBlockActions   from './block/LockedBlockActions';
+import FlagComment          from './block/FlagComment';
+import EditHTMLModal        from './block/EditHTML';
+import CoupletWarningPopup  from "./CoupletWarningPopup.vue";
+import DeleteBlockModal     from './block/DeleteBlockModal';
 import ChangeVoiceworkModal from './block/ChangeVoiceworkModal';
 //import { tabs, tab } from 'vue-strap';
 // import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
@@ -697,30 +703,30 @@ export default {
       parnumComp: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.secnum.toString();
+            return this.translateNumberMetaLang(this.blockO.secnum.toString());
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.parnum.toString();
+            return this.translateNumberMetaLang(this.blockO.parnum.toString());
           }
           return '';
       }},
       parnumCompNotHidden: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum.toString();
+            return this.translateNumberMetaLang(this.blockO.secnum.toString());
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum.toString();
+            return this.translateNumberMetaLang(this.blockO.parnum.toString());
           }
           return '';
       }},
       subBlockParnumComp: {
         get: function() {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum.toString();
+            return this.translateNumberMetaLang(this.blockO.secnum.toString());
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum.toString();
+            return this.translateNumberMetaLang(this.blockO.parnum.toString());
           }
           return '';
         },
@@ -1472,27 +1478,27 @@ Save or discard your changes to continue editing`,
     this.$root.$off(`reload-audio-editor:${this.block.blockid}`, this.reloadAudioEditor);
   },
   methods: {
-      ...mapActions([
-        'putMetaAuthors',
-        'tc_approveBookTask',
-        'setCurrentBookCounters',
-        'getAlignCount',
-        'recountApprovedInRange',
-        'loadBookToc',
-        'tc_loadBookTask',
-        'getCurrentJobInfo',
-        'updateBookVersion',
-        'updateBlockToc',
-        'saveNarrated',
-        'checkError',
-        'getBookAlign',
-        'updateBlockPart',
-        'addAudioTask',
-        'applyTasksQueue',
-        'saveBlockAudio',
-        'updateStoreFlag',
-        'changeBlocksVoicework',
-      ]),
+    ...mapActions([
+      'putMetaAuthors',
+      'tc_approveBookTask',
+      'setCurrentBookCounters',
+      'getAlignCount',
+      'recountApprovedInRange',
+      'loadBookToc',
+      'tc_loadBookTask',
+      'getCurrentJobInfo',
+      'updateBookVersion',
+      'updateBlockToc',
+      'saveNarrated',
+      'checkError',
+      'getBookAlign',
+      'updateBlockPart',
+      'addAudioTask',
+      'applyTasksQueue',
+      'saveBlockAudio',
+      'updateStoreFlag',
+      'changeBlocksVoicework',
+    ]),
     ...mapActions('tocSections', ['loadBookTocSections', 'checkUpdatedBlock']),
     ...mapMutations(['add_modified_block', 'remove_modified_block']),
     ...mapMutations('uploadImage',{
@@ -1887,7 +1893,7 @@ Save or discard your changes to continue editing`,
             //this.$refs.blockContent.focus();
             this.blockParts.forEach((part, partIdx) => {
               if (this.$refs.blocks[partIdx].$refs.blockContent) {
-                this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = part.content;
+                this.$refs.blocks[partIdx].$refs.blockContent.innerHTML = this.translateContentParts(part.content);
                 this.block.setPartContent(partIdx, part.content);
                 this.$refs.blocks[partIdx].showPinnedInText();
               }
@@ -4707,8 +4713,16 @@ Save text changes and realign the Block?`,
               this.voiceworkUpdateType = 'single';
             }
           });
+      },
+
+      translateNumberMetaLang: function (num) {
+        return numerationMixin.translateNumber(num, this.meta.language);
+      },
+
+      translateContentParts(content) {
+        return numerationMixin.translateContentParts(content, this.meta.language);
       }
-  },
+  }, // -- end -- methods: --//
   watch: {
       'isLocked': {
         handler(val) {

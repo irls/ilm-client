@@ -30,6 +30,7 @@
   import VirtualList from '../generic/VirtualList.svelte';
   import BookBlockDisplay from './BookBlockDisplay.svelte';
   import suspiciousWordsHighlight from '../../store/suspiciousWordsHighlight.js';
+  import numerationMixin from '../../mixins/numeration_config.js';
 
   export let lang = 'en';
   export let blocksList = {};
@@ -158,13 +159,17 @@
   const getParnum = (block) => {
     if (block) {
       if (block.type == 'header' && block.isNumber && !block.isHidden) {
-        return block.secnum;
+        return translateNumber(block.secnum);
       }
       else if (block.type == 'par' && block.isNumber && !block.isHidden) {
-        return block.parnum;
+        return translateNumber(block.parnum);
       }
     }
     return false;
+  }
+
+  const translateNumber = (num) => {
+    return numerationMixin.translateNumber(num, lang);
   }
 
   const blockView = (blockId) => {
@@ -214,7 +219,7 @@
             viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
           }
           ftnIdx++;
-          return `<sup data-idx="${fntCounter++}">[${fntCounter}]</sup>`
+          return `<sup data-idx="${fntCounter++}">[${translateNumber(fntCounter)}]</sup>`
         }
       );
       //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
@@ -225,7 +230,7 @@
             viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
           }
           ftnIdx++;
-          return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
+          return `<sup class="service-info" data-idx="${fntCounter++}">[${translateNumber(fntCounter)}]</sup>`
         }
       );
       viewObj.content = suspiciousWordsHighlight.clearText(viewObj.content);

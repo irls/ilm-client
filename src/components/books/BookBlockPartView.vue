@@ -20,6 +20,7 @@
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}">
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
+        @mouseenter="test"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top" v-if="mode !== 'narrate'">
@@ -133,7 +134,7 @@
                   :data-iseditor="block._id"
                   :id="'content-'+block._id+'-part-'+blockPartIdx"
                   ref="blockContent"
-                  v-html="blockPart.content"
+                  v-html="translateContentParts(blockPart.content)"
                   :class="[ block.getClass(mode), {
                     'updated': isUpdated,
                     'checked': blockO.checked,
@@ -156,7 +157,7 @@
                   <div class="content-wrap-desc description"
                     ref="blockDescription"
                     @input="commitDescription($event)"
-                    v-html="block.description"
+                    v-html="translateContentParts(block.description)"
                     @contextmenu.prevent.stop="onContext"
                     @focusout="commitDescription($event, true)">
                   </div>
@@ -394,6 +395,7 @@ import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 import playing_block      from '../../mixins/playing_block.js';
+import numerationMixin    from '../../mixins/numeration_config.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
@@ -1631,8 +1633,9 @@ export default {
           if (this.$refs.blockContent) {
             //let content = this.blockContent();
             let content = block.getPartContent(this.blockPartIdx);
+            console.log(`${__filename.substr(-30)}::discardBlock: `);
             //if (this.mode !== 'narrate') {
-              this.$refs.blockContent.innerHTML = content;
+              this.$refs.blockContent.innerHTML = translateContentParts(content);
             //} else {
               //this.block.setPartContent(this.blockPartIdx, content);
               //this.$refs.blockContent.innerHTML = content;
@@ -4385,9 +4388,17 @@ Join subblocks?`,
         }
         this.editingLocked = false;
         this.$parent.$forceUpdate();
+      },
+
+      translateContentParts(content) {
+        return numerationMixin.translateContentParts(content, this.meta.language);
+      },
+
+      test(ev) {
+        console.log(`${__filename.substr(-30)}::test: `);
       }
 
-  },
+  }, // methods:
   watch: {
       'blockPart.content': {
         handler(val, oldval) {

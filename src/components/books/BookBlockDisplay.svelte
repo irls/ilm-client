@@ -39,7 +39,7 @@
       {#each block.footnotes as footnote, footnoteIdx (footnote)}
       <div class="{footnote.isShow ? '' : '-hidden'}">
         <div class="-langftn-{footnote.language}">
-          <div class="-num">[fn{footnote.ftnIdx+1}]</div>
+          <div class="-num">[fn{translateNumber(footnote.ftnIdx+1)}]</div>
           <div  class="-text">
             {@html footnote.content}
           </div>
@@ -58,10 +58,12 @@
 <script>
 
   //import { fade } from 'svelte/transition';
+  import numerationMixin from '../../mixins/numeration_config.js';
 
   export let block;
   export let blockListObj;
   export let blockRid = '';
+  export let lang = 'en';
 
   let footNotes = {};
 
@@ -92,6 +94,10 @@
   }
 
   const handleFootnoteKeyUp = (ev) => true;
+
+  const translateNumber = (num) => {
+    return numerationMixin.translateNumber(num, lang);
+  }
 
 </script>
 
