@@ -4398,7 +4398,7 @@ Join subblocks?`,
         console.log(`${__filename.substr(-30)}::test: `);
       }
 
-  }, // methods:
+  }, //-- end -- methods: --//
   watch: {
       'blockPart.content': {
         handler(val, oldval) {
