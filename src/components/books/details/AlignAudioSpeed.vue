@@ -213,11 +213,13 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
             this.align_wpm_type = 'original'; // new voice selected_voice_params
           }
 
-          const wpmMin = Math.ceil(this.elevenLabsMinSpeed * val.wpm);
-          const wpmMax = Math.floor(this.elevenLabsMaxSpeed * val.wpm);
+          if (val && val.wpm) {
+            const wpmMin = Math.ceil(this.elevenLabsMinSpeed * val.wpm);
+            const wpmMax = Math.floor(this.elevenLabsMaxSpeed * val.wpm);
 
-          this.custom_wpm_min = wpmMin;
-          this.custom_wpm_max = wpmMax;
+            this.custom_wpm_min = wpmMin;
+            this.custom_wpm_max = wpmMax;
+          }
         }
       },
       'align_wpm_type': {
