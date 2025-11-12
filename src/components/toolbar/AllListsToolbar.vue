@@ -127,7 +127,7 @@
 <script>
 import Vue from 'vue';
 import _ from 'lodash';
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import BookImport from '@src/components/books/BookImport'
 import TaskAddModal from '@src/components/tasks/TaskAddModal'
 import { Languages } from "@src/mixins/lang_config.js"
@@ -213,6 +213,13 @@ export default {
         newFilters.secFilter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
+      this.updateBooksList({
+        filter: newFilters.filter || '', 
+        secFilter: newFilters.secFilter || '', 
+        language: newFilters.language || [], 
+        importStatus: newFilters.importStatus || [], 
+        jobStatus: newFilters.jobStatus || []});
+      this.getCollections(this.collectionsFilters);
       this.changeFilterVisual();
     },
 
@@ -229,6 +236,7 @@ export default {
         newFilters.filter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
+      this.getCollections(Object.assign(newFilters, {language: this.booksFilters.language}));
     },
 
     filterChangeCollectionsDebounce: _.debounce(function (key, $event) {
@@ -406,7 +414,8 @@ export default {
       this.taskAddModalActive = false;
       await Vue.nextTick();
       this.taskAddModalActive = true;
-    }
+    },
+    ...mapActions(['updateBooksList', 'getCollections'])
   },
 
   async mounted() {
@@ -415,6 +424,7 @@ export default {
     this.syncRouteWithTab();
     this.changeFilterVisual();
     this.fillFilters();
+    this.updateBooksList(this.booksFilters);
   },
   watch:{
     async '$route' ($to, $from) {

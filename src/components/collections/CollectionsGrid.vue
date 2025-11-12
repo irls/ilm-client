@@ -7,15 +7,18 @@
       :rowsPerPage="100"
       @clickRow="rowClick"
       @dblClickRow="openCollection"
+      @pagination-page="goToGridPage"
+      @sort-by="sortBy"
       :selected="selectedBooks"
       :idField="idField"
       :filter-key="''"
       :scrollTopOnPageClick="true"
+      :pagination="collectionsPagination"
       customEmptyTableText="No Collections found" />
   </div>
 </template>
 <script>
-  import Grid from '../generic/Grid';
+  import Grid from '../generic/GridPaged';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
   //import lodash from 'lodash';
@@ -85,7 +88,18 @@
             this.selectedBooks = [selectedCollectionId];
           }
         },
-        ...mapActions([])
+        goToGridPage(page) {
+          this.getCollections(Object.assign(this.collectionsFilters, { page: page }));
+        },
+        sortBy(field, dir) {
+          this.getCollections(Object.assign(this.collectionsFilters, {
+            sort: {
+              key: field,
+              dir: dir
+            }
+          }));
+        },
+        ...mapActions(['getCollections'])
       },
       mounted() {
         if (this.$route && this.$route.params) {
@@ -102,6 +116,8 @@
           'currentCollection',
           'allowCollectionsEdit',
           'adminOrLibrarian',
+          'collectionsFilters',
+          'collectionsPagination'
         ]),
         ...mapGetters({
           fltrChangeTrigger:    'gridFilters/fltrChangeTrigger',
