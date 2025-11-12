@@ -7,10 +7,13 @@
       :rowsPerPage="100"
       @clickRow="rowClick"
       @dblClickRow="openBook"
+      @pagination-page="goToGridPage"
+      @sort-by="sortBy"
       :selected="selectedBooks"
       :idField="idField"
       :filter-key="''"
       :scrollTopOnPageClick="true"
+      :pagination="allBooksPagination"
       customEmptyTableText="No Books found" />
   </div>
   <!--<div class="router-view-wrapper"-->
@@ -19,9 +22,7 @@
 <script>
 import Vue from 'vue';
 import { mapGetters, mapActions } from 'vuex'
-import Grid from '../generic/Grid'
-import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
-//import taskControls from '@src/mixins/task_controls.js';
+import Grid from '../generic/GridPaged';
 
 export default {
 
@@ -46,6 +47,7 @@ export default {
 
     ...mapGetters([
       'allBooks',
+      'allBooksPagination',
       'adminOrLibrarian',
       'isEditor',
       'isNarrator',
@@ -296,8 +298,10 @@ export default {
     goToBookPage (bookId = false) {
       if (this.$refs.books_grid) {
         if (bookId) {
-          const index = this.$refs.books_grid.filteredData.findIndex((book)=>book.bookid === bookId);
-          this.$refs.books_grid.goToIndex(index);
+          const index = this.$refs.books_grid.data.findIndex((book)=>book.bookid === bookId);
+          if (index !== -1) {
+            this.$refs.books_grid.goToIndex(index);
+          }
         } else {
           this.$refs.books_grid.goToIndex(0);
         }
@@ -336,6 +340,17 @@ export default {
       this.$router.replace({ name: 'Books' });
       this.selectedBooks = [];
       return false;
+    },
+    goToGridPage(page) {
+      this.updateBooksList(Object.assign(this.booksFilters, { page: page }));
+    },
+    sortBy(field, dir) {
+      this.updateBooksList(Object.assign(this.booksFilters, {
+        sort: {
+          key: field,
+          dir: dir
+        }
+      }));
     }
   }
 
