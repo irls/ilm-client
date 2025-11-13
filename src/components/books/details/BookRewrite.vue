@@ -99,11 +99,7 @@
 <script>
   import Vue from 'vue';
   import { mapGetters, mapActions } from 'vuex';
-  // import lodash from "lodash";
-  // import DropdownILM from "../../generic/components/DropdownILM";
-  // import v_modal from 'vue-js-modal';
-
-  // Vue.use(v_modal, {dialog: true});
+  import access from "../../../mixins/access";
 
   export default {
     data() {
@@ -127,8 +123,9 @@
       },
     },
     components: {
-      // DropdownILM
+      
     },
+    mixins: [ access ],
     computed: {
 
       tabPlaceholder: {
