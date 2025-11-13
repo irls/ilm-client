@@ -4720,7 +4720,8 @@ Save text changes and realign the Block?`,
       },
 
       translateContentParts(content) {
-        return numerationMixin.translateContentParts(content, this.meta.language);
+        return content;
+        //return numerationMixin.translateContentParts(content, this.meta.language);
       }
   }, // -- end -- methods: --//
   watch: {

@@ -20,7 +20,6 @@
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}">
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
-        @mouseenter="test"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top" v-if="mode !== 'narrate'">
@@ -4391,11 +4390,8 @@ Join subblocks?`,
       },
 
       translateContentParts(content) {
-        return numerationMixin.translateContentParts(content, this.meta.language);
-      },
-
-      test(ev) {
-        console.log(`${__filename.substr(-30)}::test: `);
+        return content;
+        //return numerationMixin.translateContentParts(content, this.meta.language);
       }
 
   }, //-- end -- methods: --//
