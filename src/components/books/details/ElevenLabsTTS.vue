@@ -629,6 +629,25 @@
             this.setMaxContainerHeight();
           }
         }
+      },
+      'alignProcess': {
+        handler(val, oldVal) {
+          if (val) {
+            this.is_voice_wpm_calculating = true;
+          }
+        }
+      },
+      'aligningBlocks': {
+        handler(val, oldVal) {
+          if (val.length < oldVal.length) {
+            const hasBlock = oldVal.find(blk => {
+              return blk.voicework === 'tts';
+            });
+            if (hasBlock) {
+              this.onCalculateVoiceWpm();
+            }
+          }
+        }
       }
     }
   }
