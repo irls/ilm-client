@@ -21,9 +21,14 @@
               <input type="radio" v-model="align_wpm_type" value="original"/><span>Original</span>
             </label>
           </div>
-          <div class="audio-speed-option">
+          <div :class="['audio-speed-option', {'-disabled': !selected_voice_params || !selected_voice_params.wpm}]">
             <label>
-              <input type="radio" v-model="align_wpm_type" value="custom"/><span>Custom ({{custom_wpm_min}}&nbsp;-&nbsp;{{custom_wpm_max}}&nbsp;wpm)</span>
+              <input
+                type="radio"
+                v-model="align_wpm_type"
+                value="custom"
+                :disabled="!selected_voice_params || !selected_voice_params.wpm"/>
+                <span>Custom ({{custom_wpm_min}}&nbsp;-&nbsp;{{custom_wpm_max}}&nbsp;wpm)</span>
             </label>
           </div>
         </div>
@@ -33,6 +38,7 @@
               :min="custom_wpm_min" 
               :max="custom_wpm_max" 
               :step="1"
+              :disabled="!selected_voice_params || !selected_voice_params.wpm"
               v-on:change="settingsChangedDebounced" />
           </div>
           <div class="custom-wpm-controls">
@@ -207,7 +213,7 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
           this.custom_wpm = this.wpm;
         }
       }*/
-      'selected_voice_params' :{
+      'selected_voice_params': {
         handler(val, oldVal) {
           if (oldVal) {
             this.align_wpm_type = 'original'; // new voice selected_voice_params
@@ -216,6 +222,17 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
           if (val && val.wpm) {
             const wpmMin = Math.ceil(this.elevenLabsMinSpeed * val.wpm);
             const wpmMax = Math.floor(this.elevenLabsMaxSpeed * val.wpm);
+
+            this.custom_wpm_min = wpmMin;
+            this.custom_wpm_max = wpmMax;
+          }
+        }
+      },
+      'selected_voice_params.wpm': {
+        handler(voiceWpm, oldVal) {
+          if (voiceWpm) {
+            const wpmMin = Math.ceil(this.elevenLabsMinSpeed * voiceWpm);
+            const wpmMax = Math.floor(this.elevenLabsMaxSpeed * voiceWpm);
 
             this.custom_wpm_min = wpmMin;
             this.custom_wpm_max = wpmMax;
@@ -336,6 +353,11 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
       .audio-speed-option {
         display: inline-block;
         padding-right: 20px;
+        &.-disabled {
+          label {
+            color: grey
+          }
+        }
         input {
           margin-right: 10px;
           /*vertical-align: middle;*/
