@@ -182,7 +182,7 @@
               <template v-if="toc.level == 'toc1'">
                 <td :class="['toc-item-number', toc.level]" width="10">
                   <template v-if="displayTOC">
-                    {{toc.secnum?toc.secnum:''}}
+                    {{toc_secnum(toc.secnum)}}
                   </template>
                 </td>
                 <td colspan="4" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
@@ -195,7 +195,7 @@
                 <td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">
                   <template v-if="displayTOC">
-                    {{toc.secnum?toc.secnum:''}}
+                    {{toc_secnum(toc.secnum)}}
                   </template>
                 </td>
                 <td colspan="3" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
@@ -208,7 +208,7 @@
                 <td></td><td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">
                   <template v-if="displayTOC">
-                    {{toc.secnum?toc.secnum:''}}
+                    {{toc_secnum(toc.secnum)}}
                   </template>
                 </td>
                 <td colspan="2" :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
@@ -221,7 +221,7 @@
                 <td></td><td></td><td></td>
                 <td :class="['toc-item-number', toc.level]" width="10">
                   <template v-if="displayTOC">
-                    {{toc.secnum?toc.secnum:''}}
+                    {{toc_secnum(toc.secnum)}}
                   </template>
                 </td>
                 <td :class="['toc-item-link', toc.inTocStyle]" @click="goToBlock(toc.blockid, $event)">
@@ -243,8 +243,9 @@
 
 //import Vue from 'vue'
 import { mapGetters, mapActions } from 'vuex';
-import api_config from '../../mixins/api_config.js';
-import time_methods from '../../mixins/time_methods.js';
+import api_config       from '../../mixins/api_config.js';
+import time_methods     from '../../mixins/time_methods.js';
+import numerationMixin  from '../../mixins/numeration_config.js';
 import TOCSettingsModal from './details/TOCSettings.vue';
 import Vue from 'vue';
 
@@ -302,7 +303,7 @@ export default {
 
 
   computed: {
-    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookid', 'adminOrLibrarian', 'storeList']),
+    ...mapGetters(['isBlocked', 'blockers', 'currentBookToc', 'currentBookMeta', 'currentBookid', 'adminOrLibrarian', 'storeList']),
     ...mapGetters('tocSections', ['tocSectionBook', 'currentBookTocCombined', 'bookTocSections', 'pendingSectionUpdate']),
     buildBookButtonEnabled: {
       get() {
@@ -1100,6 +1101,16 @@ export default {
     },
     buildTypeLabel(label) {
       return `${label} ${this.buildTypes[this.buildTypeSection]}`;
+    },
+
+    toc_secnum(secnum) {
+      if (secnum) {
+        if (this.currentBookMeta.language !== 'en') {
+          return numerationMixin.translateNumber(secnum, this.currentBookMeta.language);
+        }
+        return secnum;
+      }
+      return '';
     }
   },
 
