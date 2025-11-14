@@ -289,7 +289,7 @@ export default {
       }
       return false;
     },
-    tc_displayRewriteTab() {
+    tc_displayRewriteTab(bookid) {
       if ( ['edit'].indexOf(this.bookMode) === -1) {
         return false;
       }
@@ -302,7 +302,7 @@ export default {
       if (this.adminOrLibrarian) {
         return true;
       }
-      return false;
+      return this._is('editor', bookid);
     },
     tc_isBookCopy() {
       return this.currentBookMeta && this.currentBookMeta.parent_book && this.currentBookMeta.parent_book.length;
