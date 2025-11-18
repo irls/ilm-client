@@ -139,11 +139,20 @@ export default {
 
     loadCurrentCollectionBooks({rootState, dispatch}, params) {
       if (rootState.currentCollection && rootState.currentCollection._id) {
-        dispatch('filterBooks', Object.assign(params, { collection_id: rootState.currentCollection._id }))
+        dispatch('filterBooks', Object.assign(lodash.cloneDeep(params), { collection_id: rootState.currentCollection._id }))
           .then(response => {
             rootState.currentCollection.books_list = response.books;
           });
       }
+    },
+
+    loadBooksFilters({rootState, commit}) {
+      return axios.get(`${rootState.API_URL}books_filters`)
+        .then(response => {
+          commit('gridFilters/set_jobStatusFilterList', response.data.jobStatuses, { root: true });
+          commit('gridFilters/set_importStatusFilterList', response.data.importStatuses, { root: true });
+          commit('gridFilters/set_languageFilterList', response.data.languages, { root: true });
+        });
     }
   }
 }
