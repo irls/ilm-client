@@ -906,6 +906,7 @@ export default {
       isBookReaderCategory: 'isBookReaderCategory',
       isVariousAuthor: 'authorsMapModule/isVariousAuthor',
     }),
+    ...mapGetters('collectionsModule', ['allCollections']),
     proofreadModeReadOnly: {
       get() {
           // return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
@@ -929,7 +930,7 @@ export default {
     collectionsList: {
       get() {
         let list = [];
-        this.bookCollections.forEach(c => {
+        this.allCollections.forEach(c => {
           if (c.language == this.currentBookMeta.language) {
             if (c.title.trim().length == 0) {
               const coll = Object.assign({}, c);
