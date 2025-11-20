@@ -214,8 +214,8 @@ export default {
       }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
       this.updateBooksList({
-        filter: newFilters.filter || '', 
-        secFilter: newFilters.secFilter || '', 
+        filter: this.booksFilters.filter || '', 
+        secFilter: this.booksFilters.secFilter || '', 
         language: newFilters.language || [], 
         importStatus: newFilters.importStatus || [], 
         jobStatus: newFilters.jobStatus || []});
