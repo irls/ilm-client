@@ -43,7 +43,7 @@
       methods: {
         rowClick(collection, event) {
           if (collection._id !== this.currentCollection._id) {
-            this.$store.dispatch('loadCollection', collection._id);
+            //this.$store.dispatch('loadCollection', collection._id);
             this.$router.replace({ path: '/collections/' + collection._id });
             this.selectedBooks = [collection._id];
           }
@@ -57,7 +57,7 @@
         goToBookPage (collId = false) {
           if(this.$refs.books_grid) {
             if (collId) {
-              const index = this.$refs.books_grid.filteredData.findIndex((coll)=>coll._id === collId);
+              const index = this.$refs.books_grid.data.findIndex((coll)=>coll._id === collId);
               this.$refs.books_grid.goToIndex(index);
             } else {
               this.$refs.books_grid.goToIndex(0);

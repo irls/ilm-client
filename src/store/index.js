@@ -927,12 +927,12 @@ export const store = new Vuex.Store({
         if (collection) {
           currentCollection = collection;
         }
-        this.dispatch('booksModule/loadCurrentCollectionBooks', this.getters['gridFilters/booksFilters'] || {});
       }
       if (!(currentCollection instanceof Collection)) {
         currentCollection = new Collection({});
       }
       state.currentCollection = currentCollection;
+      this.dispatch('booksModule/loadCurrentCollectionBooks', this.getters['gridFilters/booksFilters'] || {});
       if (state.currentCollection) state.currentCollection.sortBooks();
       state.currentCollectionId = _id;
     },
@@ -1076,7 +1076,7 @@ export const store = new Vuex.Store({
         //state.bookCollections[idx].sortBooks();
       });
       //if (state.currentCollectionId && !state.currentCollection._id) {
-        this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
+        //this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
       //}
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
@@ -1731,6 +1731,7 @@ export const store = new Vuex.Store({
             })
 
         dispatch('getBookCategories');
+        dispatch('collectionsModule/loadAllCollections');
         dispatch('getCollections', {});
         dispatch('getAlignBlocksLimit');
 
@@ -5123,9 +5124,9 @@ export const store = new Vuex.Store({
     getCollections({state, commit, dispatch}, params) {
       return dispatch(`collectionsModule/filterCollections`, params)
         .then(response => {
-          if (response && response.data) {
-            state.bookCollectionsAll = response.data.collections;
-            state.collectionsPagination = response.data.pagination;
+          if (response) {
+            state.bookCollectionsAll = response.collections;
+            state.collectionsPagination = response.pagination;
             commit('PREPARE_BOOK_COLLECTIONS');
             dispatch('reloadCollection');
             return Promise.resolve();
