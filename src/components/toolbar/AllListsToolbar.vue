@@ -185,9 +185,14 @@ export default {
       filteredCollectionsCounter:     'gridFilters/filteredCollectionsCounter',
       filteredCollectionBooksCounter: 'gridFilters/filteredCollectionBooksCounter',
     }),
+    ...mapGetters('booksModule', ['collectionBooksLoading']),
     currentCollectionHeader () {
       if (this.currentCollection._id) {
-        return `<span class="text-clip-ellipsis">${this.currentCollection.title || this.currentCollection._id}</span><span>&nbsp;(${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})</span>`;
+        if (this.collectionBooksLoading) {
+          return `<span class="load-books-in-progress"></span>`;
+        } else {
+          return `<span class="text-clip-ellipsis">${this.currentCollection.title || this.currentCollection._id}</span><span>&nbsp;(${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})</span>`;
+        }
       }
       return '';
     },
@@ -629,6 +634,13 @@ input.form-control {
 
     .add-collection-button {
       margin-right: 0px;
+    }
+    .load-books-in-progress {
+      background: url(/static/preloader-snake-transparent-tiny.gif);
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      vertical-align: text-top;
     }
   }
 }

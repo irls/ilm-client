@@ -3,9 +3,19 @@ import lodash from "lodash";
 
 export default {
   namespaced: true,
-  state: {},
-  getters: {},
-  mutations: {},
+  state: {
+    collectionBooksLoading: false
+  },
+  getters: {
+    collectionBooksLoading: state => {
+      return state.collectionBooksLoading;
+    }
+  },
+  mutations: {
+    set_collectionBooksLoading(state, loading) {
+      state.collectionBooksLoading = loading;
+    }
+  },
   actions: {
     createCopy({rootState, dispatch}, [bookid, tobookid]) {
       return axios.post(`${rootState.API_URL}books/${bookid}/copy/${tobookid}`)
@@ -137,11 +147,14 @@ export default {
         });
     },
 
-    loadCurrentCollectionBooks({rootState, dispatch}, params) {
+    loadCurrentCollectionBooks({rootState, dispatch, commit}, params) {
       if (rootState.currentCollection && rootState.currentCollection._id) {
-        dispatch('filterBooks', Object.assign(lodash.cloneDeep(params), { collection_id: rootState.currentCollection._id }))
+        commit('set_collectionBooksLoading', true);
+        return dispatch('filterBooks', Object.assign(lodash.cloneDeep(params), { collection_id: rootState.currentCollection._id }))
           .then(response => {
             rootState.currentCollection.books_list = response.books;
+            commit('set_collectionBooksLoading', false);
+            return response.books;
           });
       }
     },
