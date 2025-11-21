@@ -224,7 +224,11 @@ export default {
         language: newFilters.language || [], 
         importStatus: newFilters.importStatus || [], 
         jobStatus: newFilters.jobStatus || []});
-      this.getCollections(this.collectionsFilters);
+      let collectionsFilters = _.cloneDeep(this.collectionsFilters);
+      if (Array.isArray(newFilters.language) && newFilters.language.length > 0) {
+        collectionsFilters.language = newFilters.language;
+      }
+      this.getCollections(collectionsFilters);
       this.changeFilterVisual();
     },
 

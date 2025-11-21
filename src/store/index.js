@@ -1878,7 +1878,7 @@ export const store = new Vuex.Store({
     updateBooksList ({state, commit, dispatch}, params = {}) {
       return dispatch('booksModule/filterBooks', params)
         .then((answer) => {
-          dispatch('booksModule/loadCurrentCollectionBooks', params);
+          //dispatch('booksModule/loadCurrentCollectionBooks', params);
           commit('SET_BOOKLIST', answer)
           //dispatch('tc_loadBookTask')
           return Promise.resolve();
