@@ -95,9 +95,6 @@ export default {
     mapFilterProjectTag:         state => state.mapFilterProjectTag,
 
     mapFilterJobStatus: (state, getters, rootState, rootGetters) => {
-      //if (!rootGetters.allBooks.length) {
-        //return [];//state.mapFilterJobStatus;
-      //}
       if (state.jobStatusFilterList.loaded) {
         return state.jobStatusFilterList.list;
       }
@@ -105,9 +102,6 @@ export default {
     },
 
     mapFilterImportStatus: (state, getters, rootState, rootGetters) => {
-      if (!rootGetters.allBooks.length) {
-        return [];//state.mapFilterImportStatus;
-      }
       if (state.importStatusFilterList.loaded) {
         return state.importStatusFilterList.list;
       }
@@ -115,9 +109,6 @@ export default {
     },
 
     mapFilterLanguages: (state, getters, rootState, rootGetters) => {
-      if (!rootGetters.allBooks.length) {
-        return [];//Object.entries(Languages).map(([code, name])=>({caption: name, value: code}));
-      }
       if (state.languageFilterList.loaded) {
         return state.languageFilterList.list;
       }
