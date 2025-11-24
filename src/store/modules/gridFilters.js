@@ -150,7 +150,7 @@ export default {
 
     set_booksFilters (state, obj) { // replace any property of bookFilters
       for (const prop in obj) {
-        if (['filter', 'secFilter', 'multiProjectTag', 'importStatus', 'language', 'jobStatus'].indexOf(prop) > -1) {
+        if (['filter', 'secFilter', 'multiProjectTag', 'importStatus', 'language', 'jobStatus', 'page'].indexOf(prop) > -1) {
           state.booksFilters[prop] = obj[prop];
         }
       }
