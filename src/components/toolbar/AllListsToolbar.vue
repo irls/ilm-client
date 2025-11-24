@@ -212,9 +212,11 @@ export default {
         return acc;
       }, {});
       if (key && key === 'filter') {
+        newFilters.page = 0;
         newFilters.filter = $event ? $event.target.value : '';
       }
       if (key && key === 'secFilter') {
+        newFilters.page = 0;
         newFilters.secFilter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
