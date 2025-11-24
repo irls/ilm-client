@@ -157,6 +157,7 @@ export default {
             return response.books;
           });
       }
+      return Promise.resolve();
     },
 
     loadBooksFilters({rootState, commit}) {

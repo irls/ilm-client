@@ -229,6 +229,8 @@ export default {
       let collectionsFilters = _.cloneDeep(this.collectionsFilters);
       if (Array.isArray(newFilters.language) && newFilters.language.length > 0) {
         collectionsFilters.language = newFilters.language;
+        collectionsFilters.page = 0;
+        this.$store.commit('gridFilters/set_collectionsFilters', collectionsFilters);
       }
       this.getCollections(collectionsFilters);
       this.changeFilterVisual();
