@@ -1058,7 +1058,7 @@ export const store = new Vuex.Store({
       let booksList = this.getters.allBooks;
       state.bookCollections.forEach((c, idx) => {
         let pages = 0;
-        let books = [];
+        /*let books = [];
         if (c.bookids && Array.isArray(c.bookids)) {
           c.bookids.forEach(b => {
             let book = booksList.find(_b => _b.bookid === b);
@@ -1074,11 +1074,11 @@ export const store = new Vuex.Store({
           });
         }
 
-        c.pages = pages;
+        c.pages = pages;*/
         if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
           c.coverimgURL = process.env.ILM_API + c.coverimgURL;
         }
-        c.books_list = books;
+        //c.books_list = books;
         state.bookCollections[idx] = new Collection(c);
         //state.bookCollections[idx].sortBooks();
       });
