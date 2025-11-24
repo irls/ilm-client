@@ -1062,6 +1062,11 @@ export const store = new Vuex.Store({
         if (c.bookids && Array.isArray(c.bookids)) {
           c.bookids.forEach(b => {
             let book = booksList.find(_b => _b.bookid === b);
+            if (!book) {
+              book = (c.books_list || []).find(_b => {
+                return _b.bookid === b;
+              });
+            }
             if (book) {
               pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
               books.push(book);
