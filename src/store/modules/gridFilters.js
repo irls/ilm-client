@@ -164,7 +164,7 @@ export default {
 
     set_collectionsFilters (state, obj) {
       for (const prop in obj) {
-        if (['filter', 'multiProjectTag', 'booksIds'].indexOf(prop) > -1) {
+        if (['filter', 'multiProjectTag', 'booksIds', 'page'].indexOf(prop) > -1) {
           state.collectionsFilters[prop] = obj[prop];
         }
       }

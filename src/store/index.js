@@ -931,11 +931,16 @@ export const store = new Vuex.Store({
       if (!(currentCollection instanceof Collection)) {
         currentCollection = new Collection({});
       }
+      if (currentCollection._id === state.currentCollection._id && currentCollection.books_list.length === 0) {
+        currentCollection.books_list = state.currentCollection.books_list;
+      }
       state.currentCollection = currentCollection;
       let collectionFilters = lodash.cloneDeep(this.getters['gridFilters/booksFilters'] || {});
       collectionFilters.page = 0;
-      this.dispatch('booksModule/loadCurrentCollectionBooks', collectionFilters);
-      if (state.currentCollection) state.currentCollection.sortBooks();
+      this.dispatch('booksModule/loadCurrentCollectionBooks', collectionFilters)
+        .then(() => {
+          if (state.currentCollection) state.currentCollection.sortBooks();
+        });
       state.currentCollectionId = _id;
     },
 
