@@ -127,7 +127,7 @@
 <script>
 import Vue from 'vue';
 import _ from 'lodash';
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import BookImport from '@src/components/books/BookImport'
 import TaskAddModal from '@src/components/tasks/TaskAddModal'
 import { Languages } from "@src/mixins/lang_config.js"
@@ -185,9 +185,14 @@ export default {
       filteredCollectionsCounter:     'gridFilters/filteredCollectionsCounter',
       filteredCollectionBooksCounter: 'gridFilters/filteredCollectionBooksCounter',
     }),
+    ...mapGetters('booksModule', ['collectionBooksLoading']),
     currentCollectionHeader () {
       if (this.currentCollection._id) {
-        return `<span class="text-clip-ellipsis">${this.currentCollection.title || this.currentCollection._id}</span><span>&nbsp;(${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})</span>`;
+        if (this.collectionBooksLoading) {
+          return `<span class="load-books-in-progress"></span>`;
+        } else {
+          return `<span class="text-clip-ellipsis">${this.currentCollection.title || this.currentCollection._id}</span><span>&nbsp;(${this.filteredCollectionBooksCounter} Book${(this.filteredCollectionBooksCounter === 1?'':'s')})</span>`;
+        }
       }
       return '';
     },
@@ -207,12 +212,27 @@ export default {
         return acc;
       }, {});
       if (key && key === 'filter') {
+        newFilters.page = 0;
         newFilters.filter = $event ? $event.target.value : '';
       }
       if (key && key === 'secFilter') {
+        newFilters.page = 0;
         newFilters.secFilter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_booksFilters', newFilters);
+      this.updateBooksList({
+        filter: this.booksFilters.filter || '', 
+        secFilter: this.booksFilters.secFilter || '', 
+        language: newFilters.language || [], 
+        importStatus: newFilters.importStatus || [], 
+        jobStatus: newFilters.jobStatus || []});
+      let collectionsFilters = _.cloneDeep(this.collectionsFilters);
+      if (Array.isArray(newFilters.language) && newFilters.language.length > 0) {
+        collectionsFilters.language = newFilters.language;
+        collectionsFilters.page = 0;
+        this.$store.commit('gridFilters/set_collectionsFilters', collectionsFilters);
+      }
+      this.getCollections(collectionsFilters);
       this.changeFilterVisual();
     },
 
@@ -229,6 +249,7 @@ export default {
         newFilters.filter = $event ? $event.target.value : '';
       }
       this.$store.commit('gridFilters/set_collectionsFilters', newFilters);
+      this.getCollections(Object.assign(newFilters, {language: this.booksFilters.language}));
     },
 
     filterChangeCollectionsDebounce: _.debounce(function (key, $event) {
@@ -406,7 +427,8 @@ export default {
       this.taskAddModalActive = false;
       await Vue.nextTick();
       this.taskAddModalActive = true;
-    }
+    },
+    ...mapActions(['updateBooksList', 'getCollections'])
   },
 
   async mounted() {
@@ -415,6 +437,7 @@ export default {
     this.syncRouteWithTab();
     this.changeFilterVisual();
     this.fillFilters();
+    this.updateBooksList(this.booksFilters);
   },
   watch:{
     async '$route' ($to, $from) {
@@ -619,6 +642,13 @@ input.form-control {
 
     .add-collection-button {
       margin-right: 0px;
+    }
+    .load-books-in-progress {
+      background: url(/static/preloader-snake-transparent-tiny.gif);
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      vertical-align: text-top;
     }
   }
 }

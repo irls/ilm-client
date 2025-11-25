@@ -30,6 +30,7 @@ import calculateLevelsModule from "./modules/calculateLevels";
 import booksModule from "./modules/book";
 import suggestionsModule from './modules/suggestions';
 import filterTagsModule from "./modules/filterTag";
+import collectionsModule from "./modules/collection";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -102,7 +103,8 @@ export const store = new Vuex.Store({
     calculateLevelsModule,
     suggestionsModule,
     booksModule,
-    filterTagsModule
+    filterTagsModule,
+    collectionsModule
   },
   state: {
     SelectionModalProgress:0,
@@ -135,6 +137,7 @@ export const store = new Vuex.Store({
     librariesRemoteDB: false,
 
     books_meta: [],
+    books_meta_pagination: {},
 
     currentBookid: '',
     currentBook: {},
@@ -159,6 +162,7 @@ export const store = new Vuex.Store({
     API_URL: process.env.ILM_API + '/api/v1/',
     bookCollectionsAll: [],
     bookCollections: [],
+    collectionsPagination: {},
     currentCollection: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
@@ -394,6 +398,16 @@ export const store = new Vuex.Store({
         }
       });
       return state.books_meta;
+    },
+    allBooksPagination: state => {
+      if (state.books_meta_pagination.hasOwnProperty('total')) {
+        return state.books_meta_pagination;
+      }
+      return {
+        page: 0,
+        pages: 0,
+        total: 0
+      }
     },
     bookSearch: state => state.bookSearch,
     currentBookid: state => state.currentBookid,
@@ -739,6 +753,16 @@ export const store = new Vuex.Store({
         return book && book.bookid ? book.bookid : null;
       }
       return null;
+    },
+    collectionsPagination: state => {
+      if (state.collectionsPagination.hasOwnProperty('total')) {
+        return state.collectionsPagination;
+      }
+      return {
+        page: 0,
+        pages: 0,
+        total: 0
+      }
     }
   },
 
@@ -907,8 +931,16 @@ export const store = new Vuex.Store({
       if (!(currentCollection instanceof Collection)) {
         currentCollection = new Collection({});
       }
+      if (currentCollection._id === state.currentCollection._id && currentCollection.books_list.length === 0) {
+        currentCollection.books_list = state.currentCollection.books_list;
+      }
       state.currentCollection = currentCollection;
-      if (state.currentCollection) state.currentCollection.sortBooks();
+      let collectionFilters = lodash.cloneDeep(this.getters['gridFilters/booksFilters'] || {});
+      collectionFilters.page = 0;
+      this.dispatch('booksModule/loadCurrentCollectionBooks', collectionFilters)
+        .then(() => {
+          if (state.currentCollection) state.currentCollection.sortBooks();
+        });
       state.currentCollectionId = _id;
     },
 
@@ -930,7 +962,8 @@ export const store = new Vuex.Store({
     },
 
     SET_BOOKLIST (state, books) {
-      state.books_meta = books;
+      state.books_meta = books.books;
+      state.books_meta_pagination = books.pagination;
       this.commit('set_currentbook_executors');
       this.commit('PREPARE_BOOK_COLLECTIONS');
     },
@@ -1009,9 +1042,9 @@ export const store = new Vuex.Store({
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       state.bookCollections = [];
-      if (state.isAdmin || state.isLibrarian) {
+      //if (state.isAdmin || state.isLibrarian) {
         state.bookCollections = state.bookCollectionsAll;
-      } else if (state.tc_userTasks) {
+      /*} else if (state.tc_userTasks) {
         let collections = [];
         for (let jobid in state.tc_userTasks.list) {
           state.bookCollectionsAll.forEach(c => {
@@ -1026,14 +1059,19 @@ export const store = new Vuex.Store({
           });
         }
         state.bookCollections = collections;
-      }
+      }*/
       let booksList = this.getters.allBooks;
       state.bookCollections.forEach((c, idx) => {
         let pages = 0;
-        let books = [];
+        /*let books = [];
         if (c.bookids && Array.isArray(c.bookids)) {
           c.bookids.forEach(b => {
             let book = booksList.find(_b => _b.bookid === b);
+            if (!book) {
+              book = (c.books_list || []).find(_b => {
+                return _b.bookid === b;
+              });
+            }
             if (book) {
               pages+= book.wordcount ? Math.round(book.wordcount / 300) : 0;
               books.push(book);
@@ -1041,16 +1079,16 @@ export const store = new Vuex.Store({
           });
         }
 
-        c.pages = pages;
+        c.pages = pages;*/
         if (c.coverimgURL && c.coverimgURL.indexOf('http') !== 0) {
           c.coverimgURL = process.env.ILM_API + c.coverimgURL;
         }
-        c.books_list = books;
+        //c.books_list = books;
         state.bookCollections[idx] = new Collection(c);
         //state.bookCollections[idx].sortBooks();
       });
       //if (state.currentCollectionId && !state.currentCollection._id) {
-        this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
+        //this.commit('SET_CURRENT_COLLECTION', state.currentCollectionId);
       //}
     },
     SET_ALLOW_BOOK_PUBLISH(state, allow) {
@@ -1705,7 +1743,8 @@ export const store = new Vuex.Store({
             })
 
         dispatch('getBookCategories');
-        dispatch('getCollections');
+        dispatch('collectionsModule/loadAllCollections');
+        dispatch('getCollections', {});
         dispatch('getAlignBlocksLimit');
 
         state.liveDB.startWatch('collection', 'collection', {bookid: 'collection'}, (data) => {
@@ -1735,7 +1774,7 @@ export const store = new Vuex.Store({
                 break;
               case 'create':
                 if (data.collection && data.collection._id !== state.currentCollectionId) {
-                  dispatch('getCollections');
+                  dispatch('getCollections', {});
                 }
                 break;
               case 'delete':
@@ -1791,7 +1830,8 @@ export const store = new Vuex.Store({
 
        dispatch('getSuspiciousWordsCharacters');
        dispatch('getAudioFadeConfig');
-       dispatch('updateBooksList');
+       //dispatch('updateBooksList', {});
+       dispatch('booksModule/loadBooksFilters');
        dispatch('authorsModule/getAll');
     },
 
@@ -1845,11 +1885,11 @@ export const store = new Vuex.Store({
       //}, 500)
     },
 
-    updateBooksList ({state, commit, dispatch}) {
-      console.log(`updateBooksList: `);
-      return axios.get(state.API_URL + 'books')///user/' + state.auth.getSession().user_id
+    updateBooksList ({state, commit, dispatch}, params = {}) {
+      return dispatch('booksModule/filterBooks', params)
         .then((answer) => {
-          commit('SET_BOOKLIST', answer.data.books)
+          //dispatch('booksModule/loadCurrentCollectionBooks', params);
+          commit('SET_BOOKLIST', answer)
           //dispatch('tc_loadBookTask')
           return Promise.resolve();
         })
@@ -5093,11 +5133,12 @@ export const store = new Vuex.Store({
         return Promise.reject({})
       })
     },
-    getCollections({state, commit, dispatch}) {
-      return axios.get(`${state.API_URL}collection`)
+    getCollections({state, commit, dispatch}, params) {
+      return dispatch(`collectionsModule/filterCollections`, params)
         .then(response => {
-          if (response && response.data) {
-            state.bookCollectionsAll = response.data;
+          if (response) {
+            state.bookCollectionsAll = response.collections;
+            state.collectionsPagination = response.pagination;
             commit('PREPARE_BOOK_COLLECTIONS');
             dispatch('reloadCollection');
             return Promise.resolve();
@@ -5112,7 +5153,7 @@ export const store = new Vuex.Store({
       return axios.post(`${state.API_URL}collection`, data)
         .then(response => {
           if (response && response.data) {
-            return dispatch('getCollections')
+            return dispatch('getCollections', {})
               .then(() => {
                 return Promise.resolve(response.data);
               });
@@ -5192,7 +5233,7 @@ export const store = new Vuex.Store({
           books_ids: bookids
         })
         .then((response) => {
-          return dispatch('getCollections')
+          return dispatch('getCollections', {})
           .then(() => {
             bookids.forEach(bookid => {
               let index = state.books_meta.findIndex(b => {
@@ -5587,7 +5628,7 @@ export const store = new Vuex.Store({
     uploadBook({state, dispatch}, [data, config]) {
       return axios.post(`${state.API_URL}books`, data, config)
         .then(response => {
-          dispatch('updateBooksList');
+          dispatch('updateBooksList', {});
           return response.data;
         })
         .catch(err => {
