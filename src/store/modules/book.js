@@ -153,6 +153,15 @@ export default {
         return dispatch('filterBooks', Object.assign(lodash.cloneDeep(params), { collection_id: rootState.currentCollection._id }))
           .then(response => {
             rootState.currentCollection.books_list = response.books;
+            rootState.currentCollection.books_list.forEach(b => {
+              if (b.importStatus == 'staging' && b.blocksCount <= 2){
+                if (!b.hasOwnProperty('publishLog') || b.publishLog == null){
+                  b.importStatus = 'staging_empty'
+                } else if (!b.publishLog.updateTime){
+                  b.importStatus = 'staging_empty'
+                }
+              }
+            });
             commit('set_collectionBooksLoading', false);
             return response.books;
           });
