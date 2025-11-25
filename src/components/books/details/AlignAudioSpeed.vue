@@ -28,7 +28,7 @@
                 v-model="align_wpm_type"
                 value="custom"
                 :disabled="!selected_voice_params || !selected_voice_params.wpm"/>
-                <span>Custom ({{custom_wpm_min}}&nbsp;-&nbsp;{{custom_wpm_max}}&nbsp;wpm)</span>
+                <span>Custom<template v-if="selected_voice_params && selected_voice_params.wpm">&nbsp;({{custom_wpm_min}}&nbsp;-&nbsp;{{custom_wpm_max}}&nbsp;wpm)</template></span>
             </label>
           </div>
         </div>
