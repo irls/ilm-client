@@ -154,6 +154,46 @@ export default {
           .then(response => {
             rootState.currentCollection.books_list = response.books;
             rootState.currentCollection.books_list.forEach(b => {
+              b.pub_ver = b.publishedVersion && b.publishedVersion !== 'false' ? b.publishedVersion : '';
+              b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
+
+              if (b.hasOwnProperty('publishLog') && b.publishLog != null && b.publishLog != false && b.publishLog != undefined){
+                if (b.publishLog.publishTime != false && b.publishLog.publishTime != undefined){
+                  var pDate = new Date(b.publishLog.publishTime);
+                  var publishDate = '' + pDate.getFullYear() + '.' + ('0' + (pDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (pDate.getDate() )).slice(-2);
+                } else {
+                  var publishDate = '';
+                }
+
+                if (b.publishLog.updateTime != false && b.publishLog.updateTime != undefined){
+                  var uDate = new Date(b.publishLog.updateTime);
+                  var updateDate = '' + uDate.getFullYear() + '.' + ('0' + (uDate.getMonth() + 1)).slice(-2) + '.' + ('0' + (uDate.getDate() )).slice(-2);
+                } else {
+                  var updateDate = '';
+                }
+
+                if (b.publishedVersion && b.publishedVersion == b.version){
+                  updateDate = '';
+                }
+
+                if (b.pub_ver){
+                    b.pub_ver = publishDate + ' v. ' + b.pub_ver;
+                } else {
+                      b.pub_ver = publishDate;
+                }
+                if (b.cur_ver){
+                    b.cur_ver = updateDate + ' v. ' + b.cur_ver;
+                } else {
+                    b.cur_ver = updateDate;
+                }
+              } else {
+                if (b.pub_ver){
+                    b.pub_ver = ' v. ' + b.pub_ver;
+                }
+                if (b.cur_ver){
+                    b.cur_ver = ' v. ' + b.cur_ver;
+                }
+              }
               if (b.importStatus == 'staging' && b.blocksCount <= 2){
                 if (!b.hasOwnProperty('publishLog') || b.publishLog == null){
                   b.importStatus = 'staging_empty'
