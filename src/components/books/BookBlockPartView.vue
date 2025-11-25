@@ -1288,14 +1288,14 @@ export default {
         if (this.editingLocked) {
           return false;
         }
+        const getBookCategory = () => {
+          return this.currentBookMeta.alt_meta && this.currentBookMeta.alt_meta.ocean && this.currentBookMeta.alt_meta.ocean.category ? this.currentBookMeta.alt_meta.ocean.category : null;
+        }
 
         if ((!this.editor || force === true) && this.block.needsText()) {
           let extensions = {};
           let toolbar = {buttons: []};
           let keyboardCommands = false;
-          const getBookCategory = () => {
-            return this.currentBookMeta.alt_meta && this.currentBookMeta.alt_meta.ocean && this.currentBookMeta.alt_meta.ocean.category ? this.currentBookMeta.alt_meta.ocean.category : null;
-          }
           if (this.allowEditing && this.mode === 'edit') {
             extensions = {
                 'quoteButton': new QuoteButton(),
@@ -1429,7 +1429,8 @@ export default {
                 onAddListItemCallback: (suggestionItem)=>{
                   this.$root.$emit('for-suggestions-list:add-suggestion', suggestionItem);
                 },
-                showApplyModalCallback: this.suggestionShowApplyModalCallback
+                showApplyModalCallback: this.suggestionShowApplyModalCallback,
+                getBookCategory: getBookCategory
             });
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
