@@ -146,11 +146,11 @@
       },
       editModeAllowed: {
         get() {
-          return this.adminOrLibrarian || this._is('editor', true) || this._is('narrator', true);
+          return (this.adminOrLibrarian || this._is('editor', true) || this._is('narrator', true)) && this.bookMode !== "proofread";
         },
         cache: false
       },
-      ...mapGetters(['storeList', 'blockSelection', 'modifiedBlockids', 'adminOrLibrarian']),
+      ...mapGetters(['storeList', 'blockSelection', 'modifiedBlockids', 'adminOrLibrarian', 'bookMode']),
       ...mapGetters('suggestionsModule', ['applySuggestions'])
     },
     mounted() {
