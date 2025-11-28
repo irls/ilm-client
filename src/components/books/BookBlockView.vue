@@ -4091,7 +4091,7 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        console.log("CHECK0002: send update");
+        console.log("CHECK0002: send update", this.block.blockid);
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             console.log("CHECK0003: update response", JSON.stringify(response));
@@ -4707,6 +4707,7 @@ Save text changes and realign the Block?`,
           },
           {
             'closed': () => {
+              console.log('CLOSED POPUP', this.block.blockid);
               this.voiceworkChange = false;
               this.voiceworkUpdateType = 'single';
             }
