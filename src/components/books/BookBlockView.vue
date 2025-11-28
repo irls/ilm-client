@@ -4707,7 +4707,7 @@ Save text changes and realign the Block?`,
           },
           {
             'closed': () => {
-              console.log('CLOSED POPUP', this.block.blockid);
+              console.log('CLOSED POPUP', this.block.blockid, this._isDestroyed);
               this.voiceworkChange = false;
               this.voiceworkUpdateType = 'single';
             }
