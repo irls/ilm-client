@@ -4084,15 +4084,17 @@ Save text changes and realign the Block?`,
         if (voiceworkUpdateType) {
           this.voiceworkUpdateType = voiceworkUpdateType;
         }
+        console.log('this.voiceworkChange', this.voiceworkChange);
         if (!this.voiceworkChange) {
           return false;
         }
 
         this.voiceworkUpdating = true;
 
-
+        console.log("CHECK0002: send update");
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
+            console.log("CHECK0003: update response", JSON.stringify(response));
             this.voiceworkUpdating = false;
             if (response.status == 200) {
 

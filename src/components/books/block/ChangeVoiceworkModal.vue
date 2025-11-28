@@ -71,8 +71,10 @@
       },
       startUpdateVoicework() {
         this.voiceworkUpdating = true;
+        console.log("CHECK0001: start update");
         this.updateVoicework(false, this.voiceworkUpdateType)
           .then(() => {
+            console.log("CHECK0004: finish update");
             this.$emit('close');
           })
           .catch(err => {
