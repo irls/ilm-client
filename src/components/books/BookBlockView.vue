@@ -4130,12 +4130,14 @@ Save text changes and realign the Block?`,
                 //}
               }
             }
+            return response.data;
             //this.voiceworkChange = false;
           })
           .catch(err => {
             console.error(`err: `, err);
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
+            return Promise.reject(err);
           });
       },
       scrollToBlock(id) {
