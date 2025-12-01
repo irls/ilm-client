@@ -723,10 +723,10 @@ export default {
       subBlockParnumComp: {
         get: function() {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.translateNumberMetaLang(this.blockO.secnum.toString());
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.translateNumberMetaLang(this.blockO.parnum.toString());
+            return this.blockO.parnum.toString();
           }
           return '';
         },

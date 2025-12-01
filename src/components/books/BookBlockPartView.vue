@@ -492,7 +492,7 @@ export default {
     'split-block-menu': SplitBlockMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason', 'showStopConfirmations', 'hasAudioEditingPart'],
-  mixins: [taskControls, apiConfig, access, playing_block],
+  mixins: [taskControls, apiConfig, access, playing_block, numerationMixin],
   computed: {
       isLocked: {
         get () {
@@ -549,10 +549,13 @@ export default {
       parnumComp: { cache: false,
 
       get: function () {
-          if (this.mode === 'narrate') {
-            return this.isSplittedBlock ? (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx + 1) : this.parnum;
-          }
-          return (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
+        let num = '';
+        if (this.mode === 'narrate') {
+          num = this.isSplittedBlock ? (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx + 1) : this.parnum;
+        } else {
+          num = (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
+        }
+        return numerationMixin.translateNumber(num, this.meta.language);
       }},
       isNumbered: { cache: false,
       get: function () {
