@@ -35,6 +35,9 @@ const translateNumber = (num = 1, lang = 'en') => {
       }
       return n;
     });
+    if (/^\d+\;\d+$/.test(num)) {
+      numArr = numArr.reverse();
+    }
     return numArr.join('');
   }
   return '' + num;
