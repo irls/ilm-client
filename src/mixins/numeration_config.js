@@ -35,7 +35,7 @@ const translateNumber = (num = 1, lang = 'en') => {
       }
       return n;
     });
-    if (lang === "ar" && !/^\d+[\d\.]*$/.test(num)) {
+    if (lang === "ar" && !/^\d+[\d\.]*$/.test(num) && !/^[a-zA-Z0-9\.]+$/.test(num)) {
       numArr = numArr.reverse();
     }
     return numArr.join('');
