@@ -25,7 +25,7 @@ const TRANSLATE_NUMERATION = {
   }
 }
 
-const translateNumber = (num = 1, lang = 'en') => {
+const translateNumber = (num = 1, lang = 'en', is_subblock = false) => {
   if (TRANSLATE_NUMERATION[lang]) {
     const translateNumLang = TRANSLATE_NUMERATION[lang];
     let numArr = ('' + num).split('');
@@ -37,6 +37,14 @@ const translateNumber = (num = 1, lang = 'en') => {
     });
     if (lang === "ar" && !/^\d+[\d\.]*$/.test(num) && !/^[a-zA-Z0-9\.]+$/.test(num)) {
       numArr = numArr.reverse();
+    }
+    if (lang === "ar" && is_subblock) {
+      let fullNum = numArr.join('');
+      let numParts = fullNum.split('_');
+      if (numParts && numParts.length > 0) {
+        numParts[0] = numParts[0].split('').reverse().join('');
+        return numParts.join('_');
+      }
     }
     return numArr.join('');
   }
