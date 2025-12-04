@@ -555,7 +555,7 @@ export default {
         } else {
           num = (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
         }
-        return numerationMixin.translateNumber(num, this.meta.language);
+        return numerationMixin.translateNumber(num, this.meta.language, true);
       }},
       isNumbered: { cache: false,
       get: function () {

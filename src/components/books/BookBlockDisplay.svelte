@@ -38,7 +38,7 @@
     <div class="footnotes">
       {#each block.footnotes as footnote, footnoteIdx (footnote)}
       <div class="{footnote.isShow ? '' : '-hidden'}">
-        <div class="-langftn-{footnote.language}">
+        <div class="-langftn-{lang}">
           <div class="-num">[fn{translateNumber(footnote.ftnIdx+1)}]</div>
           <div  class="-text">
             {@html footnote.content}
