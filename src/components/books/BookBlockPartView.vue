@@ -133,7 +133,7 @@
                   :data-iseditor="block._id"
                   :id="'content-'+block._id+'-part-'+blockPartIdx"
                   ref="blockContent"
-                  v-html="blockPart.content"
+                  v-html="translateContentParts(blockPart.content)"
                   :class="[ block.getClass(mode), {
                     'updated': isUpdated,
                     'checked': blockO.checked,
@@ -156,7 +156,7 @@
                   <div class="content-wrap-desc description"
                     ref="blockDescription"
                     @input="commitDescription($event)"
-                    v-html="block.description"
+                    v-html="translateContentParts(block.description)"
                     @contextmenu.prevent.stop="onContext"
                     @focusout="commitDescription($event, true)">
                   </div>
@@ -394,6 +394,7 @@ import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 import playing_block      from '../../mixins/playing_block.js';
+import numerationMixin    from '../../mixins/numeration_config.js';
 //import { modal }          from 'vue-strap';
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
@@ -491,7 +492,7 @@ export default {
     'split-block-menu': SplitBlockMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit', 'splitPointAdded', 'splitPointRemoved', 'checkAllowUpdateUnassigned', 'checkVisible', 'checkFullyVisible', 'editingLockedReason', 'showStopConfirmations', 'hasAudioEditingPart'],
-  mixins: [taskControls, apiConfig, access, playing_block],
+  mixins: [taskControls, apiConfig, access, playing_block, numerationMixin],
   computed: {
       isLocked: {
         get () {
@@ -548,10 +549,13 @@ export default {
       parnumComp: { cache: false,
 
       get: function () {
-          if (this.mode === 'narrate') {
-            return this.isSplittedBlock ? (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx + 1) : this.parnum;
-          }
-          return (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
+        let num = '';
+        if (this.mode === 'narrate') {
+          num = this.isSplittedBlock ? (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx + 1) : this.parnum;
+        } else {
+          num = (this.parnum ? `${this.parnum}_` : '') + (this.blockPartIdx+1);
+        }
+        return numerationMixin.translateNumber(num, this.meta.language, true);
       }},
       isNumbered: { cache: false,
       get: function () {
@@ -1631,8 +1635,9 @@ export default {
           if (this.$refs.blockContent) {
             //let content = this.blockContent();
             let content = block.getPartContent(this.blockPartIdx);
+            console.log(`${__filename.substr(-30)}::discardBlock: `);
             //if (this.mode !== 'narrate') {
-              this.$refs.blockContent.innerHTML = content;
+              this.$refs.blockContent.innerHTML = translateContentParts(content);
             //} else {
               //this.block.setPartContent(this.blockPartIdx, content);
               //this.$refs.blockContent.innerHTML = content;
@@ -4385,9 +4390,14 @@ Join subblocks?`,
         }
         this.editingLocked = false;
         this.$parent.$forceUpdate();
+      },
+
+      translateContentParts(content) {
+        return content;
+        //return numerationMixin.translateContentParts(content, this.meta.language);
       }
 
-  },
+  }, //-- end -- methods: --//
   watch: {
       'blockPart.content': {
         handler(val, oldval) {

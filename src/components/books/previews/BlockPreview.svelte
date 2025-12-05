@@ -127,7 +127,7 @@
                     </div>
 
                     <div class="table-row">
-                      <div class="table-cell -num">{ftnIdx+1}.</div>
+                      <div class="table-cell -num">{getFootnoteNum(ftnIdx+1)}.</div>
                       <div class="content-wrap-footn-preview table-cell -text -langftn-{getFtnLang(footnote.language)}">
                         {@html footnote.content}
                       </div>
@@ -186,6 +186,7 @@
   import { onMount } from 'svelte';
   //import { fade } from 'svelte/transition';
   import ImgPreview from './ImgPreview.svelte';
+  import numerationMixin from '../../../mixins/numeration_config.js';
 
   export let block;
   export let blockRid = '';
@@ -206,7 +207,7 @@
     //console.log(`beforeUpdate.blockid: `, block._id, getParnum());
   //});
 
-  onMount(async () => {
+  onMount(() => {
     const blockEditRef = document.getElementById(block._id);
     if (blockEditRef) {
       const blockVirtRef = document.getElementById('v-' + block._id);
@@ -298,23 +299,28 @@
   const getParnum = () => {
     //console.log(`getParnum: block.type:${block.type} block.secnum:${block.secnum} block.parnum: ${block.parnum}`);
     if (block.type == 'header'/* && block.isNumber && !block.isHidden*/) {
-      return block.secnum;
+      return numerationMixin.translateNumber(block.secnum, lang);
     }
     else if (block.type == 'par'/* && block.isNumber && !block.isHidden*/) {
-      return block.parnum;
+      return numerationMixin.translateNumber(block.parnum, lang);
     }
     else return false;
   }
 
   const getSubParnum = (blockPartIdx) => {
     //console.log(`getSubParnum: block.type:${block.type} block.secnum:${block.secnum} block.parnum: ${block.parnum}`);
+    const parnum = block.parnum ? numerationMixin.translateNumber(block.parnum, lang) : '';
     if (mode === 'narrate') {
       if (!block.parnum) {
         return '';
       }
-      return isSplittedBlock ? `${block.parnum}_${blockPartIdx+1}` : block.parnum;
+      return isSplittedBlock ? `${parnum}_${blockPartIdx+1}` : parnum;
     }
-    return (block.parnum ? `${block.parnum}_` : '') + (blockPartIdx+1);
+    return (block.parnum ? `${parnum}_` : '') + (blockPartIdx+1);
+  }
+
+  const getFootnoteNum = (num) => {
+    return numerationMixin.translateNumber(num, lang);
   }
 
 </script>

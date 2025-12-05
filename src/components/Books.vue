@@ -497,6 +497,9 @@ export default {
 .-langblock-fa {
   &.ilm-block, {
     direction: rtl;
+    .bview-parnum {
+      direction: ltr;
+    }
   }
 }
 
