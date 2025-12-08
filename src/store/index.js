@@ -2094,6 +2094,7 @@ export const store = new Vuex.Store({
                 dispatch('getCurrentJobInfo');
               }
               commit('publishModule/set_publicationErrors', []);
+              commit('genreModule/set_autoGenerateInProgress', false);
             }
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
@@ -2350,9 +2351,6 @@ export const store = new Vuex.Store({
               //state.currentCollection.updateBook(response.data);
               commit('PREPARE_BOOK_COLLECTIONS');
             }
-
-            //console.log(`updateBookMeta.state.currentBookMeta: `, state.currentBookMeta);
-            commit('genreModule/set_autoGenerateInProgress', false);
             return Promise.resolve(response.data);
           } else {
             return Promise.resolve('No data updated');
