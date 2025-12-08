@@ -35,14 +35,17 @@ const translateNumber = (num = 1, lang = 'en', is_subblock = false) => {
       }
       return n;
     });
+    let is_reversed = false;
     if (lang === "ar" && !/^\d+[\d\.]*$/.test(num) && !/^[a-zA-Z0-9\.]+$/.test(num)) {
       numArr = numArr.reverse();
+      is_reversed = true;
     }
     if (lang === "ar" && is_subblock) {
       let fullNum = numArr.join('');
       let numParts = fullNum.split('_');
-      if (numParts && numParts.length > 0) {
-        numParts[0] = numParts[0].split('').reverse().join('');
+      let numPartsIndex = is_reversed ? 1 : 0;
+      if (numParts && numParts[numPartsIndex]) {
+        numParts[numPartsIndex] = numParts[numPartsIndex].split('').reverse().join('');
         return numParts.join('_');
       }
     }
