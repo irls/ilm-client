@@ -6,8 +6,31 @@
       </legend>
       <AlignAudioSpeed
         :audio_type="'tts'"
-        :is_catalog_active="is_active"/>
-      <table class="table table-striped table-bordered table-voices">
+        :is_catalog_active="is_active"
+        :selected_voice_params="selected_voice_params"
+        :is_voice_wpm_calculating="is_voice_wpm_calculating"
+        @onCalculateVoiceWpm = "onCalculateVoiceWpm"/>
+
+      <div v-if="all_voices.length > 0">
+        <h4 class="audio-voice-caption">Character voice:</h4>
+        <div class="audio-voice-selection">
+          <select-tts-voice
+            :pre_selected="defaultVoice('paragraph')"
+            :voices="all_voices"
+            :block_type="'paragraph'"
+            :generating_example="generating_example"
+            :playing_type="audio_playing_type"
+            @onSelect="onVoiceChange"
+            @play="playVoiceExample"
+            @stop="stopVoiceExample"
+          ></select-tts-voice>
+        </div>
+      </div>
+
+      <!--https://isddesign.atlassian.net/wiki/spaces/ILM/pages/4186407098/TTS+Audio+speed#11Labs-TTS-audio-speed
+      https://isddesign.atlassian.net/browse/ILM-7167
+      Reduce selected voice to the one-->
+      <table v-if="false" class="table table-striped table-bordered table-voices">
         <thead>
           <tr>
             <th>Block</th><th>Voice</th>
@@ -207,7 +230,8 @@
           type: 'custom',
           wpm: 140
         },
-        alignStartedTimeout: null
+        alignStartedTimeout: null,
+        is_voice_wpm_calculating: false
       }
     },
     components: {
@@ -237,6 +261,11 @@
       isAlignButtonDisabled: {
         get() {
           return this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null;
+        }
+      },
+      selected_voice_params: {
+        get() {
+          return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
         }
       }
     },
@@ -269,12 +298,39 @@
       defaultVoice(type) {
         return this.currentBookMeta.voices ? this.currentBookMeta.voices[type] : '';
       },
-      onVoiceChange(type, value) {
+      onVoiceChange(type, voice_id) {
         if (this.audio_playing_type === type) {
           this.stopVoiceExample();
         }
-        this.currentBookMeta.voices[type] = value;
+        this.currentBookMeta.voices[type] = voice_id;
         this.updateBookMeta({voices: this.currentBookMeta.voices});
+
+        //if (this.selected_voice_params && !this.selected_voice_params.wpm) {
+          // this.calculateVoiceWpm([this.selected_voice_params.voice_id])
+          // .then((voice)=>{
+          //   this.all_voices = this.all_voices.map((_v)=>{
+          //     if (_v.voice_id === voice.voice_id) {
+          //       _v.wpm = voice.wpm;
+          //     }
+          //     return _v;
+          //   });
+          // });
+        //}
+      },
+      onCalculateVoiceWpm() {
+        if (this.selected_voice_params && !this.selected_voice_params.wpm) {
+          this.is_voice_wpm_calculating = true;
+          this.calculateVoiceWpm([this.selected_voice_params.voice_id])
+          .then((voice)=>{
+            this.all_voices = this.all_voices.map((_v)=>{
+              if (_v.voice_id === voice.voice_id) {
+                _v.wpm = voice.wpm;
+              }
+              return _v;
+            });
+            this.is_voice_wpm_calculating = false;
+          });
+        }
       },
       startAlign() {
         this.$emit('alignTts');
@@ -531,7 +587,7 @@
         this.alignWpmSettings.wpm = data.wpm;
       },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample'])
+      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample', 'calculateVoiceWpm'])
     },
 
     watch: {
@@ -573,10 +629,42 @@
             this.setMaxContainerHeight();
           }
         }
+      },
+      'alignProcess': {
+        handler(val, oldVal) {
+          if (val) {
+            this.is_voice_wpm_calculating = true;
+          }
+        }
+      },
+      'aligningBlocks': {
+        handler(val, oldVal) {
+          if (val.length < oldVal.length) {
+            const hasBlock = oldVal.find(blk => {
+              return blk.voicework === 'tts';
+            });
+            if (hasBlock) {
+              this.onCalculateVoiceWpm();
+            }
+          }
+        }
       }
     }
   }
 </script>
+<style lang="less" scoped>
+      .audio-voice-selection {
+        background-color: rgb(238, 238, 238);
+        padding-top: 4px;
+        padding-bottom: 4px;
+
+        .voice-select-el {
+          margin-left: 20px;
+           display: flex;
+          align-items: center;
+        }
+      }
+</style>
 <style lang="less">
   .eleven-labs-tts {
     overflow-y: auto;
@@ -603,6 +691,10 @@
         font-size: 1.2rem;
       }
     }
+    .audio-voice-caption {
+      margin-left: 20px;
+    }
+
     table {
       width: 95%;
       max-width: 95%;

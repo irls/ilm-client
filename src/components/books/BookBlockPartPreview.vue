@@ -29,7 +29,7 @@
 
                 <div :class="['table-row content-description', getClass]">
                   <div class="content-wrap-desc description"
-                    v-html="block.description">
+                    v-html="translateContentParts(block.description)">
                   </div>
                 </div>
 
@@ -39,7 +39,7 @@
               <template v-else>
                 <div v-cloak
                   :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
-                  v-html="blockPart.content">
+                  v-html="translateContentParts(blockPart.content)">
                 </div>
               </template>
               <!--<div class="content-wrap">-->
@@ -171,7 +171,9 @@ import {mapGetters} from 'vuex'
       })
     },
     methods: {
-
+      translateContentParts(content) {
+        return content;
+      }
     }
   }
 </script>
