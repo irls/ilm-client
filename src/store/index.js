@@ -152,7 +152,7 @@ export const store = new Vuex.Store({
     currentBookToc: {bookId: '', data: []},
     currentAudiobook: {},
 
-    bookSearch: {string: '', resultCounter: 0, searchPointer: 0},
+    bookSearch: {string: '', resultCounter: null, searchPointer: 0, force: false},
 
     editMode: 'Editor',
     allowBookEditMode: false,

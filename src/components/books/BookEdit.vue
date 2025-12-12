@@ -2417,7 +2417,9 @@ export default {
       },
 
       searchInBlocks(bookSearch) {
-        if(bookSearch.string && bookSearch.string.trim().length > 2) {
+        if(bookSearch.string && (bookSearch.string.trim().length > 2 || (bookSearch.string.trim().length > 0 && bookSearch.force))) {
+          this.bookSearch.force = false;
+          this.bookSearch.resultCounter = null;
           this.searchResultArray = [];
           //console.time('Search');
           let parserSearchArr = prepareForFilter(bookSearch.string, true).split(' ');
@@ -2445,6 +2447,7 @@ export default {
             }
           }
 
+          bookSearch.resultCounter = this.searchResultArray.length;
           //console.log(`this.searchResultArray: `, this.searchResultArray);
           //console.timeEnd('Search');
         } else {
@@ -2458,9 +2461,9 @@ export default {
             block.cleanFindMarks();
           }
           this.searchResultArray = [];
+          this.bookSearch.resultCounter = null;
         }
 
-        bookSearch.resultCounter = this.searchResultArray.length;
         bookSearch.searchPointer = 0;
 
         //console.log(`this.searchResultArray: `, this.searchResultArray);
@@ -2837,6 +2840,13 @@ export default {
         }, 400);
       },
       //deep: true
+    },
+    'bookSearch.force': {
+      handler(val) {
+        if (val) {
+          this.searchInBlocks(this.bookSearch);
+        }
+      }
     },
     'selectionModalActive': {
       handler(val) {
