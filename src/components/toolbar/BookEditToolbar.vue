@@ -29,7 +29,7 @@
         <div class="search">
           <input ref="searchInBookInput" v-model="bookSearch.string" v-on:paste.prevent="onPaste" v-on:keyup.enter="scrollSearchDown" v-on:keyup.escape="toggleSearchVisible" type="text" class="form-control search-in-book" placeholder="Search"></input>
         </div>
-        <div class="results"><span v-show="bookSearch.string.length > 2">{{getSearchCounters}}</span></div>
+        <div class="results"><span v-show="bookSearch.resultCounter !== null">{{getSearchCounters}}</span></div>
         <div class="buttons">
           <i class="fa fa-chevron-down" aria-hidden="true" @click='scrollSearchDown'></i>
           <i class="fa fa-chevron-up" aria-hidden="true" @click='scrollSearchUp'></i>
@@ -204,6 +204,7 @@ export default {
       });
     },
     scrollSearchDown(ev) {
+      this.bookSearch.force = ev.keyCode === 13;
       this.$root.$emit('from-book-edit-toolbar:scroll-search-down');
     },
     scrollSearchUp(ev) {
