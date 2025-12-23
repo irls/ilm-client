@@ -171,7 +171,7 @@
   import Vue from 'vue'
   import api_config from '../mixins/api_config.js'
   import task_controls from '../mixins/task_controls.js'
-  import BlockContextMenu from './generic/BlockContextMenu';
+  import BlockContextMenu from './books/block/BlockContextMenu';
   import {mapActions, mapGetters} from 'vuex'
   import _ from 'lodash';
   //import Peaks from 'peaks.js';

@@ -31,6 +31,7 @@ import booksModule from "./modules/book";
 import suggestionsModule from './modules/suggestions';
 import filterTagsModule from "./modules/filterTag";
 import collectionsModule from "./modules/collection";
+import blocksModule from "./modules/block";
 // const ilm_content = new PouchDB('ilm_content')
 // const ilm_content_meta = new PouchDB('ilm_content_meta')
 
@@ -104,7 +105,8 @@ export const store = new Vuex.Store({
     suggestionsModule,
     booksModule,
     filterTagsModule,
-    collectionsModule
+    collectionsModule,
+    blocksModule
   },
   state: {
     SelectionModalProgress:0,
@@ -763,6 +765,14 @@ export const store = new Vuex.Store({
         pages: 0,
         total: 0
       }
+    },
+    isMultiBlocksSelected: state => {
+      return state.blockSelection.start._id && state.blockSelection.end._id && state.blockSelection.start._id !== state.blockSelection.end._id;
+    },
+    isBlockSelected: (state, getters) => (blockid) => {
+      return getters.selectedBlocksData.find(block => {
+        return block.blockid === blockid;
+      }) ? true : false;
     }
   },
 
@@ -1618,7 +1628,6 @@ export const store = new Vuex.Store({
 
       if (state.blockSelection.start && state.blockSelection.start._id && state.blockSelection.end && state.blockSelection.end._id) {
         let crossId = state.blockSelection.start._id;
-        let this_ = this;
         promises.push(new Promise((resolve, reject) => {
           let size = state.storeList.size;
           let idx = 0;
@@ -1633,32 +1642,7 @@ export const store = new Vuex.Store({
     },
 
     async set_selected_blocks({ state, commit, dispatch }) {
-      // debugger
-      // if(state.storeList.size>5){
-        return await dispatch('set_selected_blocksAsync');
-
-        // state.set_selected_blocksAsync(state);
-      // }
-      let blockList = [];
-      if (state.blockSelection.start && state.blockSelection.start._id && state.blockSelection.end && state.blockSelection.end._id) {
-        let crossId = state.blockSelection.start._id;
-        for (let idx = 0; idx < state.storeList.size; idx++) {
-          let block = state.storeList.get(crossId);
-          if (block) {
-            blockList.push(block);
-
-            if (block.blockid == state.blockSelection.end._id) {
-              break;
-            }
-            crossId = state.storeListO.getOutId(block.blockid);
-            if (!crossId) {
-              break;
-            }
-          } else break;
-        }
-      }
-      state.selectedBlocks = blockList;
-
+      return await dispatch('set_selected_blocksAsync');
     },
     setAudioRenamingStatus({ state, commit, dispatch },status) {
       commit('SET_AUDIO_RENAMING',status);
@@ -4399,6 +4383,14 @@ export const store = new Vuex.Store({
                       commit('set_storeList', new BookBlock(block));
                       commit('clear_block_lock', {block: {blockid: block.blockid}, type: oldIds[block.blockid]});
                     });
+                    Object.keys(oldIds).forEach(blockid => {
+                      let block = blocks.find(blk => {
+                        return blk.blockid === blockid;
+                      });
+                      if (!block) {
+                        commit('clear_block_lock', {block: {blockid: blockid}, type: oldIds[blockid]});
+                      }
+                    });
                     return {};
                   });
                 dispatch('getAlignCount');
@@ -4412,14 +4404,26 @@ export const store = new Vuex.Store({
                         ({updateType, voicework, blockType} = JSON.parse(r.content));
                       }
                       delete r.content;
-                      dispatch('addBlockLock', {
-                        block: r,
-                        type: r.taskType,
-                        inProcess: true,
-                        blockType,
-                        updateType,
-                        voicework
-                      });
+                      if (["deleteBlocks", "joinBlocks"].includes(r.taskType)) {
+                        r.params.blockids.forEach(blockid => {
+                          dispatch('addBlockLock', {
+                            block: {
+                              blockid: blockid
+                            },
+                            type: r.taskType,
+                            inProcess: true
+                          });
+                        });
+                      } else {
+                        dispatch('addBlockLock', {
+                          block: r,
+                          type: r.taskType,
+                          inProcess: true,
+                          blockType,
+                          updateType,
+                          voicework
+                        });
+                      }
                     });
                     dispatch('startProcessQueueWatch');
                   }

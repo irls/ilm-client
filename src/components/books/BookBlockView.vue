@@ -60,66 +60,71 @@
                       dir="top"
                       :update="update"
                       @click.stop>
+                    <BlockBurgerMenu 
+                      :isHideArchFlags="isHideArchFlags" 
+                      :toggleArchFlags="toggleArchFlags" 
+                      :block="block" />
+                    <template v-if="!multiBlockBurgerMenu">
+                      <li v-if="isHideArchFlags"
+                        @click.prevent="toggleArchFlags()">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                        Show archived flags</li>
+                      <li v-else
+                        @click.prevent="toggleArchFlags()">
+                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                        Hide archived flags</li>
 
-                    <li v-if="isHideArchFlags"
-                      @click.prevent="toggleArchFlags()">
-                      <i class="fa fa-eye" aria-hidden="true"></i>
-                      Show archived flags</li>
-                    <li v-else
-                      @click.prevent="toggleArchFlags()">
-                      <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                      Hide archived flags</li>
-
-                    <li class="separator"></li>
-                    <template v-if="allowEditing || proofreadModeReadOnly">
-                      <template v-if="!proofreadModeReadOnly">
-                      <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
-                        <i class="fa fa-angle-up" aria-hidden="true"></i>
-                        Insert block before</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Insert block before</li>
-                      <li v-if="!isBlocked" @click="insertBlockAfter()">
-                        <i class="fa fa-angle-down" aria-hidden="true"></i>
-                        Insert block after</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Insert block after</li>
-                      <li v-if="!isBlockLocked(prevId)" @click="confirmDeleteBlock()">
-                        <i class="fa fa-trash" aria-hidden="true"></i>
-                        Delete block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Delete block</li>
-                      <!--<li>Split block</li>-->
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
-                        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
-                        Join with previous block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="joinWithNext()">
-                        <i class="fa fa-angle-double-down" aria-hidden="true"></i>
-                        Join with next block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Join with next block</li>
                       <li class="separator"></li>
-                      </template>
-                      <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
-                          <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                            <option v-if="block.language != false && !blockLanguages.hasOwnProperty(block.language)" :value="block.language">{{ block.language }}</option>
-                            <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
-                        </select>
-                      </li>
-                      <li class="separator"></li>
-                      <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
-                      <li @click="openEditBlockHtml()">
-                        <i class="fa fa-code" aria-hidden="true"></i>
-                        {{editBlockHTMLLabel}}
-                      </li>
-                      <li class="separator"></li>
+                      <template v-if="allowEditing || proofreadModeReadOnly">
+                        <template v-if="!proofreadModeReadOnly">
+                        <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
+                          <i class="fa fa-angle-up" aria-hidden="true"></i>
+                          Insert block before</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Insert block before</li>
+                        <li v-if="!isBlocked" @click="insertBlockAfter()">
+                          <i class="fa fa-angle-down" aria-hidden="true"></i>
+                          Insert block after</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Insert block after</li>
+                        <li v-if="!isBlockLocked(prevId)" @click="confirmDeleteBlock()">
+                          <i class="fa fa-trash" aria-hidden="true"></i>
+                          Delete block</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Delete block</li>
+                        <!--<li>Split block</li>-->
+                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
+                          <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+                          Join with previous block</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Join with previous block</li>
+                        <li v-if="!isBlockLocked(block._id) && !isBlockLocked(storeListO.getOutId(block.blockid))" @click="joinWithNext()">
+                          <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                          Join with next block</li>
+                        <li v-else class="disabled">
+                          <i class="fa menu-preloader" aria-hidden="true"></i>
+                          Join with next block</li>
+                        <li class="separator"></li>
+                        </template>
+                        <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
+                            <i class="fa fa-language" aria-hidden="true"></i>
+                            Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
+                              <option v-if="block.language != false && !blockLanguages.hasOwnProperty(block.language)" :value="block.language">{{ block.language }}</option>
+                              <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
+                          </select>
+                        </li>
+                        <li class="separator"></li>
+                        <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
+                        <li @click="openEditBlockHtml()">
+                          <i class="fa fa-code" aria-hidden="true"></i>
+                          {{editBlockHTMLLabel}}
+                        </li>
+                        <li class="separator"></li>
+                        </template>
                       </template>
                     </template>
                   </block-menu>
@@ -536,7 +541,8 @@ import {  QuoteButton, QuotePreview,
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
 import BlockMenu          from '../generic/BlockMenu';
-import BlockContextMenu   from '../generic/BlockContextMenu';
+import BlockContextMenu   from './block/BlockContextMenu';
+import BlockBurgerMenu    from './block/BlockBurgerMenu.vue';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
@@ -557,19 +563,10 @@ import LockedBlockActions   from './block/LockedBlockActions';
 import FlagComment          from './block/FlagComment';
 import EditHTMLModal        from './block/EditHTML';
 import CoupletWarningPopup  from "./CoupletWarningPopup.vue";
-import DeleteBlockModal     from './block/DeleteBlockModal';
+import DeleteBlockWarning   from './block/DeleteBlockWarning.vue';
 import ChangeVoiceworkModal from './block/ChangeVoiceworkModal';
-//import { tabs, tab } from 'vue-strap';
-// import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.js');
-// import('jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.min.css');
-//import hljs from 'highlight.js';
-//import VueHighlightJS from 'vue-highlightjs';
 const BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
-//Vue.use(hljs.vuePlugin);
-//Vue.use(VueHighlightJS);
-
-import Deferred from "@src/mixins/deferred.js";
 
 export default {
   data () {
@@ -651,6 +648,7 @@ export default {
       //'tab': tab,// vue-strap,
       LockedBlockActions,
       FlagComment,
+      BlockBurgerMenu
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder', 'playNextBlock', 'checkVisible', 'checkFullyVisible'],
   mixins: [taskControls, apiConfig, access, toc_methods],
@@ -1110,7 +1108,10 @@ Save or discard your changes to continue editing`,
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
           blockLockedSimultaneous: 'blockLockedSimultaneous',
           updatingNumeration: 'updatingNumeration',
-          suspiciousWordsHighlight: 'suspiciousWordsHighlight'
+          suspiciousWordsHighlight: 'suspiciousWordsHighlight',
+          isMultiBlocksSelected: 'isMultiBlocksSelected',
+          isBlockSelected: 'isBlockSelected',
+          selectedBlocksData: 'selectedBlocksData'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1335,6 +1336,12 @@ Save or discard your changes to continue editing`,
             };
           }
           return false;
+        },
+        cache: false
+      },
+      multiBlockBurgerMenu: {
+        get() {
+          return this.isBlockSelected(this.block.blockid) && this.isMultiBlocksSelected;
         },
         cache: false
       }
@@ -3190,6 +3197,15 @@ Save text changes and realign the Block?`,
           } else {
             return;
           }
+        } else if (this.mode === "narrate") {
+          let hasOpenFlag = foundBlockFlag[0].parts.find(part => {
+            return part.status !== "hidden";
+          });
+          if (!hasOpenFlag) {
+            this.block.addFlag(flagId, {}, type, this.mode);
+            this.isChanged = true;
+            this.pushChange('flags');
+          }
         }
 
         this.flagsSel = this.block.flags.filter((flag)=>{
@@ -3361,6 +3377,7 @@ Save text changes and realign the Block?`,
 
       toggleArchFlags: function(ev, partIdx) {
         this.isHideArchFlags = !this.isHideArchFlags;
+        this.block.set_isHideArchFlags(this.isHideArchFlags);
       },
 
       toggleHideArchParts: function() {
@@ -3648,17 +3665,23 @@ Save text changes and realign the Block?`,
         }
       },
       confirmDeleteBlock() {
-        this.$modal.show(DeleteBlockModal, {
-          deleteBlock: this.deleteBlock
+        let deleteInfo = {};
+        this.$modal.show(DeleteBlockWarning, {
+          deleteInfo: deleteInfo,
+          delete_count: 1
         },
         {
-          resizeable: false,
-          clickToClose: false,
-          height: "auto"
+          height: 'auto',
+          width: '440px',
+          clickToClose: false
         },
         {
-          'closed': () => {
-
+          'closed': (e) => {
+            if (deleteInfo && deleteInfo.success) {
+              return this.deleteBlock();
+            } else {
+              return Promise.resolve(false);
+            }
           }
         });
       },
@@ -5061,6 +5084,12 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
+      },
+      'block.isHideArchFlags': {
+        handler(val) {
+          console.log(`isHideArchFlags`, val)
+        },
+        deep: true
       }
 
   }
