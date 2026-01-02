@@ -121,7 +121,7 @@
         },
         cache: false
       },
-      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked'])
+      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO'])
     },
     methods: {
       setLanguage() {
@@ -131,6 +131,7 @@
         if (!this.allowMultiAction) {
           return false;
         }
+        let checkBlocks = this.getSelectedBlocks();// force re read actual blocks
         let typeDiffers = this.selectedBlocksData.find(blk => {
           return this.selectedBlocksData.find(block => {
             return blk.type !== block.type;
@@ -149,8 +150,8 @@
           this.$root.$emit('join_voicework_differs');
           return false;
         }
-        let hasChanges = this.selectedBlocksData.find(blk => {
-          return blk.isChanged || blk.hasChangedPart() || blk.isAudioChanged;
+        let hasChanges = checkBlocks.find(blk => {
+          return blk.getIsChanged() || blk.hasChangedPart() || blk.isAudioChanged;
         });
         if (hasChanges) {
           this.$root.$emit('join_has_changes');
@@ -221,6 +222,23 @@
             block.set_isHideArchFlags(false);
           });
         }
+      },
+      getSelectedBlocks() {
+        let data = [];
+        if (this.blockSelection.start._id && this.blockSelection.end._id) {
+          let crossId = this.blockSelection.start._id;
+          for (let idx = 0; idx < this.storeList.size; idx++) {
+            let block = this.storeList.get(crossId);
+            if (block) {
+              data.push(block);
+              if (block._id === this.blockSelection.end._id) {
+                break;
+              }
+              crossId = this.storeListO.getOutId(block.blockid);
+            } else break;
+          }
+        }
+        return data;
       },
       ...mapActions('blocksModule', ['massSetLanguage', 'massDelete', 'massJoin'])
     }

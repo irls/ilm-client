@@ -5084,12 +5084,6 @@ Save text changes and realign the Block?`,
             this.initEditor(true);
           }
         }
-      },
-      'block.isHideArchFlags': {
-        handler(val) {
-          console.log(`isHideArchFlags`, val)
-        },
-        deep: true
       }
 
   }
