@@ -74,7 +74,7 @@ export default {
         });
     },
 
-    massDelete({state, rootState, dispatch}) {
+    massDelete({state, rootState, dispatch, commit}) {
       let blockids = rootState.selectedBlocks.reduce((acc, block) => {
         acc.push(block.blockid);
         return acc;
@@ -83,6 +83,7 @@ export default {
         blockids: blockids
       })
         .then(response => {
+          commit('clear_blockSelection', null, { root: true });
           return dispatch('getProcessQueue', {}, { root: true });
         });
     },
@@ -99,6 +100,12 @@ export default {
         line_breaks: line_breaks
       })
         .then(response => {
+          if (rootState.blockSelection.start._id && rootState.blockSelection.end._id) {
+            dispatch('setBlockSelection', {
+              start: { _id: rootState.blockSelection.start._id }, 
+              end: { _id: rootState.blockSelection.start._id }
+            }, { root: true });
+          }
           return dispatch('getProcessQueue', {}, { root: true });
         });
     }
