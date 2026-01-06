@@ -132,8 +132,8 @@
           return false;
         }
         let checkBlocks = this.getSelectedBlocks();// force re read actual blocks
-        let typeDiffers = this.selectedBlocksData.find(blk => {
-          return this.selectedBlocksData.find(block => {
+        let typeDiffers = checkBlocks.find(blk => {
+          return checkBlocks.find(block => {
             return blk.type !== block.type;
           });
         });
@@ -141,8 +141,8 @@
           this.$root.$emit('join_type_differs');
           return false;
         }
-        let voiceworkDiffers = this.selectedBlocksData.find(blk => {
-          return this.selectedBlocksData.find(block => {
+        let voiceworkDiffers = checkBlocks.find(blk => {
+          return checkBlocks.find(block => {
             return blk.voicework !== block.voicework;
           });
         });
