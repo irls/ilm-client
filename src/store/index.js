@@ -4383,14 +4383,21 @@ export const store = new Vuex.Store({
                       commit('set_storeList', new BookBlock(block));
                       commit('clear_block_lock', {block: {blockid: block.blockid}, type: oldIds[block.blockid]});
                     });
+                    let checkAlignQueue = false;
                     Object.keys(oldIds).forEach(blockid => {
                       let block = blocks.find(blk => {
                         return blk.blockid === blockid;
                       });
                       if (!block) {
+                        if (!checkAlignQueue) {
+                          checkAlignQueue = ["joinBlocks"].includes(oldIds[blockid]);
+                        }
                         commit('clear_block_lock', {block: {blockid: blockid}, type: oldIds[blockid]});
                       }
                     });
+                    if (checkAlignQueue) {
+                      dispatch('getBookAlign');
+                    }
                     return {};
                   });
                 dispatch('getAlignCount');
