@@ -121,7 +121,7 @@
         },
         cache: false
       },
-      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO'])
+      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock'])
     },
     methods: {
       setLanguage() {
@@ -171,6 +171,7 @@
         {
           'closed': (e) => {
             if (joinInfo && joinInfo.success) {
+              this.checkAudioEditing();
               return this.massJoin([[], joinInfo.line_breaks])
                 .then(() => {
                   return Promise.resolve(true);
@@ -198,6 +199,7 @@
         {
           'closed': (e) => {
             if (deleteInfo && deleteInfo.success) {
+              this.checkAudioEditing();
               return this.massDelete()
                 .then(() => {
                   return Promise.resolve(true);
@@ -240,6 +242,17 @@
           }
         }
         return data;
+      },
+      checkAudioEditing() {
+        let editingBlock = this.audioTasksQueueBlock();
+        if (editingBlock && editingBlock.blockid) {
+          let block = this.selectedBlocksData.find(blk => {
+            return blk.blockid === editingBlock.blockid;
+          });
+          if (block) {
+            this.$root.$emit('for-audioeditor:force-close');
+          }
+        }
       },
       ...mapActions('blocksModule', ['massSetLanguage', 'massDelete', 'massJoin'])
     }
