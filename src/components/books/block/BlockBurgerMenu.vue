@@ -38,7 +38,7 @@
       </li>
     </template>
     <li class="separator"></li>
-    <li>
+    <li @click.stop="() => {return false}">
       <i class="fa fa-language" aria-hidden="true"></i>
       Language: 
       <select v-model="selectedLanguage" v-on:change="setLanguage">
@@ -125,6 +125,7 @@
     },
     methods: {
       setLanguage() {
+        this.$parent.close();
         return this.massSetLanguage([this.selectedLanguage]);
       },
       joinBlocks() {
