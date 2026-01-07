@@ -59,6 +59,7 @@ import Vue from 'vue'
         },
 
         close: function() {
+            console.log('on close')
             this.viewMenu = false;
             this.top = 0 + 'px';
             this.left = 0 + 'px';
