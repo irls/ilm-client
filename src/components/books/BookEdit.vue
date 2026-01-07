@@ -1074,7 +1074,7 @@ export default {
                 this.unableToJoinAdaptedMessage(this.meta.copy_type === "adapted");
                 return Promise.reject(new Error("adapted_mismatch"));
               }
-              this.sureToJoinBlocks('previous',elBlock, elNext, block, blockBefore);
+              this.sureToJoinBlocks('previous',elBlock, elNext, blockBefore, block);
             }
           })
         } break;
