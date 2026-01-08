@@ -121,7 +121,7 @@
         },
         cache: false
       },
-      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock'])
+      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta'])
     },
     methods: {
       setLanguage() {
@@ -156,6 +156,15 @@
         });
         if (hasChanges) {
           this.$root.$emit('join_has_changes');
+          return false;
+        }
+        let adaptDiffers = checkBlocks.find(blk => {
+          return checkBlocks.find(block => {
+            return (blk.adapted || block.adapted) && blk.adapted !== block.adapted;
+          });
+        });
+        if (adaptDiffers) {
+          this.$root.$emit('join_adapted_differs', this.currentBookMeta && this.currentBookMeta.copy_type === "adapted");
           return false;
         }
         let joinInfo = {};
