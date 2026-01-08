@@ -1550,9 +1550,14 @@ export default {
         }
       }
       //console.log(`firstVisible: `, firstVisible.blockid);
+
+      this.editorsTop = range.padFront + countHeight;
       if (!firstVisible) {
         const blockId = this.parlistO.idsArray()[range.end];
-        this.scrollToBlock(blockId);
+        //Vue.nextTick(() => {
+          this.scrollToBlock(blockId);
+        //});
+         this.correctCurrentEditHeight(blockId);
         return;
       }
 
@@ -1561,7 +1566,7 @@ export default {
         this.startId = firstVisible.blockid;
       }
 
-      this.editorsTop = range.padFront + countHeight;
+      //this.editorsTop = range.padFront + countHeight;
 
 //       this.$refs.blocks.forEach((block, bIdx)=>{
 //         this.correctCurrentEditHeight(block.blockId);
@@ -2601,6 +2606,7 @@ export default {
       this.$root.$on('join_type_differs', this.unableJoinMessage);
       this.$root.$on('join_voicework_differs', this.unableToJoinVoiceworkMessage);
       this.$root.$on('join_has_changes', this.unableToJoinChangedMessage);
+      this.$root.$on('join_adapted_differs', this.unableToJoinAdaptedMessage);
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         if (e.target.hasAttribute('data-except-link-prevent')) return;
@@ -2680,32 +2686,13 @@ export default {
     this.$root.$off('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
     this.$root.$off('join_type_differs', this.unableJoinMessage);
     this.$root.$off('join_voicework_differs', this.unableToJoinVoiceworkMessage);
+    this.$root.$off('join_adapted_differs', this.unableToJoinAdaptedMessage);
     this.$root.$off('join_has_changes', this.unableToJoinChangedMessage);
 
     // unsubscribe
     this.subscribeOnVoiceworkBlocker();
   },
   watch: {
-    'meta._id': {
-      handler(newVal, oldVal) {
-        console.log('watch meta._id', newVal, oldVal);
-//         if (newVal) {
-//           this.tc_loadBookTask()
-//           .then(()=>{
-//             this.loadBookDown(true)
-//             .then(()=>{
-//               this.setBlockWatch();
-//               //this.loadBookBlocks(newVal);
-//             });
-//           });
-//         }
-      }
-    },
-//     'allBooks': {
-//       handler() {
-//
-//       }
-//     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
