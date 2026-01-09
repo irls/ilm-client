@@ -927,19 +927,22 @@ export const store = new Vuex.Store({
       //console.log(`state.currentBookFiles[${fileObj.fileName}] : `, state.currentBookFiles[fileObj.fileName] );
     },
 
-    SET_CURRENT_COLLECTION (state, _id) {
+    SET_CURRENT_COLLECTION (state, setObj) {
       //console.log(`SET_CURRENT_COLLECTION: `, _id);
       let currentCollection = null;
+      let _id = setObj && setObj instanceof Object ? setObj._id : setObj;
       if (_id) {
         let collection = state.bookCollections.find(c => {
           return c._id === _id;
         });
         if (collection) {
           currentCollection = collection;
+        } else if (setObj instanceof Object) {
+          currentCollection = lodash.cloneDeep(setObj);
         }
       }
       if (!(currentCollection instanceof Collection)) {
-        currentCollection = new Collection({});
+        currentCollection = new Collection(setObj instanceof Object ? setObj : {});
       }
       if (currentCollection._id === state.currentCollection._id && currentCollection.books_list.length === 0) {
         currentCollection.books_list = state.currentCollection.books_list;
@@ -2364,7 +2367,7 @@ export const store = new Vuex.Store({
               state.bookCollectionsAll[cIndex] = collection;
             }
             commit('PREPARE_BOOK_COLLECTIONS');
-            commit('SET_CURRENT_COLLECTION', id);
+            commit('SET_CURRENT_COLLECTION', collection);
             return Promise.resolve();
           })
           .catch(err => {
