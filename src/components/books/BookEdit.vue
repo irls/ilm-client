@@ -1447,12 +1447,37 @@ export default {
       this.parlistO.setUnCheckedRange()
     },
 
-    scrollToBlock(blockId, blockPartIdx = null)
+    scrollToBlock(blockId, blockPartIdx = null, attempt = 0)
     {
       const nextIdx = this.parlistO.idsArray().indexOf(blockId);
 
       if (nextIdx >-1 && nextIdx < this.parlistO.idsArray().length) {
         this.hotkeyScrollTo = -1;
+        let frontElement = document.querySelector(`[id="${blockId}"]`);
+        if (!frontElement && attempt < 2) {// limit attempts to avoid endless recursive calls
+          let div = document.getElementById('t1');
+          const pullUpElement = () => {// recursive method call if block element not visible after scroll
+            let block = this.parlist.get(blockId);
+            Vue.nextTick(() => {
+              this.$root.$on(`block-view-mounted`, () => {
+                this.$root.$off(`block-view-mounted`);
+                frontElement = document.querySelector(`[id="${blockId}"]`);
+                let firstW;
+                if (frontElement) {
+                  firstW = frontElement.querySelector('w:first-child');
+                  if (block && ['hr', 'illustration'].includes(block.type)) {
+                    firstW = frontElement.querySelector('.controls-top');
+                  }
+                }
+                if (!frontElement || (firstW && !this.checkFullyVisible(firstW))) {
+                  this.scrollToBlock(blockId, blockPartIdx, ++attempt);
+                }
+              });
+            });
+            div.removeEventListener('scroll', pullUpElement);
+          };
+          div.addEventListener('scroll', pullUpElement);
+        }
         Vue.nextTick(()=>{
           this.hotkeyScrollTo = nextIdx;
         });
