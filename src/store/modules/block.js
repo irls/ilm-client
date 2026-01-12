@@ -4,10 +4,12 @@ import lodash from "lodash";
 export default {
   namespaced: true,
   state: {
-    
+    massSetLanguageProcess: false
   },
   getters: {
-    
+    massSetLanguageProcess: state => {
+      return state.massSetLanguageProcess;
+    }
   },
   mutations: {
     lockSelectedBlocks(state) {
@@ -49,6 +51,7 @@ export default {
   actions: {
     massSetLanguage({state, rootState, commit}, [ language ]) {
       commit('lockSelectedBlocks');
+      state.massSetLanguageProcess = true;
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/set_block_language`, {
         start_id: rootState.blockSelection.start._id,
         end_id: rootState.blockSelection.end._id,
@@ -56,6 +59,7 @@ export default {
       })
         .then(response => {
           commit('unlockSelectedBlocks');
+          state.massSetLanguageProcess = false;
           if (Array.isArray(response.data)) {
             response.data.forEach(b => {
               let block = rootState.storeList.get(b.blockid);
@@ -70,6 +74,7 @@ export default {
         })
         .catch(err => {
           commit('unlockSelectedBlocks');
+          state.massSetLanguageProcess = false;
           return Promise.reject(err);
         });
     },

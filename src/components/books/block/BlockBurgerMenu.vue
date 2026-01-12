@@ -121,12 +121,33 @@
         },
         cache: false
       },
-      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta'])
+      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta']),
+      ...mapGetters('blocksModule', ['massSetLanguageProcess'])
+    },
+    mounted() {
+      this.collecSelectedLanguage();
     },
     methods: {
       setLanguage() {
         this.$parent.close();
         return this.massSetLanguage([this.selectedLanguage]);
+      },
+      collecSelectedLanguage() {
+        this.selectedLanguage = '';
+        if (this.showMenu) {
+          let checkBlocks = this.getSelectedBlocks();
+          let langsList = [];
+          checkBlocks.forEach(block => {
+            if (!langsList.includes(block.language)) {
+              langsList.push(block.language);
+            }
+          });
+          if (langsList.length > 1) {
+            this.selectedLanguage = '';
+          } else if (langsList.length === 1) {
+            this.selectedLanguage = langsList[0];
+          }
+        }
       },
       joinBlocks() {
         if (!this.allowMultiAction) {
@@ -264,6 +285,21 @@
         }
       },
       ...mapActions('blocksModule', ['massSetLanguage', 'massDelete', 'massJoin'])
+    },
+    watch: {
+      'blockSelection': {
+        handler(val) {
+          this.collecSelectedLanguage();
+        },
+        deep: true
+      },
+      'massSetLanguageProcess': {
+        handler(val) {
+          if (!val) {
+            this.collecSelectedLanguage();
+          }
+        }
+      }
     }
   }
 </script>
