@@ -109,9 +109,10 @@ import Vue from 'vue'
     margin: 0;
     padding: 0;
     position: absolute;
-    width: 250px;
+    min-width: 250px;
     z-index: 999999;
     outline: none;
+    width: auto;
 }
 
 .click-menu li {

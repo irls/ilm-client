@@ -125,7 +125,7 @@ Vue.use(VueHotkey);
 
 import SvelteBookPreview from "./previews/BookPreview.svelte";
 import toVue from "svelte-adapter/vue";
-import TaskAddModal from "../tasks/TaskAddModal";
+import JoinBlocksWarning from './block/JoinBlocksWarning.vue';
 
 export default {
   data () {
@@ -322,6 +322,9 @@ export default {
     ]),
     ...mapActions('tocSections', [
       'loadBookTocSections'
+    ]),
+    ...mapActions('blocksModule', [
+      'massJoin'
     ]),
     ...mapMutations('suggestionsModule', [
       'setDoNotDisturb'
@@ -1071,7 +1074,7 @@ export default {
                 this.unableToJoinAdaptedMessage(this.meta.copy_type === "adapted");
                 return Promise.reject(new Error("adapted_mismatch"));
               }
-              this.sureToJoinBlocks('previous',elBlock, elNext, block, blockBefore);
+              this.sureToJoinBlocks('previous',elBlock, elNext, blockBefore, block);
             }
           })
         } break;
@@ -1244,28 +1247,24 @@ export default {
     },
 
     sureToJoinBlocks(direction, elBlock, elNext, blockFirst, blockSecond ) {
-      let thisVueComponent = this //needed to save reference to variable in async function
-      this.$root.$emit('show-modal', {
-        title: 'Join blocks',
-        text: 'Task Assignments and Styles for the lower block will be discarded.<br> Join blocks?',
-        buttons: [
-          {
-            title: 'Cancel',
-            handler: () => {
-              this.$root.$emit('hide-modal');
-            },
-            class: ['btn btn-default']
-          },
-          {
-            title: 'Join',
-            handler: () => {
-              if(direction === 'previous')  thisVueComponent.continueToJoinWithPrevious(elBlock, elNext, blockFirst, blockSecond);
-              else thisVueComponent.continueToJoinWithNext(elBlock, elNext, blockFirst, blockSecond);
-            },
-            'class': 'btn btn-primary'
+      let joinInfo = {};
+      this.$modal.show(JoinBlocksWarning, {
+        joinInfo: joinInfo,
+        join_count: 2
+      },
+      {
+        height: 'auto',
+        width: '460px',
+        clickToClose: false
+      },
+      {
+        'closed': (e) => {
+          if (joinInfo && joinInfo.success) {
+            return this.massJoin([[blockFirst.blockid, blockSecond.blockid], joinInfo.line_breaks]);
+          } else {
+            return Promise.resolve(false);
           }
-        ],
-        class: ['sureJoin', 'align-modal']
+        }
       });
     },
 
@@ -1551,9 +1550,14 @@ export default {
         }
       }
       //console.log(`firstVisible: `, firstVisible.blockid);
+
+      this.editorsTop = range.padFront + countHeight;
       if (!firstVisible) {
         const blockId = this.parlistO.idsArray()[range.end];
-        this.scrollToBlock(blockId);
+        //Vue.nextTick(() => {
+          this.scrollToBlock(blockId);
+        //});
+         this.correctCurrentEditHeight(blockId);
         return;
       }
 
@@ -1562,7 +1566,7 @@ export default {
         this.startId = firstVisible.blockid;
       }
 
-      this.editorsTop = range.padFront + countHeight;
+      //this.editorsTop = range.padFront + countHeight;
 
 //       this.$refs.blocks.forEach((block, bIdx)=>{
 //         this.correctCurrentEditHeight(block.blockId);
@@ -2602,6 +2606,10 @@ export default {
       this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
 
       this.$root.$on('from-block-part-view:on-input', this.correctCurrentEditHeight);
+      this.$root.$on('join_type_differs', this.unableJoinMessage);
+      this.$root.$on('join_voicework_differs', this.unableToJoinVoiceworkMessage);
+      this.$root.$on('join_has_changes', this.unableToJoinChangedMessage);
+      this.$root.$on('join_adapted_differs', this.unableToJoinAdaptedMessage);
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
         if (e.target.hasAttribute('data-except-link-prevent')) return;
@@ -2679,31 +2687,15 @@ export default {
     this.$root.$off('from-block-part-view:on-input', this.correctCurrentEditHeight);
     this.$root.$off('from-book-edit-toolbar:scroll-search-down', this.scrollSearchDown);
     this.$root.$off('from-book-edit-toolbar:scroll-search-up', this.scrollSearchUp);
+    this.$root.$off('join_type_differs', this.unableJoinMessage);
+    this.$root.$off('join_voicework_differs', this.unableToJoinVoiceworkMessage);
+    this.$root.$off('join_adapted_differs', this.unableToJoinAdaptedMessage);
+    this.$root.$off('join_has_changes', this.unableToJoinChangedMessage);
 
     // unsubscribe
     this.subscribeOnVoiceworkBlocker();
   },
   watch: {
-    'meta._id': {
-      handler(newVal, oldVal) {
-        console.log('watch meta._id', newVal, oldVal);
-//         if (newVal) {
-//           this.tc_loadBookTask()
-//           .then(()=>{
-//             this.loadBookDown(true)
-//             .then(()=>{
-//               this.setBlockWatch();
-//               //this.loadBookBlocks(newVal);
-//             });
-//           });
-//         }
-      }
-    },
-//     'allBooks': {
-//       handler() {
-//
-//       }
-//     },
     '$route' (toRoute, fromRoute) {
       //console.log('$route', toRoute, fromRoute);
       if (toRoute.params.hasOwnProperty('task_type') && toRoute.params.task_type) {
