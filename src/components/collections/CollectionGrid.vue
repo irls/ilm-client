@@ -1,5 +1,6 @@
 <template>
   <div id="books_grid">
+    {{ collectionsPage }}
     <div v-for="collection in collectionsPage" class="collection-container">
       <div v-on:click="rowClick(collection, $event)"
         :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
@@ -9,6 +10,7 @@
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
+      {{ collection }}
       <Grid id='books_grid_grid'
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
@@ -110,18 +112,19 @@
           }
           return false;
         },
-        async initScroll(selectedBookId) {
-          if (this.filteredBooks.some((book)=>book.bookid == selectedBookId)) {
-            await Vue.nextTick();
-            this.goToBookPage(selectedBookId);
-            await Vue.nextTick();
-            this.scrollToRow(selectedBookId);
-            this.selectedBooks = [selectedBookId];
-          } else {
-            this.$router.replace({ name: 'CollectionBooks' });
-            this.selectedBooks = [];
-          }
-          return true;
+        async initScroll(selectedCollectionId) {
+          return this.loadCollection(selectedCollectionId)
+            .then(collection => {
+              Vue.nextTick(() => {
+                if (this.$route.params.bookid) {
+                  this.goToBookPage(selectedBookId);
+                  Vue.nextTick(() => {
+                    this.scrollToRow(selectedBookId);
+                    this.selectedBooks = [selectedBookId];
+                  });
+                }
+              });
+            });
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
@@ -136,15 +139,15 @@
             && data.from != data.to) {
           }
         },
-        ...mapActions([])
+        ...mapActions(['loadCollection'])
       },
       mounted() {
         if (this.$route && this.$route.params) {
-          if (this.$route.params.hasOwnProperty('bookid')) {
-            if (this.filteredBooks.some((book)=>book.bookid == this.$route.params.bookid)) {
-              this.initScroll(this.$route.params.bookid)
-            }
-          }
+          //if (this.$route.params.hasOwnProperty('bookid')) {
+            //if (this.filteredBooks.some((book)=>book.bookid == this.$route.params.bookid)) {
+              this.initScroll(this.$route.params.collectionid)
+            //}
+          //}
         }
       },
       computed: {
