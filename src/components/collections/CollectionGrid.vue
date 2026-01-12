@@ -1,6 +1,5 @@
 <template>
   <div id="books_grid">
-    {{ collectionsPage }}
     <div v-for="collection in collectionsPage" class="collection-container">
       <div v-on:click="rowClick(collection, $event)"
         :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
@@ -10,7 +9,6 @@
           {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
         </span>
       </div>
-      {{ collection }}
       <Grid id='books_grid_grid'
           v-if="isOpenPanel(collection)"
           :data="collection.books_list"
