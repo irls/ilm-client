@@ -204,6 +204,7 @@
               this.checkAudioEditing();
               return this.massJoin([[], joinInfo.line_breaks])
                 .then(() => {
+                  this.$root.$emit('for-bookedit:scroll-to-block', checkBlocks[0].blockid);
                   return Promise.resolve(true);
                 });
             } else {
