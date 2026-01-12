@@ -939,6 +939,8 @@ export const store = new Vuex.Store({
           currentCollection = collection;
         } else if (setObj instanceof Object) {
           currentCollection = lodash.cloneDeep(setObj);
+        } else if (!collection && state.currentCollection._id && setObj === state.currentCollection._id) {
+          currentCollection = lodash.cloneDeep(state.currentCollection);
         }
       }
       if (!(currentCollection instanceof Collection)) {
