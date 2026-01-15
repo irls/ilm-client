@@ -79,14 +79,16 @@
           return false;
         },
         async initScroll(selectedCollectionId) {
-          if (this.filteredCollections.some((coll)=>coll._id == selectedCollectionId)) {
-            this.$store.dispatch('loadCollection', selectedCollectionId);
-            await Vue.nextTick();
-            this.goToBookPage(selectedCollectionId);
-            await Vue.nextTick();
-            this.scrollToRow(selectedCollectionId);
-            this.selectedBooks = [selectedCollectionId];
-          }
+          return this.loadCollection(selectedCollectionId)
+            .then(collection => {
+              Vue.nextTick(() => {
+                this.goToBookPage(selectedCollectionId);
+                Vue.nextTick(() => {
+                  this.scrollToRow(selectedCollectionId);
+                  this.selectedBooks = [selectedCollectionId];
+                });
+              });
+            })
         },
         goToGridPage(page) {
           this.getCollections(Object.assign(this.collectionsFilters, { page: page }));
@@ -99,7 +101,7 @@
             }
           }));
         },
-        ...mapActions(['getCollections'])
+        ...mapActions(['getCollections', 'loadCollection'])
       },
       mounted() {
         if (this.$route && this.$route.params) {

@@ -393,6 +393,7 @@ class BookBlock {
     this.audio_silences = init.audio_silences || [];
     this.data_original = init.data_original || {};
     this.adapted = init.adapted || false;
+    this.isHideArchFlags = true;
   }
 
   clean() {
@@ -550,7 +551,7 @@ class BookBlock {
           creator: userId,
           created_at: _at,
           type: type,
-          content: range.cloneContents().textContent,
+          content: range && typeof range.cloneContents === "function" ? range.cloneContents().textContent : false,
           updated_at: _at,
           creator_role: creator_role
         });
@@ -1392,6 +1393,18 @@ class BookBlock {
     } else {
       return this.parts[partIdx].audio_silences;
     }
+  }
+
+  setLanguage(language) {
+    this.language = language;
+  }
+
+  set_isHideArchFlags(val) {
+    this.isHideArchFlags = val;
+  }
+
+  get_isHideArchFlags() {
+    return this.isHideArchFlags;
   }
 }
 

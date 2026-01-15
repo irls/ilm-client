@@ -138,7 +138,7 @@
                     'updated': isUpdated,
                     'checked': blockO.checked,
                     'playing': blockAudio.src,
-                    'hide-archive': isHideArchFlags,
+                    'hide-archive': block.get_isHideArchFlags(),
                     '-end-linebreak': hasEndLinebreak
                   },
                     'part-' + blockPartIdx]"
@@ -167,14 +167,14 @@
                 <block-flag-popup
                     ref="blockFlagPopup"
                     dir="top"
-                    :isHideArchFlags="isHideArchFlags"
+                    :isHideArchFlags="block.get_isHideArchFlags()"
                     :isHideArchParts="isHideArchParts"
                     :toggleHideArchParts="toggleHideArchParts"
                     :countArchParts="countArchParts"
                 >
                   <template v-if="flagsSel">
                   <template v-for="(part, partIdx) in flagsSel.parts">
-                    <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
+                    <template v-if="part.status!=='hidden' || !block.get_isHideArchFlags() || !isHideArchParts">
                     <li>
 
                     <div class="flag-header -left">
@@ -385,7 +385,7 @@ import {  QuoteButton, QuotePreview,
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
 import BlockMenu          from '../generic/BlockMenu';
-import BlockContextMenu   from '../generic/BlockContextMenu';
+import BlockContextMenu   from './block/BlockContextMenu';
 import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import LockedBlockActions from './block/LockedBlockActions';
 import FlagComment        from './block/FlagComment';
@@ -423,7 +423,6 @@ export default {
       quoteEl: 'qq',
       suggestEl: 'sg',
       footEl: 'sup',
-      isHideArchFlags: true,
       isHideArchParts: true,
       moment: moment,
 
@@ -2728,10 +2727,6 @@ export default {
         //this.isChanged = true;
         //this.pushChange('flags');
         this.$emit('unHideFlagPart');
-      },
-
-      toggleArchFlags: function(ev, partIdx) {
-        this.isHideArchFlags = !this.isHideArchFlags;
       },
 
       toggleHideArchParts: function() {
