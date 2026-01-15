@@ -170,6 +170,9 @@
         collectionsPage: {
           cache: true,
           get() {
+            if (this.currentCollection._id) {
+              return [ this.currentCollection ];
+            }
             if (!this.bookCollections || !this.bookCollections.length) {
               return [];
             }
