@@ -8,7 +8,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" v-on:click="saveChanges">
-        Delete {{ delete_count }}
+        Delete ({{ delete_count }})
       </button>
       <button class="btn btn-default" v-on:click="closePopup">
         Cancel
