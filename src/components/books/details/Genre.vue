@@ -102,8 +102,8 @@
       canRemove(genre) {
         return this.adminOrLibrarian;
       },
-      getBookGenres() {
-        this.loadGenres([this.currentBookMeta.bookid]);
+      getBookGenres(exclude_ids = []) {
+        this.loadGenres([this.currentBookMeta.bookid, exclude_ids]);
       }
     },
     watch: {
@@ -114,7 +114,7 @@
       },
       'currentBookMeta.alt_meta.reader.category': {
         handler(val) {
-          this.getBookGenres();
+          this.getBookGenres([val]);
         }
       }
     }
