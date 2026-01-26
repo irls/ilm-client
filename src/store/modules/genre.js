@@ -34,9 +34,9 @@ export default {
     }
   },
   actions: {
-    loadGenres({state, dispatch, commit, rootState}, [ bookid = null ]) {
+    loadGenres({state, dispatch, commit, rootState}, [ bookid = null, exclude_ids = [] ]) {
       
-      let url = !bookid ? `${rootState.API_URL}genre` : `${rootState.API_URL}genre?bookid=${bookid}`;
+      let url = !bookid ? `${rootState.API_URL}genre` : `${rootState.API_URL}genre?bookid=${bookid}&exclude_ids=${exclude_ids}`;
 
       return axios.get(url)
         .then(data => {
