@@ -202,7 +202,7 @@
                 <tr class='category'>
                   <td>Reader category</td>
                   <td class="category-wrapper">
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='readerCategory' @click="updateCategory('reader', $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='readerCategory' @change="updateCategory('reader', $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
                           <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
