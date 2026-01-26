@@ -57,7 +57,7 @@
       }
     },
     mounted() {
-      this.loadGenres();
+      this.loadGenres([this.currentBookMeta.bookid ? this.currentBookMeta.bookid : null]);
     },
     methods: {
       ...mapActions(['updateBookMeta']),
@@ -101,6 +101,21 @@
       },
       canRemove(genre) {
         return this.adminOrLibrarian;
+      },
+      getBookGenres() {
+        this.loadGenres([this.currentBookMeta.bookid]);
+      }
+    },
+    watch: {
+      'currentBookMeta.bookid': {
+        handler(val) {
+          this.getBookGenres();
+        }
+      },
+      'currentBookMeta.alt_meta.reader.category': {
+        handler(val) {
+          this.getBookGenres();
+        }
       }
     }
   }

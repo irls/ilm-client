@@ -397,7 +397,10 @@
           return this.update('description', event);
         },
         clearReaderCategory(check = true) {
-          if (check && Array.isArray(this.currentCollection.bookids) && this.currentCollection.bookids.length > 0) {
+          let hasGenres = Array.isArray(this.currentCollection.bookids) && this.currentCollection.bookids.length > 0 ? this.currentCollection.books_list.find(book => {
+            return Array.isArray(book.genres) && book.genres.length > 0;
+          }) : false;
+          if (check && hasGenres) {
             this.$root.$emit('show-modal', {
               title: 'Remove Category and Genres',
               text: 'Remove Collection Category and Book Genres?',
@@ -449,30 +452,36 @@
             return this.collection.alt_meta.reader.category;
           },
           set(category) {
-            if (!this.collection.alt_meta.reader.category && category && category !== this.collection.alt_meta.reader.category) {
-              if (Array.isArray(this.currentCollection.bookids) && this.currentCollection.bookids.length > 0) {
-                return this.$root.$emit('show-modal', {
-                  title: 'Add Category and Genres',
-                  text: 'Add Collection Category and Book Genres?',
-                  buttons: [
-                    {
-                      title: 'Cancel',
-                      handler: () => {
-                        this.readerCategory = this.collection.alt_meta.reader.category;
-                        this.$forceUpdate();
-                        this.$root.$emit('hide-modal');
-                      }
-                    },
-                    {
-                      title: 'Add',
-                      handler: () => {
-                        this.$root.$emit('hide-modal');
-                        this.update('alt_meta.reader.category', {target: {value: category}});
-                      },
-                      class: ['btn btn-primary']
-                    }
-                  ]
+            if (category !== this.collection.alt_meta.reader.category) {
+              if (category) {
+                let hasCategory = this.collection.alt_meta.reader.category ? true : false;
+                let hasTitles = this.currentCollection.books_list.find(book => {
+                  return book.title && book.title.length > 0;
                 });
+                if (hasTitles) {
+                  return this.$root.$emit('show-modal', {
+                    title: hasCategory ? 'Update Category and Genres' : 'Add Category and Genres',
+                    text: hasCategory ? 'Update Collection Category and Book Genres?' : 'Add Collection Category and Book Genres?',
+                    buttons: [
+                      {
+                        title: 'Cancel',
+                        handler: () => {
+                          this.readerCategory = this.collection.alt_meta.reader.category;
+                          this.$forceUpdate();
+                          this.$root.$emit('hide-modal');
+                        }
+                      },
+                      {
+                        title: hasCategory ? 'Update' : 'Add',
+                        handler: () => {
+                          this.$root.$emit('hide-modal');
+                          this.update('alt_meta.reader.category', {target: {value: category}});
+                        },
+                        class: ['btn btn-primary']
+                      }
+                    ]
+                  });
+                }
               }
             }
             return this.liveUpdate('alt_meta.reader.category', category);

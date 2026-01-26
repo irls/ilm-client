@@ -34,15 +34,21 @@ export default {
     }
   },
   actions: {
-    loadGenres({state, dispatch, commit, rootState}) {
+    loadGenres({state, dispatch, commit, rootState}, [ bookid = null ]) {
       
-      return axios.get(`${rootState.API_URL}genre/all`)
+      let url = !bookid ? `${rootState.API_URL}genre` : `${rootState.API_URL}genre?bookid=${bookid}`;
+
+      return axios.get(url)
         .then(data => {
           commit('set_genres', data.data);
         })
         .catch(err => {
           return Promise.reject(err);
         });
+    },
+
+    loadBookGenres({dispatch, rootState}) {
+      return dispatch('loadGenres', [ rootState.currentBookid ]);
     },
     
     autoGenerate({state, rootState, dispatch, commit}) {

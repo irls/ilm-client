@@ -2298,7 +2298,7 @@ export const store = new Vuex.Store({
           return ['title', 'author_link'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
         });
         if (!updateGenres) {
-          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
+          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category && !currMeta.collection_id) {
               updateGenres = true;
             }
         }

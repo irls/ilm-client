@@ -202,7 +202,7 @@
                 <tr class='category'>
                   <td>Reader category</td>
                   <td class="category-wrapper">
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.alt_meta.reader.category' @change="debounceUpdate('alt_meta.reader.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='readerCategory' @click="updateCategory('reader', $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
                           <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
@@ -211,7 +211,7 @@
                     </select>
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
                       v-if="currentBook.alt_meta.reader.category && !categoryEditDisabled"
-                      @click="currentBook.alt_meta.reader.category = null; debounceUpdate('alt_meta.reader.category', '', $event)"></i>
+                      @click="removeCategory('reader', $event)"></i>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
                   </td>
                 </tr>
@@ -861,7 +861,8 @@ export default {
       blockType: '',
       styleKey: '',
       styleVal: '',
-      authorUpdated: false
+      authorUpdated: false,
+      readerCategory: ''
     }
   },
 
@@ -1042,7 +1043,7 @@ export default {
 
     categoryEditDisabled: {
       get() {
-        if (!this.allowMetadataEdit) {
+        if (!this.allowMetadataEdit || !this.adminOrLibrarian) {
           return true;
         }
         /*if (typeof this.currentBookCollection.category !== 'undefined') {
@@ -1134,21 +1135,6 @@ export default {
             }
           }
         }
-      },
-      deep: true
-    },
-    /*currentBookFiles: {
-      handler (val) {
-        this.currentBook.coverimg = this.currentBookFiles.coverimg
-      },
-      deep: true
-    },
-    currentBookBlocksLeft: {
-      handler(val) {}
-    },*/
-    audiobook: {
-      handler(val) {
-
       },
       deep: true
     },
@@ -1271,6 +1257,12 @@ export default {
             delete this.requiredFields[this.currentBook.bookid]['slug'];
           }
         }
+      }
+    },
+    'currentBook.alt_meta.reader.category': {
+      handler(val) {
+        console.log('CATEGORY CHANGED', val);
+        this.readerCategory = val;
       }
     }
 
@@ -2673,6 +2665,75 @@ export default {
       document.execCommand("copy");
       window.getSelection().removeAllRanges();// to deselect
       document.body.removeChild(node);
+    },
+
+    updateCategory(type, event) {
+      if (type === "reader" && !this.currentBook.collection_id) {
+        event.preventDefault();
+        let hasCategory = this.currentBookMeta.alt_meta && this.currentBookMeta.alt_meta.reader && this.currentBookMeta.alt_meta.reader.category;
+        if (this.currentBookMeta.title.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: hasCategory ? 'Update Category and Genres' : 'Add Category and Genres',
+            text: hasCategory ? `Update Book Category and Genres?` : 'Add Book Category and Genres?',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.readerCategory = this.currentBook.alt_meta.reader.category;
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: hasCategory ? 'Update' : 'Add',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.debounceUpdate(`alt_meta.${type}.category`, event.target.value, event);
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+        } else {
+          this.debounceUpdate(`alt_meta.${type}.category`, event.target.value, event);
+        }
+      } else {
+        this.debounceUpdate(`alt_meta.${type}.category`, event.target.value, event);
+      }
+    },
+
+    removeCategory(type, event) {
+      if (type === "reader") {
+        event.preventDefault();
+        if (this.currentBookMeta.genres.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Remove Category and Genres',
+            text: `Remove Book Category and Genres?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.readerCategory = this.currentBook.alt_meta.reader.category;
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Remove',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.debounceUpdate(`alt_meta.${type}.category`, null, event);
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+        } else {
+          this.debounceUpdate(`alt_meta.${type}.category`, null, event);
+        }
+      } else {
+        this.debounceUpdate(`alt_meta.${type}.category`, null, event);
+      }
     },
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
