@@ -1261,7 +1261,6 @@ export default {
     },
     'currentBook.alt_meta.reader.category': {
       handler(val) {
-        console.log('CATEGORY CHANGED', val);
         this.readerCategory = val;
       }
     }
