@@ -116,6 +116,11 @@
         handler(val) {
           this.getBookGenres([val]);
         }
+      },
+      'currentBookMeta.genres_generating': {
+        handler(val) {
+          this.getBookGenres();
+        }
       }
     }
   }

@@ -2088,7 +2088,6 @@ export const store = new Vuex.Store({
                 dispatch('getCurrentJobInfo');
               }
               commit('publishModule/set_publicationErrors', []);
-              commit('genreModule/set_autoGenerateInProgress', false);
             }
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
@@ -2318,6 +2317,7 @@ export const store = new Vuex.Store({
         .then(response => {
           dispatch('tocSections/loadBookTocSections', []);
           if (response.data["@class"] && response.status == 200) {
+            commit('genreModule/set_autoGenerateInProgress', false);
             //console.log('updateBookMeta @version', response.data['@version'], update);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
             if (bookMetaIdx > -1) {
@@ -2349,6 +2349,7 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
+          commit('genreModule/set_autoGenerateInProgress', false);
           if (err.message && err.message === 'canceled') {
             //console.log(`CANCELED::: `);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);

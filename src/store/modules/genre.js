@@ -21,8 +21,8 @@ export default {
       }
       return state.genres;
     },
-    autoGenerateInProgress: state => {
-      return state.autoGenerateInProgress;
+    autoGenerateInProgress: (state, getters, rootState) => {
+      return state.autoGenerateInProgress || rootState.currentBookMeta.genres_generating;
     }
   },
   mutations: {
