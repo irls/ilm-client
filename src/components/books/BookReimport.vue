@@ -194,42 +194,47 @@
         this.isUploading = true
         this.reimportBook({data: this.formData, config})
           .then((response) => {
-          if (response.status === 200) {
-            // hide modal after one second
-            this.uploadProgress = "Upload Successful"
-            this.$root.$emit('book-reimported');
-            this.closeForm()
-          } else {
-            // not sure what we should be doing here
-            this.closeForm()
-          }
-        }).catch((err) => {
-          //console.log('reimportBook Err:', err.response)
-          if (err.response.data.message && err.response.data.message.length) {
-            this.bookUploadCommonError = err.response.data.message;
-            setTimeout(() => {
-              this.$emit('close_modal')
-            }, 5000)
-          } else if (Array.isArray(err.response.data)) {
-            this.bookUploadCheckError = [];
-            err.response.data.forEach((msg)=>{
-              if (typeof msg.error == 'object') {
-                for (var prop in msg.error) {
-                  if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
-                    this.bookUploadCheckError.push(`${this.errorsMsgKeys[prop] ? this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
+            if (response.status === 200) {
+              // hide modal after one second
+              this.uploadProgress = "Upload Successful"
+              this.$root.$emit('book-reimported');
+              this.closeForm()
+            } else {
+              // not sure what we should be doing here
+              this.closeForm()
+            }
+          }).catch((err) => {
+            //console.log('reimportBook Err:', err.response)
+            if (typeof err.response.data === "string" && err.response.data.length > 0) {
+              this.bookUploadCommonError = err.response.data;
+              setTimeout(() => {
+                this.$emit('close_modal')
+              }, 5000)
+            } else if (err.response.data.message && err.response.data.message.length) {
+              this.bookUploadCommonError = err.response.data.message;
+              setTimeout(() => {
+                this.$emit('close_modal')
+              }, 5000)
+            } else if (Array.isArray(err.response.data)) {
+              this.bookUploadCheckError = [];
+              err.response.data.forEach((msg)=>{
+                if (typeof msg.error == 'object') {
+                  for (var prop in msg.error) {
+                    if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
+                      this.bookUploadCheckError.push(`${this.errorsMsgKeys[prop] ? this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
+                    }
                   }
+                } else {
+                  this.bookUploadCheckError.push(`Error: ${msg.error}`);
                 }
-              } else {
-                this.bookUploadCheckError.push(`Error: ${msg.error}`);
-              }
-              this.bookUploadCheckError.reverse();
-            })
-          }
-          this.formReset()
-          /*setTimeout(function () {
-            vu_this.$emit('close_modal')
-          }, 5000)*/
-        });
+                this.bookUploadCheckError.reverse();
+              })
+            }
+            this.formReset()
+            /*setTimeout(function () {
+              vu_this.$emit('close_modal')
+            }, 5000)*/
+          });
       },
       closeForm() {
         setTimeout(() => {
