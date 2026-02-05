@@ -2835,7 +2835,7 @@ export default {
     },
     'bookSearch.force': {
       handler(val) {
-        if (val) {
+        if (val && this.bookSearch.resultCounter === null) {
           this.searchInBlocks(this.bookSearch);
         }
       }
