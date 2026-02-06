@@ -54,7 +54,7 @@
                     <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
                   </template>
                   <hr>
-                  <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                  <div class="demo-book-link" v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
                   <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
                   <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
                 </div>
@@ -2882,11 +2882,11 @@ select.text-danger#categorySelection, input.text-danger{
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;
-    /*min-height: 180px;*/
     resize: vertical;
   }
   fieldset.description.brief textarea {
-    /*min-height: 50px;*/
+    border: 1px solid #eee;
+    border-radius: 4px;
   }
   fieldset.approve-metadata textarea {
     width: 100%;
@@ -3296,6 +3296,28 @@ select.text-danger#categorySelection, input.text-danger{
     width: 100% !important;
     color: red;
     float: left !important;
+  }
+
+  hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .demo-book-link {
+    white-space: nowrap;      /* Prevents text from wrapping */
+    overflow: hidden;         /* Hides overflowing text */
+    text-overflow: ellipsis;  /* Displays "..." for clipped text */
+    max-width: 400px;         /* Optional: define a specific width */
+  }
+
+  fieldset {
+    width: 99%;
+    padding-top: 0.35em;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    padding-bottom: 0.625em;
+    margin-left: 2px;
+    margin-right: 2px;
   }
 
 </style>

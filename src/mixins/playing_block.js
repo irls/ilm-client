@@ -40,6 +40,7 @@ export default {
     },
     
     playPause(blockid, length) {
+      console.log(`:playPause:: `, blockid, length);
       this.setPlayingBlock(blockid);
       this.playingBlock.playingPauseAfter = true;
       return new Promise((resolve, reject) => {
