@@ -231,8 +231,12 @@
           'closed': (e) => {
             if (deleteInfo && deleteInfo.success) {
               this.checkAudioEditing();
+              let scrollBlockid = this.getBlockAfterRange();
               return this.massDelete()
                 .then(() => {
+                  if (scrollBlockid) {
+                    this.$root.$emit('for-bookedit:scroll-to-block', scrollBlockid);
+                  }
                   return Promise.resolve(true);
                 });
             } else {
@@ -273,6 +277,16 @@
           }
         }
         return data;
+      },
+      getBlockAfterRange() {
+        let blockid = null;
+        if (this.blockSelection.end._id) {
+          blockid = this.storeListO.getOutId(this.blockSelection.end._id);
+        }
+        if (this.blockSelection.start._id && !blockid) {
+          blockid = this.storeListO.getInId(this.blockSelection.start._id);
+        }
+        return blockid;
       },
       checkAudioEditing() {
         let editingBlock = this.audioTasksQueueBlock();
