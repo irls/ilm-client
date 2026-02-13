@@ -57,7 +57,7 @@
       }
     },
     mounted() {
-      this.loadGenres();
+      this.loadGenres([this.currentBookMeta.bookid ? this.currentBookMeta.bookid : null]);
     },
     methods: {
       ...mapActions(['updateBookMeta']),
@@ -101,6 +101,26 @@
       },
       canRemove(genre) {
         return this.adminOrLibrarian;
+      },
+      getBookGenres(exclude_ids = []) {
+        this.loadGenres([this.currentBookMeta.bookid, exclude_ids]);
+      }
+    },
+    watch: {
+      'currentBookMeta.bookid': {
+        handler(val) {
+          this.getBookGenres();
+        }
+      },
+      'currentBookMeta.alt_meta.reader.category': {
+        handler(val) {
+          this.getBookGenres([val]);
+        }
+      },
+      'currentBookMeta.genres_generating': {
+        handler(val) {
+          this.getBookGenres();
+        }
       }
     }
   }
