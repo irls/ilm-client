@@ -4402,6 +4402,7 @@ export const store = new Vuex.Store({
                           checkAlignQueue = ["joinBlocks"].includes(oldIds[blockid]);
                         }
                         commit('clear_block_lock', {block: {blockid: blockid}, type: oldIds[blockid]});
+                        state.storeListO.delExistsBlock(state.storeListO.getRIdById(blockid));
                       }
                     });
                     if (checkAlignQueue) {
@@ -5583,7 +5584,7 @@ export const store = new Vuex.Store({
           }
         }
       } else if (data.action === 'delete') {
-        state.storeListO.delExistsBlock(data.block['@rid'])
+        state.storeListO.delExistsBlock(data.block['@rid']);
       }
 
       if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {

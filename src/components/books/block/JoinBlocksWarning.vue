@@ -12,7 +12,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" v-on:click="saveChanges">
-        Join {{ join_count }}
+        Join ({{ join_count }})
       </button>
       <button class="btn btn-default" v-on:click="closePopup">
         Cancel
