@@ -88,4 +88,8 @@
     }
   }
 </script>
-<style lang="less"></style>
+<style lang="less" scoped>
+  .suggestions-dictionary {
+    margin-top: 1px;
+  }
+</style>
