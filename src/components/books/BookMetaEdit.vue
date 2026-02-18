@@ -2825,7 +2825,9 @@ select.text-danger#categorySelection, input.text-danger{
   }
 
   .download-area {
-    margin-left:15px; padding-left:0;
+    margin-left:15px;
+    padding-left:0;
+    min-height: 0px;
   }
   .download-area .btn_download {
     float: right;
@@ -2839,7 +2841,7 @@ select.text-danger#categorySelection, input.text-danger{
     margin-top:0px;
     margin-left:0;
     padding-left:0;
-    overflow-y: auto;
+    /*overflow-y: auto;*/
     height: 100%;
   }
   .sidebar::-webkit-scrollbar-track {
@@ -3090,6 +3092,7 @@ select.text-danger#categorySelection, input.text-danger{
 
   .sidebar-bookmeta {
     width: 100%;
+    height: 100%;
   }
 
   .editing-wrapper {

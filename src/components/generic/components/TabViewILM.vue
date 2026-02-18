@@ -18,6 +18,7 @@
                                 <TabPanelHeaderSlot :tab="tab" v-if="tab.$scopedSlots.header"/>
                             </a>
                         </li>
+                        <li class="divider-line"> </li>
                         <li ref="inkbar" class="p-tabview-ink-bar"></li>
                     </ul>
                 </div>
@@ -64,7 +65,7 @@ export default {
             allChildren: [],
             d_activeIndex: this.activeIndex,
             backwardIsDisabled: true,
-            forwardIsDisabled: false
+            forwardIsDisabled: true
         };
     },
     watch: {
@@ -80,6 +81,7 @@ export default {
     },
     updated() {
         this.updateInkBar();
+        if (this.forwardIsDisabled) this.updateButtonState();
     },
     methods: {
         onTabClick(event, i) {
@@ -121,8 +123,8 @@ export default {
             const content = this.$refs.content;
             const { scrollLeft, scrollWidth } = content;
             const width = DomHandler.getWidth(content);
-            this.backwardIsDisabled = scrollLeft === 0;
-            this.forwardIsDisabled = Math.round(scrollLeft) === scrollWidth - width;
+            this.backwardIsDisabled = scrollLeft <= 0;
+            this.forwardIsDisabled = Math.round(scrollLeft) >= scrollWidth - width;
         },
         getKey(tab, index) {
             return tab.header ? ObjectUtils.resolveFieldData(tab, tab.header) : index;
@@ -192,10 +194,17 @@ export default {
 }
 
 .meta-edit-tabs .p-tabview-nav-container {
-    position: sticky;
+    /*position: sticky;*/
     top: -0px;
     background-color:white;
     z-index: 2;
+    min-height: 37px;
+}
+
+.meta-edit-tabs.p-tabview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .p-tabview-scrollable .p-tabview-nav-container {
@@ -209,6 +218,11 @@ export default {
     scrollbar-width: none;
     overscroll-behavior: contain auto;
     padding-top: 2px;
+}
+
+.meta-edit-tabs .p-tabview-nav-content {
+  padding-top: 1px;
+  min-height: 37px;
 }
 
 .p-tabview-nav {
@@ -233,6 +247,15 @@ export default {
     padding: 0;
 }
 
+.meta-edit-tabs.p-tabview .p-tabview-panels {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.meta-edit-tabs .divider-line {
+  flex-grow: 1;
+}
+
 .p-tabview .p-tabview-nav li .p-tabview-nav-link {
     color: #337ab7;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -247,7 +270,8 @@ export default {
 }
 
 .p-tabview .p-tabview-nav li {
-  border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    /*wide tabs*/ padding: 0 1px;
 }
 
 .p-tabview .p-tabview-nav li.p-highlight {
