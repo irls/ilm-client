@@ -115,6 +115,7 @@
             .then(collection => {
               Vue.nextTick(() => {
                 if (this.$route.params.bookid) {
+                  const selectedBookId = this.$route.params.bookid;
                   this.goToBookPage(selectedBookId);
                   Vue.nextTick(() => {
                     this.scrollToRow(selectedBookId);
