@@ -2321,10 +2321,13 @@ export default {
       },
 
       playNextBlock(blockid) {
-        let currentBlock = this.parlist.get(blockid);
-        let pauseAfter = this.playPause(blockid, currentBlock.pause_after);
-        Promise.all([this.findNextAudioblock([blockid]), this.findNextAudioblock([blockid, true])])
-          .then(prepare => {
+        const currentBlock = this.parlist.get(blockid);
+        const pause_after = currentBlock.pause_after + this.getNextBlocksPause(currentBlock);
+        const pauseAfter = this.playPause(blockid, pause_after);
+        Promise.all([
+          this.findNextAudioblock([blockid]),
+          this.findNextAudioblock([blockid, true])
+        ]).then(prepare => {
             //console.log(block);
             let [block, audioBlock] = prepare;
             if (block) {
@@ -2347,6 +2350,31 @@ export default {
               this.stopPlayingBlock(blockid);
             }
           });
+      },
+
+      getNextBlocksPause(currentBlock) { // ILM-7194 Add next unvoiced text block pause
+        if (currentBlock?.audiosrc_ver?.m4a?.length) {
+          const nextIds = this.parlistO.getNextIds(currentBlock.blockid, 1);
+
+          if (nextIds.length) {
+            const nextBlockId = nextIds[0];
+            const nextBlock   = this.parlist.get(nextBlockId);
+            if (nextBlock && nextBlock.type) {
+              switch(nextBlock.type) {
+                case 'par' : case 'header' : case 'title' : {
+                  if (!nextBlock.audiosrc?.length || !nextBlock.audiosrc_ver?.m4a?.length) {
+                    if (nextBlock.pause_after) {
+                      return nextBlock.pause_after;
+                    }
+                  }
+                } break;
+                default : {
+                } break;
+              };
+            }
+          }
+        }
+        return 0;
       },
 
       goToAudioBlock(block) {
