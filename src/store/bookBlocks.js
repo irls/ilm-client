@@ -1,8 +1,5 @@
 
 const _ = require('lodash');
-const _id = require('uniqid');
-import superlogin from 'superlogin-client';
-import { BookBlock }    from './bookBlock';
 
 class LookupBlock {
   constructor(block) {
@@ -418,6 +415,7 @@ class BookBlocks {
     }
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
+
   setCheckedAsyncIterator(i,endIdx,resolveCb,$store ) {
     let iterationCount = 0;
     let iterationMax = 50;
@@ -462,8 +460,6 @@ class BookBlocks {
   async setCheckedAsync(startRId, endRId = false,$store) {
 
     // $store.dispatch('setSelectionModalProgressWidth')
-    let renderTime = 1000;
-
     return new Promise((resolve, reject) => {
       let promises = []
       let result = {start: {}, end: {}};
@@ -472,17 +468,14 @@ class BookBlocks {
         let startIdx = this.listRIds.indexOf(startRId);
         let endIdx = this.listRIds.indexOf(endRId);
         if (startIdx < endIdx) {
-          renderTime = 3000;
           promises.push(new Promise((resolve, reject) => {
             this.setCheckedAsyncIterator(startIdx,endIdx, resolve, $store);
             result.start = { _id: this.lookupList[startRId].blockid };
             result.end = { _id: this.lookupList[endRId].blockid };
           }))
-
         }
 
         if (startIdx > endIdx) {
-          renderTime = 1000;
           promises.push(new Promise((resolve, reject) => {
             let max = startIdx+1;
             for (var i=endIdx; i<=startIdx; i++) {
@@ -498,16 +491,13 @@ class BookBlocks {
 
               $store.dispatch('setSelectionModalProgressWidth',width)
               console.log(`setCheckedAsync inner iteratoin ${i}`)
-
             }
             result.start = { _id: this.lookupList[endRId].blockid };
             result.end = { _id: this.lookupList[startRId].blockid };
 
             resolve();
           }));
-
         }
-
       }
       else if (this.lookupList.hasOwnProperty(startRId)) {
         this.lookupList[startRId].checked = true;
@@ -518,9 +508,7 @@ class BookBlocks {
       return Promise.all(promises).then(function() {
         resolve(result)
       });
-
     })
-
   }
 
   setChecked(startRId, endRId = false) {

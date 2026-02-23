@@ -334,13 +334,13 @@ export default {
 #booksarea {
   margin: 0;
   padding:0;
-/*  height: 100%;
-  padding-top: 43px;*/
+  height: 100%;
+/*  padding-top: 43px;*/
 
-  flex-grow: 2;
-  display:flex;
+  flex-grow: 1;
+  display: flex;
   flex-direction: row;
-  overflow-y:auto;
+  overflow-y: hidden;
   &.narrate {
     overflow-x: auto;
   }

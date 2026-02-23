@@ -2069,10 +2069,15 @@ export const store = new Vuex.Store({
             //console.log('metaV watch:', book_id, data.meta['@version'], state.currentBookMeta['@version'], data.meta);
             if (data && data.meta && data.meta.bookid === state.currentBookMeta.bookid) {
               let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==data.meta.bookid);
-              if (bookMetaIdx > -1  && data.meta['@version'] > state.books_meta[bookMetaIdx]['@version']) {
-                console.log('liveDB metaV update:', book_id, state.currentBookMeta['@version'], state.books_meta[bookMetaIdx]['@version'], data.meta['@version']);
-                state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
-                commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
+              if (data.meta['@version'] > state.currentBookMeta['@version']) {
+                console.log('liveDB metaV update:', book_id, state.currentBookMeta['@version'], data.meta['@version']);
+                if (bookMetaIdx !== -1) {
+                  state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
+                  commit('SET_CURRENTBOOK_META', state.books_meta[bookMetaIdx]);
+                } else {
+                  //state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], data.meta);
+                  commit('SET_CURRENTBOOK_META', data.meta);
+                }
                 let allowPublish = state.adminOrLibrarian;
                 commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
                 let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
@@ -2083,7 +2088,6 @@ export const store = new Vuex.Store({
                 dispatch('getCurrentJobInfo');
               }
               commit('publishModule/set_publicationErrors', []);
-              commit('genreModule/set_autoGenerateInProgress', false);
             }
           });
           state.liveDB.startWatch(book_id + '-job', 'job', {bookid: book_id}, (data) => {
@@ -2293,18 +2297,16 @@ export const store = new Vuex.Store({
       //console.log('update', update);
       //return Promise.resolve('No data updated');
 
-      if (!state.currentBookMeta.genres_manual) {
-        let updateGenres = Object.keys(update).find(updateField => {
-          return ['title', 'author_link'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
-        });
-        if (!updateGenres) {
-          if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category) {
-              updateGenres = true;
-            }
-        }
-        if (updateGenres) {
-          commit('genreModule/set_autoGenerateInProgress', true);
-        }
+      let updateGenres = Object.keys(update).find(updateField => {
+        return ['title', 'author_link'].includes(updateField)/* && !_.isEqual(update[updateField], state.currentBookMeta[updateField])*/;
+      });
+      if (!updateGenres) {
+        if (update.alt_meta && update.alt_meta.reader && update.alt_meta.reader.category && !currMeta.collection_id) {
+            updateGenres = true;
+          }
+      }
+      if (updateGenres) {
+        commit('genreModule/set_autoGenerateInProgress', true);
       }
 
       const BOOKID = update.bookid || state.currentBookMeta._id;
@@ -2315,6 +2317,7 @@ export const store = new Vuex.Store({
         .then(response => {
           dispatch('tocSections/loadBookTocSections', []);
           if (response.data["@class"] && response.status == 200) {
+            commit('genreModule/set_autoGenerateInProgress', false);
             //console.log('updateBookMeta @version', response.data['@version'], update);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
             if (bookMetaIdx > -1) {
@@ -2346,6 +2349,7 @@ export const store = new Vuex.Store({
           }
         })
         .catch(err => {
+          commit('genreModule/set_autoGenerateInProgress', false);
           if (err.message && err.message === 'canceled') {
             //console.log(`CANCELED::: `);
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid===BOOKID);
@@ -4398,6 +4402,7 @@ export const store = new Vuex.Store({
                           checkAlignQueue = ["joinBlocks"].includes(oldIds[blockid]);
                         }
                         commit('clear_block_lock', {block: {blockid: blockid}, type: oldIds[blockid]});
+                        state.storeListO.delExistsBlock(state.storeListO.getRIdById(blockid));
                       }
                     });
                     if (checkAlignQueue) {
@@ -5579,7 +5584,7 @@ export const store = new Vuex.Store({
           }
         }
       } else if (data.action === 'delete') {
-        state.storeListO.delExistsBlock(data.block['@rid'])
+        state.storeListO.delExistsBlock(data.block['@rid']);
       }
 
       if (data.block && data.block.blockid && state.storeList.has(data.block.blockid)) {

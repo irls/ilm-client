@@ -54,7 +54,7 @@
                     <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
                   </template>
                   <hr>
-                  <div v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                  <div class="demo-book-link" v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
                   <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
                   <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
                 </div>
@@ -202,7 +202,7 @@
                 <tr class='category'>
                   <td>Reader category</td>
                   <td class="category-wrapper">
-                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='currentBook.alt_meta.reader.category' @change="debounceUpdate('alt_meta.reader.category', $event.target.value, $event)" :key="currentBookid" :disabled="categoryEditDisabled">
+                    <select id="categorySelection" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category'] }" class="form-control" v-model='readerCategory' @change="updateCategory('reader', $event)" :key="currentBookid" :disabled="categoryEditDisabled">
                       <!--<template v-for="(data, index) in subjectCategories">-->
                         <!--<optgroup :label="data.group">-->
                           <option v-for="(value, ind) in subjectCategories.reader" :value="value">{{ value }}</option>
@@ -211,7 +211,7 @@
                     </select>
                     <i class="ico ico-clear-filter btn-inside" aria-hidden="true"
                       v-if="currentBook.alt_meta.reader.category && !categoryEditDisabled"
-                      @click="currentBook.alt_meta.reader.category = null; debounceUpdate('alt_meta.reader.category', '', $event)"></i>
+                      @click="removeCategory('reader', $event)"></i>
                     <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['category']" class="validation-error">Define Category</span>
                   </td>
                 </tr>
@@ -861,7 +861,8 @@ export default {
       blockType: '',
       styleKey: '',
       styleVal: '',
-      authorUpdated: false
+      authorUpdated: false,
+      readerCategory: ''
     }
   },
 
@@ -1042,7 +1043,7 @@ export default {
 
     categoryEditDisabled: {
       get() {
-        if (!this.allowMetadataEdit) {
+        if (!this.allowMetadataEdit || !this.adminOrLibrarian) {
           return true;
         }
         /*if (typeof this.currentBookCollection.category !== 'undefined') {
@@ -1134,21 +1135,6 @@ export default {
             }
           }
         }
-      },
-      deep: true
-    },
-    /*currentBookFiles: {
-      handler (val) {
-        this.currentBook.coverimg = this.currentBookFiles.coverimg
-      },
-      deep: true
-    },
-    currentBookBlocksLeft: {
-      handler(val) {}
-    },*/
-    audiobook: {
-      handler(val) {
-
       },
       deep: true
     },
@@ -1271,6 +1257,11 @@ export default {
             delete this.requiredFields[this.currentBook.bookid]['slug'];
           }
         }
+      }
+    },
+    'currentBook.alt_meta.reader.category': {
+      handler(val) {
+        this.readerCategory = val;
       }
     }
 
@@ -2675,6 +2666,75 @@ export default {
       document.body.removeChild(node);
     },
 
+    updateCategory(type, event) {
+      if (type === "reader" && !this.currentBook.collection_id) {
+        event.preventDefault();
+        let hasCategory = this.currentBookMeta.alt_meta && this.currentBookMeta.alt_meta.reader && this.currentBookMeta.alt_meta.reader.category;
+        if (this.currentBookMeta.title.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: hasCategory ? 'Update Category and Genres' : 'Add Category and Genres',
+            text: hasCategory ? `Update Book Category and Genres?` : 'Add Book Category and Genres?',
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.readerCategory = this.currentBook.alt_meta.reader.category;
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: hasCategory ? 'Update' : 'Add',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.debounceUpdate(`alt_meta.${type}.category`, event.target.value, event);
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+        } else {
+          this.debounceUpdate(`alt_meta.${type}.category`, event.target.value, event);
+        }
+      } else {
+        this.debounceUpdate(`alt_meta.${type}.category`, event.target.value, event);
+      }
+    },
+
+    removeCategory(type, event) {
+      if (type === "reader") {
+        event.preventDefault();
+        if (this.currentBookMeta.genres.length > 0) {
+          this.$root.$emit('show-modal', {
+            title: 'Remove Category and Genres',
+            text: `Remove Book Category and Genres?`,
+            buttons: [
+              {
+                title: 'Cancel',
+                handler: () => {
+                  this.readerCategory = this.currentBook.alt_meta.reader.category;
+                  this.$root.$emit('hide-modal');
+                },
+                class: ['btn btn-default']
+              },
+              {
+                title: 'Remove',
+                handler: () => {
+                  this.$root.$emit('hide-modal');
+                  this.debounceUpdate(`alt_meta.${type}.category`, null, event);
+                },
+                class: ['btn btn-primary']
+              }
+            ]
+          });
+        } else {
+          this.debounceUpdate(`alt_meta.${type}.category`, null, event);
+        }
+      } else {
+        this.debounceUpdate(`alt_meta.${type}.category`, null, event);
+      }
+    },
+
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
   }
 }
@@ -2765,7 +2825,9 @@ select.text-danger#categorySelection, input.text-danger{
   }
 
   .download-area {
-    margin-left:15px; padding-left:0;
+    margin-left:15px;
+    padding-left:0;
+    min-height: 0px;
   }
   .download-area .btn_download {
     float: right;
@@ -2779,7 +2841,7 @@ select.text-danger#categorySelection, input.text-danger{
     margin-top:0px;
     margin-left:0;
     padding-left:0;
-    overflow-y: auto;
+    /*overflow-y: auto;*/
     height: 100%;
   }
   .sidebar::-webkit-scrollbar-track {
@@ -2822,11 +2884,11 @@ select.text-danger#categorySelection, input.text-danger{
   /* Edit area for book description */
   fieldset.description textarea {
     width: 100%; padding: 0; margin:0; border: none;
-    /*min-height: 180px;*/
     resize: vertical;
   }
   fieldset.description.brief textarea {
-    /*min-height: 50px;*/
+    border: 1px solid #eee;
+    border-radius: 4px;
   }
   fieldset.approve-metadata textarea {
     width: 100%;
@@ -3030,6 +3092,7 @@ select.text-danger#categorySelection, input.text-danger{
 
   .sidebar-bookmeta {
     width: 100%;
+    height: 100%;
   }
 
   .editing-wrapper {
@@ -3236,6 +3299,28 @@ select.text-danger#categorySelection, input.text-danger{
     width: 100% !important;
     color: red;
     float: left !important;
+  }
+
+  hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .demo-book-link {
+    white-space: nowrap;      /* Prevents text from wrapping */
+    overflow: hidden;         /* Hides overflowing text */
+    text-overflow: ellipsis;  /* Displays "..." for clipped text */
+    max-width: 400px;         /* Optional: define a specific width */
+  }
+
+  fieldset {
+    width: 99%;
+    padding-top: 0.35em;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    padding-bottom: 0.625em;
+    margin-left: 2px;
+    margin-right: 2px;
   }
 
 </style>

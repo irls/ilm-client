@@ -262,7 +262,7 @@
       font-size: 1.2rem;
     }
     .status-name {
-      padding: 10px 2px;
+      padding: 2px 2px 10px 2px;
     }
   }
 </style>
