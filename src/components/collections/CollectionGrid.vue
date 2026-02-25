@@ -17,26 +17,25 @@
           @clickRow="selectBook"
           @dblClickRow="openBook"
           @orderChanged="moveBook(collection, $event)"
+          @pagination-page="goToGridPage"
           :selected="selectedBooks"
           :idField="'bookid'"
           :filter-key="''"
-          :draggable="allowCollectionsEdit"
+          :draggable="false"
           :sortable="true"
           :ref="'grid-' + collection._id"
           :class="['collection-books-grid']"
           :scrollTopOnPageClick="true"
+          :pagination="currentCollectionPagination"
           customEmptyTableText="No Books found" />
     </div>
   </div>
 </template>
 <script>
-  import Grid from '../generic/Grid';
+  import Grid from '../generic/GridPaged';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
-  import superlogin from 'superlogin-client';
-  import PouchDB from 'pouchdb';
   import lodash from 'lodash';
-  import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
 
   export default {
       name: 'CollectionGrid',
@@ -138,7 +137,11 @@
             && data.from != data.to) {
           }
         },
-        ...mapActions(['loadCollection'])
+        goToGridPage (page) {
+          this.loadCurrentCollectionBooks(Object.assign(this.collectionsFilters, { page: page }))
+        },
+        ...mapActions(['loadCollection']),
+        ...mapActions('booksModule', ['loadCurrentCollectionBooks'])
       },
       mounted() {
         if (this.$route && this.$route.params) {
@@ -160,7 +163,8 @@
           'adminOrLibrarian',
           'isEditor',
           'isNarrator',
-          'isProofer'
+          'isProofer',
+          'currentCollectionPagination'
         ]),
         ...mapGetters({
           fltrChangeTrigger:  'gridFilters/fltrChangeTrigger',

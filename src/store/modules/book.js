@@ -153,6 +153,7 @@ export default {
         return dispatch('filterBooks', Object.assign(lodash.cloneDeep(params), { collection_id: rootState.currentCollection._id }))
           .then(response => {
             rootState.currentCollection.books_list = response.books;
+            commit('set_currentCollectionPagination', response.pagination, { root: true });
             rootState.currentCollection.books_list.forEach(b => {
               b.pub_ver = b.publishedVersion && b.publishedVersion !== 'false' ? b.publishedVersion : '';
               b.cur_ver = typeof b.version !== 'undefined' && b.version !== b.publishedVersion ? b.version || '1.0' : (b.publishedVersion ? '' : '1.0');
