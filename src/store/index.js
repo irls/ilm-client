@@ -166,6 +166,7 @@ export const store = new Vuex.Store({
     bookCollections: [],
     collectionsPagination: {},
     currentCollection: {},
+    currentCollectionPagination: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
     libraries: [],
@@ -434,6 +435,7 @@ export const store = new Vuex.Store({
     },
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
+    currentCollectionPagination: state => state.currentCollectionPagination,
     currentCollectionId: state => state.currentCollectionId,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
@@ -957,6 +959,10 @@ export const store = new Vuex.Store({
           if (state.currentCollection) state.currentCollection.sortBooks();
         });
       state.currentCollectionId = _id;
+    },
+
+    set_currentCollectionPagination (state, pagination) {
+      state.currentCollectionPagination = pagination;
     },
 
     SET_CURRENT_LIBRARY (state, library) {

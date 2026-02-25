@@ -121,8 +121,8 @@ export default {
     filteredCollectionsCounter: (state, getters, rootState, rootGetters) => {
       return rootGetters.collectionsPagination.total;
     },
-    filteredCollectionBooksCounter: (state, getters) => {
-      return getters.filteredCollectionBooks.length;
+    filteredCollectionBooksCounter: (state, getters, rootState, rootGetters) => {
+      return rootGetters.currentCollectionPagination.total;
     },
 
     filteredBooks: (state, getters, rootState, rootGetters) => {
