@@ -1413,7 +1413,7 @@ export default {
               //console.log(`this.$route.name: `, this.$route.name, ' collectionId:', this.$route.params.collectionid);
               if (collectionId) {
                 if (this.$route.name == 'BooksGrid') {
-                  this.$store.dispatch('loadCollection', collectionId);
+                  this.loadCollection(collectionId);
                 }
                 if (this.$route.name == 'CollectionBook' && this.$route.params.hasOwnProperty('collectionid')) {
                   if (this.$route.params.collectionid !== collectionId) {
@@ -1434,6 +1434,7 @@ export default {
                     name: 'CollectionBooks',
                     params: {collectionid: this.$route.params.collectionid}
                   });
+                  this.loadCollection(this.$route.params.collectionid);
                 } else {
                   this.$store.dispatch('loadCollection', false);
                 }
@@ -2735,7 +2736,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList', 'loadCollection'])
   }
 }
 
