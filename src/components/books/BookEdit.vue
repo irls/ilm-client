@@ -2457,23 +2457,26 @@ export default {
           let parserSearchArr = prepareForFilter(bookSearch.string, true).split(' ');
           parserSearchArr = parserSearchArr.filter((sEl)=>{
             return sEl.trim().length > 0;
-          })
+          });
           let filterSearchArr = prepareForFilter(bookSearch.string, false)
           //console.log(`parserSearchArr: `, parserSearchArr);
           //console.log(`filterSearchArr: `, filterSearchArr);
 
           //let stop = 3;
+          const searchStringPrepared = bookSearch.string.trim().replace(/([\[\]\{\}\(\)\?])/img, `\\$1`);
+          const blockIdRx = new RegExp(`-${searchStringPrepared}$`);
           for (let blockId of this.parlistO.idsArray()) {
             //if (stop-- == 0) break;
-            const block = this.parlist.get(blockId);
-            const result = block.findInText({
-              parserSearchArr,
-              filterSearchArr,
-              fullPhrase : true
-            });
-            if (result) this.searchResultArray.push(blockId);
+            if (parserSearchArr.length > 0) {
+              const block = this.parlist.get(blockId);
+              const result = block.findInText({
+                parserSearchArr,
+                filterSearchArr,
+                fullPhrase : true
+              });
+              if (result) this.searchResultArray.push(blockId);
+            }
             // add search by blockId
-            const blockIdRx = new RegExp(`-${bookSearch.string.trim()}$`);
             if (blockIdRx.test(blockId)) {
               this.searchResultArray.push(blockId);
             }
