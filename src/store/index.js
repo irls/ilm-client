@@ -2347,7 +2347,12 @@ export const store = new Vuex.Store({
             }
             if (state.currentBookMeta.collection_id && state.currentCollection) {
               //state.currentCollection.updateBook(response.data);
-              commit('PREPARE_BOOK_COLLECTIONS');
+              let bookIndex = state.currentCollection.books_list.findIndex(cBook => {
+                return cBook.bookid === state.currentBookMeta.bookid;
+              });
+              if (bookIndex !== -1) {
+                state.currentCollection.books_list[bookIndex] = response.data;
+              }
             }
             return Promise.resolve(response.data);
           } else {
