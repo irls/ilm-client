@@ -115,6 +115,11 @@
     ],
     mixins: [],
     mounted() {
+      let accentElement = document.querySelector('.generate-voice .slider-container');
+      accentElement.addEventListener('click', () => {
+        let sliderHandler = accentElement.querySelector('.p-slider-handle');
+        sliderHandler.focus();
+      });
     },
     computed: {
       saveNewVoiceDisabled: {

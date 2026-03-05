@@ -103,12 +103,12 @@
         </div>
       </div>
     </fieldset>
-    <GenerateVoice
+    <!--<GenerateVoice
       ref="generateVoice"
       :playing_generated_example = "playing_generated_example"
       :book_voices = "book_voices"
       @stopVoiceExample = "stopVoiceExample"
-    />
+    />-->
   </div>
 </template>
 <script>
@@ -119,7 +119,7 @@
   import lodash from 'lodash';
 
   import AlignAudioSpeed from './tts/AlignAudioSpeed.vue';
-  import GenerateVoice   from './tts/GenerateVoice.vue';
+  //import GenerateVoice   from './tts/GenerateVoice.vue';
   //import v_modal from 'vue-js-modal';
 
   //Vue.use(v_modal, { dialog: true });
@@ -150,7 +150,7 @@
       'select-tts-voice': SelectTTSVoice,
       'Slider': Slider,
       'AlignAudioSpeed': AlignAudioSpeed,
-      'GenerateVoice': GenerateVoice
+      //'GenerateVoice': GenerateVoice
     },
     props: ['is_active'],
     computed: {
@@ -185,11 +185,6 @@
           }
         });
       window.addEventListener('resize', this.setMaxContainerHeight);
-      let accentElement = document.querySelector('.generate-voice .slider-container');
-      accentElement.addEventListener('click', () => {
-        let sliderHandler = accentElement.querySelector('.p-slider-handle');
-        sliderHandler.focus();
-      });
       this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
     },
