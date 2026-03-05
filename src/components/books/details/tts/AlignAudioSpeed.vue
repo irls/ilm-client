@@ -68,7 +68,7 @@
   import lodash from 'lodash';
   import Accordion from 'primevue/accordion';
   import AccordionTab from 'primevue/accordiontab';
-  import access from '../../../mixins/access';
+  import access from '../../../../mixins/access';
   export default {
     data() {
       return {
