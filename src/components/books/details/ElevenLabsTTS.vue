@@ -12,7 +12,13 @@
         @onCalculateVoiceWpm = "onCalculateVoiceWpm"/>
 
       <div v-if="all_voices.length > 0">
-        <h4 class="audio-voice-caption">Character voice:</h4>
+        <div class="audio-voice-header">
+          <h4 class="audio-voice-caption">Character voice:</h4>
+          <div class="audio-voice-select">
+            <span @click=""
+              class="audio-voice-select-btn">Select voices</span>
+          </div>
+        </div>
         <div class="audio-voice-selection">
           <select-tts-voice
             :pre_selected="defaultVoice('paragraph')"
@@ -468,17 +474,47 @@
   }
 </script>
 <style lang="less" scoped>
-      .audio-voice-selection {
-        background-color: rgb(238, 238, 238);
-        padding-top: 4px;
-        padding-bottom: 4px;
+  .audio-voice-selection {
+    background-color: rgb(238, 238, 238);
+    padding-top: 4px;
+    padding-bottom: 4px;
 
-        .voice-select-el {
-          margin-left: 20px;
-           display: flex;
-          align-items: center;
+    .voice-select-el {
+      margin-left: 20px;
+      display: flex;
+      align-items: center;
+    }
+  }
+  .eleven-labs-tts {
+    .audio-voice-header {
+      display: flex;
+      flex-direction: row;
+      height: 40px;
+    }
+
+    .audio-voice-caption {
+      margin-left: 20px;
+      flex-grow: 1;
+    }
+
+    .audio-voice-select {
+      align-items: center;
+      display: flex;
+      padding-right: 6px;
+      padding-top: 1px;
+
+      .audio-voice-select-btn {
+        color: #337AB7;
+        font-weight: 400;
+
+        &:hover {
+          text-decoration: underline;
+          cursor: pointer;
         }
       }
+    }
+  }
+
 </style>
 <style lang="less">
   .eleven-labs-tts {
@@ -506,9 +542,6 @@
         font-size: 1.2rem;
       }
     }
-    .audio-voice-caption {
-      margin-left: 20px;
-    }
 
     table {
       width: 95%;
@@ -521,6 +554,7 @@
         width: 70%;
       }
     }
+
     .table.table-voices {
       margin: 0px 2px;
 
@@ -549,7 +583,7 @@
       .blocks-info {
         display: inline-block;
         width: 70%;
-        padding: 10px 5px;
+        padding: 6px 5px;
         a {
           cursor: pointer;
         }
