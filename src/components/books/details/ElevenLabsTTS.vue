@@ -15,7 +15,7 @@
         <div class="audio-voice-header">
           <h4 class="audio-voice-caption">Character voice:</h4>
           <div class="audio-voice-select">
-            <span @click=""
+            <span @click="elevenLabFiltersModalShow = true"
               class="audio-voice-select-btn">Select voices</span>
           </div>
         </div>
@@ -31,6 +31,12 @@
             @stop="stopVoiceExample"
           ></select-tts-voice>
         </div>
+
+        <eleven-lab-filters-modal v-if="elevenLabFiltersModalShow"
+          @close_modal="elevenLabFiltersModalShow = false"
+          :languages="[]">
+        </eleven-lab-filters-modal>
+
       </div>
 
       <!--https://isddesign.atlassian.net/wiki/spaces/ILM/pages/4186407098/TTS+Audio+speed#11Labs-TTS-audio-speed
@@ -125,6 +131,7 @@
   import lodash from 'lodash';
 
   import AlignAudioSpeed from './tts/AlignAudioSpeed.vue';
+  import ElevenLabFiltersModal from './tts/11LabFiltersModal.vue';
   //import GenerateVoice   from './tts/GenerateVoice.vue';
   //import v_modal from 'vue-js-modal';
 
@@ -150,12 +157,14 @@
         alignStartedTimeout: null,
         is_voice_wpm_calculating: false,
         playing_generated_example: false,
+        elevenLabFiltersModalShow: false
       }
     },
     components: {
       'select-tts-voice': SelectTTSVoice,
       'Slider': Slider,
       'AlignAudioSpeed': AlignAudioSpeed,
+      'eleven-lab-filters-modal': ElevenLabFiltersModal
       //'GenerateVoice': GenerateVoice
     },
     props: ['is_active'],
