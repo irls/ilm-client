@@ -37,8 +37,22 @@
               <TabPanel
                 v-for="(voice, idx) in voicesList"
                 :key="voice.id"
-                :header="voice.title"
-                :data-idx="idx">
+                :data-idx="idx"><!--:header="voice.title"-->
+                <template #header>
+                  <span v-if="!voice.isEditing"
+                    class="p-tabview-title-voice"
+                    :contenteditable="voice.isEditing"
+                    v-text="voice.title"
+                    @dblclick="onTitleDblClick($event, voice)">
+                  </span>
+                  <span v-if="voice.isEditing"
+                    class="p-tabview-title-voice"
+                    :contenteditable="voice.isEditing"
+                    ref="voiceTitleEditRef"
+                    @input="onTitleEdit($event, voice)"
+                    @blur="onTitleBlur($event, voice)">
+                  </span>
+                </template>
                 {{voice.title}}
               </TabPanel>
 
@@ -168,6 +182,9 @@
         },
         ...mapGetters(['allBooks', 'currentCollection', 'bookCollections'])
       },
+      mounted() {
+        this.showModal('eleven-lab-filters-modal');
+      },
       methods: {
         ...mapActions(['linkBooksToCollection']),
 
@@ -182,13 +199,8 @@
             this.$refs.voicesTabs.onResize()
           }
         }, 300),
-        modalOpening() {
-          //$('.fixed-wrapper .navtable').css('z-index', 0);
-          //$('.toolbar-wrapper .toolbar').css('z-index', 0);
-        },
+        modalOpening() {},
         modalClosing() {
-          //$('.fixed-wrapper .navtable').css('z-index', 999);
-          //$('.toolbar-wrapper .toolbar').css('z-index', 999);
           this.$emit('close_modal');
         },
         voiceTabChange(tab) {
@@ -206,6 +218,47 @@
           //     //this.$refs.descriptionLong.initSize();
           //   });
           // }
+
+          // for (const _v of this.voicesList) {
+          //   _v.isEditing = false;
+          // }
+        },
+
+        onTitleBlur(event, voice) {
+          this.voicesList = this.voicesList.map((_v)=>{
+            _v.isEditing = false;
+            return _v;
+          })
+        },
+
+        onTitleDblClick(event, voice) {
+          this.voicesList = this.voicesList.map((_v)=>{
+            _v.isEditing = (_v.id == voice.id)
+            return _v;
+          })
+
+          Vue.nextTick(()=>{
+            const activeRef = this.$refs.voiceTitleEditRef.find(el=>el.getAttribute('contenteditable')==='true');
+            if (activeRef) {
+              activeRef.innerText = voice.title;
+              this.setCaretToEnd(activeRef);
+            }
+          })
+        },
+
+        setCaretToEnd(element) {
+          if (!element) return;
+          const range = document.createRange();
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          range.selectNodeContents(element);
+          range.collapse(false);
+          selection.addRange(range);
+          element.focus();
+        },
+
+        onTitleEdit(event, voice) {
+          voice.title = event.target.innerText;
         },
 
         addVoice() {
@@ -277,9 +330,6 @@
           this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
         },
 
-      },
-      mounted() {
-        this.showModal('eleven-lab-filters-modal');
       }
   }
 </script>
@@ -295,6 +345,31 @@
 
   .modal-header {
     padding: 2px 15px 15px 15px;
+
+    span.p-tabview-title-voice {
+      line-height: 1;
+      white-space: nowrap;
+
+      &[contenteditable="true"] {
+        cursor: text;
+        outline-color: #ddd;
+        outline-style: solid;
+        outline-width: 1px;
+        padding: 0.5rem;
+        margin-right: -5px;
+      }
+    }
+
+    input.p-tabview-title-voice {
+      width: 86%;
+      height: 30px;
+      margin-left: 0;
+      margin-right: auto;
+      border: 1px solid #767676;
+      border-radius: 2px 0px 0px 2px;
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .modal-body {

@@ -307,9 +307,17 @@ export default {
     border-width: 0;
 }
 
+.p-tabview .p-tabview-nav li .p-tabview-nav-link:has(span[contenteditable="true"]) {
+  padding: 0.5rem;
+}
+
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
     color: #333;
     border: none;
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link:has(span[contenteditable="true"]) {
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
 }
 
 .p-tabview .p-tabview-nav li {
