@@ -148,11 +148,12 @@ export default {
           this.$emit('onRemoveTab', { i, tab });
 
           Vue.nextTick(()=>{
-            let loop = this.allChildren.length;
+            const maxLength = this.allChildren.length;
+            let loop = maxLength;
             while (loop--) {
               this.allChildren[loop].index = loop;
             }
-            this.d_activeIndex = i;
+            this.d_activeIndex = i > maxLength-1 ? maxLength-1 : i;
           })
         },
         updateInkBar() {
@@ -365,7 +366,7 @@ export default {
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-close-tab {
     display: inline-block;
     height: 14px;
-    margin-left: 8px;
+    margin-left: 15px;
     margin-top: -5px;
 }
 
