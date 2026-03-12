@@ -204,7 +204,6 @@
           this.$emit('close_modal');
         },
         voiceTabChange(tab) {
-          //this.activeTabIndex = tab.index;
           //this.voiceTabsActiveIndex = tab.index;
           // if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
           //   Vue.nextTick(() => {
@@ -269,16 +268,15 @@
             id: id + 1,
             title: (id + 1).toString()
           })
-          this.voiceTabsActiveIndex = lastIndex;
+
           Vue.nextTick(()=>{
-            this.$refs.voicesTabs.onResize();
+            this.$refs.voicesTabs.onResize(lastIndex);
           })
         },
 
         removeVoice(params) {
           const { i, tab: voice } = params;
           const voiceId = this.voicesList[i]?.id;
-          console.log(`${__filename.slice(-30)}:i:tab: `, voiceId);
 
           if (voiceId) {
             this.voicesList = this.voicesList.filter((voice)=>voice.id!==voiceId);

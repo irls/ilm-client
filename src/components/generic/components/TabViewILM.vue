@@ -43,8 +43,9 @@
 </template>
 
 <script>
-import DomHandler from 'primevue/utils/DomHandler';
+import DomHandler  from 'primevue/utils/DomHandler';
 import ObjectUtils from 'primevue/utils/ObjectUtils';
+import Vue         from 'vue';
 
 const TabPanelHeaderSlot = {
     functional: true,
@@ -106,11 +107,15 @@ export default {
         if (this.forwardIsDisabled) this.updateButtonState();
     },
     methods: {
-        onResize() {
+        onResize(activeIndex = -1) {
           this.updateTabs = false;
           this.updateTabs = true;
           this.updateInkBar();
           this.updateButtonState();
+          if (activeIndex > -1) {
+            this.d_activeIndex = activeIndex;
+            this.updateScrollBar(activeIndex);
+          }
         },
         onTabClick(event, i) {
             if (!this.isTabDisabled(this.tabs[i]) && i !== this.d_activeIndex) {
@@ -141,7 +146,14 @@ export default {
         },
         onRemoveTabClick(event, i, tab) {
           this.$emit('onRemoveTab', { i, tab });
-          this.d_activeIndex = 0; // don`t know why activeIndex won`t work from outside...
+
+          Vue.nextTick(()=>{
+            let loop = this.allChildren.length;
+            while (loop--) {
+              this.allChildren[loop].index = loop;
+            }
+            this.d_activeIndex = i;
+          })
         },
         updateInkBar() {
           if (this.$refs.nav.children.length > 1) {
