@@ -16,11 +16,14 @@
                               :tabindex="isTabDisabled(tab) ? null : '0'" :aria-selected="d_activeIndex">
                                 <span class="p-tabview-title" v-if="tab.header">{{tab.header}}</span>
                                 <TabPanelHeaderSlot :tab="tab" v-if="tab.$scopedSlots.header"/>
+                                <span class="p-tabview-close-tab" v-if="showAddTab" @click="onRemoveTabClick($event, i, tab)">
+                                  <i class="fa fa-remove"></i>
+                                </span>
                             </a>
                         </li>
                         <li v-if="showAddTab" role="presentation" class="add-tab-button">
                           <div class="p-tabview-title add-tab">
-                            <button class="btn btn-primary" :disabled="false" @click="onAddTabClick">
+                            <button class="btn btn-primary" @click="onAddTabClick">
                               <i class="glyphicon glyphicon-remove-circle"></i>
                             </button>
                           </div>
@@ -73,14 +76,19 @@ export default {
         onAddTab: {
             type: Function,
             default: function(){}
-        }
+        },
+        onRemoveTab: {
+            type: Function,
+            default: function(){}
+        },
     },
     data() {
         return {
             allChildren: [],
             d_activeIndex: this.activeIndex,
             backwardIsDisabled: true,
-            forwardIsDisabled: true
+            forwardIsDisabled: true,
+            updateTabs: true
         };
     },
     watch: {
@@ -99,6 +107,8 @@ export default {
     },
     methods: {
         onResize() {
+          this.updateTabs = false;
+          this.updateTabs = true;
           this.updateInkBar();
           this.updateButtonState();
         },
@@ -128,6 +138,10 @@ export default {
         },
         onAddTabClick() {
           this.$emit('onAddTab');
+        },
+        onRemoveTabClick(event, i, tab) {
+          this.$emit('onRemoveTab', { i, tab });
+          this.d_activeIndex = 0; // don`t know why activeIndex won`t work from outside...
         },
         updateInkBar() {
           if (this.$refs.nav.children.length > 1) {
@@ -201,7 +215,7 @@ export default {
       },
       tabs() {
         let tabs = [];
-        if (this.allChildren) {
+        if (this.allChildren && this.updateTabs) {
           tabs = this.allChildren
           .filter(child => child.$vnode.tag.indexOf('tabpanel') !== -1);
         }
@@ -318,6 +332,21 @@ export default {
 
 .p-tabview .p-tabview-nav li.p-highlight.add-tab-button {
     padding: 0;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-close-tab {
+    display: none;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-close-tab i {
+    height: 14px;
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-close-tab {
+    display: inline-block;
+    height: 14px;
+    margin-left: 8px;
+    margin-top: -5px;
 }
 
 .p-tabview-ink-bar {

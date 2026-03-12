@@ -31,7 +31,8 @@
               class="meta-edit-tabs"
               @tab-change="voiceTabChange"
               :showAddTab="true"
-              @onAddTab="addVoice">
+              @onAddTab="addVoice"
+              @onRemoveTab="removeVoice">
 
               <TabPanel
                 v-for="(voice, idx) in voicesList"
@@ -216,7 +217,23 @@
             title: (id + 1).toString()
           })
           this.voiceTabsActiveIndex = lastIndex;
-          this.$refs.voicesTabs.onResize();
+          Vue.nextTick(()=>{
+            this.$refs.voicesTabs.onResize();
+          })
+        },
+
+        removeVoice(params) {
+          const { i, tab: voice } = params;
+          const voiceId = this.voicesList[i]?.id;
+          console.log(`${__filename.slice(-30)}:i:tab: `, voiceId);
+
+          if (voiceId) {
+            this.voicesList = this.voicesList.filter((voice)=>voice.id!==voiceId);
+          }
+
+          Vue.nextTick(()=>{
+            this.$refs.voicesTabs.onResize();
+          })
         },
 
         rowClick(item, event) {
