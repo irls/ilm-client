@@ -73,6 +73,7 @@
           <div class="eleven-lab-filters-search">
 
             <elevenLabFiltersBar />
+            <elevenLabSearchResults />
 
           </div>
         </div>
@@ -105,6 +106,7 @@
   import TabView  from '../../../generic/components/TabViewILM.vue';
 
   import elevenLabFiltersBar  from './11LabFiltersBar.vue';
+  import elevenLabSearchResults  from './11LabSearchResults.vue';
 
   import {mapGetters, mapActions } from 'vuex';
 
@@ -129,43 +131,6 @@
             }
           ],
 
-          headers: [
-            {
-              title: '',
-              path: 'bookid',
-              html (val) {
-                return `<i class="fa fa-check-square toggle-select"></i><i class="fa fa-square toggle-select"></i><input type="checkbox" class="link-book-select-toggle" name="select-link-${val}"/>`
-              }
-            },
-            {
-              title: 'Title',
-              path: 'title',
-              addClass: 'booktitle'
-            },
-            {
-              title: 'Author',
-              path: 'author',
-              addClass: 'author',
-              render(val) {
-                return val ? val.join(', ') : '';
-              }
-            },
-            {
-              title: 'Size',
-              path: 'wordcount',
-              render (val) {
-                // return '~'+Math.round(val / 300) +'pg'
-                return val ? `${Math.round(val / 300)} pages` : '0 pages';
-              }
-            },
-            {
-              title: 'Published',
-              path: 'published',
-              html (val) {
-                return '<i class="fa ' + (val ? 'fa-check-square-o' : 'fa-square-o') + '"></i>'
-              }
-            }
-          ],
           idField: 'bookid',
           selected: [],
           booksFilter: {title: '', language: 'en', collection: 'not-linked', published: ''},
@@ -177,7 +142,8 @@
         //Grid: Grid
         TabView,
         TabPanel,
-        elevenLabFiltersBar
+        elevenLabFiltersBar,
+        elevenLabSearchResults
       },
       mixins: [api_config],
       computed: {
@@ -322,6 +288,9 @@
 
   .modal-body {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
 
     .tabs-controls {
       padding-bottom: 10px;
@@ -351,9 +320,17 @@
       position: relative;
       z-index: 1;
     }
+
+    .eleven-lab-filters-search {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
   }
 
-  .modal-footer {}
+  .modal-footer {
+    border-top: none;
+  }
 
 }
 </style>

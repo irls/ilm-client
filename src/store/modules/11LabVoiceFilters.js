@@ -127,6 +127,11 @@ export default {
       return [];
     },
 
+    isReqFltrsSelected: (state, getters, rootState, rootGetters) => {
+      const reqFltrs = ['language', 'gender', 'age'];
+      return reqFltrs.every((field)=>state.voiceFilters[field].length);
+    },
+
     // filteredBooksCounter: (state, getters, rootState, rootGetters) => {
     //   return rootGetters.allBooksPagination.total;
     // },

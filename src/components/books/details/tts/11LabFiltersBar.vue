@@ -2,7 +2,7 @@
 <div class="voice-filters-main-wrapper">
   <div class="voice-filters-first-row" ref="voiceFiltersFirstRow">
     <!-- Voice Filter -->
-    <div v-if="showVoiceFilters" class="voice-filters-text-filter">
+    <div class="voice-filters-text-filter">
       <input placeholder="Filter by voice name or description"
         ref="voiceFilters.filter" type="text"
         :class="['form-control voice-filter', {filled: voiceFilters.filter!=''}]"
@@ -106,10 +106,6 @@ export default {
         type: Number,
         default: 0
       },
-      scrollable: {
-        type: Boolean,
-        default: false
-      },
       onAddTab: {
         type: Function,
         default: function(){}
@@ -117,14 +113,10 @@ export default {
     },
     data() {
       return {
-        showVoiceFilters: true,
-        languages: Languages,
       };
     },
     watch: {},
-    mounted() {
-      console.log(`${__filename.slice(-30)}:mounted:elevenLabsVoicesFilters: `, this.mapVoiceFilterHQ.length);
-    },
+    mounted() {},
     updated() {},
     methods: {
       filterVoiceChange (key, $event) {
@@ -138,7 +130,6 @@ export default {
         }
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
         console.log(`elevenLabsVoicesFilters/set_voiceFilters::: `, newFilters);
-
         this.changeFilterVisual();
       },
 
@@ -316,6 +307,7 @@ export default {
   .p-component.p-multiselect {
     .p-multiselect-label.p-placeholder {
       color: #888;
+      /*padding: 0.25rem 0.5rem;*/
     }
     &.multi-select-language,
     &.multi-select-gender,
@@ -325,6 +317,7 @@ export default {
           content: "*";
           color: red;
           vertical-align: middle;
+          line-height: 1px;
         }
       }
     }
