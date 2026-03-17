@@ -20,12 +20,9 @@
             </button>
             <h4>Select voices</h4>
           </div>
-          <div class="header-controls">
-            <!--<label>Collection</label>-->
-            <!--<select @change="filterChange('collection', $event)">
-              <option v-for="c in filterCollectionsList" :value="c._id">{{c.title}}</option>
-            </select>-->
-
+        </div>
+        <div class="modal-body">
+          <div class="tabs-controls">
             <TabView ref="voicesTabs" :scrollable="true"
               :activeIndex="voiceTabsActiveIndex"
               class="meta-edit-tabs"
@@ -53,7 +50,8 @@
                     @blur="onTitleBlur($event, voice)">
                   </span>
                 </template>
-                {{voice.title}}
+
+                <span style="display: none">{{voice.title}}</span>
               </TabPanel>
 
               <!--<TabPanel
@@ -70,9 +68,13 @@
 
             </TabView>
           </div>
-        </div>
-        <div class="modal-body">
-          <div class="eleven-lab-filters-search"></div>
+          <!--<div class="tabs-controls">-->
+
+          <div class="eleven-lab-filters-search">
+
+            <elevenLabFiltersBar />
+
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" @click="addVoice">
@@ -101,6 +103,8 @@
 
   import TabPanel from 'primevue/tabpanel';
   import TabView  from '../../../generic/components/TabViewILM.vue';
+
+  import elevenLabFiltersBar  from './11LabFiltersBar.vue';
 
   import {mapGetters, mapActions } from 'vuex';
 
@@ -173,6 +177,7 @@
         //Grid: Grid
         TabView,
         TabPanel,
+        elevenLabFiltersBar
       },
       mixins: [api_config],
       computed: {
@@ -180,13 +185,13 @@
           get() {
           }
         },
-        ...mapGetters(['allBooks', 'currentCollection', 'bookCollections'])
+        ...mapGetters([])
       },
       mounted() {
         this.showModal('eleven-lab-filters-modal');
       },
       methods: {
-        ...mapActions(['linkBooksToCollection']),
+        ...mapActions([]),
 
         showModal(name) {
           this.$modal.show(name);
@@ -295,39 +300,9 @@
           }
         },
 
-        linkBooks(check = false) {
-          this.hideModal('on-link-message');
-          if (check === true) {
-            this.relinkCount = 0;
-            this.selected.forEach(s => {
-              let b = this.allBooks.find(_b => _b.bookid === s);
-              if (b && b.collection_id) {
-                ++this.relinkCount;
-              }
-            });
-            if (this.relinkCount > 0) {
-              this.showModal('on-link-message');
-              return;
-            }
-          }
-          if (this.selected.length > 0) {
-            return this.linkBooksToCollection(this.selected)
-              .then((response) => {
-                if (response.status===200) {
-                  this.$emit('close_modal');
-                } else {
-
-                }
-              }).catch((err) => {
-
-              });
-          }
-        },
         filterChange(field, event) {
-
           this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
         },
-
       }
   }
 </script>
@@ -342,7 +317,15 @@
   width: 100%;
 
   .modal-header {
-    padding: 2px 15px 15px 15px;
+    padding: 2px 15px 2px 15px;
+  }
+
+  .modal-body {
+    flex-grow: 1;
+
+    .tabs-controls {
+      padding-bottom: 10px;
+    }
 
     span.p-tabview-title-voice {
       line-height: 1;
@@ -368,10 +351,6 @@
       position: relative;
       z-index: 1;
     }
-  }
-
-  .modal-body {
-    flex-grow: 1;
   }
 
   .modal-footer {}

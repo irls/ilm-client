@@ -20,6 +20,7 @@ import alignActions from './modules/align';
 import tasks from './modules/tasks';
 import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
+import elevenLabsVoicesFilters from './modules/11LabVoiceFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
@@ -28,6 +29,7 @@ import authorsMapModule from './modules/authorsMap';
 import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
 import booksModule from "./modules/book";
+import elevenLabsVoicesModule from "./modules/11LabVoices";
 import suggestionsModule from './modules/suggestions';
 import filterTagsModule from "./modules/filterTag";
 import collectionsModule from "./modules/collection";
@@ -94,6 +96,7 @@ export const store = new Vuex.Store({
     alignActions,
     tasks,
     gridFilters,
+    elevenLabsVoicesFilters,
     audioExport,
     tocSections,
     ttsModule,
@@ -104,6 +107,7 @@ export const store = new Vuex.Store({
     calculateLevelsModule,
     suggestionsModule,
     booksModule,
+    elevenLabsVoicesModule,
     filterTagsModule,
     collectionsModule,
     blocksModule
@@ -1822,6 +1826,7 @@ export const store = new Vuex.Store({
        //dispatch('updateBooksList', {});
        dispatch('booksModule/loadBooksFilters');
        dispatch('authorsModule/getAll');
+       dispatch('elevenLabsVoicesModule/loadVoicesFilters');
     },
 
     destroyDB ({ state, commit, dispatch }) {

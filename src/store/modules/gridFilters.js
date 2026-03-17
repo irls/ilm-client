@@ -1,9 +1,9 @@
-import {
-  prepareForFilter,
-  cleanDiacritics,
-  splitPrepareForFilter,
-  prepareRegexpForArFaLetters
-}  from '@src/filters/search.js';
+// import {
+//   prepareForFilter,
+//   cleanDiacritics,
+//   splitPrepareForFilter,
+//   prepareRegexpForArFaLetters
+// }  from '@src/filters/search.js';
 import { Languages }       from "@src/mixins/lang_config.js"
 
 export default {
