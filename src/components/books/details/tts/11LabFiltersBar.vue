@@ -45,7 +45,7 @@
     <!-- Gender Dropdown -->
     <MultiSelect v-if="mapVoiceFilterLibraries.gender.length > 0"
       v-model="multiSelectVoiceModel.gender"
-      class="multi-select-gender"
+      :selectionLimit="1" class="multi-select-gender"
       :options="mapVoiceFilterLibraries.gender" optionLabel="caption"
       data-captions="Genders" placeholder="Gender"
       display="chip" :showToggleAll="false"
@@ -54,7 +54,7 @@
     <!-- Age Dropdown -->
     <MultiSelect v-if="mapVoiceFilterLibraries.age.length > 0"
       v-model="multiSelectVoiceModel.age"
-      class="multi-select-age"
+      :selectionLimit="1" class="multi-select-age"
       :options="mapVoiceFilterLibraries.age" optionLabel="caption"
       data-captions="Ages" placeholder="Age"
       display="chip" :showToggleAll="false"
@@ -129,7 +129,7 @@ export default {
           newFilters.filter = $event ? $event.target.value : '';
         }
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
-        console.log(`elevenLabsVoicesFilters/set_voiceFilters::: `, newFilters);
+        //console.log(`elevenLabsVoicesFilters/set_voiceFilters::: `, newFilters);
         this.changeFilterVisual();
       },
 
@@ -138,7 +138,8 @@ export default {
       }, 300),
 
       applyFilters() {
-
+        //this.$emit('applyFilters');
+        this.$store.dispatch('elevenLabsVoicesModule/act_filterVoices');
       },
 
       cleanFilterVal (key) {
@@ -193,7 +194,7 @@ export default {
         mapVoiceFilterAccents:    'elevenLabsVoicesFilters/mapVoiceFilterAccents',
         lengthVoiceFilterAccents: 'elevenLabsVoicesFilters/lengthVoiceFilterAccents',
         mapVoiceFilterLibraries:  'elevenLabsVoicesFilters/mapVoiceFilterLibraries',
-        mapVoiceFilterHQ:         'elevenLabsVoicesFilters/mapVoiceFilterHQ',
+        mapVoiceFilterHQ:         'elevenLabsVoicesFilters/mapVoiceFilterHQ'
       }),
     },
     components: {

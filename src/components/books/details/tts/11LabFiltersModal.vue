@@ -72,7 +72,8 @@
 
           <div class="eleven-lab-filters-search">
 
-            <elevenLabFiltersBar />
+            <elevenLabFiltersBar
+              @applyFilters = "addVoice"/>
             <elevenLabSearchResults />
 
           </div>
@@ -151,7 +152,10 @@
           get() {
           }
         },
-        ...mapGetters([])
+        ...mapGetters({
+          voicesListLoading:  'elevenLabsVoicesModule/voicesListLoading',
+          mapVoicesList:      'elevenLabsVoicesModule/mapVoicesList',
+        })
       },
       mounted() {
         this.showModal('eleven-lab-filters-modal');
@@ -288,6 +292,7 @@
 
   .modal-body {
     flex-grow: 1;
+    min-height: 0; /* CRITICAL FIX: Allows it to shrink below content size */
     display: flex;
     flex-direction: column;
     padding-bottom: 0;
@@ -323,6 +328,7 @@
 
     .eleven-lab-filters-search {
       flex-grow: 1;
+      min-height: 0; /* CRITICAL FIX: Allows it to shrink below content size */
       display: flex;
       flex-direction: column;
     }
