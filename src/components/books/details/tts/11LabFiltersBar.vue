@@ -80,7 +80,7 @@
   </div>
   <!--<div class="voice-filters-first-row"-->
   <div class="voice-filters-second-row" ref="voiceFiltersSecondRow">
-    <button class="btn btn-default" v-on:click="cleanFilterVal('voiceFilters.filter'); resetFilters(); filterVoiceChange('filter');">Reset filters</button>
+    <button class="btn btn-default" v-on:click="cleanFilterVal('voiceFilters.filter'); resetFilters();">Reset filters</button>
     <button class="btn btn-primary" v-on:click="applyFilters">Filter</button>
   </div>
   <!--<div class="voice-filters-second-row"-->
@@ -129,7 +129,6 @@ export default {
           newFilters.filter = $event ? $event.target.value : '';
         }
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
-        //console.log(`elevenLabsVoicesFilters/set_voiceFilters::: `, newFilters);
         this.changeFilterVisual();
       },
 
@@ -151,6 +150,7 @@ export default {
 
       resetFilters () {
         this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
+        this.$store.dispatch('elevenLabsVoicesModule/act_filterVoices');
       },
 
       changeFilterVisual() {

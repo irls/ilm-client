@@ -3,11 +3,12 @@
   <div v-if="!isReqFltrsSelected" class="search-results-filter-non-selected">
     Voice filtering requires Language, Gender and Age to be selected.
   </div>
-  <div v-if="!isReqFltrsSelected" class="search-results-filter-empty">
-    No voices match the selected criteria. Please refine your filters and try again.
+  <div v-if="isVoicesListLoaded && mapVoicesList.length == 0"
+    class="search-results-filter-empty">
+      No voices match the selected criteria. Please refine your filters and try again.
   </div>
 
-  <div v-if="!voicesListLoading" class="search-results-list-wrapper">
+  <div v-if="!isVoicesListLoading" class="search-results-list-wrapper">
     <ul>
       <li v-for="(voice, idx) in mapVoicesList" :data-id="voice.id" :key="voice.id">
         <div class="result-list-item">
@@ -71,10 +72,12 @@ export default {
     },
     computed: {
       ...mapGetters({
-        voicesListLoading:  'elevenLabsVoicesModule/voicesListLoading',
-        mapVoicesList:      'elevenLabsVoicesModule/mapVoicesList',
-        voiceFilters:       'elevenLabsVoicesFilters/voiceFilters',
-        isReqFltrsSelected: 'elevenLabsVoicesFilters/isReqFltrsSelected'
+        isVoicesListLoading: 'elevenLabsVoicesModule/isVoicesListLoading',
+        isVoicesListLoaded:  'elevenLabsVoicesModule/isVoicesListLoaded',
+        mapVoicesList:       'elevenLabsVoicesModule/mapVoicesList',
+
+        voiceFilters:        'elevenLabsVoicesFilters/voiceFilters',
+        isReqFltrsSelected:  'elevenLabsVoicesFilters/isReqFltrsSelected'
       }),
     },
     components: {
@@ -106,7 +109,7 @@ export default {
 
   .search-results-list-wrapper {
     height: 100%;
-    overflow-y: scroll;
+    overflow-y: auto;
 
     ul {
       list-style-type: none;

@@ -11,8 +11,11 @@ export default {
     }
   },
   getters: {
-    voicesListLoading: state => {
+    isVoicesListLoading: state => {
       return state.voicesListLoading;
+    },
+    isVoicesListLoaded: state => {
+      return state.voicesList.loaded;
     },
     mapVoicesList: state => {
       if (state.voicesList.loaded) {
@@ -28,6 +31,10 @@ export default {
     set_voicesList(state, payload) {
       state.voicesList.list = payload;
       state.voicesList.loaded = true;
+    },
+    set_voicesListEmpty(state) {
+      state.voicesList.list = [];
+      state.voicesList.loaded = false;
     }
   },
   actions: {
@@ -41,6 +48,7 @@ export default {
     },
 
     act_filterVoices({rootState, rootGetters, commit}) {
+      const isReqFltrsSelected = rootGetters['elevenLabsVoicesFilters/isReqFltrsSelected'];
       const {
         filter,
         language,
@@ -52,6 +60,12 @@ export default {
         notice
       } = rootGetters['elevenLabsVoicesFilters/voiceFilters'];
       const preparedFilters = {};
+
+      if (!isReqFltrsSelected) {
+        commit('set_voicesListEmpty');
+        return Promise.resolve();
+      }
+
       if (filter.trim().length) {
         preparedFilters.filter = filter.trim()
       }
