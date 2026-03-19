@@ -23,43 +23,43 @@
         </div>
         <div class="modal-body">
           <div class="tabs-controls">
-            <TabView ref="voicesTabs" :scrollable="true"
-              :activeIndex="voiceTabsActiveIndex"
+            <TabView ref="charactersTabs" :scrollable="true"
+              :activeIndex="charactersTabsActiveIndex"
               class="meta-edit-tabs"
-              @tab-change="voiceTabChange"
+              @tab-change="charactersTabChange"
               :showAddTab="true"
-              @onAddTab="addVoice"
-              @onRemoveTab="removeVoice">
+              @onAddTab="addCharacter"
+              @onRemoveTab="removeCharacter">
 
               <TabPanel
-                v-for="(voice, idx) in voicesList"
-                :key="voice.id"
-                :data-idx="idx"><!--:header="voice.title"-->
+                v-for="(char, idx) in mapCharactersList"
+                :key="char.uuid"
+                :data-idx="idx"><!--:header="char.name"-->
                 <template #header>
-                  <span v-if="!voice.isEditing"
-                    class="p-tabview-title-voice"
-                    :contenteditable="voice.isEditing"
-                    v-text="voice.title"
-                    @dblclick="onTitleDblClick($event, voice)">
+                  <span v-if="!char.isEditing"
+                    class="p-tabview-title-character"
+                    :contenteditable="char.isEditing"
+                    v-text="char.name"
+                    @dblclick="onTitleDblClick($event, char)">
                   </span>
-                  <span v-if="voice.isEditing"
-                    class="p-tabview-title-voice"
-                    :contenteditable="voice.isEditing"
+                  <span v-if="char.isEditing"
+                    class="p-tabview-title-character"
+                    :contenteditable="char.isEditing"
                     ref="voiceTitleEditRef"
-                    @input="onTitleEdit($event, voice)"
-                    @blur="onTitleBlur($event, voice)">
+                    @input="onTitleEdit($event, char)"
+                    @blur="onTitleBlur">
                   </span>
                 </template>
 
-                <span style="display: none">{{voice.title}}</span>
+                <span style="display: none">{{char.name}}</span>
               </TabPanel>
 
               <!--<TabPanel
                 data-tab-head-class="no-padding"
-                :data-idx="voicesList.length">
+                :data-idx="mapCharactersList.length">
                 <template #header>
-                  <div class="p-tabview-title add-voice">
-                    <button class="btn btn-primary" :disabled="false" @click="addVoice">
+                  <div class="p-tabview-title add-character">
+                    <button class="btn btn-primary" :disabled="false" @click="addVCharacter">
                       <i class="glyphicon glyphicon-remove-circle"></i>
                     </button>
                   </div>
@@ -73,13 +73,13 @@
           <div class="eleven-lab-filters-search">
 
             <elevenLabFiltersBar
-              @applyFilters = "addVoice"/>
+              @applyFilters = "charactersTabChange"/>
             <elevenLabSearchResults />
 
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" @click="addVoice">
+          <button class="btn btn-primary" @click="charactersTabChange">
             <i class="fa fa-plus"></i>&nbsp;
           </button>
           <button class="btn btn-default" v-on:click="$emit('close_modal')">Cancel</button>
@@ -109,7 +109,7 @@
   import elevenLabFiltersBar  from './11LabFiltersBar.vue';
   import elevenLabSearchResults  from './11LabSearchResults.vue';
 
-  import {mapGetters, mapActions } from 'vuex';
+  import {mapGetters, mapActions} from 'vuex';
 
   import _     from 'lodash'
   import modal from 'vue-js-modal';
@@ -120,19 +120,8 @@
       name: 'ElevenLabFiltersModal',
       data() {
         return {
-          voiceTabsActiveIndex: 0,
-          voicesList: [
-            {
-              id: 1,
-              title: 'Tasks'
-            },
-            {
-              id: 2,
-              title: 'Narrator'
-            }
-          ],
+          charactersTabsActiveIndex: 0,
 
-          idField: 'bookid',
           selected: [],
           booksFilter: {title: '', language: 'en', collection: 'not-linked', published: ''},
           relinkCount: 0
@@ -154,14 +143,15 @@
         },
         ...mapGetters({
           voicesListLoading:  'elevenLabsVoicesModule/voicesListLoading',
-          mapVoicesList:      'elevenLabsVoicesModule/mapVoicesList',
+          mapCharactersList:  'elevenLabsVoicesModule/mapCharactersList',
         })
       },
       mounted() {
+        this.$store.dispatch('elevenLabsVoicesModule/applyInitVoicesFilters');
         this.showModal('eleven-lab-filters-modal');
       },
       methods: {
-        ...mapActions([]),
+        //...mapActions(),
 
         showModal(name) {
           this.$modal.show(name);
@@ -170,51 +160,32 @@
           this.$modal.hide(name);
         },
         modalResizing: _.debounce(function () {
-          if (this?.$refs?.voicesTabs) {
-            this.$refs.voicesTabs.onResize()
+          if (this?.$refs?.charactersTabs) {
+            this.$refs.charactersTabs.onResize()
           }
         }, 300),
         modalOpening() {},
         modalClosing() {
           this.$emit('close_modal');
         },
-        voiceTabChange(tab) {
-          //this.voiceTabsActiveIndex = tab.index;
-          // if (this.activeTabIndex === 1 && this.$refs.descriptionShort) {
-          //   Vue.nextTick(() => {
-          //     this.$refs.descriptionShort.setValue(this.currentBook.description_short);
-          //     //this.$refs.descriptionShort.initSize();
-          //   });
-          // }
-          // if (this.activeTabIndex === 1 && this.$refs.descriptionLong) {
-          //   Vue.nextTick(() => {
-          //     this.$refs.descriptionLong.setValue(this.currentBook.description);
-          //     //this.$refs.descriptionLong.initSize();
-          //   });
-          // }
-
-          // for (const _v of this.voicesList) {
-          //   _v.isEditing = false;
-          // }
+        charactersTabChange(tab) {
+          console.log(`charactersTabChange::: `, tab.index);
+          this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
+          this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+          this.$store.dispatch('elevenLabsVoicesModule/applyInitVoicesFilters', tab.index);
         },
 
-        onTitleBlur(event, voice) {
-          this.voicesList = this.voicesList.map((_v)=>{
-            _v.isEditing = false;
-            return _v;
-          })
+        onTitleBlur() {
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListNonEdit');
         },
 
-        onTitleDblClick(event, voice) {
-          this.voicesList = this.voicesList.map((_v)=>{
-            _v.isEditing = (_v.id == voice.id)
-            return _v;
-          })
+        onTitleDblClick(event, char) {
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListItemEdit', char);
 
           Vue.nextTick(()=>{
             const activeRef = this.$refs.voiceTitleEditRef.find(el=>el.getAttribute('contenteditable')==='true');
             if (activeRef) {
-              activeRef.innerText = voice.title;
+              activeRef.innerText = char.name;
               this.setCaretToEnd(activeRef);
             }
           })
@@ -231,48 +202,41 @@
           element.focus();
         },
 
-        onTitleEdit(event, voice) {
-          voice.title = event.target.innerText;
+        onTitleEdit(event, character) {
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
+            values: { name: event.target.innerText }, character
+          });
         },
 
-        addVoice() {
-          const lastIndex = this.voicesList.length;
-          const id = this.voicesList[lastIndex - 1].id;
-
-          this.voicesList.push({
-            id: id + 1,
-            title: (id + 1).toString()
-          })
+        addCharacter() {
+          const lastIndex = this.mapCharactersList.length;
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListAddItem');
 
           Vue.nextTick(()=>{
-            this.$refs.voicesTabs.onResize(lastIndex);
+            this.$refs.charactersTabs.onResize(lastIndex);
           })
         },
 
-        removeVoice(params) {
-          const { i, tab: voice } = params;
-          const voiceId = this.voicesList[i]?.id;
-
-          if (voiceId) {
-            this.voicesList = this.voicesList.filter((voice)=>voice.id!==voiceId);
-          }
+        removeCharacter(params) {
+          const { i } = params;
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListRemoveItem', i);
 
           Vue.nextTick(()=>{
-            this.$refs.voicesTabs.onResize();
+            this.$refs.charactersTabs.onResize();
           })
         },
 
-        rowClick(item, event) {
-          if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
-            if (item && item.bookid) {
-              $('[name="select-link-' + item.bookid + '"]').trigger('click');
-            }
-          }
-        },
-
-        filterChange(field, event) {
-          this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
-        },
+        // rowClick(item, event) {
+        //   if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
+        //     if (item && item.bookid) {
+        //       $('[name="select-link-' + item.bookid + '"]').trigger('click');
+        //     }
+        //   }
+        // },
+        //
+        // filterChange(field, event) {
+        //   this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
+        // },
       }
   }
 </script>
@@ -301,7 +265,7 @@
       padding-bottom: 10px;
     }
 
-    span.p-tabview-title-voice {
+    span.p-tabview-title-character {
       line-height: 1;
       white-space: nowrap;
 
@@ -315,7 +279,7 @@
       }
     }
 
-    input.p-tabview-title-voice {
+    input.p-tabview-title-character {
       width: 86%;
       height: 30px;
       margin-left: 0;

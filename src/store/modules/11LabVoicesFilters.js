@@ -6,6 +6,8 @@
 // }  from '@src/filters/search.js';
 //import { Languages }       from "@src/mixins/lang_config.js"
 
+import axios from "axios";
+
 export default {
   namespaced: true,
   state: {
@@ -117,7 +119,11 @@ export default {
           notice: state.librariesFilterObj.notice
         }
       }
-      return [];
+      return {
+        age: [],
+        gender: [],
+        notice: []
+      };
     },
 
     mapVoiceFilterHQ: (state, getters, rootState, rootGetters) => {
@@ -202,8 +208,41 @@ export default {
         value: _val.name
       }));
       state.librariesFilterObj.loaded = true;
+    },
+
+    set_initFilters (state, fObj) {
+      if (fObj) {
+        for (const [key] of Object.entries(state.voiceFilters)) {
+          if (fObj[key]) {
+            state.voiceFilters[key] = Array.isArray(fObj[key]) ? fObj[key] : [fObj[key]];
+          }
+        }
+        for (const [key] of Object.entries(state.multiSelectVoiceModel)) {
+          if (fObj[key] && state.librariesFilterObj[key]) {
+            const searchArr = Array.isArray(fObj[key]) ? fObj[key] : [fObj[key]];
+            const values = state.librariesFilterObj[key].filter((_v)=>searchArr.indexOf(_v.value) > -1);
+            if (values.length) {
+              state.multiSelectVoiceModel[key] = values;
+            }
+          }
+        }
+        state.fltrChangeTrigger = !state.fltrChangeTrigger;
+      }
     }
   },
 
-  actions: {}
+  actions: {
+    loadVoicesFilters({rootState, commit}) {
+      return axios.get(`${rootState.API_URL}tts/eleven_labs/voice_filters`)
+      .then(response => {
+        commit('set_languageFilterList',  response.data.languages);
+        commit('set_accentFilterList',    response.data.accents);
+        commit('set_librariesFilterList', response.data.libraries);
+        //commit('elevenLabsVoicesFilters/set_librariesFilterList', response.data.libraries, { root: true });
+      })
+      .catch(err=>{
+        console.error(err)
+      })
+    },
+  }
 }

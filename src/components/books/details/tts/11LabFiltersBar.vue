@@ -120,6 +120,7 @@ export default {
     updated() {},
     methods: {
       filterVoiceChange (key, $event) {
+        //this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
         const newFilters = Object.entries(this.multiSelectVoiceModel).reduce((acc, [key, val])=>{
           acc[key] = val.map((el)=>el.value);
           return acc;
@@ -138,7 +139,7 @@ export default {
 
       applyFilters() {
         //this.$emit('applyFilters');
-        this.$store.dispatch('elevenLabsVoicesModule/act_filterVoices');
+        this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
       },
 
       cleanFilterVal (key) {
@@ -150,7 +151,8 @@ export default {
 
       resetFilters () {
         this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
-        this.$store.dispatch('elevenLabsVoicesModule/act_filterVoices');
+        this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+        //this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
       },
 
       changeFilterVisual() {

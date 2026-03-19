@@ -20,7 +20,7 @@ import alignActions from './modules/align';
 import tasks from './modules/tasks';
 import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
-import elevenLabsVoicesFilters from './modules/11LabVoiceFilters';
+import elevenLabsVoicesFilters from './modules/11LabVoicesFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
@@ -1826,7 +1826,7 @@ export const store = new Vuex.Store({
        //dispatch('updateBooksList', {});
        dispatch('booksModule/loadBooksFilters');
        dispatch('authorsModule/getAll');
-       dispatch('elevenLabsVoicesModule/loadVoicesFilters');
+       dispatch('elevenLabsVoicesFilters/loadVoicesFilters');
     },
 
     destroyDB ({ state, commit, dispatch }) {

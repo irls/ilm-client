@@ -11,7 +11,7 @@
         :is_voice_wpm_calculating="is_voice_wpm_calculating"
         @onCalculateVoiceWpm = "onCalculateVoiceWpm"/>
 
-      <div v-if="all_voices.length > 0">
+      <div v-if="isCharactersListLoaded || all_voices.length > 0">
         <div class="audio-voice-header">
           <h4 class="audio-voice-caption">Character voice:</h4>
           <div class="audio-voice-select">
@@ -171,6 +171,7 @@
     computed: {
       ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid', 'user']),
       ...mapGetters('ttsModule', ['tts_voices']),
+      ...mapGetters('elevenLabsVoicesModule', ['isCharactersListLoaded']),
       alignProcess: {
         get() {
           let hasBlock = this.aligningBlocks.find(blk => {
@@ -192,16 +193,20 @@
       }
     },
     mounted() {
-      this.loadBookVoices();
-      this.getNewVoiceSettings()
-        .then(() => {
-          if (this.$refs?.generateVoice) {
-            this.$refs.generateVoice.resetNewVoiceSettings();
-          }
-        });
+      // this.loadBookVoices();
+      // this.getNewVoiceSettings()
+      //   .then(() => {
+      //     if (this.$refs?.generateVoice) {
+      //       this.$refs.generateVoice.resetNewVoiceSettings();
+      //     }
+      //   });
+
       window.addEventListener('resize', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
+
+      this.loadBookCharacters(this.currentBookMeta.bookid);
+
     },
     destroyed() {
       this.$root.$off('from-audioeditor:visible', this.setMaxContainerHeight);
@@ -439,6 +444,7 @@
         this.alignWpmSettings.wpm = data.wpm;
       },
       ...mapActions(['updateBookMeta']),
+      ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'removeVoice', 'updateVoice', 'calculateVoiceWpm'])
     },
 

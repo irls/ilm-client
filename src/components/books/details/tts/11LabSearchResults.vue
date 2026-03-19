@@ -3,7 +3,7 @@
   <div v-if="!isReqFltrsSelected" class="search-results-filter-non-selected">
     Voice filtering requires Language, Gender and Age to be selected.
   </div>
-  <div v-if="isVoicesListLoaded && mapVoicesList.length == 0"
+  <div v-if="isReqFltrsSelected && isVoicesListLoaded && mapVoicesList.length == 0"
     class="search-results-filter-empty">
       No voices match the selected criteria. Please refine your filters and try again.
   </div>
