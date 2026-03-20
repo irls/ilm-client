@@ -171,10 +171,7 @@
           this.$emit('close_modal');
         },
         charactersTabChange(tab) {
-          console.log(`charactersTabChange::: `, tab.index);
           this.charactersTabsActiveIndex = tab.index;
-          //this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
-          //this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
           this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
         },
 
@@ -215,9 +212,6 @@
           const lastIndex = this.mapCharactersList.length;
           this.$store.commit('elevenLabsVoicesModule/set_charactersListAddItem');
 
-          //this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', lastIndex);
-          //this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
-
           Vue.nextTick(()=>{
             this.charactersTabsActiveIndex = lastIndex;
             this.$refs.charactersTabs.onResize(lastIndex);
@@ -231,6 +225,10 @@
 
           Vue.nextTick(()=>{
             this.$refs.charactersTabs.onResize();
+            Vue.nextTick(()=>{
+              const idx = this.$refs.charactersTabs.d_activeIndex;
+              this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', idx);
+            })
           })
         },
 

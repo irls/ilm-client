@@ -134,11 +134,6 @@ export default {
           newFilters.filter = $event ? $event.target.value : '';
         }
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
-        console.log(`elevenLabsVoicesModule/set_charactersListUpdateItem::: `, {
-          idx: this.activeIndex,
-          uuid: this.character.uuid,
-          filters: newFilters
-        });
         this.$store.commit('elevenLabsVoicesModule/set_charactersListUpdateItem', {
           idx: this.activeIndex,
           uuid: this.character.uuid,

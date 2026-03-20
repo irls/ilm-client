@@ -63,7 +63,6 @@ export default {
     },
 
     set_charactersList(state, payload) {
-      console.log(`set_charactersList:payload:: `, payload);
       state.charactersList.list = payload;
       state.charactersList.loaded = true;
     },
@@ -118,7 +117,6 @@ export default {
         }
         return _v;
       })
-      console.log(`set_charactersListUpdateItem:filters:: `, state.charactersList.list);
     },
   },
   actions: {
@@ -134,7 +132,6 @@ export default {
         }
         commit('set_initCharactersList',  characters);
         commit('set_charactersList',  characters);
-        console.log(`loadBookCharacters::: `, state.charactersList.list);
       });
     },
 
@@ -149,7 +146,6 @@ export default {
     },
 
     applySavedVoicesFilters({state, commit}, idx = 0) {
-      console.log(`applySavedVoicesFilters::: `, state.charactersList.list[idx]);
       if (state.charactersList.list.length) {
         commit(
           'elevenLabsVoicesFilters/set_initFilters',
