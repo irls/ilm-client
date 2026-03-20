@@ -10,6 +10,10 @@ export default {
       loaded: false,
       list: []
     },
+    initCharactersList: {
+      loaded: false,
+      list: []
+    },
     charactersList: {
       loaded: false,
       list: []
@@ -42,30 +46,42 @@ export default {
     set_voicesListLoading(state, loading) {
       state.voicesListLoading = loading;
     },
+
     set_voicesList(state, payload) {
       state.voicesList.list = payload;
       state.voicesList.loaded = true;
     },
+
     set_voicesListEmpty(state) {
       state.voicesList.list = [];
       state.voicesList.loaded = false;
     },
+
+    set_initCharactersList(state, payload) {
+      state.initCharactersList.list = payload;
+      state.initCharactersList.loaded = true;
+    },
+
     set_charactersList(state, payload) {
+      console.log(`set_charactersList:payload:: `, payload);
       state.charactersList.list = payload;
       state.charactersList.loaded = true;
     },
+
     set_charactersListNonEdit(state) {
       state.charactersList.list = state.charactersList.list.map((_v)=>{
         _v.isEditing = false;
         return _v;
       });
     },
+
     set_charactersListItemEdit(state, character) {
       state.charactersList.list = state.charactersList.list.map((_v)=>{
         _v.isEditing = (_v.uuid == character.uuid)
         return _v;
       });
     },
+
     set_charactersListItemValue(state, payload) {
       const { values, character } = payload;
       const item = state.charactersList.list?.find((_v)=>_v.uuid == character.uuid);
@@ -76,6 +92,7 @@ export default {
         }
       }
     },
+
     set_charactersListAddItem(state) {
       state.charactersList.list.push({
         filters: {},
@@ -86,9 +103,23 @@ export default {
         isEditing: false
       })
     },
+
     set_charactersListRemoveItem(state, idx) {
       state.charactersList.list = state.charactersList.list.filter((_v, _idx)=>_idx != idx);
-    }
+    },
+
+    set_charactersListUpdateItem(state, payload) {
+      const { idx, uuid = null, filters} = payload;
+      state.charactersList.list = state.charactersList.list.map((_v, _idx)=>{
+        if (uuid && _v.uuid === uuid) {
+          _v.filters = {..._v.filters, ...filters};
+        } else if (_idx === idx) {
+          _v.filters = {..._v.filters, ...filters}
+        }
+        return _v;
+      })
+      console.log(`set_charactersListUpdateItem:filters:: `, state.charactersList.list);
+    },
   },
   actions: {
 
@@ -101,15 +132,24 @@ export default {
           characters[loop].uuid = uuidv4();
           characters[loop].isEditing = false;
         }
+        commit('set_initCharactersList',  characters);
         commit('set_charactersList',  characters);
-
-        // if (state.charactersList.list.length) {
-        //   dispatch('applyInitVoicesFilters');
-        // }
+        console.log(`loadBookCharacters::: `, state.charactersList.list);
       });
     },
 
     applyInitVoicesFilters({state, commit}, idx = 0) {
+      if (state.initCharactersList.list.length) {
+        commit(
+          'elevenLabsVoicesFilters/set_initFilters',
+          state.initCharactersList.list[idx]?.filters,
+          { root: true }
+        );
+      }
+    },
+
+    applySavedVoicesFilters({state, commit}, idx = 0) {
+      console.log(`applySavedVoicesFilters::: `, state.charactersList.list[idx]);
       if (state.charactersList.list.length) {
         commit(
           'elevenLabsVoicesFilters/set_initFilters',

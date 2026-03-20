@@ -73,6 +73,8 @@
           <div class="eleven-lab-filters-search">
 
             <elevenLabFiltersBar
+              :character = "mapCharactersList[charactersTabsActiveIndex]"
+              :activeIndex="charactersTabsActiveIndex"
               @applyFilters = "charactersTabChange"/>
             <elevenLabSearchResults />
 
@@ -170,9 +172,10 @@
         },
         charactersTabChange(tab) {
           console.log(`charactersTabChange::: `, tab.index);
-          this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
-          this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
-          this.$store.dispatch('elevenLabsVoicesModule/applyInitVoicesFilters', tab.index);
+          this.charactersTabsActiveIndex = tab.index;
+          //this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
+          //this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+          this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
         },
 
         onTitleBlur() {
@@ -212,8 +215,13 @@
           const lastIndex = this.mapCharactersList.length;
           this.$store.commit('elevenLabsVoicesModule/set_charactersListAddItem');
 
+          //this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', lastIndex);
+          //this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
+
           Vue.nextTick(()=>{
+            this.charactersTabsActiveIndex = lastIndex;
             this.$refs.charactersTabs.onResize(lastIndex);
+            this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
           })
         },
 

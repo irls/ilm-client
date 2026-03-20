@@ -70,7 +70,7 @@ export default {
     },
     accentFilterList: {
       loaded: false,
-      list: []
+      obj: {}
     },
     librariesFilterObj: {
       loaded: false,
@@ -97,7 +97,7 @@ export default {
 
     mapVoiceFilterAccents: (state, getters, rootState, rootGetters) => {
       if (state.voiceFilters.language.length && state.accentFilterList.loaded) {
-        return Object.entries(state.accentFilterList.list).reduce((acc, [key, _val])=>{
+        return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
           if (state.voiceFilters.language.indexOf(key) > -1) {
             acc = [...acc, ..._val];
           }
@@ -182,7 +182,7 @@ export default {
     },
 
     set_accentFilterList (state, list) {
-      state.accentFilterList.list = Object.keys(list).reduce((acc, key)=>{
+      state.accentFilterList.obj = Object.keys(list).reduce((acc, key)=>{
         acc[key] = list[key].map((_val)=>({
           caption: _val.label ? _val.label : _val.name,
           value: _val.name,
@@ -211,18 +211,49 @@ export default {
     },
 
     set_initFilters (state, fObj) {
+      state.voiceFilters = Object.assign({}, state.defaultVoiceFilters);
+      state.multiSelectVoiceModel = Object.assign({}, state.defaultMultiSelectVoiceModel);
       if (fObj) {
+        // state.voiceFilters
         for (const [key] of Object.entries(state.voiceFilters)) {
           if (fObj[key]) {
             state.voiceFilters[key] = Array.isArray(fObj[key]) ? fObj[key] : [fObj[key]];
           }
         }
+        // state.multiSelectVoiceModel
         for (const [key] of Object.entries(state.multiSelectVoiceModel)) {
-          if (fObj[key] && state.librariesFilterObj[key]) {
-            const searchArr = Array.isArray(fObj[key]) ? fObj[key] : [fObj[key]];
-            const values = state.librariesFilterObj[key].filter((_v)=>searchArr.indexOf(_v.value) > -1);
+          const searchArr = Array.isArray(fObj[key]) ? fObj[key] : (fObj[key] ? [fObj[key]] : []);
+          if (searchArr.length) {
+            // age gender notice
+            if (state.librariesFilterObj[key]) {
+              const values = state.librariesFilterObj[key].filter((_v)=>searchArr.indexOf(_v.value) > -1);
+              if (values.length) {
+                state.multiSelectVoiceModel[key] = values;
+              }
+            }
+            // language nativeLanguage
+            let values = state.languageFilterList.list.filter((_v)=>searchArr.indexOf(_v.value) > -1);
             if (values.length) {
               state.multiSelectVoiceModel[key] = values;
+            }
+            // hq
+            values = state.hqFilterList.list.filter((_v)=>searchArr.indexOf(_v.value) > -1);
+            if (values.length) {
+              state.multiSelectVoiceModel[key] = values;
+            }
+            // accent
+            if (fObj.language) {
+              const langSearchArr = Array.isArray(fObj.language) ? fObj.language : [fObj.language];
+              values = Object.entries(state.accentFilterList.obj).reduce((acc, [_langKey, _val])=>{
+                if (langSearchArr.indexOf(_langKey) > -1) {
+                  _val = _val.filter((_v)=>searchArr.indexOf(_v.value) > -1);
+                  return [...acc, ..._val];
+                }
+                return acc;
+              }, []);
+              if (values.length) {
+                state.multiSelectVoiceModel[key] = values;
+              }
             }
           }
         }
