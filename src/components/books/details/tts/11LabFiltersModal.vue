@@ -81,20 +81,21 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" @click="charactersTabChange">
-            <i class="fa fa-plus"></i>&nbsp;
+          <button class="btn btn-default" @click="cancelCharactersChanges">Cancel</button>
+          <button class="btn btn-primary" @click="applyCharactersChanges">
+            <!--<i class="fa fa-plus"></i>&nbsp;-->
+            Apply Voices
           </button>
-          <button class="btn btn-default" v-on:click="$emit('close_modal')">Cancel</button>
         </div>
       </div><!--<div class="link-book-modal-wrapper">-->
     </modal>
-    <modal name="on-link-message" :height="150" :resizeable="false">
+    <modal name="characters-message" :height="150" :resizeable="false">
       <div class="modal-header"></div>
       <div class="modal-body">
         <p>This will remove {{relinkCount}} of the selected books from their current collection(s).</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" v-on:click="hideModal('on-link-message')">Cancel</button>
+        <button class="btn btn-default" v-on:click="hideModal('characters-message')">Cancel</button>
         <button class="btn btn-primary" v-on:click="linkBooks()">Confirm</button>
       </div>
     </modal>
@@ -173,6 +174,7 @@
         charactersTabChange(tab) {
           this.charactersTabsActiveIndex = tab.index;
           this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
+          this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
         },
 
         onTitleBlur() {
@@ -216,6 +218,7 @@
             this.charactersTabsActiveIndex = lastIndex;
             this.$refs.charactersTabs.onResize(lastIndex);
             this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
+            this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
           })
         },
 
@@ -231,6 +234,14 @@
             })
           })
         },
+
+        applyCharactersChanges() {
+          this.showModal('characters-message');
+        },
+
+        cancelCharactersChanges() {
+          this.$emit('close_modal');
+        }
 
         // rowClick(item, event) {
         //   if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
