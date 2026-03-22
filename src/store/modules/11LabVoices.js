@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 export default {
   namespaced: true,
   state: {
+    moduleChangeTrigger: false,
+
     voicesListLoading: false,
     voicesList: {
       loaded: false,
@@ -31,6 +33,11 @@ export default {
         return state.voicesList.list;
       }
       return [];
+    },
+    getSelectedVoice: state => {
+      return state.voicesList.list.find((_v)=>{
+        return _v.isSelected === true;
+      });
     },
     mapCharactersList: state => {
       if (state.charactersList.loaded) {
@@ -118,6 +125,36 @@ export default {
         return _v;
       })
     },
+
+    set_characterVoiceSelected(state, payload) {
+      const { voice, character } = payload;
+      if (state.voicesList.loaded) {
+        state.charactersList.list = state.charactersList.list.map((_v, _idx)=>{
+          if (character.uuid && _v.uuid === character.uuid) {
+            _v.voice_id = voice.voice_id;
+            _v.voice = voice;
+          } /*else if (_idx === idx) {
+            _v.filters = {..._v.filters, ...filters}
+          }*/
+          return _v;
+        });
+        state.moduleChangeTrigger = !state.moduleChangeTrigger;
+      }
+    },
+
+    set_voiceSelected(state, payload) {
+      const { voice } = payload;
+      if (voice && state.voicesList.loaded) {
+        state.voicesList.list = state.voicesList.list.map((_v, _idx)=>{
+          _v.isSelected = false;
+          if (_v.voice_id && _v.voice_id === voice.voice_id) {
+            _v.isSelected = true;
+          }
+          return _v;
+        });
+        state.moduleChangeTrigger = !state.moduleChangeTrigger;
+      }
+    }
   },
   actions: {
 
@@ -155,7 +192,7 @@ export default {
       }
     },
 
-    applyFilterVoices({rootState, rootGetters, commit}) {
+    applyFilterVoices({rootState, state, rootGetters, commit}, idx = 0) {
       const isReqFltrsSelected = rootGetters['elevenLabsVoicesFilters/isReqFltrsSelected'];
       const {
         filter,
@@ -209,6 +246,9 @@ export default {
       .then(response => {
         commit('set_voicesList', response.data);
         commit('set_voicesListLoading', false);
+        if (state.charactersList.list[idx]?.voice_id) {
+          commit('set_voiceSelected', { voice: state.charactersList.list[idx].voice })
+        }
       });
     }
   }

@@ -10,11 +10,13 @@
 
   <div v-if="!isVoicesListLoading" class="search-results-list-wrapper">
     <ul>
-      <li v-for="(voice, idx) in mapVoicesList" :data-id="voice.id" :key="voice.id">
-        <div class="result-list-item">
+      <li v-for="(voice, idx) in mapVoicesList"
+        :data-id="voice.voice_id" :key="voice.id">
+        <div :class="['result-list-item', {'selected': voice.isSelected}]"
+          @click="searchRowClick($event, voice)" >
           <div class="result-list-description-row">
             <div class="result-list-play-button">
-              <button class="audio-btn -play"></button>
+              <button class="audio-btn -play" @click="playSample($event, voice)" ></button>
             </div>
             <div class="result-list-name">
               <p class="list-details-name">{{voice.name}}</p>
@@ -52,14 +54,18 @@ import { Languages } from "@src/mixins/lang_config.js"
 export default {
     name: 'ElevenLabSearchResults',
     props: {
-      // activeIndex: {
-      //   type: Number,
-      //   default: 0
-      // },
-      // onAddTab: {
-      //   type: Function,
-      //   default: function(){}
-      // }
+      character: {
+        type: Object,
+        default: null
+      },
+      activeIndex: {
+        type: Number,
+        default: 0
+      },
+      rowClick: {
+        type: Function,
+        default: function(){}
+      }
     },
     data() {
       return {
@@ -69,6 +75,14 @@ export default {
     mounted() {},
     updated() {},
     methods: {
+      playSample(event, voice) {
+        event.stopPropagation();
+
+      },
+      searchRowClick(event, voice) {
+        console.log(`searchRowClick::: `);
+        this.$emit('rowClick', {event, voice, character: this.character})
+      }
     },
     computed: {
       ...mapGetters({
@@ -122,6 +136,9 @@ export default {
 
       &:hover {
         background: #f4f4f4;
+      }
+      &.selected {
+        background: #8FBC8F;
       }
 
       .result-list-description-row {

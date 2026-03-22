@@ -73,10 +73,15 @@
           <div class="eleven-lab-filters-search">
 
             <elevenLabFiltersBar
+              ref="elevenLabFiltersBar"
               :character = "mapCharactersList[charactersTabsActiveIndex]"
               :activeIndex="charactersTabsActiveIndex"
               @applyFilters = "charactersTabChange"/>
-            <elevenLabSearchResults />
+            <elevenLabSearchResults
+              ref="elevenLabSearchResults"
+              :character = "mapCharactersList[charactersTabsActiveIndex]"
+              :activeIndex="charactersTabsActiveIndex"
+              @rowClick = "searchRowClick"/>
 
           </div>
         </div>
@@ -147,6 +152,7 @@
         ...mapGetters({
           voicesListLoading:  'elevenLabsVoicesModule/voicesListLoading',
           mapCharactersList:  'elevenLabsVoicesModule/mapCharactersList',
+          getSelectedVoice:   'elevenLabsVoicesModule/getSelectedVoice',
         })
       },
       mounted() {
@@ -171,10 +177,19 @@
         modalClosing() {
           this.$emit('close_modal');
         },
-        charactersTabChange(tab) {
+        async charactersTabChange(tab) {
           this.charactersTabsActiveIndex = tab.index;
-          this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
-          this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
+          await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
+          await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', tab.index);
+          if (this.getSelectedVoice?.voice_id) {
+            Vue.nextTick(()=>{
+              const voiceId = this.getSelectedVoice.voice_id;
+              const selectedVoiceEl = this.$refs.elevenLabSearchResults.$el.querySelector(`[data-id="${voiceId}"]`);
+              if (selectedVoiceEl) {
+                selectedVoiceEl.scrollIntoView();
+              }
+            });
+          }
         },
 
         onTitleBlur() {
@@ -241,6 +256,12 @@
 
         cancelCharactersChanges() {
           this.$emit('close_modal');
+        },
+
+        searchRowClick(params) {
+          const { event, voice, character } = params;
+          this.$store.commit('elevenLabsVoicesModule/set_characterVoiceSelected', { voice, character });
+          this.$store.commit('elevenLabsVoicesModule/set_voiceSelected', { voice });
         }
 
         // rowClick(item, event) {
