@@ -35,6 +35,7 @@
         <eleven-lab-filters-modal v-if="elevenLabFiltersModalShow"
           :audio_playing="audio_playing"
           @close_modal="elevenLabFiltersModalShow = false"
+          @onSaveBookCharacters="onSaveBookCharacters"
           @play="play11LabVoiceExample"
           @stop="stopVoiceExample">
         </eleven-lab-filters-modal>
@@ -463,8 +464,12 @@
         this.alignWpmSettings.type = data.type;
         this.alignWpmSettings.wpm = data.wpm;
       },
+
+      onSaveBookCharacters(charIdx) {
+        this.saveBookCharacters({bookid: this.currentBookMeta.bookid, charIdx})
+      },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters']),
+      ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters', 'saveBookCharacters']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'removeVoice', 'updateVoice', 'calculateVoiceWpm'])
     },
 

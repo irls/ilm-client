@@ -14,11 +14,15 @@ export default {
     },
     initCharactersList: {
       loaded: false,
-      list: []
+      list: [],
+      bookid: '',
+      id: ''
     },
     charactersList: {
       loaded: false,
-      list: []
+      list: [],
+      bookid: '',
+      id: ''
     }
   },
   getters: {
@@ -65,12 +69,18 @@ export default {
     },
 
     set_initCharactersList(state, payload) {
-      state.initCharactersList.list = payload;
+      const { characters, id, bookid } = payload;
+      state.initCharactersList.id = id;
+      state.initCharactersList.bookid = bookid;
+      state.initCharactersList.list = characters;
       state.initCharactersList.loaded = true;
     },
 
     set_charactersList(state, payload) {
-      state.charactersList.list = payload;
+      const { characters, id, bookid } = payload;
+      state.charactersList.id = id;
+      state.charactersList.bookid = bookid;
+      state.charactersList.list = characters;
       state.charactersList.loaded = true;
     },
 
@@ -158,17 +168,17 @@ export default {
   },
   actions: {
 
-    loadBookCharacters({rootState, state, commit, dispatch}, bookid) {
+    loadBookCharacters({rootState, commit}, bookid) {
       return axios.get(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`)
       .then(response => {
-        const { characters } = response.data;
+        const { characters, id, bookid } = response.data;
         let loop = characters.length;
         while (loop--) {
           characters[loop].uuid = uuidv4();
           characters[loop].isEditing = false;
         }
-        commit('set_initCharactersList',  characters);
-        commit('set_charactersList',  characters);
+        commit('set_initCharactersList', { characters, id, bookid });
+        commit('set_charactersList', { characters, id, bookid });
       });
     },
 
@@ -180,6 +190,31 @@ export default {
           { root: true }
         );
       }
+    },
+
+    saveBookCharacters({rootState, state, commit}, payload) {
+      const {bookid, charIdx} = payload;
+      console.log(`${__filename.slice(-30)}:bookid, charIdx:: `, bookid, charIdx);
+      console.log(`${__filename.slice(-30)}:saveBookCharacters:state.charactersList: `, state.charactersList);
+      console.log(`${__filename.slice(-30)}:saveBookCharacters:state.initCharactersList: `, state.initCharactersList);
+
+      const prepareArray = state.charactersList.list.map((_v, _idx)=>({
+        name: _v.name,
+        voice_id: _v.voice_id,
+        filters: _v.filters
+      }));
+      console.log(`${__filename.slice(-30)}:saveBookCharacters:prepareArray: `, prepareArray);
+
+      return axios.put(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`, {
+        id: state.charactersList.id,
+        bookid: state.charactersList.bookid,
+        characters: prepareArray
+      })
+      .then(response => {
+        console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response);
+      }).catch(err=>{
+        console.error('saveBookCharacters', err);
+      })
     },
 
     applySavedVoicesFilters({state, commit}, idx = 0) {

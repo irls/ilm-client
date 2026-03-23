@@ -97,14 +97,14 @@
         </div>
       </div><!--<div class="link-book-modal-wrapper">-->
     </modal>
-    <modal name="characters-message" :height="150" :resizeable="false">
-      <div class="modal-header"></div>
+    <modal name="characters-message" class="eleven-labs-characters-modal" :height="141" :resizeable="false">
+      <div class="modal-header">Delete character tab</div>
       <div class="modal-body">
         <p>This will remove {{relinkCount}} of the selected books from their current collection(s).</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" v-on:click="hideModal('characters-message')">Cancel</button>
         <button class="btn btn-primary" v-on:click="linkBooks()">Confirm</button>
+        <button class="btn btn-default" v-on:click="hideModal('characters-message')">Cancel</button>
       </div>
     </modal>
   </div>
@@ -146,7 +146,11 @@
         audio_playing: {
           type: [String, Boolean],
           default: false
-        }
+        },
+        onSaveBookCharacters: {
+          type: Function,
+          default: function(){}
+        },
       }, //['languages'],
       components: {
         //Grid: Grid
@@ -263,7 +267,8 @@
         },
 
         applyCharactersChanges() {
-          this.showModal('characters-message');
+          //this.showModal('characters-message');
+          this.$emit('onSaveBookCharacters', this.charactersTabsActiveIndex);
         },
 
         cancelCharactersChanges() {
@@ -362,5 +367,26 @@
     border-top: none;
   }
 
+}
+
+.eleven-labs-characters-modal {
+  .modal-header {
+    border: 0;
+    font-weight: 600;
+    padding-bottom: 0;
+  }
+
+  .modal-footer {
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-direction: row;
+
+    .btn {
+      width: 50%;
+      height: 46px;
+      margin: 0;
+    }
+  }
 }
 </style>
