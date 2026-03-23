@@ -33,8 +33,10 @@
         </div>
 
         <eleven-lab-filters-modal v-if="elevenLabFiltersModalShow"
+          :audio_playing="audio_playing"
           @close_modal="elevenLabFiltersModalShow = false"
-          :languages="[]">
+          @play="play11LabVoiceExample"
+          @stop="stopVoiceExample">
         </eleven-lab-filters-modal>
 
       </div>
@@ -96,6 +98,7 @@
           </tr>
         </tbody>
       </table>
+
       <div class="selection-info">
         <div class="blocks-info">
           <template v-if="!blockSelection.start._id">
@@ -407,6 +410,23 @@
               console.log(err);
             });
         }
+      },
+      play11LabVoiceExample(params) {
+        const { event, voice, character } = params;
+
+        this.stopVoiceExample();
+        //if (this.audio_playing) {
+          //return;
+        //}
+        this.checkCreateAudioElement();
+
+        if (voice && voice.preview_url) {
+          this.audio_element.src = voice.preview_url;
+          this.audio_playing = voice.voice_id;
+          this.audio_element.play();
+          return;
+        }
+
       },
       stopVoiceExample() {
         if (this.audio_element) {

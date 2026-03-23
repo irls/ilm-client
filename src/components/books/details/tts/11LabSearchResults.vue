@@ -16,7 +16,8 @@
           @click="searchRowClick($event, voice)" >
           <div class="result-list-description-row">
             <div class="result-list-play-button">
-              <button class="audio-btn -play" @click="playSample($event, voice)" ></button>
+              <button v-if="!isAudioPplaying(voice.voice_id)" class="audio-btn -play" @click="playVoiceExample($event, voice)"></button>
+              <button v-if="isAudioPplaying(voice.voice_id)" class="audio-btn -pause" @click="pauseVoiceExample($event, voice)"></button>
             </div>
             <div class="result-list-name">
               <p class="list-details-name">{{voice.name}}</p>
@@ -65,6 +66,18 @@ export default {
       rowClick: {
         type: Function,
         default: function(){}
+      },
+      play: {
+        type: Function,
+        default: function(){}
+      },
+      stop: {
+        type: Function,
+        default: function(){}
+      },
+      audio_playing: {
+        type: [String, Boolean],
+        default: false
       }
     },
     data() {
@@ -75,14 +88,22 @@ export default {
     mounted() {},
     updated() {},
     methods: {
-      playSample(event, voice) {
+      playVoiceExample(event, voice) {
         event.stopPropagation();
-
+        this.$emit('play', {event, voice, character: this.character})
+      },
+      pauseVoiceExample(event, voice) {
+        event.stopPropagation();
+        this.$emit('stop', {event, voice, character: this.character})
       },
       searchRowClick(event, voice) {
-        console.log(`searchRowClick::: `);
         this.$emit('rowClick', {event, voice, character: this.character})
-      }
+      },
+      isAudioPplaying (voice_id) {
+        return this.audio_playing
+            && this.audio_playing.trim().length
+            && this.audio_playing.trim() === voice_id;
+      },
     },
     computed: {
       ...mapGetters({

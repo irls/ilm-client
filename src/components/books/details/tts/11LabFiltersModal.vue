@@ -81,7 +81,10 @@
               ref="elevenLabSearchResults"
               :character = "mapCharactersList[charactersTabsActiveIndex]"
               :activeIndex="charactersTabsActiveIndex"
-              @rowClick = "searchRowClick"/>
+              :audio_playing="audio_playing"
+              @rowClick = "searchRowClick"
+              @play="playVoiceExample"
+              @stop="stopVoiceExample"/>
 
           </div>
         </div>
@@ -135,7 +138,16 @@
           relinkCount: 0
         }
       },
-      props: ['languages'],
+      props: {
+        play: {
+          type: Function,
+          default: function(){}
+        },
+        audio_playing: {
+          type: [String, Boolean],
+          default: false
+        }
+      }, //['languages'],
       components: {
         //Grid: Grid
         TabView,
@@ -262,7 +274,17 @@
           const { event, voice, character } = params;
           this.$store.commit('elevenLabsVoicesModule/set_characterVoiceSelected', { voice, character });
           this.$store.commit('elevenLabsVoicesModule/set_voiceSelected', { voice });
-        }
+        },
+
+        playVoiceExample(params) {
+          //const { event, voice, character } = params;
+          this.$emit('play', params);
+        },
+
+        stopVoiceExample(params) {
+          //const { event, voice, character } = params;
+          this.$emit('stop', params);
+        },
 
         // rowClick(item, event) {
         //   if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
