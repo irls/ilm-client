@@ -29,7 +29,7 @@
               @tab-change="charactersTabChange"
               :showAddTab="true"
               @onAddTab="addCharacter"
-              @onRemoveTab="removeCharacter">
+              @onRemoveTab="removeCharacterApprove">
 
               <TabPanel
                 v-for="(char, idx) in mapCharactersList"
@@ -46,6 +46,7 @@
                     class="p-tabview-title-character"
                     :contenteditable="char.isEditing"
                     ref="voiceTitleEditRef"
+                    @keypress="onTitleKeyPress($event)"
                     @input="onTitleEdit($event, char)"
                     @blur="onTitleBlur">
                   </span>
@@ -97,14 +98,16 @@
         </div>
       </div><!--<div class="link-book-modal-wrapper">-->
     </modal>
-    <modal name="characters-message" class="eleven-labs-characters-modal" :height="141" :resizeable="false">
+    <modal name="characters-message"
+      class="eleven-labs-characters-modal"
+      height="auto" :width="400" :resizeable="false">
       <div class="modal-header">Delete character tab</div>
       <div class="modal-body">
-        <p>This will remove {{relinkCount}} of the selected books from their current collection(s).</p>
+        <p v-if="removeCharacterParams">Delete “{{removeCharacterParams.name}}” tab?</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" v-on:click="linkBooks()">Confirm</button>
-        <button class="btn btn-default" v-on:click="hideModal('characters-message')">Cancel</button>
+        <button class="btn btn-primary" v-on:click="removeCharacter">Confirm</button>
+        <button class="btn btn-default" v-on:click="removeCharacterCancel">Cancel</button>
       </div>
     </modal>
   </div>
@@ -132,10 +135,7 @@
       data() {
         return {
           charactersTabsActiveIndex: 0,
-
-          selected: [],
-          booksFilter: {title: '', language: 'en', collection: 'not-linked', published: ''},
-          relinkCount: 0
+          removeCharacterParams: null,
         }
       },
       props: {
@@ -161,19 +161,16 @@
       },
       mixins: [api_config],
       computed: {
-        linkBooksList: {
-          get() {
-          }
-        },
         ...mapGetters({
           voicesListLoading:  'elevenLabsVoicesModule/voicesListLoading',
           mapCharactersList:  'elevenLabsVoicesModule/mapCharactersList',
           getSelectedVoice:   'elevenLabsVoicesModule/getSelectedVoice',
         })
       },
-      mounted() {
-        this.$store.dispatch('elevenLabsVoicesModule/applyInitVoicesFilters');
+      async mounted() {
+        await this.$store.dispatch('elevenLabsVoicesModule/applyInitVoicesFilters');
         this.showModal('eleven-lab-filters-modal');
+        await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', 0);
       },
       methods: {
         //...mapActions(),
@@ -193,6 +190,7 @@
         modalClosing() {
           this.$emit('close_modal');
         },
+
         async charactersTabChange(tab) {
           this.charactersTabsActiveIndex = tab.index;
           await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
@@ -235,6 +233,14 @@
           element.focus();
         },
 
+        onTitleKeyPress(event, character) {
+          const text = event.target.innerText;
+          if (text.length > 30) {
+            event.preventDefault();
+            return false;
+          }
+        },
+
         onTitleEdit(event, character) {
           this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
             values: { name: event.target.innerText }, character
@@ -253,25 +259,47 @@
           })
         },
 
-        removeCharacter(params) {
+        removeCharacterApprove(params) {
           const { i } = params;
-          this.$store.commit('elevenLabsVoicesModule/set_charactersListRemoveItem', i);
+          if (this.mapCharactersList[i]) {
+            this.removeCharacterParams = {
+              i, name: this.mapCharactersList[i]?.name
+            }
+            this.showModal('characters-message');
+          }
+        },
 
-          Vue.nextTick(()=>{
-            this.$refs.charactersTabs.onResize();
+        removeCharacterCancel() {
+          this.removeCharacterParams = null;
+          this.hideModal('characters-message');
+        },
+
+        removeCharacter(params) {
+          if (this.removeCharacterParams) {
+            const { i } = this.removeCharacterParams;
+            this.$store.commit('elevenLabsVoicesModule/set_charactersListRemoveItem', i);
+
             Vue.nextTick(()=>{
-              const idx = this.$refs.charactersTabs.d_activeIndex;
-              this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', idx);
+              this.$refs.charactersTabs.onResize();
+              Vue.nextTick( async ()=>{
+                const idx = this.$refs.charactersTabs.d_activeIndex;
+                console.log(`${__filename.slice(-30)}:removeCharacter:idx: `, idx);
+                await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', idx);
+                await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', idx);
+                this.removeCharacterCancel();
+              })
             })
-          })
+          }
         },
 
         applyCharactersChanges() {
           //this.showModal('characters-message');
           this.$emit('onSaveBookCharacters', this.charactersTabsActiveIndex);
+          this.$emit('close_modal');
         },
 
         cancelCharactersChanges() {
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
           this.$emit('close_modal');
         },
 
@@ -290,18 +318,6 @@
           //const { event, voice, character } = params;
           this.$emit('stop', params);
         },
-
-        // rowClick(item, event) {
-        //   if (event && event.target && event.target.className.indexOf('toggle-select') !== -1) {
-        //     if (item && item.bookid) {
-        //       $('[name="select-link-' + item.bookid + '"]').trigger('click');
-        //     }
-        //   }
-        // },
-        //
-        // filterChange(field, event) {
-        //   this.booksFilter[field] = event.target.type === 'checkbox' ? (event.target.checked ? '1' : '') : event.target.value;
-        // },
       }
   }
 </script>

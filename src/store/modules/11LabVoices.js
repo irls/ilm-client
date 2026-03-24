@@ -49,8 +49,19 @@ export default {
       }
       return [];
     },
+    mapInitCharactersList: state => {
+      if (state.initCharactersList.loaded) {
+        return state.initCharactersList.list;
+      }
+      return [];
+    },
     isCharactersListLoaded: state => {
       return state.charactersList.loaded;
+    },
+    getSelectedCharacter: state => {
+      return state.charactersList.list.find((_v)=>{
+        return _v.isSelected === true;
+      });
     },
   },
   mutations: {
@@ -72,7 +83,7 @@ export default {
       const { characters, id, bookid } = payload;
       state.initCharactersList.id = id;
       state.initCharactersList.bookid = bookid;
-      state.initCharactersList.list = characters;
+      state.initCharactersList.list = characters.map((char)=>({...char}));
       state.initCharactersList.loaded = true;
     },
 
@@ -80,8 +91,12 @@ export default {
       const { characters, id, bookid } = payload;
       state.charactersList.id = id;
       state.charactersList.bookid = bookid;
-      state.charactersList.list = characters;
+      state.charactersList.list = characters.map((char)=>({...char}));
       state.charactersList.loaded = true;
+    },
+
+    set_charactersListFromInit(state) {
+      state.charactersList.list = state.initCharactersList.list.map((char)=>({...char}));
     },
 
     set_charactersListNonEdit(state) {
@@ -164,6 +179,21 @@ export default {
         });
         state.moduleChangeTrigger = !state.moduleChangeTrigger;
       }
+    },
+
+    set_characterSelected(state, payload) {
+      const { character } = payload;
+      if (state.charactersList.loaded) {
+        state.charactersList.list = state.charactersList.list.map((_v, _idx)=>{
+          if (character.uuid && _v.uuid === character.uuid) {
+            _v.isSelected = true;
+          } else {
+            _v.isSelected = false;
+          }
+        return _v;
+        });
+        state.moduleChangeTrigger = !state.moduleChangeTrigger;
+      }
     }
   },
   actions: {
@@ -176,6 +206,7 @@ export default {
         while (loop--) {
           characters[loop].uuid = uuidv4();
           characters[loop].isEditing = false;
+          characters[loop].isSelected = false;
         }
         commit('set_initCharactersList', { characters, id, bookid });
         commit('set_charactersList', { characters, id, bookid });
@@ -194,27 +225,28 @@ export default {
 
     saveBookCharacters({rootState, state, commit}, payload) {
       const {bookid, charIdx} = payload;
-      console.log(`${__filename.slice(-30)}:bookid, charIdx:: `, bookid, charIdx);
-      console.log(`${__filename.slice(-30)}:saveBookCharacters:state.charactersList: `, state.charactersList);
-      console.log(`${__filename.slice(-30)}:saveBookCharacters:state.initCharactersList: `, state.initCharactersList);
-
       const prepareArray = state.charactersList.list.map((_v, _idx)=>({
         name: _v.name,
         voice_id: _v.voice_id,
         filters: _v.filters
       }));
-      console.log(`${__filename.slice(-30)}:saveBookCharacters:prepareArray: `, prepareArray);
 
-      return axios.put(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`, {
+      commit('set_initCharactersList', {
+        characters: [...state.charactersList.list],
         id: state.charactersList.id,
-        bookid: state.charactersList.bookid,
-        characters: prepareArray
-      })
-      .then(response => {
-        console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response);
-      }).catch(err=>{
-        console.error('saveBookCharacters', err);
-      })
+        bookid: state.charactersList.bookid
+      });
+
+      // return axios.put(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`, {
+      //   id: state.charactersList.id,
+      //   bookid: state.charactersList.bookid,
+      //   characters: prepareArray
+      // })
+      // .then(response => {
+      //   console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response);
+      // }).catch(err=>{
+      //   console.error('saveBookCharacters', err);
+      // })
     },
 
     applySavedVoicesFilters({state, commit}, idx = 0) {

@@ -96,6 +96,16 @@ export default {
         activeIndex(newValue) {
             this.d_activeIndex = newValue;
             this.updateScrollBar(newValue);
+        },
+        'tabs.length'(newValue, oldValue) {
+          if (newValue < oldValue) {
+            const maxLength = this.allChildren.length;
+            let loop = maxLength;
+            while (loop--) {
+              this.allChildren[loop].index = loop;
+            }
+            this.d_activeIndex = newValue > maxLength-1 ? maxLength-1 : newValue;
+          }
         }
     },
     mounted() {
@@ -146,15 +156,6 @@ export default {
         },
         onRemoveTabClick(event, i, tab) {
           this.$emit('onRemoveTab', { i, tab });
-
-          Vue.nextTick(()=>{
-            const maxLength = this.allChildren.length;
-            let loop = maxLength;
-            while (loop--) {
-              this.allChildren[loop].index = loop;
-            }
-            this.d_activeIndex = i > maxLength-1 ? maxLength-1 : i;
-          })
         },
         updateInkBar() {
           if (this.$refs.nav.children.length > 1) {

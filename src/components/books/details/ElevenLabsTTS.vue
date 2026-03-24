@@ -20,7 +20,15 @@
           </div>
         </div>
         <div class="audio-voice-selection">
-          <select-tts-voice
+          <eleven-lab-tts-characters-grid
+            :pre_selected="defaultVoice('paragraph')"
+            :characters="mapInitCharactersList"
+            :audio_playing="audio_playing"
+            @onCharSelect="onCharSelect"
+            @play="play11LabVoiceExample"
+            @stop="stopVoiceExample"
+          ></eleven-lab-tts-characters-grid>
+          <select-tts-voice v-if="false"
             :pre_selected="defaultVoice('paragraph')"
             :voices="all_voices"
             :block_type="'paragraph'"
@@ -136,6 +144,7 @@
 
   import AlignAudioSpeed from './tts/AlignAudioSpeed.vue';
   import ElevenLabFiltersModal from './tts/11LabFiltersModal.vue';
+  import ElevenLabCharactersGrid from './tts/11LabCharactersGrid.vue';
   //import GenerateVoice   from './tts/GenerateVoice.vue';
   //import v_modal from 'vue-js-modal';
 
@@ -168,14 +177,15 @@
       'select-tts-voice': SelectTTSVoice,
       'Slider': Slider,
       'AlignAudioSpeed': AlignAudioSpeed,
-      'eleven-lab-filters-modal': ElevenLabFiltersModal
+      'eleven-lab-filters-modal': ElevenLabFiltersModal,
+      'eleven-lab-tts-characters-grid': ElevenLabCharactersGrid
       //'GenerateVoice': GenerateVoice
     },
     props: ['is_active'],
     computed: {
       ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid', 'user']),
       ...mapGetters('ttsModule', ['tts_voices']),
-      ...mapGetters('elevenLabsVoicesModule', ['isCharactersListLoaded']),
+      ...mapGetters('elevenLabsVoicesModule', ['isCharactersListLoaded', 'mapInitCharactersList', 'getSelectedCharacter']),
       alignProcess: {
         get() {
           let hasBlock = this.aligningBlocks.find(blk => {
@@ -192,7 +202,8 @@
       },
       selected_voice_params: {
         get() {
-          return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
+          //return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
+          return this.getSelectedCharacter?.voice;
         }
       }
     },
@@ -244,6 +255,12 @@
           //   });
           // });
         //}
+      },
+      onCharSelect(params) {
+        const { event, voice, character } = params;
+        this.currentBookMeta.voices['paragraph'] = voice.voice_id;
+        this.$store.commit('elevenLabsVoicesModule/set_characterSelected', { character });
+        //this.updateBookMeta({voices: this.currentBookMeta.voices});
       },
       onCalculateVoiceWpm() {
         if (this.selected_voice_params && !this.selected_voice_params.wpm) {
@@ -515,9 +532,9 @@
 </script>
 <style lang="less" scoped>
   .audio-voice-selection {
-    background-color: rgb(238, 238, 238);
+    /*background-color: rgb(238, 238, 238);
     padding-top: 4px;
-    padding-bottom: 4px;
+    padding-bottom: 4px;*/
 
     .voice-select-el {
       margin-left: 20px;
