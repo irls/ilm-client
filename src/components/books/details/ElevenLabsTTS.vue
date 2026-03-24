@@ -185,7 +185,7 @@
     computed: {
       ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid', 'user']),
       ...mapGetters('ttsModule', ['tts_voices']),
-      ...mapGetters('elevenLabsVoicesModule', ['isCharactersListLoaded', 'mapInitCharactersList', 'getSelectedCharacter']),
+      ...mapGetters('elevenLabsVoicesModule', ['isCharactersListLoaded', 'mapInitCharactersList', 'getSelectedInitCharacter']),
       alignProcess: {
         get() {
           let hasBlock = this.aligningBlocks.find(blk => {
@@ -203,7 +203,7 @@
       selected_voice_params: {
         get() {
           //return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
-          return this.getSelectedCharacter?.voice;
+          return this.getSelectedInitCharacter?.voice;
         }
       }
     },
@@ -259,7 +259,7 @@
       onCharSelect(params) {
         const { event, voice, character } = params;
         this.currentBookMeta.voices['paragraph'] = voice.voice_id;
-        this.$store.commit('elevenLabsVoicesModule/set_characterSelected', { character });
+        this.$store.commit('elevenLabsVoicesModule/set_initCharacterSelected', { character });
         //this.updateBookMeta({voices: this.currentBookMeta.voices});
       },
       onCalculateVoiceWpm() {

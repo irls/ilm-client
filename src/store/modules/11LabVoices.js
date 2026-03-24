@@ -58,8 +58,8 @@ export default {
     isCharactersListLoaded: state => {
       return state.charactersList.loaded;
     },
-    getSelectedCharacter: state => {
-      return state.charactersList.list.find((_v)=>{
+    getSelectedInitCharacter: state => {
+      return state.initCharactersList.list.find((_v)=>{
         return _v.isSelected === true;
       });
     },
@@ -181,10 +181,10 @@ export default {
       }
     },
 
-    set_characterSelected(state, payload) {
+    set_initCharacterSelected(state, payload) {
       const { character } = payload;
-      if (state.charactersList.loaded) {
-        state.charactersList.list = state.charactersList.list.map((_v, _idx)=>{
+      if (state.initCharactersList.loaded) {
+        state.initCharactersList.list = state.initCharactersList.list.map((_v, _idx)=>{
           if (character.uuid && _v.uuid === character.uuid) {
             _v.isSelected = true;
           } else {
