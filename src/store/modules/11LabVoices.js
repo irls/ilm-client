@@ -293,15 +293,15 @@ export default {
       if (hq.length) {
         preparedFilters.hq = hq[0];
       }
-      // if (accent.length) {
-      //   preparedFilters.accent = accent;
-      // }
-      // if (nativeLanguage.length) {
-      //   preparedFilters.nativeLanguage = nativeLanguage;
-      // }
-      // if (notice.length) {
-      //   preparedFilters.notice = notice;
-      // }
+      if (accent.length) {
+        preparedFilters.accent = accent;
+      }
+      if (nativeLanguage.length) {
+        preparedFilters.sec_language = nativeLanguage;
+      }
+      if (notice.length) {
+        preparedFilters.notice_period = notice;
+      }
 
       console.log(`applyFilterVoices::: `, preparedFilters);
 

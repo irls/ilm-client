@@ -25,12 +25,13 @@
             </div>
           </div>
           <div class="result-list-tags-row">
-            <div class="result-tags-item">Language - {{voice.language}}</div>
-            <div class="result-tags-item">Accent - {{voice.accent}}</div>
-            <div class="result-tags-item">Primary - {{voice.accent}}</div>
-            <div class="result-tags-item">{{voice.gender}}</div>
-            <div class="result-tags-item">{{voice.age}}</div>
-            <div class="result-tags-item">{{voice.category}}</div>
+            <div class="result-tags-item">Language - {{labelLanguage(voice.language)}}</div>
+            <div class="result-tags-item">Accent - {{labelAccent(voice.accent)}}</div>
+            <div class="result-tags-item">Primary - {{labelLanguage(voice.verified_languages[0].language)}}</div>
+            <div class="result-tags-item">{{labelGender(voice.gender)}}</div>
+            <div class="result-tags-item">{{labelAge(voice.age)}}</div>
+            <div class="result-tags-item" v-if="labelHQ(voice.category)">{{labelHQ(voice.category)}}</div>
+            <div class="result-tags-item">{{labelNotice(voice.notice_period)}}</div>
           </div>
         </div>
 
@@ -104,6 +105,51 @@ export default {
             && this.audio_playing.trim().length
             && this.audio_playing.trim() === voice_id;
       },
+      labelLanguage(langCode) {
+        const filter = this.voiceFilterLanguages.find((_v)=>{
+          return _v.value === langCode;
+        });
+        if (filter && filter.caption) return filter.caption;
+        return langCode;
+      },
+      labelAccent(accentCode) {
+        const filter = this.voiceFilterAccents.find((_v)=>{
+          return _v.value === accentCode;
+        });
+        if (filter && filter.caption) return filter.caption;
+        return accentCode;
+      },
+      labelGender(genderCode) {
+        const filter = this.voiceFilterLibraries.gender.find((_v)=>{
+          return _v.value === genderCode;
+        });
+        if (filter && filter.caption) return filter.caption;
+        return genderCode;
+      },
+      labelAge(ageCode) {
+        const filter = this.voiceFilterLibraries.age.find((_v)=>{
+          return _v.value === ageCode;
+        });
+        if (filter && filter.caption) return filter.caption;
+        return ageCode;
+      },
+      labelNotice(noticeCode) {
+        const filter = this.voiceFilterLibraries.notice.find((_v)=>{
+          return _v.value === ''+noticeCode;
+        });
+        if (filter && filter.caption) return filter.caption;
+        return noticeCode;
+      },
+      labelHQ(hqCode) {
+        const isHQ = hqCode && hqCode === 'high_quality';
+        if (isHQ) {
+          const filter = this.voiceFilterHQ.find((_v)=>{
+            return _v.value === 'hq';
+          });
+          if (filter && filter.caption) return filter.caption;
+        }
+        return false;
+      },
     },
     computed: {
       ...mapGetters({
@@ -111,8 +157,12 @@ export default {
         isVoicesListLoaded:  'elevenLabsVoicesModule/isVoicesListLoaded',
         mapVoicesList:       'elevenLabsVoicesModule/mapVoicesList',
 
-        voiceFilters:        'elevenLabsVoicesFilters/voiceFilters',
-        isReqFltrsSelected:  'elevenLabsVoicesFilters/isReqFltrsSelected'
+        voiceFilters:         'elevenLabsVoicesFilters/voiceFilters',
+        isReqFltrsSelected:   'elevenLabsVoicesFilters/isReqFltrsSelected',
+        voiceFilterLanguages: 'elevenLabsVoicesFilters/mapVoiceFilterLanguages',
+        voiceFilterAccents:   'elevenLabsVoicesFilters/mapVoiceFilterAccents',
+        voiceFilterLibraries: 'elevenLabsVoicesFilters/mapVoiceFilterLibraries',
+        voiceFilterHQ:        'elevenLabsVoicesFilters/mapVoiceFilterHQ'
       }),
     },
     components: {
