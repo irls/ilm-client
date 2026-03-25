@@ -29,7 +29,7 @@
     height="auto" :width="400" :resizeable="false">
     <div class="modal-header">Delete voice</div>
     <div class="modal-body" v-if="removeCharacterParams">
-      <div v-if="removeCharacterIsLoading" class="dot-flashing"></div>
+      <three-dot-loader-div v-if="removeCharacterIsLoading" :marginLeft="'49%'" />
       <section v-else >
         <p v-if="removeCharacterAlignedCount">“{{removeCharacterParams.name}}” has been aligned with {{removeCharacterAlignedCount}} blocks.</p>
         <p v-if="removeCharacterAlignedCount">Are you sure you want to delete the voice?</p>
@@ -53,6 +53,8 @@ import _       from 'lodash';
 import Vue     from 'vue';
 import v_modal from 'vue-js-modal';
 Vue.use(v_modal, {dialog: true});
+
+import ThreeDotLoaderDiv from '@src/components/generic/ThreeDotLoaderDiv.vue';
 
 import { mapGetters, mapActions } from 'vuex';
 import { Languages } from "@src/mixins/lang_config.js"
@@ -182,6 +184,7 @@ export default {
       }),
     },
     components: {
+      'three-dot-loader-div': ThreeDotLoaderDiv
     },
     directives: {
     }
@@ -332,54 +335,6 @@ export default {
       width: 50%;
       height: 46px;
       margin: 0;
-    }
-  }
-
-  .dot-flashing {
-    position: relative;
-    top: 2px;
-    margin-left: 49%;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    background-color: black; /*#9880ff;*/
-    color: black; /*#9880ff;*/
-    animation: dot-flashing 1s infinite linear alternate;
-    animation-delay: 0.5s;
-  }
-  .dot-flashing::before, .dot-flashing::after {
-    content: "";
-    display: inline-block;
-    position: absolute;
-    top: 0;
-  }
-  .dot-flashing::before {
-    left: -15px;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    background-color: black; /*#9880ff;*/
-    color: black; /*#9880ff;*/
-    animation: dot-flashing 1s infinite alternate;
-    animation-delay: 0s;
-  }
-  .dot-flashing::after {
-    left: 15px;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    background-color: black; /*#9880ff;*/
-    color: black; /*#9880ff;*/
-    animation: dot-flashing 1s infinite alternate;
-    animation-delay: 1s;
-  }
-
-  @keyframes dot-flashing {
-    0% {
-      background-color: black; /*#9880ff;*/
-    }
-    50%, 100% {
-      background-color: rgba(0, 0, 0, 0.2); /*rgba(152, 128, 255, 0.2);*/
     }
   }
 }

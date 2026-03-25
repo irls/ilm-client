@@ -282,13 +282,13 @@ export default {
         preparedFilters.filter = filter.trim()
       }
       if (language.length) {
-        preparedFilters.language = language[0];
+        preparedFilters.language = language;
       }
       if (gender.length) {
-        preparedFilters.gender = gender[0];
+        preparedFilters.gender = gender;
       }
       if (age.length) {
-        preparedFilters.age = age[0];
+        preparedFilters.age = age;
       }
       if (hq.length) {
         preparedFilters.hq = hq[0];
@@ -306,17 +306,16 @@ export default {
       console.log(`applyFilterVoices::: `, preparedFilters);
 
       commit('set_voicesListLoading', true);
-
-      // return axios.get(`${rootState.API_URL}tts/eleven_labs/voices`, {
-      //   params: preparedFilters
-      // })
-      // .then(response => {
-      //   commit('set_voicesList', response.data);
-      //   commit('set_voicesListLoading', false);
-      //   if (state.charactersList.list[idx]?.voice_id) {
-      //     commit('set_voiceSelected', { voice: state.charactersList.list[idx].voice })
-      //   }
-      // });
+      return axios.get(`${rootState.API_URL}tts/eleven_labs/voices`, {
+        params: preparedFilters
+      })
+      .then(response => {
+        commit('set_voicesList', response.data);
+        commit('set_voicesListLoading', false);
+        if (state.charactersList.list[idx]?.voice_id) {
+          commit('set_voiceSelected', { voice: state.charactersList.list[idx].voice })
+        }
+      });
     },
 
     checkVoiceIfApplied({rootState}, voice) {
