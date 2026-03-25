@@ -93,7 +93,7 @@
           <button class="btn btn-default" @click="cancelCharactersChanges">Cancel</button>
           <button class="btn btn-primary" @click="applyCharactersChanges">
             <!--<i class="fa fa-plus"></i>&nbsp;-->
-            Apply Voices
+            Apply Voices ({{getSelectedVoicesByCharacters}})
           </button>
         </div>
       </div><!--<div class="link-book-modal-wrapper">-->
@@ -163,9 +163,10 @@
       mixins: [api_config],
       computed: {
         ...mapGetters({
-          voicesListLoading:  'elevenLabsVoicesModule/voicesListLoading',
-          mapCharactersList:  'elevenLabsVoicesModule/mapCharactersList',
-          getSelectedVoice:   'elevenLabsVoicesModule/getSelectedVoice',
+          voicesListLoading:             'elevenLabsVoicesModule/voicesListLoading',
+          mapCharactersList:             'elevenLabsVoicesModule/mapCharactersList',
+          getSelectedVoice:              'elevenLabsVoicesModule/getSelectedVoice',
+          getSelectedVoicesByCharacters: 'elevenLabsVoicesModule/getSelectedVoicesByCharacters',
         })
       },
       async mounted() {

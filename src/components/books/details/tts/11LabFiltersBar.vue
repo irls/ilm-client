@@ -160,6 +160,11 @@ export default {
       resetFilters () {
         this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
         this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+        this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
+          character: {  },
+          values: { voice: false, voice_id: false },
+          idx: this.activeIndex
+        });
         //this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
       },
 

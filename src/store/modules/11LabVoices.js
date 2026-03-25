@@ -63,6 +63,11 @@ export default {
         return _v.isSelected === true;
       });
     },
+    getSelectedVoicesByCharacters: state => {
+      return state.charactersList.list.filter((_v)=>{
+        return _v.voice && _v.voice_id;
+      }).length;
+    },
   },
   mutations: {
     set_voicesListLoading(state, loading) {
@@ -114,12 +119,17 @@ export default {
     },
 
     set_charactersListItemValue(state, payload) {
-      const { values, character } = payload;
-      const item = state.charactersList.list?.find((_v)=>_v.uuid == character.uuid);
+      const { values, character, idx = -1 } = payload;
+      if (!character.uuid && idx >= 0) {
+        character.uuid = state.charactersList.list[idx]?.uuid
+      }
+      if (character.uuid) {
+        const item = state.charactersList.list?.find((_v)=>_v.uuid == character.uuid);
 
-      if (item) {
-        for (const [key, value] of Object.entries(values)) {
-          item[key] = value;
+        if (item) {
+          for (const [key, value] of Object.entries(values)) {
+            item[key] = value;
+          }
         }
       }
     },
@@ -313,8 +323,19 @@ export default {
       .then(response => {
         commit('set_voicesList', response.data);
         commit('set_voicesListLoading', false);
-        if (state.charactersList.list[idx]?.voice_id) {
-          commit('set_voiceSelected', { voice: state.charactersList.list[idx].voice })
+        const character = state.charactersList.list[idx];
+        if (character && character?.voice_id) {
+          const voiceExists = state.voicesList.list.find((_v, _idx)=>{
+            return _v.voice_id && _v.voice_id === character?.voice_id
+          });
+          if (voiceExists) {
+            commit('set_voiceSelected', { voice: character?.voice })
+          } else {
+            commit('set_charactersListItemValue', {
+              character: { uuid: character.uuid },
+              values: { voice: false, voice_id: false }
+            });
+          }
         }
       });
     },
