@@ -125,9 +125,10 @@ export default {
     },
 
     set_charactersListAddItem(state) {
+      const num = state.charactersList.list.length;
       state.charactersList.list.push({
         filters: {},
-        name: 'new Character',
+        name: 'Character '+num,
         voice: {},
         voice_id: null,
         uuid: uuidv4(),
