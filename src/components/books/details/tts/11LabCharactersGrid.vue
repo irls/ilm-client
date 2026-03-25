@@ -28,12 +28,17 @@
     class="eleven-labs-characters-modal"
     height="auto" :width="400" :resizeable="false">
     <div class="modal-header">Delete voice</div>
-    <div class="modal-body">
-      <p v-if="removeCharacterParams">Delete “{{removeCharacterParams.name}}” voice?</p>
-      <p v-if="removeCharacterParams">Delete “{{removeCharacterParams.name}}” tab?</p>
+    <div class="modal-body" v-if="removeCharacterParams">
+      <div v-if="removeCharacterIsLoading" class="dot-flashing"></div>
+      <section v-else >
+        <p v-if="removeCharacterAlignedCount">“{{removeCharacterParams.name}}” has been aligned with {{removeCharacterAlignedCount}} blocks.</p>
+        <p v-if="removeCharacterAlignedCount">Are you sure you want to delete the voice?</p>
+        <p v-if="!removeCharacterAlignedCount">Delete “{{removeCharacterParams.name}}” voice?</p>
+      </section>
+
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" v-on:click="onCharacterRemove">Confirm</button>
+      <button class="btn btn-primary" v-on:click="onCharacterRemove">Delete</button>
       <button class="btn btn-default" v-on:click="removeCharacterCancel">Cancel</button>
     </div>
   </modal>
@@ -79,6 +84,8 @@ export default {
     data() {
       return {
         removeCharacterParams: null,
+        removeCharacterAlignedCount: 0,
+        removeCharacterIsLoading: false
       };
     },
     watch: {},
@@ -110,17 +117,48 @@ export default {
           this.removeCharacterParams = {
             i: idx, name: this.characters[idx]?.name
           }
-          this.showModal('characters-message');
+          this.removeCharacterIsLoading = true;
+          this.$store.dispatch('elevenLabsVoicesModule/checkVoiceIfApplied', this.characters[idx]?.voice)
+          .then((alignedCount)=>{
+            this.removeCharacterAlignedCount = alignedCount;
+            this.removeCharacterIsLoading = false;
+            this.showModal('characters-message');
+          })
+          .catch(err=>{
+            console.error('removeCharacterApprove', err);
+            this.removeCharacterIsLoading = false;
+            this.removeCharacterParams = null;
+            this.hideModal('characters-message');
+          })
         }
       },
 
       removeCharacterCancel() {
         this.removeCharacterParams = null;
+        this.removeCharacterIsLoading = false;
         this.hideModal('characters-message');
       },
 
       onCharacterRemove() {
-        //this.showModal('characters-message');
+        if (this.removeCharacterParams) {
+          const params = {
+            idx: this.removeCharacterParams?.i,
+            bookid: this.currentBookid
+          };
+          this.removeCharacterIsLoading = true;
+          this.$store.dispatch('elevenLabsVoicesModule/deleteVoice', params)
+          .then(()=>{
+            this.removeCharacterIsLoading = false;
+            this.removeCharacterParams = null;
+            this.hideModal('characters-message');
+          })
+          .catch(err=>{
+            console.error('onCharacterRemove', err);
+            this.removeCharacterIsLoading = false;
+            this.removeCharacterParams = null;
+            this.hideModal('characters-message');
+          })
+        }
       },
 
       showModal(name) {
@@ -133,6 +171,8 @@ export default {
   },
     computed: {
       ...mapGetters({
+        currentBookid:       'currentBookid',
+
         isVoicesListLoading: 'elevenLabsVoicesModule/isVoicesListLoading',
         isVoicesListLoaded:  'elevenLabsVoicesModule/isVoicesListLoaded',
         mapVoicesList:       'elevenLabsVoicesModule/mapVoicesList',
@@ -278,6 +318,10 @@ export default {
     padding-bottom: 0;
   }
 
+  .modal-body {
+    min-height: 50px;
+  }
+
   .modal-footer {
     padding: 0;
     border: 0;
@@ -288,6 +332,54 @@ export default {
       width: 50%;
       height: 46px;
       margin: 0;
+    }
+  }
+
+  .dot-flashing {
+    position: relative;
+    top: 2px;
+    margin-left: 49%;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: black; /*#9880ff;*/
+    color: black; /*#9880ff;*/
+    animation: dot-flashing 1s infinite linear alternate;
+    animation-delay: 0.5s;
+  }
+  .dot-flashing::before, .dot-flashing::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+  }
+  .dot-flashing::before {
+    left: -15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: black; /*#9880ff;*/
+    color: black; /*#9880ff;*/
+    animation: dot-flashing 1s infinite alternate;
+    animation-delay: 0s;
+  }
+  .dot-flashing::after {
+    left: 15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: black; /*#9880ff;*/
+    color: black; /*#9880ff;*/
+    animation: dot-flashing 1s infinite alternate;
+    animation-delay: 1s;
+  }
+
+  @keyframes dot-flashing {
+    0% {
+      background-color: black; /*#9880ff;*/
+    }
+    50%, 100% {
+      background-color: rgba(0, 0, 0, 0.2); /*rgba(152, 128, 255, 0.2);*/
     }
   }
 }

@@ -147,7 +147,6 @@ export default {
       }, 300),
 
       applyFilters() {
-        //this.$emit('applyFilters');
         this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
       },
 

@@ -237,16 +237,16 @@ export default {
         bookid: state.charactersList.bookid
       });
 
-      // return axios.put(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`, {
-      //   id: state.charactersList.id,
-      //   bookid: state.charactersList.bookid,
-      //   characters: prepareArray
-      // })
-      // .then(response => {
-      //   console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response);
-      // }).catch(err=>{
-      //   console.error('saveBookCharacters', err);
-      // })
+      return axios.put(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`, {
+        id: state.charactersList.id,
+        bookid: state.charactersList.bookid,
+        characters: prepareArray
+      })
+      .then(response => {
+        console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response.data);
+      }).catch(err=>{
+        console.error('saveBookCharacters', err);
+      })
     },
 
     applySavedVoicesFilters({state, commit}, idx = 0) {
@@ -307,16 +307,43 @@ export default {
 
       commit('set_voicesListLoading', true);
 
-      return axios.get(`${rootState.API_URL}tts/eleven_labs/voices`, {
-        params: preparedFilters
-      })
+      // return axios.get(`${rootState.API_URL}tts/eleven_labs/voices`, {
+      //   params: preparedFilters
+      // })
+      // .then(response => {
+      //   commit('set_voicesList', response.data);
+      //   commit('set_voicesListLoading', false);
+      //   if (state.charactersList.list[idx]?.voice_id) {
+      //     commit('set_voiceSelected', { voice: state.charactersList.list[idx].voice })
+      //   }
+      // });
+    },
+
+    checkVoiceIfApplied({rootState}, voice) {
+      return axios.get(`${rootState.API_URL}tts/eleven_labs/${encodeURIComponent(voice.id)}/aligned_blocks`)
       .then(response => {
-        commit('set_voicesList', response.data);
-        commit('set_voicesListLoading', false);
-        if (state.charactersList.list[idx]?.voice_id) {
-          commit('set_voiceSelected', { voice: state.charactersList.list[idx].voice })
-        }
-      });
+        return response.data?.count;
+      }).catch(err=>{
+        console.error('checkVoiceIfApplied', err);
+        return Promise.reject(err);
+      })
+    },
+
+    deleteVoice({rootState, state, commit}, params) {
+      const { idx, bookid } = params;
+      return axios.delete(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters/${idx}`)
+      .then(response => {
+        const { id, bookid } = response.data;
+        const characters = state.initCharactersList.list.filter((_v, _idx)=>{
+          return _idx !== idx;
+        });
+
+        commit('set_initCharactersList', { characters, id, bookid });
+        commit('set_charactersList', { characters, id, bookid });
+      }).catch(err=>{
+        console.error('deleteVoice', err);
+        return Promise.reject(err);
+      })
     }
   }
 }

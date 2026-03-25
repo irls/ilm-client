@@ -106,7 +106,7 @@
         <p v-if="removeCharacterParams">Delete “{{removeCharacterParams.name}}” tab?</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" v-on:click="removeCharacter">Confirm</button>
+        <button class="btn btn-primary" v-on:click="removeCharacter">Delete</button>
         <button class="btn btn-default" v-on:click="removeCharacterCancel">Cancel</button>
       </div>
     </modal>
@@ -136,6 +136,7 @@
         return {
           charactersTabsActiveIndex: 0,
           removeCharacterParams: null,
+          removeCharacterIsLoading: false
         }
       },
       props: {
