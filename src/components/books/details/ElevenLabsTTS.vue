@@ -220,8 +220,6 @@
       this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
 
-      this.loadBookCharacters(this.currentBookMeta.bookid);
-
     },
     destroyed() {
       this.$root.$off('from-audioeditor:visible', this.setMaxContainerHeight);
@@ -486,7 +484,7 @@
         this.saveBookCharacters({bookid: this.currentBookMeta.bookid, charIdx})
       },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters', 'saveBookCharacters']),
+      ...mapActions('elevenLabsVoicesModule', ['saveBookCharacters']),
       ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'removeVoice', 'updateVoice', 'calculateVoiceWpm'])
     },
 

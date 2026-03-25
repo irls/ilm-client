@@ -249,6 +249,7 @@ export default {
       }
       if (!this.currentBookMeta._id || this.currentBookMeta._id != book_id) {
         this.loadBook(book_id);
+        this.loadBookCharacters(this.$route.params.bookid);
       }
     }
 
@@ -310,7 +311,8 @@ export default {
 
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
+    ...mapActions(['loadBook', 'updateBooksList', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo']),
+    ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters']),
   },
 
   destroyed: function () {

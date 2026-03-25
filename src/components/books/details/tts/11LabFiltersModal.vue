@@ -71,7 +71,7 @@
           </div>
           <!--<div class="tabs-controls">-->
 
-          <div class="eleven-lab-filters-search">
+          <div class="eleven-lab-filters-search" v-if="mapCharactersList.length">
 
             <elevenLabFiltersBar
               ref="elevenLabFiltersBar"

@@ -90,6 +90,7 @@ export default {
       state.initCharactersList.bookid = bookid;
       state.initCharactersList.list = characters.map((char)=>({...char}));
       state.initCharactersList.loaded = true;
+      state.moduleChangeTrigger = !state.moduleChangeTrigger;
     },
 
     set_charactersList(state, payload) {
@@ -98,6 +99,7 @@ export default {
       state.charactersList.bookid = bookid;
       state.charactersList.list = characters.map((char)=>({...char}));
       state.charactersList.loaded = true;
+      state.moduleChangeTrigger = !state.moduleChangeTrigger;
     },
 
     set_charactersListFromInit(state) {
@@ -139,8 +141,8 @@ export default {
       state.charactersList.list.push({
         filters: {},
         name: 'Character '+num,
-        voice: {},
-        voice_id: null,
+        voice: false,
+        voice_id: false,
         uuid: uuidv4(),
         isEditing: false
       })
@@ -210,14 +212,19 @@ export default {
   actions: {
 
     loadBookCharacters({rootState, commit}, bookid) {
+      console.log(`${__filename.slice(-30)}::loadBookCharacters: `, bookid);
       return axios.get(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`)
       .then(response => {
-        const { characters, id, bookid } = response.data;
-        let loop = characters.length;
-        while (loop--) {
-          characters[loop].uuid = uuidv4();
-          characters[loop].isEditing = false;
-          characters[loop].isSelected = false;
+        let { characters, id, bookid } = response.data;
+        if (characters && characters.length) {
+          let loop = characters.length;
+          while (loop--) {
+            characters[loop].uuid = uuidv4();
+            characters[loop].isEditing = false;
+            characters[loop].isSelected = false;
+          }
+        } else {
+          characters = [];
         }
         commit('set_initCharactersList', { characters, id, bookid });
         commit('set_charactersList', { characters, id, bookid });
