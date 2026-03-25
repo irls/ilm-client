@@ -136,11 +136,13 @@ export default {
       }
     },
 
-    set_charactersListAddItem(state) {
+    set_charactersListAddItem(state, bookid) {
       const num = state.charactersList.list.length;
       state.charactersList.list.push({
         filters: {},
-        name: 'Character '+num,
+        name: num > 0 ? 'Character '+num : 'Narrator',
+        id: null,
+        bookid,
         voice: false,
         voice_id: false,
         uuid: uuidv4(),
@@ -224,7 +226,16 @@ export default {
             characters[loop].isSelected = false;
           }
         } else {
-          characters = [];
+          characters = [{
+            filters: {},
+            name: 'Narrator',
+            id: null,
+            bookid,
+            voice: false,
+            voice_id: false,
+            uuid: uuidv4(),
+            isEditing: false
+          }];
         }
         commit('set_initCharactersList', { characters, id, bookid });
         commit('set_charactersList', { characters, id, bookid });
@@ -280,7 +291,7 @@ export default {
     applyFilterVoices({rootState, state, rootGetters, commit}, idx = 0) {
       const isReqFltrsSelected = rootGetters['elevenLabsVoicesFilters/isReqFltrsSelected'];
       const {
-        filter,
+        filter = '',
         language,
         gender,
         age,

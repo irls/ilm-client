@@ -4,7 +4,8 @@
     <ul>
       <li v-for="(char, idx) in characters"
         :data-id="char.voice_id" :key="char.uuid">
-        <div :class="['result-list-item', {'selected': char.isSelected}]"
+        <div v-if="char.voice"
+          :class="['result-list-item', {'selected': char.isSelected}]"
           @click="charRowClick($event, char)" >
 
           <div class="result-list-description-row">

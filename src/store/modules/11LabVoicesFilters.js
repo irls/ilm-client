@@ -86,6 +86,7 @@ export default {
   getters: {
     fltrChangeTrigger:           state => state.fltrChangeTrigger,
     voiceFilters:                state => state.voiceFilters,
+    defaultVoiceFilters:         state => state.defaultVoiceFilters,
     multiSelectVoiceModel:       state => state.multiSelectVoiceModel,
 
     mapVoiceFilterLanguages: (state, getters, rootState, rootGetters) => {
@@ -137,16 +138,6 @@ export default {
       const reqFltrs = ['language', 'gender', 'age'];
       return reqFltrs.every((field)=>state.voiceFilters[field].length);
     },
-
-    // filteredBooksCounter: (state, getters, rootState, rootGetters) => {
-    //   return rootGetters.allBooksPagination.total;
-    // },
-    //
-    // filteredBooks: (state, getters, rootState, rootGetters) => {
-    //   if (!rootGetters.allBooks.length) return [];
-    //   const filteredbooks = rootGetters.allBooks
-    //   return filteredbooks;
-    // },
   },
   mutations: {
     set_multiSelectVoiceModel(state, payload) {
@@ -215,11 +206,18 @@ export default {
       state.multiSelectVoiceModel = Object.assign({}, state.defaultMultiSelectVoiceModel);
       if (fObj) {
         // state.voiceFilters
-        for (const [key] of Object.entries(state.voiceFilters)) {
+        let initFilters = {};
+        for (const [key] of Object.entries(state.defaultVoiceFilters)) {
           if (fObj[key]) {
-            state.voiceFilters[key] = Array.isArray(fObj[key]) ? fObj[key] : [fObj[key]];
+            if (Array.isArray(state.defaultVoiceFilters[key])) {
+              initFilters[key] = Array.isArray(fObj[key]) ? fObj[key] : [fObj[key]];
+            } else {
+              initFilters[key] = fObj[key];
+            }
           }
         }
+        state.voiceFilters = {...state.defaultVoiceFilters, ...initFilters};
+        console.log(`set_initFilters:state.voiceFilters:: `, state.voiceFilters);
         // state.multiSelectVoiceModel
         for (const [key] of Object.entries(state.multiSelectVoiceModel)) {
           const searchArr = Array.isArray(fObj[key]) ? fObj[key] : (fObj[key] ? [fObj[key]] : []);

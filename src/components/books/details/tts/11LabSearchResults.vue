@@ -1,6 +1,6 @@
 <template>
 <div class="search-results-main-wrapper">
-  <div v-if="!isReqFltrsSelected" class="search-results-filter-non-selected">
+  <div v-if="!isReqFltrsSelected && isVoicesListLoaded" class="search-results-filter-non-selected">
     Voice filtering requires Language, Gender and Age to be selected.
   </div>
   <div v-if="isReqFltrsSelected && isVoicesListLoaded && mapVoicesList.length == 0"

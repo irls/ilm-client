@@ -4,7 +4,7 @@
     <!-- Voice Filter -->
     <div class="voice-filters-text-filter">
       <input placeholder="Filter by voice name or description"
-        ref="voiceFilters.filter" type="text"
+        ref="voiceFilters.filter" type="text" :value="voiceFilters.filter"
         :class="['form-control voice-filter', {filled: voiceFilters.filter!=''}]"
         @keyup="filterChangeVoiceDescriptionDebounce('filter', $event)"
         @paste="filterChangeVoiceDescriptionDebounce('filter', $event)" ></input>
@@ -20,7 +20,7 @@
       :options="mapVoiceFilterLanguages" optionLabel="caption"
       data-captions="Languages" placeholder="Language"
       display="chip" :showToggleAll="false"
-      @change="filterVoiceChange" />
+      @change="filterVoiceChange('language', $event)" />
 
     <!-- Accent Dropdown -->
     <MultiSelect v-if="lengthVoiceFilterAccents > 0"
@@ -132,6 +132,10 @@ export default {
         if (key && key === 'filter') {
           newFilters.page = 0;
           newFilters.filter = $event ? $event.target.value : '';
+        }
+        if (key && key === 'language') {
+          this.multiSelectVoiceModel.accent = [];
+          newFilters.accent = [];
         }
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
         this.$store.commit('elevenLabsVoicesModule/set_charactersListUpdateItem', {
@@ -314,8 +318,8 @@ export default {
         color: #323130;
 
         .p-multiselect-token-icon {
-          display: none;
-          margin-left: 0.5rem;
+          margin-left: 2px;
+          padding-top: 2px;
         }
       }
     }

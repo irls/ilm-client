@@ -163,6 +163,7 @@
       mixins: [api_config],
       computed: {
         ...mapGetters({
+          currentBookid:                 'currentBookid',
           voicesListLoading:             'elevenLabsVoicesModule/voicesListLoading',
           mapCharactersList:             'elevenLabsVoicesModule/mapCharactersList',
           getSelectedVoice:              'elevenLabsVoicesModule/getSelectedVoice',
@@ -251,7 +252,7 @@
 
         addCharacter() {
           const lastIndex = this.mapCharactersList.length;
-          this.$store.commit('elevenLabsVoicesModule/set_charactersListAddItem');
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListAddItem', this.currentBookid);
 
           Vue.nextTick(()=>{
             this.charactersTabsActiveIndex = lastIndex;
