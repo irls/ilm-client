@@ -196,6 +196,7 @@
 
         async charactersTabChange(tab) {
           this.charactersTabsActiveIndex = tab.index;
+          this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);
           await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
           await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', tab.index);
           if (this.getSelectedVoice?.voice_id) {

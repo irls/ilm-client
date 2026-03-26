@@ -137,6 +137,8 @@ export default {
           this.multiSelectVoiceModel.accent = [];
           newFilters.accent = [];
         }
+        this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+        this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
         this.$store.commit('elevenLabsVoicesModule/set_charactersListUpdateItem', {
           idx: this.activeIndex,
@@ -152,6 +154,7 @@ export default {
 
       applyFilters() {
         this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
+        this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', true);
       },
 
       cleanFilterVal (key) {
@@ -164,6 +167,7 @@ export default {
       resetFilters () {
         this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
         this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+        this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);
         this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
           character: {  },
           values: { voice: false, voice_id: false },

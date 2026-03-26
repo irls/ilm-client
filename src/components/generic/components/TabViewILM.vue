@@ -391,7 +391,7 @@ export default {
 
   button {
     border-radius: 3px 3px 0 0;
-    padding: 6px 6px 1px 5px;
+    padding: 6px 6px 2px 5px;
     i {
       color: white;
       transform: rotate(45deg);

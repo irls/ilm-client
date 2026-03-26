@@ -6,6 +6,7 @@ export default {
   namespaced: true,
   state: {
     moduleChangeTrigger: false,
+    filterButtonPressed: false,
 
     voicesListLoading: false,
     voicesList: {
@@ -26,6 +27,7 @@ export default {
     }
   },
   getters: {
+    isFilterButtonPressed: state => state.filterButtonPressed,
     isVoicesListLoading: state => {
       return state.voicesListLoading;
     },
@@ -70,6 +72,10 @@ export default {
     },
   },
   mutations: {
+    set_FilterButtonPressed(state, isPressed) {
+      state.filterButtonPressed = !!isPressed;
+    },
+
     set_voicesListLoading(state, loading) {
       state.voicesListLoading = loading;
     },
@@ -208,6 +214,26 @@ export default {
         return _v;
         });
         state.moduleChangeTrigger = !state.moduleChangeTrigger;
+      }
+    },
+
+    set_voiceWPM(state, payload) {
+      const { character, voice } = payload;
+      if (character.voice && state.initCharactersList.loaded) {
+        state.initCharactersList.list = state.initCharactersList.list.map((_v, _idx)=>{
+          if (character.uuid && _v.uuid === character.uuid) {
+            _v.voice.wpm = voice.wpm;
+          }
+          return _v;
+        });
+      }
+      if (character.voice && state.voicesList.loaded) {
+        state.voicesList.list = state.voicesList.list.map((_v, _idx)=>{
+          if (_v.voice_id && _v.voice_id === voice.voice_id) {
+            _v.wpm = voice.wpm;
+          }
+          return _v;
+        });
       }
     }
   },

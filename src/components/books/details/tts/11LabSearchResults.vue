@@ -1,9 +1,9 @@
 <template>
 <div class="search-results-main-wrapper">
-  <div v-if="!isReqFltrsSelected && isVoicesListLoaded" class="search-results-filter-non-selected">
+  <div v-if="!isReqFltrsSelected && isFilterButtonPressed" class="search-results-filter-non-selected">
     Voice filtering requires Language, Gender and Age to be selected.
   </div>
-  <div v-if="isReqFltrsSelected && isVoicesListLoaded && mapVoicesList.length == 0"
+  <div v-if="isReqFltrsSelected && isFilterButtonPressed && !isVoicesListLoading && mapVoicesList.length == 0"
     class="search-results-filter-empty">
       No voices match the selected criteria. Please refine your filters and try again.
   </div>
@@ -153,9 +153,10 @@ export default {
     },
     computed: {
       ...mapGetters({
-        isVoicesListLoading: 'elevenLabsVoicesModule/isVoicesListLoading',
-        isVoicesListLoaded:  'elevenLabsVoicesModule/isVoicesListLoaded',
-        mapVoicesList:       'elevenLabsVoicesModule/mapVoicesList',
+        isVoicesListLoading:   'elevenLabsVoicesModule/isVoicesListLoading',
+        isVoicesListLoaded:    'elevenLabsVoicesModule/isVoicesListLoaded',
+        isFilterButtonPressed: 'elevenLabsVoicesModule/isFilterButtonPressed',
+        mapVoicesList:         'elevenLabsVoicesModule/mapVoicesList',
 
         voiceFilters:         'elevenLabsVoicesFilters/voiceFilters',
         isReqFltrsSelected:   'elevenLabsVoicesFilters/isReqFltrsSelected',

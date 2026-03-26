@@ -25,6 +25,7 @@
             :characters="mapInitCharactersList"
             :audio_playing="audio_playing"
             @onCharSelect="onCharSelect"
+            @onCharDelete="onCharDelete"
             @play="play11LabVoiceExample"
             @stop="stopVoiceExample"
           ></eleven-lab-tts-characters-grid>
@@ -197,14 +198,14 @@
       },
       isAlignButtonDisabled: {
         get() {
-          return this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null;
+          return !this.currentBookMeta.voices['paragraph'] || (this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null);
         }
       },
       selected_voice_params: {
         get() {
           //return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
           return this.getSelectedInitCharacter?.voice;
-        }
+        }, cache: false
       }
     },
     mounted() {
@@ -260,16 +261,25 @@
         this.$store.commit('elevenLabsVoicesModule/set_initCharacterSelected', { character });
         //this.updateBookMeta({voices: this.currentBookMeta.voices});
       },
+
+      onCharDelete(params) {
+        this.currentBookMeta.voices['paragraph'] = null;
+      },
+
       onCalculateVoiceWpm() {
         if (this.selected_voice_params && !this.selected_voice_params.wpm) {
           this.is_voice_wpm_calculating = true;
           this.calculateVoiceWpm([this.selected_voice_params.voice_id])
           .then((voice)=>{
-            this.all_voices = this.all_voices.map((_v)=>{
-              if (_v.voice_id === voice.voice_id) {
-                _v.wpm = voice.wpm;
-              }
-              return _v;
+            // this.all_voices = this.all_voices.map((_v)=>{
+            //   if (_v.voice_id === voice.voice_id) {
+            //     _v.wpm = voice.wpm;
+            //   }
+            //   return _v;
+            // });
+            this.$store.commit('elevenLabsVoicesModule/set_voiceWPM', {
+              character: this.getSelectedInitCharacter,
+              voice: voice
             });
             this.is_voice_wpm_calculating = false;
           });

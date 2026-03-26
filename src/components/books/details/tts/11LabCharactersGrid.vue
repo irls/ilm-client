@@ -4,7 +4,7 @@
     <ul>
       <li v-for="(char, idx) in characters"
         :data-id="char.voice_id" :key="char.uuid">
-        <div v-if="char.voice"
+        <div v-if="char.voice && char.voice_id"
           :class="['result-list-item', {'selected': char.isSelected}]"
           @click="charRowClick($event, char)" >
 
@@ -151,6 +151,7 @@ export default {
           this.removeCharacterIsLoading = true;
           this.$store.dispatch('elevenLabsVoicesModule/deleteVoice', params)
           .then(()=>{
+            this.$emit('onCharDelete', this.removeCharacterParams);
             this.removeCharacterIsLoading = false;
             this.removeCharacterParams = null;
             this.hideModal('characters-message');
