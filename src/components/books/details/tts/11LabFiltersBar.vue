@@ -80,8 +80,10 @@
   </div>
   <!--<div class="voice-filters-first-row"-->
   <div class="voice-filters-second-row" ref="voiceFiltersSecondRow">
-    <button class="btn btn-default" v-on:click="cleanFilterVal('voiceFilters.filter'); resetFilters();">Reset filters</button>
-    <button class="btn btn-primary" v-on:click="applyFilters">Filter</button>
+    <button class="btn btn-default" @click="cleanFilterVal('voiceFilters.filter'); resetFilters();">Reset filters</button>
+    <button :disabled="!isReqFltrsSelected"
+      class="btn btn-primary"
+      @click="applyFilters">Filter</button>
   </div>
   <!--<div class="voice-filters-second-row"-->
 
@@ -217,7 +219,8 @@ export default {
         mapVoiceFilterAccents:    'elevenLabsVoicesFilters/mapVoiceFilterAccents',
         lengthVoiceFilterAccents: 'elevenLabsVoicesFilters/lengthVoiceFilterAccents',
         mapVoiceFilterLibraries:  'elevenLabsVoicesFilters/mapVoiceFilterLibraries',
-        mapVoiceFilterHQ:         'elevenLabsVoicesFilters/mapVoiceFilterHQ'
+        mapVoiceFilterHQ:         'elevenLabsVoicesFilters/mapVoiceFilterHQ',
+        isReqFltrsSelected:       'elevenLabsVoicesFilters/isReqFltrsSelected',
       }),
     },
     components: {

@@ -14,8 +14,24 @@
               <button v-if="!isAudioPlaying(char.voice_id)" class="audio-btn -play" @click="playVoiceExample($event, char)"></button>
               <button v-if="isAudioPlaying(char.voice_id)" class="audio-btn -pause" @click="pauseVoiceExample($event, char)"></button>
             </div>
-            <div class="list-details-name">{{char.name}}</div>
-            <div class="list-details-descr">{{char.voice.name}}</div>
+            <div class="list-details-name">
+              <span v-if="!char.isEditing"
+                class="p-tabview-title-character"
+                :contenteditable="char.isEditing"
+                v-text="char.name"
+                @dblclick="onTitleDblClick($event, char)">
+              </span>
+              <span v-if="char.isEditing"
+                class="p-tabview-title-character"
+                :contenteditable="char.isEditing"
+                ref="voiceTitleEditRef"
+                @keypress="onTitleKeyPress($event, char)"
+                @input="onTitleEdit($event, char)"
+                @blur="onTitleBlur($event, char)">
+              </span>
+            </div>
+            <div class="list-details-descr"
+              v-ilm-tooltip.bottom="{value: char.voice.name, classList: {tooltip: 'white-tooltip'}}">{{char.voice.name}}</div>
             <div class="list-details-trash">
               <i class="fa fa-trash" @click="removeCharacterApprove(idx)"></i>
             </div>
@@ -172,6 +188,61 @@ export default {
       hideModal(name) {
         this.$modal.hide(name);
       },
+
+      async onTitleBlur(event, character) {
+        this.$store.commit('elevenLabsVoicesModule/set_initCharactersListNonEdit');
+        this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
+          values: { name: character.name }, character
+        });
+        await this.$store.dispatch('elevenLabsVoicesModule/saveBookCharacters', {
+          bookid: this.currentBookid, charIdx: 0
+        });
+        this.$emit('onCharSelect', {event, voice: character.voice, character})
+      },
+
+      onTitleDblClick(event, char) {
+        this.$store.commit('elevenLabsVoicesModule/set_initCharactersListItemEdit', char);
+
+        Vue.nextTick(()=>{
+          const activeRef = this.$refs.voiceTitleEditRef.find(el=>el.getAttribute('contenteditable')==='true');
+          if (activeRef) {
+            activeRef.innerText = char.name;
+            this.setCaretToEnd(activeRef);
+          }
+        })
+      },
+
+      setCaretToEnd(element) {
+        if (!element) return;
+        const range = document.createRange();
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        range.selectNodeContents(element);
+        range.collapse(false);
+        selection.addRange(range);
+        element.focus();
+      },
+
+      onTitleKeyPress(event, character) {
+        const text = event.target.innerText;
+        if (event?.key === 'Enter') {
+          event.preventDefault();
+          if (document.querySelector('.list-details-name>[contenteditable="true"]')) {
+            document.querySelector('.list-details-name>[contenteditable="true"]').blur();
+          }
+          return;
+        }
+        if (text.length > 30) {
+          event.preventDefault();
+          return false;
+        }
+      },
+
+      onTitleEdit(event, character) {
+        this.$store.commit('elevenLabsVoicesModule/set_initCharactersListItemValue', {
+          values: { name: event.target.innerText }, character
+        });
+      },
   },
     computed: {
       ...mapGetters({
@@ -188,8 +259,7 @@ export default {
     components: {
       'three-dot-loader-div': ThreeDotLoaderDiv
     },
-    directives: {
-    }
+    directives: {},
 }
 </script>
 
@@ -217,7 +287,6 @@ export default {
         background: #EFEFEF;
       }
     }
-
     .result-list-item {
       cursor: pointer;
 
@@ -256,6 +325,29 @@ export default {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+
+
+          span.p-tabview-title-character {
+            white-space: nowrap;
+            margin-left: 1px;
+
+            &[contenteditable="true"] {
+              text-overflow: none;
+              overflow: hidden;
+              background: white;
+              cursor: text;
+              outline-color: #ddd;
+              outline-style: solid;
+              outline-width: 1px;
+              /*padding: 0.5rem;*/
+              margin-left: 1px;
+              margin-right: -5px;
+              margin-top: 0px;
+              width: 90%;
+              height: 100%;
+              display: inline-block;
+            }
+          }
         }
 
         .list-details-descr {

@@ -126,6 +126,21 @@ export default {
       });
     },
 
+    set_initCharactersListNonEdit(state) {
+      state.initCharactersList.list = state.initCharactersList.list.map((_v)=>{
+        _v.isEditing = false;
+        return _v;
+      });
+    },
+
+    set_initCharactersListItemEdit(state, character) {
+      state.initCharactersList.list = state.initCharactersList.list.map((_v)=>{
+        _v.isEditing = (_v.uuid == character.uuid)
+        return _v;
+      });
+      state.moduleChangeTrigger = !state.moduleChangeTrigger;
+    },
+
     set_charactersListItemValue(state, payload) {
       const { values, character, idx = -1 } = payload;
       if (!character.uuid && idx >= 0) {
@@ -133,6 +148,22 @@ export default {
       }
       if (character.uuid) {
         const item = state.charactersList.list?.find((_v)=>_v.uuid == character.uuid);
+
+        if (item) {
+          for (const [key, value] of Object.entries(values)) {
+            item[key] = value;
+          }
+        }
+      }
+    },
+
+    set_initCharactersListItemValue(state, payload) {
+      const { values, character, idx = -1 } = payload;
+      if (!character.uuid && idx >= 0) {
+        character.uuid = state.initCharactersList.list[idx]?.uuid
+      }
+      if (character.uuid) {
+        const item = state.initCharactersList.list?.find((_v)=>_v.uuid == character.uuid);
 
         if (item) {
           for (const [key, value] of Object.entries(values)) {
@@ -286,6 +317,8 @@ export default {
         filters: _v.filters
       }));
 
+      if (!bookid) return Promise.resolve();
+
       commit('set_initCharactersList', {
         characters: [...state.charactersList.list],
         id: state.charactersList.id,
@@ -298,7 +331,7 @@ export default {
         characters: prepareArray
       })
       .then(response => {
-        console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response.data);
+        //console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response.data);
       }).catch(err=>{
         console.error('saveBookCharacters', err);
       })

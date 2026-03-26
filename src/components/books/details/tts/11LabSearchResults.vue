@@ -1,9 +1,9 @@
 <template>
 <div class="search-results-main-wrapper">
-  <div v-if="!isReqFltrsSelected && isFilterButtonPressed" class="search-results-filter-non-selected">
+  <div v-if="!isReqFltrsSelected" class="search-results-filter-non-selected">
     Voice filtering requires Language, Gender and Age to be selected.
   </div>
-  <div v-if="isReqFltrsSelected && isFilterButtonPressed && !isVoicesListLoading && mapVoicesList.length == 0"
+  <div v-if="isReqFltrsSelected && isVoicesListLoaded && !isVoicesListLoading && mapVoicesList.length == 0"
     class="search-results-filter-empty">
       No voices match the selected criteria. Please refine your filters and try again.
   </div>
