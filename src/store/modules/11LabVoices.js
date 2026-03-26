@@ -391,8 +391,6 @@ export default {
         preparedFilters.notice_period = notice;
       }
 
-      console.log(`applyFilterVoices::: `, preparedFilters);
-
       commit('set_voicesListLoading', true);
       return axios.get(`${rootState.API_URL}tts/eleven_labs/voices`, {
         params: preparedFilters

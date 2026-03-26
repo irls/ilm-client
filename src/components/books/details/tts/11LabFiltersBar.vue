@@ -144,7 +144,7 @@ export default {
         this.$store.commit('elevenLabsVoicesFilters/set_voiceFilters', newFilters);
         this.$store.commit('elevenLabsVoicesModule/set_charactersListUpdateItem', {
           idx: this.activeIndex,
-          uuid: this.character.uuid,
+          uuid: this.character?.uuid,
           filters: newFilters
         });
         this.changeFilterVisual();

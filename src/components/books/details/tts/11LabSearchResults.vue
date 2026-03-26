@@ -27,7 +27,7 @@
           <div class="result-list-tags-row">
             <div class="result-tags-item">Language - {{labelLanguage(voice.language)}}</div>
             <div class="result-tags-item">Accent - {{labelAccent(voice.accent)}}</div>
-            <div class="result-tags-item">Primary - {{labelLanguage(voice.verified_languages[0].language)}}</div>
+            <div class="result-tags-item">Native - {{labelLanguage(voice.verified_languages[0].language)}}</div>
             <div class="result-tags-item">{{labelGender(voice.gender)}}</div>
             <div class="result-tags-item">{{labelAge(voice.age)}}</div>
             <div class="result-tags-item" v-if="labelHQ(voice.category)">{{labelHQ(voice.category)}}</div>

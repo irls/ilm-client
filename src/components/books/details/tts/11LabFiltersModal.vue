@@ -28,6 +28,7 @@
               class="meta-edit-tabs"
               @tab-change="charactersTabChange"
               :showAddTab="true"
+              :showRemoveButton="mapCharactersList.length > 1"
               @onAddTab="addCharacter"
               @onRemoveTab="removeCharacterApprove">
 
@@ -90,8 +91,15 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-default" @click="cancelCharactersChanges">Cancel</button>
-          <button class="btn btn-primary" @click="applyCharactersChanges">
+          <button
+            class="btn btn-default"
+            @click="cancelCharactersChanges">
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            @click="applyCharactersChanges"
+            :disabled="getSelectedVoicesByCharacters === 0">
             <!--<i class="fa fa-plus"></i>&nbsp;-->
             Apply Voices ({{getSelectedVoicesByCharacters}})
           </button>
@@ -287,7 +295,7 @@
               this.$refs.charactersTabs.onResize();
               Vue.nextTick( async ()=>{
                 const idx = this.$refs.charactersTabs.d_activeIndex;
-                console.log(`${__filename.slice(-30)}:removeCharacter:idx: `, idx);
+                this.charactersTabsActiveIndex = idx;
                 await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', idx);
                 await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', idx);
                 this.removeCharacterCancel();

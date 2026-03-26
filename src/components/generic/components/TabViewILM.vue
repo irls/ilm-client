@@ -16,7 +16,7 @@
                               :tabindex="isTabDisabled(tab) ? null : '0'" :aria-selected="d_activeIndex">
                                 <span class="p-tabview-title" v-if="tab.header">{{tab.header}}</span>
                                 <TabPanelHeaderSlot :tab="tab" v-if="tab.$scopedSlots.header"/>
-                                <span class="p-tabview-close-tab" v-if="showAddTab" @click="onRemoveTabClick($event, i, tab)">
+                                <span class="p-tabview-close-tab" v-if="showRemoveButton" @click="onRemoveTabClick($event, i, tab)">
                                   <i class="fa fa-remove"></i>
                                 </span>
                             </a>
@@ -71,6 +71,10 @@ export default {
             default: false
         },
         showAddTab: {
+            type: Boolean,
+            default: false
+        },
+        showRemoveButton: {
             type: Boolean,
             default: false
         },

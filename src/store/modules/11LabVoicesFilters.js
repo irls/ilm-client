@@ -217,7 +217,6 @@ export default {
           }
         }
         state.voiceFilters = {...state.defaultVoiceFilters, ...initFilters};
-        console.log(`set_initFilters:state.voiceFilters:: `, state.voiceFilters);
         // state.multiSelectVoiceModel
         for (const [key] of Object.entries(state.multiSelectVoiceModel)) {
           const searchArr = Array.isArray(fObj[key]) ? fObj[key] : (fObj[key] ? [fObj[key]] : []);

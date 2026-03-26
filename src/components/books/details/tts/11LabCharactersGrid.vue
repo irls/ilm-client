@@ -1,6 +1,6 @@
 <template>
 <div class="character-select-main-wrapper">
-  <div v-if="!isVoicesListLoading" class="character-select-list-wrapper">
+  <div class="character-select-list-wrapper">
     <ul>
       <li v-for="(char, idx) in characters"
         :data-id="char.voice_id" :key="char.uuid">
@@ -14,7 +14,8 @@
               <button v-if="!isAudioPlaying(char.voice_id)" class="audio-btn -play" @click="playVoiceExample($event, char)"></button>
               <button v-if="isAudioPlaying(char.voice_id)" class="audio-btn -pause" @click="pauseVoiceExample($event, char)"></button>
             </div>
-            <div class="list-details-name">
+            <div class="list-details-name"
+              v-ilm-tooltip.bottom="{value: char.name, classList: {tooltip: 'white-tooltip'}}">
               <span v-if="!char.isEditing"
                 class="p-tabview-title-character"
                 :contenteditable="char.isEditing"
@@ -321,15 +322,18 @@ export default {
           width: 35%;
           height: 40px;
           border-right: 1px solid #D9D9D9;
-          padding: 9px 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-
+          padding: 9px 0;
 
           span.p-tabview-title-character {
             white-space: nowrap;
             margin-left: 1px;
+
+            width: 90%;
+            height: 100%;
+            display: inline-block;
 
             &[contenteditable="true"] {
               text-overflow: none;
@@ -343,9 +347,7 @@ export default {
               margin-left: 1px;
               margin-right: -5px;
               margin-top: 0px;
-              width: 90%;
-              height: 100%;
-              display: inline-block;
+
             }
           }
         }
