@@ -30,8 +30,10 @@
             <div class="result-tags-item">Native - {{labelLanguage(voice.verified_languages[0].language)}}</div>
             <div class="result-tags-item">{{labelGender(voice.gender)}}</div>
             <div class="result-tags-item">{{labelAge(voice.age)}}</div>
-            <div class="result-tags-item" v-if="labelHQ(voice.category)">{{labelHQ(voice.category)}}</div>
-            <div class="result-tags-item">{{labelNotice(voice.notice_period)}}</div>
+            <div class="result-tags-item"
+              v-if="labelHQ(voice.category)">{{labelHQ(voice.category)}}</div>
+            <div class="result-tags-item"
+              v-if="labelNotice(voice.notice_period)">{{labelNotice(voice.notice_period)}}</div>
           </div>
         </div>
 
