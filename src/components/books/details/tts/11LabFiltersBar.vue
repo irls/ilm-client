@@ -167,6 +167,7 @@ export default {
       },
 
       resetFilters () {
+        this.$emit('stop', {});
         this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
         this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
         this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);

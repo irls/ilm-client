@@ -78,7 +78,8 @@
               ref="elevenLabFiltersBar"
               :character = "mapCharactersList[charactersTabsActiveIndex]"
               :activeIndex="charactersTabsActiveIndex"
-              @applyFilters = "charactersTabChange"/>
+              @applyFilters = "charactersTabChange"
+              @stop="stopVoiceExample"/>
             <elevenLabSearchResults
               ref="elevenLabSearchResults"
               :character = "mapCharactersList[charactersTabsActiveIndex]"
@@ -187,9 +188,11 @@
         //...mapActions(),
 
         showModal(name) {
+          this.$emit('stop', {});
           this.$modal.show(name);
         },
         hideModal(name) {
+          this.$emit('stop', {});
           this.$modal.hide(name);
         },
         modalResizing: _.debounce(function () {
@@ -203,6 +206,7 @@
         },
 
         async charactersTabChange(tab) {
+          this.$emit('stop', {});
           this.charactersTabsActiveIndex = tab.index;
           this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);
           await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
@@ -223,6 +227,7 @@
         },
 
         onTitleDblClick(event, char) {
+          this.$emit('stop', {});
           this.$store.commit('elevenLabsVoicesModule/set_charactersListItemEdit', char);
 
           Vue.nextTick(()=>{
@@ -260,6 +265,7 @@
         },
 
         addCharacter() {
+          this.$emit('stop', {});
           const lastIndex = this.mapCharactersList.length;
           this.$store.commit('elevenLabsVoicesModule/set_charactersListAddItem', this.currentBookid);
 
@@ -272,6 +278,7 @@
         },
 
         removeCharacterApprove(params) {
+          this.$emit('stop', {});
           const { i } = params;
           if (this.mapCharactersList[i]) {
             this.removeCharacterParams = {
@@ -306,11 +313,13 @@
 
         applyCharactersChanges() {
           //this.showModal('characters-message');
+          this.$emit('stop', {});
           this.$emit('onSaveBookCharacters', this.charactersTabsActiveIndex);
           this.$emit('close_modal');
         },
 
         cancelCharactersChanges() {
+          this.$emit('stop', {});
           this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
           this.$emit('close_modal');
         },

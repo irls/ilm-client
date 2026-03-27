@@ -534,6 +534,11 @@
             }
           }
         }
+      },
+      'elevenLabFiltersModalShow': {
+        handler(val, oldVal) {
+          this.stopVoiceExample();
+        }
       }
     }
   }
