@@ -155,7 +155,7 @@ export default {
       }, 300),
 
       applyFilters() {
-        this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
+        this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', this.activeIndex);
         this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', true);
       },
 

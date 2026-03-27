@@ -27,6 +27,7 @@
                 :contenteditable="char.isEditing"
                 ref="voiceTitleEditRef"
                 @keypress="onTitleKeyPress($event, char)"
+                @keydown="onTitleKeydown($event, char)"
                 @input="onTitleEdit($event, char)"
                 @blur="onTitleBlur($event, char)">
               </span>
@@ -105,7 +106,8 @@ export default {
       return {
         removeCharacterParams: null,
         removeCharacterAlignedCount: 0,
-        removeCharacterIsLoading: false
+        removeCharacterIsLoading: false,
+        backupCharacterName: '',
       };
     },
     watch: {},
@@ -209,6 +211,7 @@ export default {
           if (activeRef) {
             activeRef.innerText = char.name;
             this.setCaretToEnd(activeRef);
+            this.backupCharacterName = char.name;
           }
         })
       },
@@ -239,9 +242,28 @@ export default {
         }
       },
 
+      onTitleKeydown(event, character) {
+        if (event?.key === 'Escape') {
+          event.preventDefault();
+          if (this.backupCharacterName) {
+            this.$store.commit('elevenLabsVoicesModule/set_initCharactersListItemValue', {
+              values: { name: this.backupCharacterName }, character
+            });
+            if (document.querySelector('.list-details-name>[contenteditable="true"]')) {
+              document.querySelector('.list-details-name>[contenteditable="true"]').blur();
+            }
+          }
+          return;
+        }
+      },
+
       onTitleEdit(event, character) {
+        let innerText = event.target.innerText;
+        if (event.inputType === "historyUndo" && this.backupCharacterName) {
+          innerText = this.backupCharacterName;
+        }
         this.$store.commit('elevenLabsVoicesModule/set_initCharactersListItemValue', {
-          values: { name: event.target.innerText }, character
+          values: { name: innerText }, character
         });
       },
   },
