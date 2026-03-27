@@ -346,19 +346,19 @@ export default {
           border-right: 1px solid #D9D9D9;
           white-space: nowrap;
           overflow: hidden;
-          text-overflow: ellipsis;
           padding: 9px 0;
 
           span.p-tabview-title-character {
             white-space: nowrap;
             margin-left: 1px;
-
+            overflow: hidden;
+            text-overflow: ellipsis;
             width: 90%;
             height: 100%;
             display: inline-block;
 
             &[contenteditable="true"] {
-              text-overflow: none;
+              text-overflow: clip;
               overflow: hidden;
               background: white;
               cursor: text;
