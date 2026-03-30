@@ -26,8 +26,10 @@
           </div>
           <div class="result-list-tags-row">
             <div class="result-tags-item">Language - {{labelLanguage(voice.language)}}</div>
-            <div class="result-tags-item">Accent - {{labelAccent(voice.accent)}}</div>
-            <div class="result-tags-item">Native - {{labelLanguage(voice.verified_languages[0].language)}}</div>
+            <div class="result-tags-item"
+              v-if="labelAccent(voice.accent)">Accent - {{labelAccent(voice.accent)}}</div>
+            <div class="result-tags-item"
+              v-if="labelVerifiedLang(voice)">Native - {{labelVerifiedLang(voice)}}</div>
             <div class="result-tags-item">{{labelGender(voice.gender)}}</div>
             <div class="result-tags-item">{{labelAge(voice.age)}}</div>
             <div class="result-tags-item"
@@ -108,6 +110,16 @@ export default {
             && this.audio_playing.trim() === voice_id;
       },
       labelLanguage(langCode) {
+        const filter = this.voiceFilterLanguages.find((_v)=>{
+          return _v.value === langCode;
+        });
+        if (filter && filter.caption) return filter.caption;
+        return langCode;
+      },
+      labelVerifiedLang(voice) {
+        const langCode = voice?.verified_languages[0]?.language;
+        if (!langCode) return false;
+
         const filter = this.voiceFilterLanguages.find((_v)=>{
           return _v.value === langCode;
         });
