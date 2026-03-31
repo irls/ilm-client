@@ -198,7 +198,7 @@
       },
       isAlignButtonDisabled: {
         get() {
-          return !this.currentBookMeta.voices['paragraph'] || (this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null);
+          return !this.getSelectedInitCharacter?.voice || (this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null);
         }
       },
       selected_voice_params: {
