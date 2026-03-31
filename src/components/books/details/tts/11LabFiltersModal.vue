@@ -345,6 +345,10 @@
 
 <style lang="less" scoped>
 
+.v--modal-overlay {
+  overflow: hidden; /*Prevent scroll beside modal window*/
+}
+
 .eleven-lab-filters-modal-wrapper {
 
   display: flex;
