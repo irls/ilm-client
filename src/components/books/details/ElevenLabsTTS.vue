@@ -13,7 +13,7 @@
 
       <div v-if="isCharactersListLoaded || all_voices.length > 0">
         <div class="audio-voice-header">
-          <h4 class="audio-voice-caption">Character voice:</h4>
+          <h4 class="audio-voice-caption">Character voices:</h4>
           <div class="audio-voice-select">
             <span @click="elevenLabFiltersModalShow = true"
               class="audio-voice-select-btn">Select voices</span>
@@ -650,6 +650,7 @@
     }
     .selection-info {
       padding: 10px 15px;
+      border-top: 1px solid #b8b6b6;
       .blocks-info {
         display: inline-block;
         width: 70%;
