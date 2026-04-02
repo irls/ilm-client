@@ -2,6 +2,9 @@ import axios from "axios";
 //import lodash from "lodash";
 import { v4 as uuidv4 } from 'uuid';
 
+const DEFAULT_NARRATOR = 'Narrator';
+const DEFAULT_CHARACTER = 'Character';
+
 export default {
   namespaced: true,
   state: {
@@ -27,6 +30,10 @@ export default {
     }
   },
   getters: {
+    getDefaultTitles: () => ({
+      DEFAULT_NARRATOR,
+      DEFAULT_CHARACTER
+    }),
     isFilterButtonPressed: state => state.filterButtonPressed,
     isVoicesListLoading: state => {
       return state.voicesListLoading;
@@ -177,7 +184,7 @@ export default {
       const num = state.charactersList.list.length;
       state.charactersList.list.push({
         filters: {},
-        name: num > 0 ? 'Character '+num : 'Narrator',
+        name: num > 0 ? DEFAULT_CHARACTER/*+' '+num*/ : DEFAULT_NARRATOR,
         id: null,
         bookid,
         voice: false,

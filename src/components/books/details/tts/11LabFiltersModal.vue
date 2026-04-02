@@ -177,6 +177,7 @@
           mapCharactersList:             'elevenLabsVoicesModule/mapCharactersList',
           getSelectedVoice:              'elevenLabsVoicesModule/getSelectedVoice',
           getSelectedVoicesByCharacters: 'elevenLabsVoicesModule/getSelectedVoicesByCharacters',
+          defaultTitles:                 'elevenLabsVoicesModule/getDefaultTitles',
         })
       },
       async mounted() {
@@ -259,9 +260,17 @@
         },
 
         onTitleEdit(event, character) {
-          this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
-            values: { name: event.target.innerText }, character
-          });
+          let title = event.target?.innerText;
+          if (title && title.trim().length) {
+            this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
+              values: { name: title }, character
+            });
+          } else {
+            title = this.charactersTabsActiveIndex ? this.defaultTitles.DEFAULT_CHARACTER :  this.defaultTitles.DEFAULT_NARRATOR;
+            this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
+              values: { name: title }, character
+            });
+          }
         },
 
         addCharacter() {
