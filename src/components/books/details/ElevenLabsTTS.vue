@@ -257,13 +257,19 @@
       },
       onCharSelect(params) {
         const { event, voice, character } = params;
-        this.currentBookMeta.voices['paragraph'] = voice.voice_id;
+
+        for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
+          this.currentBookMeta.voices[key] = voice.voice_id;
+        }
         this.$store.commit('elevenLabsVoicesModule/set_initCharacterSelected', { character });
-        //this.updateBookMeta({voices: this.currentBookMeta.voices});
+        this.updateBookMeta({voices: this.currentBookMeta.voices});
       },
 
       onCharDelete(params) {
-        this.currentBookMeta.voices['paragraph'] = null;
+        for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
+          this.currentBookMeta.voices[key] = null;
+        }
+        this.updateBookMeta({voices: this.currentBookMeta.voices});
       },
 
       onCalculateVoiceWpm() {
