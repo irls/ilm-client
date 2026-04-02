@@ -316,7 +316,7 @@ export default {
       }
     },
 
-    saveBookCharacters({rootState, state, commit}, payload) {
+    saveBookCharacters({rootState, state, commit, getters}, payload) {
       const {bookid, charIdx} = payload;
       const prepareArray = state.charactersList.list.map((_v, _idx)=>({
         name: _v.name,
@@ -325,6 +325,8 @@ export default {
       }));
 
       if (!bookid) return Promise.resolve();
+
+      const selectedCharacter = getters.getSelectedInitCharacter;
 
       commit('set_initCharactersList', {
         characters: [...state.charactersList.list],
@@ -338,6 +340,14 @@ export default {
         characters: prepareArray
       })
       .then(response => {
+        if (!selectedCharacter) {
+          const character = state.initCharactersList?.list[0];
+          if (character) {
+            commit('set_initCharacterSelected', { character });
+          }
+        } else {
+          commit('set_initCharacterSelected', { character: selectedCharacter });
+        }
         //console.log(`${__filename.slice(-30)}:saveBookCharacters:response: `, response.data);
       }).catch(err=>{
         console.error('saveBookCharacters', err);
