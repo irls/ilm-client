@@ -193,6 +193,7 @@ export default {
       },
 
       async onTitleBlur(event, character) {
+        event.target.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
         this.$store.commit('elevenLabsVoicesModule/set_initCharactersListNonEdit');
         this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
           values: { name: character.name }, character
@@ -200,7 +201,7 @@ export default {
         await this.$store.dispatch('elevenLabsVoicesModule/saveBookCharacters', {
           bookid: this.currentBookid, charIdx: 0
         });
-        this.$emit('onCharSelect', {event, voice: character.voice, character})
+        this.$emit('onCharSelect', {event, voice: character.voice, character});
       },
 
       onTitleDblClick(event, char) {
