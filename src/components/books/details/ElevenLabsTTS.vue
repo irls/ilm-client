@@ -490,8 +490,12 @@
         this.alignWpmSettings.wpm = data.wpm;
       },
 
-      onSaveBookCharacters(charIdx) {
-        this.saveBookCharacters({bookid: this.currentBookMeta.bookid, charIdx})
+      async onSaveBookCharacters(charIdx) {
+        await this.saveBookCharacters({bookid: this.currentBookMeta.bookid, charIdx});
+        const selectedCharacter = this.getSelectedInitCharacter;
+        if (selectedCharacter?.voice_id) {
+          this.currentBookMeta.voices['paragraph'] = selectedCharacter?.voice_id;
+        }
       },
       ...mapActions(['updateBookMeta']),
       ...mapActions('elevenLabsVoicesModule', ['saveBookCharacters']),
