@@ -29,7 +29,7 @@
             @play="play11LabVoiceExample"
             @stop="stopVoiceExample"
           ></eleven-lab-tts-characters-grid>
-          <select-tts-voice v-if="false"
+          <!--<select-tts-voice
             :pre_selected="defaultVoice('paragraph')"
             :voices="all_voices"
             :block_type="'paragraph'"
@@ -38,7 +38,7 @@
             @onSelect="onVoiceChange"
             @play="playVoiceExample"
             @stop="stopVoiceExample"
-          ></select-tts-voice>
+          ></select-tts-voice>-->
         </div>
 
         <eleven-lab-filters-modal v-if="elevenLabFiltersModalShow"

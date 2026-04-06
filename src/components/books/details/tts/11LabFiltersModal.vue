@@ -201,7 +201,7 @@
             this.$refs.charactersTabs.onResize()
           }
         }, 300),
-        modalOpening() {},
+        modalOpening() { /*will execute even before mounted*/ },
         modalClosing() {
           this.$emit('close_modal');
         },
