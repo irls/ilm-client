@@ -220,7 +220,6 @@
       window.addEventListener('resize', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
-
     },
     destroyed() {
       this.$root.$off('from-audioeditor:visible', this.setMaxContainerHeight);
@@ -262,8 +261,12 @@
           this.currentBookMeta.voices[key] = voice.voice_id;
         }
         this.$store.commit('elevenLabsVoicesModule/set_initCharacterSelected', { character });
-        this.updateBookMeta({voices: this.currentBookMeta.voices});
+        this.updateBookMetaDebounce({voices: this.currentBookMeta.voices});
       },
+
+      updateBookMetaDebounce: lodash.debounce(function (obj) {
+        this.updateBookMeta(obj);
+      }, 300),
 
       onCharDelete(params) {
         for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
@@ -512,7 +515,7 @@
       'currentBookid': {
         handler(val) {
           if (val) {
-            this.loadBookVoices();
+            //this.loadBookVoices();
             if (this.$refs?.generateVoice) {
               this.$refs.generateVoice.resetNewVoiceSettings();
             }

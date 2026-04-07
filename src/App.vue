@@ -60,7 +60,6 @@ export default {
       this.$store.commit('set_book_mode', mode);
       if (this.$route.params.hasOwnProperty('bookid')) {
         this.loadBook(this.$route.params.bookid);
-        this.loadBookCharacters(this.$route.params.bookid);
       } else {
         this.loadBook(false);
       }
@@ -91,7 +90,6 @@ export default {
 
   methods: {
     ...mapActions(['loadBook', 'loadCollection', 'loadLibrary', 'tc_loadBookTask']),
-    ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters']),
     onPreloaderToggle(state, type) {
       if (state) {
         this.preloader = true;

@@ -297,12 +297,13 @@ export default {
       return axios.get(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`)
       .then(response => {
         let { characters, id, bookid } = response.data;
+        const voiceId = rootState.currentBookMeta?.voices?.paragraph;
         if (characters && characters.length) {
           let loop = characters.length;
           while (loop--) {
             characters[loop].uuid = uuidv4();
             characters[loop].isEditing = false;
-            characters[loop].isSelected = false;
+            characters[loop].isSelected = voiceId && voiceId === characters[loop]?.voice_id;
           }
         } else {
           characters = state.emptyCharactersList;
