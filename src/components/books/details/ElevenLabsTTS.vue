@@ -503,7 +503,10 @@
         await this.saveBookCharacters({bookid: this.currentBookMeta.bookid, charIdx});
         const selectedCharacter = this.getSelectedInitCharacter;
         if (selectedCharacter?.voice_id) {
-          this.currentBookMeta.voices['paragraph'] = selectedCharacter?.voice_id;
+          for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
+            this.currentBookMeta.voices[key] = selectedCharacter?.voice_id;
+          }
+          await this.updateBookMetaDebounce({voices: this.currentBookMeta.voices});
         }
       },
       ...mapActions(['updateBookMeta']),
