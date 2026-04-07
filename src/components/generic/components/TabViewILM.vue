@@ -366,6 +366,11 @@ export default {
 
 .p-tabview .p-tabview-nav li .p-tabview-close-tab i {
     height: 14px;
+    color: #ddd;
+
+    &:hover {
+      color: gray;
+    }
 }
 
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-close-tab {
