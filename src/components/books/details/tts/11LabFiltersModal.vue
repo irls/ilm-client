@@ -78,7 +78,7 @@
               ref="elevenLabFiltersBar"
               :character = "mapCharactersList[charactersTabsActiveIndex]"
               :activeIndex="charactersTabsActiveIndex"
-              @applyFilters = "charactersTabChange"
+              @onApplyFilters = "onApplyFilters"
               @stop="stopVoiceExample"/>
             <elevenLabSearchResults
               ref="elevenLabSearchResults"
@@ -181,9 +181,13 @@
         })
       },
       async mounted() {
-        await this.$store.dispatch('elevenLabsVoicesModule/applyInitVoicesFilters');
+        await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', 0);
         this.showModal('eleven-lab-filters-modal');
-        await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', 0);
+        const voice_id = await this.$store.dispatch('elevenLabsVoicesModule/getCharacterVoice', 0);
+        if (voice_id) {
+          await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', 0);
+          this.scrollToSelectedVoice();
+        }
       },
       methods: {
         //...mapActions(),
@@ -209,9 +213,25 @@
         async charactersTabChange(tab) {
           this.$emit('stop', {});
           this.charactersTabsActiveIndex = tab.index;
-          this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);
+          await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
+          const voice_id = await this.$store.dispatch('elevenLabsVoicesModule/getCharacterVoice', tab.index);
+          if (voice_id) {
+            await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', tab.index);
+            this.scrollToSelectedVoice();
+          } else {
+            this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+          }
+        },
+
+        async onApplyFilters(tab) {
+          this.$emit('stop', {});
+          this.charactersTabsActiveIndex = tab.index;
           await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', tab.index);
           await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', tab.index);
+          this.scrollToSelectedVoice();
+        },
+
+        scrollToSelectedVoice() {
           if (this.getSelectedVoice?.voice_id) {
             Vue.nextTick(()=>{
               const voiceId = this.getSelectedVoice.voice_id;
@@ -329,7 +349,7 @@
 
         cancelCharactersChanges() {
           this.$emit('stop', {});
-          this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
+          //this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
           this.$emit('close_modal');
         },
 

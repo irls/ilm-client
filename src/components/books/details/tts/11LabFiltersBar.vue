@@ -112,6 +112,10 @@ export default {
         type: Function,
         default: function(){}
       },
+      onApplyFilters: {
+        type: Function,
+        default: function(){}
+      },
       character: {
         type: Object,
         default: null
@@ -126,7 +130,6 @@ export default {
     updated() {},
     methods: {
       filterVoiceChange (key, $event) {
-        //this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
         const newFilters = Object.entries(this.multiSelectVoiceModel).reduce((acc, [key, val])=>{
           acc[key] = val.map((el)=>el.value);
           return acc;
@@ -145,7 +148,8 @@ export default {
         this.$store.commit('elevenLabsVoicesModule/set_charactersListUpdateItem', {
           idx: this.activeIndex,
           uuid: this.character?.uuid,
-          filters: newFilters
+          filters: newFilters,
+          cleanVoice: true,
         });
         this.changeFilterVisual();
       },
@@ -154,9 +158,10 @@ export default {
         this.filterVoiceChange(key, $event)
       }, 300),
 
-      applyFilters() {
-        this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', this.activeIndex);
+      async applyFilters() {
+        await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', this.activeIndex);
         this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', true);
+        this.$emit('onApplyFilters', { index: this.activeIndex });
       },
 
       cleanFilterVal (key) {

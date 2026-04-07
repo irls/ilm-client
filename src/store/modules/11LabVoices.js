@@ -199,12 +199,18 @@ export default {
     },
 
     set_charactersListUpdateItem(state, payload) {
-      const { idx, uuid = null, filters} = payload;
+      const { idx, uuid = null, filters, cleanVoice = false} = payload;
       state.charactersList.list = state.charactersList.list.map((_v, _idx)=>{
         if (uuid && _v.uuid === uuid) {
           _v.filters = {..._v.filters, ...filters};
+          if (cleanVoice) {
+            _v.voice_id = false;
+          }
         } else if (_idx === idx) {
-          _v.filters = {..._v.filters, ...filters}
+          _v.filters = {..._v.filters, ...filters};
+          if (cleanVoice) {
+            _v.voice_id = false;
+          }
         }
         return _v;
       })
@@ -430,6 +436,14 @@ export default {
           }
         }
       });
+    },
+
+    getCharacterVoice({state}, idx = 0) {
+      const character = state.charactersList.list[idx];
+      if (character && character?.voice_id) {
+        return character?.voice_id
+      }
+      return false;
     },
 
     checkVoiceIfApplied({rootState}, voice) {
