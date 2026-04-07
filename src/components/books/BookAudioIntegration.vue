@@ -961,34 +961,53 @@
           this.callUnsavedChangesPopup('tts', this.alignTts, [false]);
           return;
         }
-        this.checkBlockTTSForPattern()
+        return this.checkVoiceAvailable()
           .then(response => {
-            if (this.alignTTSVoicesData.total.length > 1) {
-              this.$modal.show(AlignTTSVoice,
-                {},
-                {
-                  height: 'auto',
-                  width: '400px',
-                  clickToClose: false
+            return this.checkBlockTTSForPattern()
+              .then(response => {
+                if (this.alignTTSVoicesData.total.length > 1) {
+                  this.$modal.show(AlignTTSVoice,
+                    {},
+                    {
+                      height: 'auto',
+                      width: '400px',
+                      clickToClose: false
+                    }
+                  );
+                } else {
+                  this.$root.$emit('start-align');
+                  this.$root.$emit('for-audioeditor:check-close-realigning-block', 'tts');
+                  return this.alignTTS()
+                    .then((response) => {
+                    this.$root.$emit('stop-align');
+                    if (response.status===200) {
+                      //this.$root.$emit('bookBlocksUpdates', response.data);
+                      this.$emit('alignmentFinished');
+                      //this.aligningBlocks = [];
+                    } else if (response.status == 504) {
+                      //self.checkAligningBlocks();
+                    }
+                  }).catch((err) => {
+                    this.$root.$emit('stop-align');
+                  });
                 }
-              );
-            } else {
-              this.$root.$emit('start-align');
-              this.$root.$emit('for-audioeditor:check-close-realigning-block', 'tts');
-              return this.alignTTS()
-                .then((response) => {
-                this.$root.$emit('stop-align');
-                if (response.status===200) {
-                  //this.$root.$emit('bookBlocksUpdates', response.data);
-                  this.$emit('alignmentFinished');
-                  //this.aligningBlocks = [];
-                } else if (response.status == 504) {
-                  //self.checkAligningBlocks();
-                }
-              }).catch((err) => {
-                this.$root.$emit('stop-align');
               });
-            }
+          })
+          .catch(err=>{
+            this.$root.$emit('show-modal', {
+              title: 'Voice is not available',
+              text: `“${this.getSelectedInitCharacter?.name}” voice is no longer available. Please select another voice`,
+              buttons: [
+                {
+                  title: 'Ok',
+                  handler: () => {
+                    this.$root.$emit('hide-modal');
+                    //this.cancelAlign();
+                  },
+                }
+              ],
+              class: ['align-modal']
+            });
           });
       },
       scrollToBlock(id) {
@@ -1318,7 +1337,8 @@
       },
 
       ...mapActions(['setCurrentBookCounters', 'clearLocks', 'getBookAlign', 'getAudioBook','setAudioRenamingStatus']),
-      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment', 'checkBlockTTSForPattern'])
+      ...mapActions('alignActions', ['alignBook', 'alignTTS', 'cancelAlignment', 'checkBlockTTSForPattern']),
+      ...mapActions('ttsModule', ['checkVoiceAvailable']),
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');
@@ -1389,7 +1409,8 @@
         selectedBlocksData: 'selectedBlocksData',
         selectedBlocks: 'selectedBlocks'
       }),
-      ...mapGetters('alignActions', ['aligningAudiofiles', 'alignTTSVoicesData', 'currentAlignCounter'])
+      ...mapGetters('alignActions', ['aligningAudiofiles', 'alignTTSVoicesData', 'currentAlignCounter']),
+      ...mapGetters('elevenLabsVoicesModule', ['getSelectedInitCharacter']),
     },
     watch: {
       'audiobook': {

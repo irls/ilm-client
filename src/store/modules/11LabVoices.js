@@ -27,7 +27,17 @@ export default {
       list: [],
       bookid: '',
       id: ''
-    }
+    },
+    emptyCharactersList: [{
+      filters: {},
+      name: DEFAULT_NARRATOR,
+      id: false,
+      bookid: false,
+      voice: false,
+      voice_id: false,
+      uuid: uuidv4(),
+      isEditing: false
+    }]
   },
   getters: {
     getDefaultTitles: () => ({
@@ -283,8 +293,7 @@ export default {
   },
   actions: {
 
-    loadBookCharacters({rootState, commit}, bookid) {
-      console.log(`${__filename.slice(-30)}::loadBookCharacters: `, bookid);
+    loadBookCharacters({rootState, state, commit}, bookid) {
       return axios.get(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`)
       .then(response => {
         let { characters, id, bookid } = response.data;
@@ -296,16 +305,8 @@ export default {
             characters[loop].isSelected = false;
           }
         } else {
-          characters = [{
-            filters: {},
-            name: 'Narrator',
-            id: null,
-            bookid,
-            voice: false,
-            voice_id: false,
-            uuid: uuidv4(),
-            isEditing: false
-          }];
+          characters = state.emptyCharactersList;
+          characters[0].bookid = bookid;
         }
         commit('set_initCharactersList', { characters, id, bookid });
         commit('set_charactersList', { characters, id, bookid });
@@ -361,6 +362,19 @@ export default {
     },
 
     applySavedVoicesFilters({state, commit}, idx = 0) {
+      if (!state.charactersList.list.length && state.charactersList.bookid) {
+        const characters = state.emptyCharactersList;
+        characters[0].bookid = state.charactersList.bookid;
+        commit(
+          'set_charactersList',
+          { // fill with default narrator
+            characters,
+            id: state.charactersList.id,
+            bookid: state.charactersList.bookid
+          }
+        );
+        commit('set_voicesListEmpty');
+      }
       if (state.charactersList.list.length) {
         commit(
           'elevenLabsVoicesFilters/set_initFilters',
