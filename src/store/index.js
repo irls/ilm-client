@@ -2345,7 +2345,7 @@ export const store = new Vuex.Store({
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
-            if (state.currentBookMeta.collection_id && state.currentCollection) {
+            if (state.currentBookMeta.collection_id && state.currentCollection && Array.isArray(state.currentCollection.books_list)) {
               //state.currentCollection.updateBook(response.data);
               let bookIndex = state.currentCollection.books_list.findIndex(cBook => {
                 return cBook.bookid === state.currentBookMeta.bookid;
