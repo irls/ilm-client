@@ -309,6 +309,7 @@ export default {
           characters = state.emptyCharactersList;
           characters[0].bookid = bookid;
         }
+        commit('set_voicesListEmpty');
         commit('set_initCharactersList', { characters, id, bookid });
         commit('set_charactersList', { characters, id, bookid });
       });
