@@ -160,7 +160,6 @@ export default {
 
       async applyFilters() {
         await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', this.activeIndex);
-        this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', true);
         this.$emit('onApplyFilters', { index: this.activeIndex });
       },
 
@@ -175,10 +174,9 @@ export default {
         this.$emit('stop', {});
         this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
         this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
-        this.$store.commit('elevenLabsVoicesModule/set_FilterButtonPressed', false);
         this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
-          character: {  },
-          values: { voice: false, voice_id: false },
+          character: { uuid: this.character?.uuid },
+          values: { voice: false, voice_id: false, filters: this.defaultVoiceFilters },
           idx: this.activeIndex
         });
         //this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices');
@@ -227,6 +225,7 @@ export default {
         mapVoiceFilterLibraries:  'elevenLabsVoicesFilters/mapVoiceFilterLibraries',
         mapVoiceFilterHQ:         'elevenLabsVoicesFilters/mapVoiceFilterHQ',
         isReqFltrsSelected:       'elevenLabsVoicesFilters/isReqFltrsSelected',
+        defaultVoiceFilters:      'elevenLabsVoicesFilters/defaultVoiceFilters',
       }),
     },
     components: {
