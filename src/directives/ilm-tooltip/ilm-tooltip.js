@@ -6,17 +6,24 @@ import { getHostOffset, getWindowScrollLeft, getWindowScrollTop, getOuterWidth, 
 function bindEvents(el) {
   el.addEventListener('mouseenter', onMouseEnter);
   el.addEventListener('mouseleave', onMouseLeave);
+  el.addEventListener('wheel', onMouseWheel);
   el.addEventListener('click', onClick);
 }
 
 function unbindEvents(el) {
   el.removeEventListener('mouseenter', onMouseEnter);
   el.removeEventListener('mouseleave', onMouseLeave);
+  el.removeEventListener('wheel', onMouseWheel);
   el.removeEventListener('click', onClick);
 }
 
 function onMouseEnter(event) {
   show(event.currentTarget);
+}
+
+function onMouseWheel(event) {
+  //forceAlign(event.currentTarget);
+  onMouseLeave(event);
 }
 
 function onMouseLeave(event) {
@@ -54,6 +61,10 @@ function unbindScrollListener(el) {
 function show(el) {
   //console.log('SHOW HERE');
   let tElement = create(el);
+  align(el);
+}
+
+function forceAlign(el) {
   align(el);
 }
 
