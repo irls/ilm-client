@@ -189,6 +189,9 @@
           this.scrollToSelectedVoice();
         }
       },
+      beforeDestroy() {
+        this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
+      },
       methods: {
         //...mapActions(),
 
@@ -208,6 +211,7 @@
         modalOpening() { /*will execute even before mounted*/ },
         modalClosing() {
           this.$emit('close_modal');
+          /*Not works*/
         },
 
         async charactersTabChange(tab) {

@@ -1004,6 +1004,7 @@
                     this.$root.$emit('hide-modal');
                     //this.cancelAlign();
                   },
+                  class: 'btn btn-primary'
                 }
               ],
               class: ['align-modal']
