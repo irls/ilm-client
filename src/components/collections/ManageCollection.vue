@@ -21,9 +21,11 @@
         </div>
 
       </div>
+
       <linkBook v-if="linkBookModal"
         @close_modal="linkBookModal = false"
-        :languages="languages"></linkBook>
+        :languages="languages">
+      </linkBook>
 
         <fieldset class="ready-books-list">
           <legend>Ready for publication</legend>
@@ -61,7 +63,7 @@
 </template>
 <script>
   import {mapActions, mapGetters} from 'vuex';
-  import LinkBook      from './LinkBook';
+  import LinkBook      from './LinkBook.vue';
   import { Languages } from "../../mixins/lang_config.js";
   import api_config    from '../../mixins/api_config.js';
   import Grid          from '../generic/Grid';

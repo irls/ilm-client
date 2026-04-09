@@ -310,7 +310,7 @@ export default {
 
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo'])
+    ...mapActions(['loadBook', 'updateBooksList', 'setBlockSelection', 'tc_loadBookTask', 'getCurrentJobInfo']),
   },
 
   destroyed: function () {

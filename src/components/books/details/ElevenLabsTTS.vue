@@ -11,10 +11,25 @@
         :is_voice_wpm_calculating="is_voice_wpm_calculating"
         @onCalculateVoiceWpm = "onCalculateVoiceWpm"/>
 
-      <div v-if="all_voices.length > 0">
-        <h4 class="audio-voice-caption">Character voice:</h4>
+      <div v-if="isCharactersListLoaded || all_voices.length > 0">
+        <div class="audio-voice-header">
+          <h4 class="audio-voice-caption">Character voices:</h4>
+          <div class="audio-voice-select">
+            <span @click="elevenLabFiltersModalShow = true"
+              class="audio-voice-select-btn">Select voices</span>
+          </div>
+        </div>
         <div class="audio-voice-selection">
-          <select-tts-voice
+          <eleven-lab-tts-characters-grid
+            :pre_selected="defaultVoice('paragraph')"
+            :characters="mapInitCharactersList"
+            :audio_playing="audio_playing"
+            @onCharSelect="onCharSelect"
+            @onCharDelete="onCharDelete"
+            @play="play11LabVoiceExample"
+            @stop="stopVoiceExample"
+          ></eleven-lab-tts-characters-grid>
+          <!--<select-tts-voice
             :pre_selected="defaultVoice('paragraph')"
             :voices="all_voices"
             :block_type="'paragraph'"
@@ -23,8 +38,17 @@
             @onSelect="onVoiceChange"
             @play="playVoiceExample"
             @stop="stopVoiceExample"
-          ></select-tts-voice>
+          ></select-tts-voice>-->
         </div>
+
+        <eleven-lab-filters-modal v-if="elevenLabFiltersModalShow"
+          :audio_playing="audio_playing"
+          @close_modal="elevenLabFiltersModalShow = false"
+          @onSaveBookCharacters="onSaveBookCharacters"
+          @play="play11LabVoiceExample"
+          @stop="stopVoiceExample">
+        </eleven-lab-filters-modal>
+
       </div>
 
       <!--https://isddesign.atlassian.net/wiki/spaces/ILM/pages/4186407098/TTS+Audio+speed#11Labs-TTS-audio-speed
@@ -84,6 +108,7 @@
           </tr>
         </tbody>
       </table>
+
       <div class="selection-info">
         <div class="blocks-info">
           <template v-if="!blockSelection.start._id">
@@ -103,90 +128,12 @@
         </div>
       </div>
     </fieldset>
-    <fieldset>
-      <legend>
-        Generate voice
-      </legend>
-      <table class="generate-voice table-stripped table-bordered">
-        <tbody>
-          <tr>
-            <td>
-              Gender
-            </td>
-            <td>
-              <select v-model="new_voice.gender">
-                <option v-for="gender in new_voice_settings.gender" :value="gender.value">{{gender.name}}</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Age
-            </td>
-            <td>
-              <select v-model="new_voice.age">
-                <option v-for="age in new_voice_settings.age" :value="age.value">{{age.name}}</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Accent
-            </td>
-            <td>
-              <select v-model="new_voice.accent">
-                <option v-for="accent in new_voice_settings.accent" :value="accent.value">{{accent.name}}</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Accent<br>Strength
-            </td>
-            <td>
-              <div class="slider-container">
-                <Slider v-if="new_voice_settings.accent_strength" v-model="new_voice.accent_strength"
-                  :min="new_voice_settings.accent_strength.min"
-                  :max="new_voice_settings.accent_strength.max"
-                  :step="0.1"></Slider>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="new-voice-data">
-        <span v-if="generating_voice" class="preloader -generating-voice"></span>
-        <template v-else>
-          <button class="play-voice -stop" v-on:click="stopVoiceExample" v-if="playing_generated_example"></button>
-          <button class="play-voice" v-on:click="startGenerateVoice()" v-else></button>
-        </template>
-        <input type="text" v-model="new_voice.name" :maxlength="new_name_maxlength" class="new-voice-name" placeholder="Define Voice Name" />
-        <span class="name-length">{{new_voice.name.length}}/{{new_name_maxlength}}</span>
-        <span class="preloader -creating-voice" v-if="creating_voice"></span>
-        <button class="save-voice" :disabled="saveNewVoiceDisabled" v-on:click="saveNewVoice()" v-else title="Save Voice"></button>
-      </div>
-      <div class="book-voices">
-        <div class="book-voice" v-for="voice in book_voices">
-          <div class="book-voice-option -play">
-            <span class="preloader -generating-example" v-if="generating_example === voice.voice_id"></span>
-            <template v-else>
-              <button class="play-voice -stop" v-if="audio_playing_voice === voice.voice_id" v-on:click="stopVoiceExample"></button>
-              <button class="play-voice" v-on:click="playVoiceExample(voice.voice_id)" v-else></button>
-            </template>
-          </div>
-          <div class="book-voice-option -name" v-on:dblclick="setEditingVoice(voice)">
-            <input v-model="editing_voice_name" v-if="editing_voice_id === voice.id" class="editing-voice-name"
-              :maxlength="new_name_maxlength"
-              v-on:change="saveVoice()"
-              v-on:blur="setEditingVoice(null)" />
-            <span class="book-voice-name" v-else>{{voice.name}}</span>
-          </div>
-          <div class="book-voice-option">
-            <button class="delete-voice" v-on:click="checkDeleteVoice(voice)" title="Delete Voice"></button>
-          </div>
-        </div>
-      </div>
-    </fieldset>
+    <!--<GenerateVoice
+      ref="generateVoice"
+      :playing_generated_example = "playing_generated_example"
+      :book_voices = "book_voices"
+      @stopVoiceExample = "stopVoiceExample"
+    />-->
   </div>
 </template>
 <script>
@@ -195,7 +142,11 @@
   import SelectTTSVoice from '../../generic/SelectTTSVoice_el';
   import Slider from 'primevue/slider';
   import lodash from 'lodash';
-  import AlignAudioSpeed from './AlignAudioSpeed.vue';
+
+  import AlignAudioSpeed from './tts/AlignAudioSpeed.vue';
+  import ElevenLabFiltersModal from './tts/11LabFiltersModal.vue';
+  import ElevenLabCharactersGrid from './tts/11LabCharactersGrid.vue';
+  //import GenerateVoice   from './tts/GenerateVoice.vue';
   //import v_modal from 'vue-js-modal';
 
   //Vue.use(v_modal, { dialog: true });
@@ -205,44 +156,37 @@
     data() {
       return {
         all_voices: [],
-        new_voice: {
-          gender: '',
-          age: '',
-          accent: '',
-          accent_strength: 0,
-          name: ''
-        },
-        new_name_maxlength: 30,
-        generating_voice: false,
-        generated_voice_url: '',
-        generated_voice_id: null,
         audio_element: null,
         book_voices: [],
         editing_voice_id: null,
         editing_voice_name: '',
-        creating_voice: false,
         audio_playing: false,
         generating_example: null,
         audio_playing_type: null,
         audio_playing_voice: null,
-        playing_generated_example: false,
         alignWpmSettings: {
           type: 'custom',
           wpm: 140
         },
         alignStartedTimeout: null,
-        is_voice_wpm_calculating: false
+        is_voice_wpm_calculating: false,
+        playing_generated_example: false,
+        elevenLabFiltersModalShow: false
       }
     },
     components: {
       'select-tts-voice': SelectTTSVoice,
       'Slider': Slider,
-      'AlignAudioSpeed': AlignAudioSpeed
+      'AlignAudioSpeed': AlignAudioSpeed,
+      'eleven-lab-filters-modal': ElevenLabFiltersModal,
+      'eleven-lab-tts-characters-grid': ElevenLabCharactersGrid
+      //'GenerateVoice': GenerateVoice
     },
     props: ['is_active'],
     computed: {
       ...mapGetters(['currentBookMeta', 'blockSelection', 'alignCounter', 'aligningBlocks', 'currentBookid', 'user']),
-      ...mapGetters('ttsModule', ['new_voice_settings', 'tts_voices']),
+      ...mapGetters('ttsModule', ['tts_voices']),
+      ...mapGetters('elevenLabsVoicesModule', ['isCharactersListLoaded', 'mapInitCharactersList', 'getSelectedInitCharacter']),
       alignProcess: {
         get() {
           let hasBlock = this.aligningBlocks.find(blk => {
@@ -252,35 +196,28 @@
         },
         cache: false
       },
-      saveNewVoiceDisabled: {
-        get() {
-          return this.generated_voice_url.length === 0 || this.new_voice.name.length === 0 || this.new_voice.name.replace(/\s+/, '').length === 0;
-        },
-        cache: false
-      },
       isAlignButtonDisabled: {
         get() {
-          return this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null;
+          return !this.getSelectedInitCharacter?.voice || (this.alignCounter.countTTS === 0 || this.alignStartedTimeout !== null);
         }
       },
       selected_voice_params: {
         get() {
-          return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
-        }
+          //return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
+          return this.getSelectedInitCharacter?.voice;
+        }, cache: false
       }
     },
     mounted() {
-      this.loadBookVoices();
-      this.getNewVoiceSettings()
-        .then(() => {
-          this.resetNewVoiceSettings();
-        });
+      // this.loadBookVoices();
+      // this.getNewVoiceSettings()
+      //   .then(() => {
+      //     if (this.$refs?.generateVoice) {
+      //       this.$refs.generateVoice.resetNewVoiceSettings();
+      //     }
+      //   });
+
       window.addEventListener('resize', this.setMaxContainerHeight);
-      let accentElement = document.querySelector('.generate-voice .slider-container');
-      accentElement.addEventListener('click', () => {
-        let sliderHandler = accentElement.querySelector('.p-slider-handle');
-        sliderHandler.focus();
-      });
       this.$root.$on('from-audioeditor:visible', this.setMaxContainerHeight);
       this.$root.$on('from-audioeditor:content-loaded', this.setMaxContainerHeight);
     },
@@ -317,16 +254,41 @@
           // });
         //}
       },
+      onCharSelect(params) {
+        const { event, voice, character } = params;
+
+        for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
+          this.currentBookMeta.voices[key] = voice.voice_id;
+        }
+        this.$store.commit('elevenLabsVoicesModule/set_initCharacterSelected', { character });
+        this.updateBookMetaDebounce({voices: this.currentBookMeta.voices});
+      },
+
+      updateBookMetaDebounce: lodash.debounce(function (obj) {
+        this.updateBookMeta(obj);
+      }, 300),
+
+      onCharDelete(params) {
+        for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
+          this.currentBookMeta.voices[key] = null;
+        }
+        this.updateBookMeta({voices: this.currentBookMeta.voices});
+      },
+
       onCalculateVoiceWpm() {
         if (this.selected_voice_params && !this.selected_voice_params.wpm) {
           this.is_voice_wpm_calculating = true;
           this.calculateVoiceWpm([this.selected_voice_params.voice_id])
           .then((voice)=>{
-            this.all_voices = this.all_voices.map((_v)=>{
-              if (_v.voice_id === voice.voice_id) {
-                _v.wpm = voice.wpm;
-              }
-              return _v;
+            // this.all_voices = this.all_voices.map((_v)=>{
+            //   if (_v.voice_id === voice.voice_id) {
+            //     _v.wpm = voice.wpm;
+            //   }
+            //   return _v;
+            // });
+            this.$store.commit('elevenLabsVoicesModule/set_voiceWPM', {
+              character: this.getSelectedInitCharacter,
+              voice: voice
             });
             this.is_voice_wpm_calculating = false;
           });
@@ -359,41 +321,6 @@
             return {};
           });
       },
-      startGenerateVoice() {
-        if (this.generated_voice_url) {
-          this.playGeneratedVoice();
-        } else {
-          this.generating_voice = true;
-          let request = lodash.cloneDeep(this.new_voice);
-          //request.accent_strength /= 100;
-          //console.log(request);
-          //return {};
-          return this.generateVoice(request)
-            .then(response => {
-              this.generated_voice_url = response.generated_voice_url;
-              this.generated_voice_id = response.generated_voice_id;
-              this.generating_voice = false;
-              this.playGeneratedVoice();
-            })
-            .catch(err => {
-              this.generating_voice = false;
-            })
-        }
-      },
-      playGeneratedVoice() {
-        //if (this.audio_playing) {
-          //return;
-        //}
-        this.stopVoiceExample()
-        if (this.generated_voice_url) {
-          this.checkCreateAudioElement();
-          //console.log(process.env.ILM_API + this.generated_voice_url);
-          this.audio_element.src = process.env.ILM_API + this.generated_voice_url;
-          this.audio_playing = true;
-          this.audio_element.play();
-          this.playing_generated_example = true;
-        }
-      },
       checkCreateAudioElement() {
         if (!this.audio_element) {
           this.audio_element = document.createElement('audio');
@@ -413,24 +340,6 @@
         this.audio_playing_type = null;
         this.audio_playing_voice = null;
         this.playing_generated_example = false;
-      },
-      saveNewVoice() {
-        let voice = lodash.cloneDeep(this.new_voice);
-        voice.generated_voice_id = this.generated_voice_id;
-        voice.voice_name = voice.name;
-        voice.category = 'generated';
-        this.creating_voice = true;
-        return this.saveGeneratedVoice(voice)
-          .then(() => {
-            this.creating_voice = false;
-            this.generated_voice_id = null;
-            this.new_voice.name = '';
-            this.generated_voice_url = '';
-            this.loadBookVoices();
-          })
-          .catch(err => {
-            this.creating_voice = false;
-          });
       },
       deleteVoice(id) {
         return this.removeVoice(id)
@@ -537,6 +446,23 @@
             });
         }
       },
+      play11LabVoiceExample(params) {
+        const { event, voice, character } = params;
+
+        this.stopVoiceExample();
+        //if (this.audio_playing) {
+          //return;
+        //}
+        this.checkCreateAudioElement();
+
+        if (voice && voice.preview_url) {
+          this.audio_element.src = voice.preview_url;
+          this.audio_playing = voice.voice_id;
+          this.audio_element.play();
+          return;
+        }
+
+      },
       stopVoiceExample() {
         if (this.audio_element) {
           this.audio_element.pause();
@@ -567,61 +493,37 @@
       goToBlock(blockid) {
         this.$root.$emit('for-bookedit:scroll-to-block', blockid);
       },
-      resetNewVoiceSettings() {
-        if (this.new_voice_settings.gender) {
-          this.new_voice.gender = this.new_voice_settings.gender[0].value;
-        }
-        if (this.new_voice_settings.age) {
-          this.new_voice.age = this.new_voice_settings.age[0].value;
-        }
-        if (this.new_voice_settings.accent) {
-          this.new_voice.accent = this.new_voice_settings.accent[0].value;
-        }
-        if (this.new_voice_settings.accent_strength) {
-          this.new_voice.accent_strength = this.new_voice_settings.accent_strength.min;
-        }
-        this.new_voice.name = '';
-      },
+
       alignWpmSettingsChanged(data) {
         this.alignWpmSettings.type = data.type;
         this.alignWpmSettings.wpm = data.wpm;
       },
+
+      async onSaveBookCharacters(charIdx) {
+        await this.saveBookCharacters({bookid: this.currentBookMeta.bookid, charIdx});
+        const selectedCharacter = this.getSelectedInitCharacter;
+        if (selectedCharacter?.voice_id) {
+          for (const [key, value] of Object.entries(this.currentBookMeta.voices)) {
+            this.currentBookMeta.voices[key] = selectedCharacter?.voice_id;
+          }
+          await this.updateBookMetaDebounce({voices: this.currentBookMeta.voices});
+        }
+      },
       ...mapActions(['updateBookMeta']),
-      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'generateVoice', 'saveGeneratedVoice', 'removeVoice', 'updateVoice', 'generateExample', 'calculateVoiceWpm'])
+      ...mapActions('elevenLabsVoicesModule', ['saveBookCharacters']),
+      ...mapActions('ttsModule', ['getNewVoiceSettings', 'getTTSVoices', 'removeVoice', 'updateVoice', 'calculateVoiceWpm'])
     },
 
     watch: {
       'currentBookid': {
         handler(val) {
           if (val) {
-            this.loadBookVoices();
-            this.resetNewVoiceSettings();
+            //this.loadBookVoices();
+            if (this.$refs?.generateVoice) {
+              this.$refs.generateVoice.resetNewVoiceSettings();
+            }
           }
         }
-      },
-      'new_voice.gender': {
-        handler() {
-          this.generated_voice_url = '';
-        },
-        deep: true
-      },
-      'new_voice.age': {
-        handler() {
-          this.generated_voice_url = '';
-        },
-        deep: true
-      },
-      'new_voice.accent': {
-        handler() {
-          this.generated_voice_url = '';
-        },
-        deep: true
-      },
-      'new_voice.accent_strength': {
-        handler() {
-          this.generated_voice_url = '';
-        },
-        deep: true
       },
       'is_active': {
         handler(val) {
@@ -648,22 +550,57 @@
             }
           }
         }
+      },
+      'elevenLabFiltersModalShow': {
+        handler(val, oldVal) {
+          this.stopVoiceExample();
+        }
       }
     }
   }
 </script>
 <style lang="less" scoped>
-      .audio-voice-selection {
-        background-color: rgb(238, 238, 238);
-        padding-top: 4px;
-        padding-bottom: 4px;
+  .audio-voice-selection {
+    /*background-color: rgb(238, 238, 238);
+    padding-top: 4px;
+    padding-bottom: 4px;*/
 
-        .voice-select-el {
-          margin-left: 20px;
-           display: flex;
-          align-items: center;
+    .voice-select-el {
+      margin-left: 20px;
+      display: flex;
+      align-items: center;
+    }
+  }
+  .eleven-labs-tts {
+    .audio-voice-header {
+      display: flex;
+      flex-direction: row;
+      height: 40px;
+    }
+
+    .audio-voice-caption {
+      margin-left: 20px;
+      flex-grow: 1;
+    }
+
+    .audio-voice-select {
+      align-items: center;
+      display: flex;
+      padding-right: 6px;
+      padding-top: 1px;
+
+      .audio-voice-select-btn {
+        color: #337AB7;
+        font-weight: 400;
+
+        &:hover {
+          text-decoration: underline;
+          cursor: pointer;
         }
       }
+    }
+  }
+
 </style>
 <style lang="less">
   .eleven-labs-tts {
@@ -691,9 +628,6 @@
         font-size: 1.2rem;
       }
     }
-    .audio-voice-caption {
-      margin-left: 20px;
-    }
 
     table {
       width: 95%;
@@ -706,6 +640,7 @@
         width: 70%;
       }
     }
+
     .table.table-voices {
       margin: 0px 2px;
 
@@ -731,10 +666,11 @@
     }
     .selection-info {
       padding: 10px 15px;
+      border-top: 1px solid #b8b6b6;
       .blocks-info {
         display: inline-block;
         width: 70%;
-        padding: 10px 5px;
+        padding: 6px 5px;
         a {
           cursor: pointer;
         }

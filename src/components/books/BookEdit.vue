@@ -329,6 +329,9 @@ export default {
     ...mapMutations('suggestionsModule', [
       'setDoNotDisturb'
     ]),
+    ...mapActions('elevenLabsVoicesModule', [
+      'loadBookCharacters'
+    ]),
 
     test(ev) {
         console.log('test', ev);
@@ -374,8 +377,11 @@ export default {
               }
               return this.getAllBlocks(answer.meta.bookid, this.startId)
               .then((result)=>{
-                this.isBookMounted = true;
-                return Promise.resolve({...meta, ...{loadType}});
+                return this.loadBookCharacters(bookid)
+                .then((result)=>{
+                  this.isBookMounted = true;
+                  return Promise.resolve({...meta, ...{loadType}});
+                });
               });
             })
           }).catch((err)=>{
@@ -385,6 +391,7 @@ export default {
         } else {
           loadType = 'pre';
           console.log('loadBookMounted', loadType);
+          this.loadBookCharacters(bookid);
           if (this.$route.params.hasOwnProperty('block')) {
             if (this.$route.params.block=='unresolved') {
               this.startId = this.$route.params.block || false;
