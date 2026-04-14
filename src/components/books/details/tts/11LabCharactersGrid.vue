@@ -198,7 +198,7 @@ export default {
         this.$store.commit('elevenLabsVoicesModule/set_charactersListItemValue', {
           values: { name: character.name }, character
         });
-        await this.$store.dispatch('elevenLabsVoicesModule/saveBookCharacters', {
+        await this.$store.dispatch('elevenLabsVoicesModule/saveInitBookCharacters', {
           bookid: this.currentBookid, charIdx: 0
         });
         this.$emit('onCharSelect', {event, voice: character.voice, character});
