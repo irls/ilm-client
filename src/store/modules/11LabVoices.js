@@ -363,6 +363,28 @@ export default {
       })
     },
 
+    saveInitBookCharacters({rootState, state, commit, getters}, payload) {
+      const {bookid, charIdx} = payload;
+      const prepareArray = state.initCharactersList.list.map((_v, _idx)=>({
+        name: _v.name,
+        voice_id: _v.voice_id,
+        filters: _v.filters
+      }));
+
+      if (!bookid) return Promise.resolve();
+
+      return axios.put(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`, {
+        id: state.initCharactersList.id,
+        bookid: state.initCharactersList.bookid,
+        characters: prepareArray
+      })
+      .then(response => {
+        return response;
+      }).catch(err=>{
+        console.error('saveBookCharacters', err);
+      })
+    },
+
     applySavedVoicesFilters({state, commit}, idx = 0) {
       if (!state.charactersList.list.length && state.charactersList.bookid) {
         const characters = state.emptyCharactersList;
