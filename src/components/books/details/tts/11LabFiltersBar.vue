@@ -74,8 +74,9 @@
       v-model="multiSelectVoiceModel.notice"
       class="multi-select-notice"
       :options="mapVoiceFilterLibraries.notice" optionLabel="caption"
-      data-captions="Notices" placeholder="Notice"
+      data-captions="Notices" placeholder="Min. notice"
       display="chip" :showToggleAll="false"
+      :selectionLimit="1"
       @change="filterVoiceChange" />
   </div>
   <!--<div class="voice-filters-first-row"-->
