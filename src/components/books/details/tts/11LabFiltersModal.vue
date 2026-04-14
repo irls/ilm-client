@@ -15,7 +15,7 @@
       <div class="eleven-lab-filters-modal-wrapper">
         <div class="modal-header">
           <div class="header-title">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancelCharactersChanges">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
             <i class="fa fa-times-circle-o" aria-hidden="true"></i>
             </button>
             <h4>Select voices</h4>
@@ -193,7 +193,7 @@
         this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
       },
       methods: {
-        ...mapActions('elevenLabsVoicesModule', ['loadBookCharacters']),
+        //...mapActions(),
 
         showModal(name) {
           this.$emit('stop', {});
@@ -354,7 +354,6 @@
         cancelCharactersChanges() {
           this.$emit('stop', {});
           //this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
-          this.loadBookCharacters(this.currentBookid);
           this.$emit('close_modal');
         },
 
