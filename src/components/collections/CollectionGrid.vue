@@ -1,42 +1,41 @@
 <template>
   <div id="books_grid">
-    <div v-for="collection in collectionsPage" class="collection-container">
-      <div v-on:click="rowClick(collection, $event)"
-        :class="['collection-title collection-row', {'selected': currentCollection._id == collection._id}]"
-        :data-id="collection._id">
+    <div v-if="currentCollection" class="collection-container">
+      <div v-on:click="rowClick(currentCollection, $event)"
+        :class="['collection-title collection-row selected']"
+        :data-id="currentCollection._id">
         <span slot="header" class="collection-title" @click.prevent.self>
           <i class='ico ico-collection'></i>&nbsp;
-          {{collection.title + ' ' + collection.bookids.length + ' Books, ' + collection.pages + ' pages'}}
+          {{currentCollection.title + ' ' + (currentCollection.bookids ? currentCollection.bookids.length : 0) + ' Books, ' + currentCollection.pages + ' pages'}}
         </span>
       </div>
       <Grid id='books_grid_grid'
-          v-if="isOpenPanel(collection)"
-          :data="collection.books_list"
+          v-if="currentCollection && isOpenPanel(currentCollection)"
+          :data="booksList"
           :columns="headers"
           :rowsPerPage="100"
           @clickRow="selectBook"
           @dblClickRow="openBook"
-          @orderChanged="moveBook(collection, $event)"
+          @orderChanged="moveBook(currentCollection, $event)"
+          @pagination-page="goToGridPage"
           :selected="selectedBooks"
           :idField="'bookid'"
           :filter-key="''"
-          :draggable="allowCollectionsEdit"
+          :draggable="false"
           :sortable="true"
-          :ref="'grid-' + collection._id"
+          :ref="'grid-' + currentCollection._id"
           :class="['collection-books-grid']"
           :scrollTopOnPageClick="true"
+          :pagination="currentCollectionPagination"
           customEmptyTableText="No Books found" />
     </div>
   </div>
 </template>
 <script>
-  import Grid from '../generic/Grid';
+  import Grid from '../generic/GridPaged';
   import { mapGetters, mapActions } from 'vuex';
   import Vue from 'vue';
-  import superlogin from 'superlogin-client';
-  import PouchDB from 'pouchdb';
   import lodash from 'lodash';
-  import { prepareForFilter, cleanDiacritics } from '@src/filters/search.js';
 
   export default {
       name: 'CollectionGrid',
@@ -127,9 +126,9 @@
         },
         isOpenPanel(collection) {
           if (this.currentCollection._id) {
-            return this.currentCollection._id === collection._id;
+            return true;
           }
-          return collection.book_match || collection.bookids.indexOf(this.currentBookMeta.bookid) !== -1;
+          return false;
         },
         moveBook(collection, data) {
           if (this.allowCollectionsEdit
@@ -138,7 +137,11 @@
             && data.from != data.to) {
           }
         },
-        ...mapActions(['loadCollection'])
+        goToGridPage (page) {
+          this.loadCurrentCollectionBooks(Object.assign(this.collectionsFilters, { page: page }))
+        },
+        ...mapActions(['loadCollection']),
+        ...mapActions('booksModule', ['loadCurrentCollectionBooks'])
       },
       mounted() {
         if (this.$route && this.$route.params) {
@@ -148,6 +151,7 @@
             //}
           //}
         }
+        this.$watch(() => this.currentBookMeta['@version'], this.$forceUpdate)
       },
       computed: {
         ...mapGetters([
@@ -160,7 +164,8 @@
           'adminOrLibrarian',
           'isEditor',
           'isNarrator',
-          'isProofer'
+          'isProofer',
+          'currentCollectionPagination'
         ]),
         ...mapGetters({
           fltrChangeTrigger:  'gridFilters/fltrChangeTrigger',
@@ -196,58 +201,6 @@
               book.editor = (book.executors && book.executors.editor) ? book.executors.editor.title : '';
               return book;
             });
-
-            /*for (const field in this.collectionsFilters) {
-              if (this.collectionsFilters[field].length > 0) {
-                let filter = prepareForFilter(this.collectionsFilters[field]);
-                switch (field) {
-                  case 'title':
-                    collections = collections.filter(collection => {
-                      let match = prepareForFilter(collection.title).indexOf(filter) !== -1;
-                      if (!match) {
-                        collection.books_list = collection.books_list.filter(book => {
-                          const bookAuthors = Array.isArray(book.author) ? book.author.join('|') : book.author;
-                          let str = prepareForFilter(`${book.title} ${book.subtitle} ${bookAuthors} ${book.bookid} ${book.category}`); // ${book.description}
-                          return (str.indexOf(filter) > -1)
-                        });
-                      }
-                      let book_match = !match && collection.books_list.length > 0;
-                      collection.match = match;
-                      collection.book_match = book_match;
-                      return match || book_match;
-                    });
-                    break;
-                  case 'language':
-                    collections = collections.filter(collection => {
-                      return collection.language == filter;
-                    });
-                    break;
-                  case 'jobStatus':
-                    collections = collections.filter(collection => {
-                      if (!collection.books_list) return false;
-                      collection.books_list = collection.books_list.filter(b => {
-                        return b.job_status === filter;
-                      });
-                      return collection.books_list.length > 0;
-                    });
-                    break;
-                  case 'projectTag':
-                    collections = collections.filter(collection => {
-                      collection.books_list = collection.books_list.filter(b => {
-                        let str = prepareForFilter(`${b.hashTags} ${b.executors.editor._id} ${b.executors.editor.name} ${b.executors.editor.title}`)
-                        return (str.indexOf(filter) > -1)
-                      });
-                      let book_match =  collection.books_list.length > 0;
-                      collection.match = book_match;
-                      collection.book_match = book_match;
-                      return book_match;
-
-                    });
-                    break;
-
-                }
-              }
-            }*/
             return collections;
           }
         },
@@ -353,6 +306,12 @@
               });
             }
             return headers;
+          },
+          cache: false
+        },
+        booksList: {
+          get() {
+            return this.currentCollection && this.currentCollection.books_list ? this.currentCollection.books_list : [];
           },
           cache: false
         }

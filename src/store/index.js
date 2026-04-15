@@ -170,6 +170,7 @@ export const store = new Vuex.Store({
     bookCollections: [],
     collectionsPagination: {},
     currentCollection: {},
+    currentCollectionPagination: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
     libraries: [],
@@ -438,6 +439,7 @@ export const store = new Vuex.Store({
     },
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
+    currentCollectionPagination: state => state.currentCollectionPagination,
     currentCollectionId: state => state.currentCollectionId,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
@@ -961,6 +963,10 @@ export const store = new Vuex.Store({
           if (state.currentCollection) state.currentCollection.sortBooks();
         });
       state.currentCollectionId = _id;
+    },
+
+    set_currentCollectionPagination (state, pagination) {
+      state.currentCollectionPagination = pagination;
     },
 
     SET_CURRENT_LIBRARY (state, library) {
@@ -2344,9 +2350,14 @@ export const store = new Vuex.Store({
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
-            if (state.currentBookMeta.collection_id && state.currentCollection) {
+            if (state.currentBookMeta.collection_id && state.currentCollection && Array.isArray(state.currentCollection.books_list)) {
               //state.currentCollection.updateBook(response.data);
-              commit('PREPARE_BOOK_COLLECTIONS');
+              let bookIndex = state.currentCollection.books_list.findIndex(cBook => {
+                return cBook.bookid === state.currentBookMeta.bookid;
+              });
+              if (bookIndex !== -1) {
+                state.currentCollection.books_list[bookIndex] = response.data;
+              }
             }
             return Promise.resolve(response.data);
           } else {
