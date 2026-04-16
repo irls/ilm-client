@@ -20,6 +20,7 @@ import alignActions from './modules/align';
 import tasks from './modules/tasks';
 import audioExport from './modules/audioExport';
 import gridFilters from './modules/gridFilters';
+import elevenLabsVoicesFilters from './modules/11LabVoicesFilters';
 import tocSections from './modules/tocSection';
 import ttsModule from './modules/tts';
 import genreModule from './modules/genre';
@@ -28,6 +29,7 @@ import authorsMapModule from './modules/authorsMap';
 import authorsModule from './modules/authors';
 import calculateLevelsModule from "./modules/calculateLevels";
 import booksModule from "./modules/book";
+import elevenLabsVoicesModule from "./modules/11LabVoices";
 import suggestionsModule from './modules/suggestions';
 import filterTagsModule from "./modules/filterTag";
 import collectionsModule from "./modules/collection";
@@ -94,6 +96,7 @@ export const store = new Vuex.Store({
     alignActions,
     tasks,
     gridFilters,
+    elevenLabsVoicesFilters,
     audioExport,
     tocSections,
     ttsModule,
@@ -104,6 +107,7 @@ export const store = new Vuex.Store({
     calculateLevelsModule,
     suggestionsModule,
     booksModule,
+    elevenLabsVoicesModule,
     filterTagsModule,
     collectionsModule,
     blocksModule
@@ -166,6 +170,7 @@ export const store = new Vuex.Store({
     bookCollections: [],
     collectionsPagination: {},
     currentCollection: {},
+    currentCollectionPagination: {},
     currentCollectionId: false,
     allowPublishCurrentCollection: false,
     libraries: [],
@@ -434,6 +439,7 @@ export const store = new Vuex.Store({
     },
     bookCollections: state => state.bookCollections,
     currentCollection: state => state.currentCollection,
+    currentCollectionPagination: state => state.currentCollectionPagination,
     currentCollectionId: state => state.currentCollectionId,
     allowPublishCurrentCollection: state => state.allowPublishCurrentCollection,
     authors: state => {
@@ -957,6 +963,10 @@ export const store = new Vuex.Store({
           if (state.currentCollection) state.currentCollection.sortBooks();
         });
       state.currentCollectionId = _id;
+    },
+
+    set_currentCollectionPagination (state, pagination) {
+      state.currentCollectionPagination = pagination;
     },
 
     SET_CURRENT_LIBRARY (state, library) {
@@ -1822,6 +1832,7 @@ export const store = new Vuex.Store({
        //dispatch('updateBooksList', {});
        dispatch('booksModule/loadBooksFilters');
        dispatch('authorsModule/getAll');
+       dispatch('elevenLabsVoicesFilters/loadVoicesFilters');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -2339,9 +2350,14 @@ export const store = new Vuex.Store({
               let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
               commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
-            if (state.currentBookMeta.collection_id && state.currentCollection) {
+            if (state.currentBookMeta.collection_id && state.currentCollection && Array.isArray(state.currentCollection.books_list)) {
               //state.currentCollection.updateBook(response.data);
-              commit('PREPARE_BOOK_COLLECTIONS');
+              let bookIndex = state.currentCollection.books_list.findIndex(cBook => {
+                return cBook.bookid === state.currentBookMeta.bookid;
+              });
+              if (bookIndex !== -1) {
+                state.currentCollection.books_list[bookIndex] = response.data;
+              }
             }
             return Promise.resolve(response.data);
           } else {

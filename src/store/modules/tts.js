@@ -192,6 +192,24 @@ export default {
       .catch(err => {
         return Promise.reject(err);
       });
+    },
+
+    checkVoiceAvailable({rootState}/*, [voiceId]*/) {
+      const voiceId = rootState.currentBookMeta?.voices?.paragraph;
+      if (voiceId) {
+        return axios.get(`${rootState.API_URL}tts/eleven_labs/voices/check/${encodeURIComponent(voiceId)}`)
+        .then(response => {
+          const {data = {}, status} = response;
+          if (status !== 200 || !data?.voice_id) {
+            return Promise.reject(new Error('Voice is not available'));
+          }
+          return data;
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+      }
+      return Promise.reject(new Error('Voice Id is not defined'));
     }
   }
 }

@@ -1,9 +1,9 @@
-import {
-  prepareForFilter,
-  cleanDiacritics,
-  splitPrepareForFilter,
-  prepareRegexpForArFaLetters
-}  from '@src/filters/search.js';
+// import {
+//   prepareForFilter,
+//   cleanDiacritics,
+//   splitPrepareForFilter,
+//   prepareRegexpForArFaLetters
+// }  from '@src/filters/search.js';
 import { Languages }       from "@src/mixins/lang_config.js"
 
 export default {
@@ -121,8 +121,8 @@ export default {
     filteredCollectionsCounter: (state, getters, rootState, rootGetters) => {
       return rootGetters.collectionsPagination.total;
     },
-    filteredCollectionBooksCounter: (state, getters) => {
-      return getters.filteredCollectionBooks.length;
+    filteredCollectionBooksCounter: (state, getters, rootState, rootGetters) => {
+      return rootGetters.currentCollectionPagination.total;
     },
 
     filteredBooks: (state, getters, rootState, rootGetters) => {

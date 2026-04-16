@@ -6,17 +6,24 @@ import { getHostOffset, getWindowScrollLeft, getWindowScrollTop, getOuterWidth, 
 function bindEvents(el) {
   el.addEventListener('mouseenter', onMouseEnter);
   el.addEventListener('mouseleave', onMouseLeave);
+  el.addEventListener('wheel', onMouseWheel);
   el.addEventListener('click', onClick);
 }
 
 function unbindEvents(el) {
   el.removeEventListener('mouseenter', onMouseEnter);
   el.removeEventListener('mouseleave', onMouseLeave);
+  el.removeEventListener('wheel', onMouseWheel);
   el.removeEventListener('click', onClick);
 }
 
 function onMouseEnter(event) {
   show(event.currentTarget);
+}
+
+function onMouseWheel(event) {
+  //forceAlign(event.currentTarget);
+  onMouseLeave(event);
 }
 
 function onMouseLeave(event) {
@@ -54,6 +61,10 @@ function unbindScrollListener(el) {
 function show(el) {
   //console.log('SHOW HERE');
   let tElement = create(el);
+  align(el);
+}
+
+function forceAlign(el) {
   align(el);
 }
 
@@ -113,6 +124,10 @@ function align(el) {
   if (modifiers.top) {
     alignTop(el);
   }
+
+  if (modifiers.bottom) {
+    alignBottom(el);
+  }
   
   let tooltipElement = getTooltipElement(el);
   let inBounds = isOutOfBounds(tooltipElement);
@@ -134,12 +149,18 @@ function alignTop(el) {
   preAlign(el, 'top');
   let tooltipElement = getTooltipElement(el);
   let hostOffset = getHostOffset(el);
-  //console.log(`hostOffset.left: ${hostOffset.left}`);
-  //console.log(`getOuterWidth(el): ${getOuterWidth(el)}`);
-  //console.log(`getOuterWidth(tooltipElement): ${getOuterWidth(tooltipElement)}`);
   let left = hostOffset.left + (getOuterWidth(el) - getOuterWidth(tooltipElement)) / 2;
   let top = hostOffset.top - getOuterHeight(tooltipElement);
-  //tooltipElement.classList+=' -top';
+  tooltipElement.style.left = left + 'px';
+  tooltipElement.style.top = top + 'px';
+}
+
+function alignBottom(el) {
+  preAlign(el, 'bottom');
+  let tooltipElement = getTooltipElement(el);
+  let hostOffset = getHostOffset(el);
+  let left = hostOffset.left + (getOuterWidth(el) - getOuterWidth(tooltipElement)) / 2;
+  let top = hostOffset.top + getOuterHeight(tooltipElement);
   tooltipElement.style.left = left + 'px';
   tooltipElement.style.top = top + 'px';
 }

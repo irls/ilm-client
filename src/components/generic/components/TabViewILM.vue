@@ -8,7 +8,7 @@
                     <ul ref="nav" class="p-tabview-nav" role="tablist">
                         <li role="presentation"
                           v-for="(tab, i) of tabs" :key="getKey(tab, i)"
-                          :class="[{'p-highlight': (d_activeIndex === i), 'p-disabled': isTabDisabled(tab)}, tabDisabledClass(tab)]">
+                          :class="[{'p-highlight': (d_activeIndex === i), 'p-disabled': isTabDisabled(tab)}, tabDisabledClass(tab), tabHeadClass(tab)]">
                             <a role="tab" class="p-tabview-nav-link"
                               :id="'t-'+tabId(tab)"
                               @click="onTabClick($event, i)"
@@ -16,7 +16,17 @@
                               :tabindex="isTabDisabled(tab) ? null : '0'" :aria-selected="d_activeIndex">
                                 <span class="p-tabview-title" v-if="tab.header">{{tab.header}}</span>
                                 <TabPanelHeaderSlot :tab="tab" v-if="tab.$scopedSlots.header"/>
+                                <span class="p-tabview-close-tab" v-if="showRemoveButton" @click="onRemoveTabClick($event, i, tab)">
+                                  <i class="fa fa-remove"></i>
+                                </span>
                             </a>
+                        </li>
+                        <li v-if="showAddTab" role="presentation" class="add-tab-button">
+                          <div class="p-tabview-title add-tab">
+                            <button class="btn btn-primary" @click="onAddTabClick">
+                              <i class="glyphicon glyphicon-remove-circle"></i>
+                            </button>
+                          </div>
                         </li>
                         <li class="divider-line"> </li>
                         <li ref="inkbar" class="p-tabview-ink-bar"></li>
@@ -33,8 +43,9 @@
 </template>
 
 <script>
-import DomHandler from 'primevue/utils/DomHandler';
+import DomHandler  from 'primevue/utils/DomHandler';
 import ObjectUtils from 'primevue/utils/ObjectUtils';
+import Vue         from 'vue';
 
 const TabPanelHeaderSlot = {
     functional: true,
@@ -58,21 +69,47 @@ export default {
         scrollable: {
             type: Boolean,
             default: false
-        }
+        },
+        showAddTab: {
+            type: Boolean,
+            default: false
+        },
+        showRemoveButton: {
+            type: Boolean,
+            default: false
+        },
+        onAddTab: {
+            type: Function,
+            default: function(){}
+        },
+        onRemoveTab: {
+            type: Function,
+            default: function(){}
+        },
     },
     data() {
         return {
             allChildren: [],
             d_activeIndex: this.activeIndex,
             backwardIsDisabled: true,
-            forwardIsDisabled: true
+            forwardIsDisabled: true,
+            updateTabs: true
         };
     },
     watch: {
         activeIndex(newValue) {
             this.d_activeIndex = newValue;
-
             this.updateScrollBar(newValue);
+        },
+        'tabs.length'(newValue, oldValue) {
+          if (newValue < oldValue) {
+            const maxLength = this.allChildren.length;
+            let loop = maxLength;
+            while (loop--) {
+              this.allChildren[loop].index = loop;
+            }
+            this.d_activeIndex = newValue > maxLength-1 ? maxLength-1 : newValue;
+          }
         }
     },
     mounted() {
@@ -84,6 +121,16 @@ export default {
         if (this.forwardIsDisabled) this.updateButtonState();
     },
     methods: {
+        onResize(activeIndex = -1) {
+          this.updateTabs = false;
+          this.updateTabs = true;
+          this.updateInkBar();
+          this.updateButtonState();
+          if (activeIndex > -1) {
+            this.d_activeIndex = activeIndex;
+            this.updateScrollBar(activeIndex);
+          }
+        },
         onTabClick(event, i) {
             if (!this.isTabDisabled(this.tabs[i]) && i !== this.d_activeIndex) {
                 this.d_activeIndex = i;
@@ -108,12 +155,20 @@ export default {
                 this.onTabClick(event, i);
             }
         },
+        onAddTabClick() {
+          this.$emit('onAddTab');
+        },
+        onRemoveTabClick(event, i, tab) {
+          this.$emit('onRemoveTab', { i, tab });
+        },
         updateInkBar() {
-            if (this.$refs.nav.children.length > 1) {
-                let tabHeader = this.$refs.nav.children[this.d_activeIndex];
-                this.$refs.inkbar.style.width = DomHandler.getWidth(tabHeader) + 'px';
-                this.$refs.inkbar.style.left =  DomHandler.getOffset(tabHeader).left - DomHandler.getOffset(this.$refs.nav).left + 'px';
+          if (this.$refs.nav.children.length > 1) {
+            let tabHeader = this.$refs?.nav?.children[this.d_activeIndex];
+            if (tabHeader) {
+              this.$refs.inkbar.style.width = DomHandler.getWidth(tabHeader) + 'px';
+              this.$refs.inkbar.style.left =  DomHandler.getOffset(tabHeader).left - DomHandler.getOffset(this.$refs.nav).left + 'px';
             }
+          }
         },
         updateScrollBar(index) {
             let tabHeader = this.$refs.nav.children[index];
@@ -133,7 +188,13 @@ export default {
             return tab.disabled;
         },
         tabDisabledClass(tab) {
-            return tab.$attrs['data-tab-class'] || '';
+            return tab?.$attrs['data-tab-class'] || '';
+        },
+        tabHeadClass(tab) {
+            return tab?.$attrs['data-tab-head-class'] || '';
+        },
+        tabIndex(tab) {
+            return 1*(tab?.$attrs['data-idx'] || 0);
         },
         tabId(tab) {
             return tab.$attrs['id'] || '';
@@ -165,19 +226,18 @@ export default {
         return ['p-tabview p-component', {'p-tabview-scrollable': this.scrollable}];
       },
       prevButtonClasses() {
-          return ['p-tabview-nav-prev p-tabview-nav-btn p-link', {'p-disabled': this.backwardIsDisabled}]
+        return ['p-tabview-nav-prev p-tabview-nav-btn p-link', {'p-disabled': this.backwardIsDisabled}]
       },
       nextButtonClasses() {
-          return ['p-tabview-nav-next p-tabview-nav-btn p-link', {'p-disabled': this.forwardIsDisabled}]
+        return ['p-tabview-nav-next p-tabview-nav-btn p-link', {'p-disabled': this.forwardIsDisabled}]
       },
       tabs() {
-          let tabs = [];
-
-          if (this.allChildren) {
-              tabs = this.allChildren.filter(child => child.$vnode.tag.indexOf('tabpanel') !== -1);
-          }
-
-          return tabs;
+        let tabs = [];
+        if (this.allChildren && this.updateTabs) {
+          tabs = this.allChildren
+          .filter(child => child.$vnode.tag.indexOf('tabpanel') !== -1);
+        }
+        return tabs;
       }
     },
     components: {
@@ -262,6 +322,11 @@ export default {
     font-size: 14px;
     font-weight: 200;
     margin: 0;
+    border-width: 0;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-nav-link:has(span[contenteditable="true"]) {
+  padding: 0.5rem;
 }
 
 .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
@@ -269,9 +334,18 @@ export default {
     border: none;
 }
 
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link:has(span[contenteditable="true"]) {
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+}
+
 .p-tabview .p-tabview-nav li {
     border-bottom: 1px solid #ddd;
     /*wide tabs*/ padding: 0 1px;
+}
+
+.p-tabview .p-tabview-nav li.add-tab-button {
+    padding: 0;
+    border-bottom: 1px solid #ddd;
 }
 
 .p-tabview .p-tabview-nav li.p-highlight {
@@ -280,6 +354,30 @@ export default {
     border-top-left-radius: 3px;
     border-bottom-color: transparent;
     padding: 0 2px;
+}
+
+.p-tabview .p-tabview-nav li.p-highlight.add-tab-button {
+    padding: 0;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-close-tab {
+    display: none;
+}
+
+.p-tabview .p-tabview-nav li .p-tabview-close-tab i {
+    height: 14px;
+    color: #ddd;
+
+    &:hover {
+      color: gray;
+    }
+}
+
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-close-tab {
+    display: inline-block;
+    height: 14px;
+    margin-left: 15px;
+    margin-top: -5px;
 }
 
 .p-tabview-ink-bar {
@@ -294,6 +392,21 @@ export default {
 .p-tabview-title {
     line-height: 1;
     white-space: nowrap;
+}
+
+.p-tabview-title.add-tab {
+  line-height: 1;
+  white-space: nowrap;
+
+  button {
+    border-radius: 3px 3px 0 0;
+    padding: 6px 6px 2px 5px;
+    i {
+      color: white;
+      transform: rotate(45deg);
+      font-size: 22px
+    }
+  }
 }
 
 .p-tabview-nav-btn {

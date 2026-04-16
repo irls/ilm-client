@@ -12,7 +12,7 @@
               class="calculate-voice-wpm-button-caption"
               @click="calculateVoiceWpm"
               >Calculate wpm</div>
-            <div v-else class="dot-flashing"></div>
+            <three-dot-loader-div v-else />
           </div>
         </template>
         <div class="audio-speed-type">
@@ -68,7 +68,8 @@
   import lodash from 'lodash';
   import Accordion from 'primevue/accordion';
   import AccordionTab from 'primevue/accordiontab';
-  import access from '../../../mixins/access';
+  import ThreeDotLoaderDiv from '@src/components/generic/ThreeDotLoaderDiv.vue';
+  import access from '@src/mixins/access';
   export default {
     data() {
       return {
@@ -84,7 +85,8 @@
     components: {
       'Slider': Slider,
       'Accordion': Accordion,
-      'AccordionTab': AccordionTab
+      'AccordionTab': AccordionTab,
+      'three-dot-loader-div': ThreeDotLoaderDiv
     },
     props: ['audio_type', 'is_catalog_active', 'selected_voice_params', 'is_voice_wpm_calculating'],
     mixins: [access],
@@ -299,55 +301,7 @@ ${JSON.stringify(this.user.alignWpmSettings[this.currentBookid])}`);*/
         margin-left: 10px;
         color: #337ab7;
       }
-      .calculate-voice-wpm-button {
-         .dot-flashing {
-          position: relative;
-          top: 2px;
-          margin-left: 40px;
-          width: 10px;
-          height: 10px;
-          border-radius: 5px;
-          background-color: black; /*#9880ff;*/
-          color: black; /*#9880ff;*/
-          animation: dot-flashing 1s infinite linear alternate;
-          animation-delay: 0.5s;
-        }
-        .dot-flashing::before, .dot-flashing::after {
-          content: "";
-          display: inline-block;
-          position: absolute;
-          top: 0;
-        }
-        .dot-flashing::before {
-          left: -15px;
-          width: 10px;
-          height: 10px;
-          border-radius: 5px;
-          background-color: black; /*#9880ff;*/
-          color: black; /*#9880ff;*/
-          animation: dot-flashing 1s infinite alternate;
-          animation-delay: 0s;
-        }
-        .dot-flashing::after {
-          left: 15px;
-          width: 10px;
-          height: 10px;
-          border-radius: 5px;
-          background-color: black; /*#9880ff;*/
-          color: black; /*#9880ff;*/
-          animation: dot-flashing 1s infinite alternate;
-          animation-delay: 1s;
-        }
-
-        @keyframes dot-flashing {
-          0% {
-            background-color: black; /*#9880ff;*/
-          }
-          50%, 100% {
-            background-color: rgba(0, 0, 0, 0.2); /*rgba(152, 128, 255, 0.2);*/
-          }
-        }
-      }
+      .calculate-voice-wpm-button {}
     }
     .audio-speed-type {
       .audio-speed-option {
