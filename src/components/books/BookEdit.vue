@@ -1519,7 +1519,7 @@ export default {
       this.handleScroll(ev);
     }, 20),
 
-    handleScroll(ev, force = false) {
+    handleScroll(ev) {
       const range = ev.detail.range;
       const blockO = this.parlistO.get(this.parlistArray[range.start]._rid);
       //console.log(`handleScroll: `, range.start, range.end, blockO.blockid, this.startId);
@@ -1561,10 +1561,8 @@ export default {
       this.editorsTop = range.padFront + countHeight;
       if (!firstVisible) {
         const blockId = this.parlistO.idsArray()[range.end];
-        //Vue.nextTick(() => {
-          this.scrollToBlock(blockId);
-        //});
-         this.correctCurrentEditHeight(blockId);
+        this.scrollToBlock(blockId);
+        this.correctCurrentEditHeight(blockId);
         return;
       }
 
@@ -2660,7 +2658,6 @@ export default {
       //this.$root.$on('for-bookedit:scroll-to-block-end', this.scrollToBlockEnd);
 
       this.subscribeOnVoiceworkBlocker = this.$store.subscribeAction((action, state) => {
-
         switch(action.type) {
           case 'addBlockLock' : {
             //console.log(`action.payload: `, action.payload);
@@ -2690,6 +2687,25 @@ export default {
                 this.$store.state.liveDB.stopWatch('job');
                 this.$root.$emit('book-reloaded');
               }
+            }
+          } break;
+          case 'set_liveDB_block_update' : { // ILM-7356 scroll to element next to deleted
+            switch(action.payload.action) {
+              case 'delete' : {
+                const blockRid = action.payload.block['@rid'];
+                const nextBlockId = this.$store.state.storeListO.getOutId(blockRid);
+                const hasLockedBlocks = this.$store.state.lockedBlocks.some(
+                  (lb)=>lb.type==='deleteBlocks'
+                );
+                if (nextBlockId && hasLockedBlocks) {
+                  Vue.nextTick(()=>{
+                    this.scrollToBlock(nextBlockId);
+                    this.$store.state.storeListO.setStartId(nextBlockId);
+                  });
+                }
+              } break;
+              default : {
+              } break;
             }
           } break;
           default : {

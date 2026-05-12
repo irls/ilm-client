@@ -190,7 +190,7 @@ class BookBlocks {
       } else {
         rid = this.getRIdById(blockId);
       }
-      if (rid && this.lookupList.hasOwnProperty(this.lookupList[rid].out)) {
+      if (rid && this.lookupList[rid] && this.lookupList.hasOwnProperty(this.lookupList[rid].out)) {
         if (this.lookupList[rid].out == this.meta.rid) return false;
         return this.lookupList[this.lookupList[rid].out].blockid;
       }

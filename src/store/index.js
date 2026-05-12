@@ -4405,8 +4405,11 @@ export const store = new Vuex.Store({
                 clearLocks = dispatch('getBlocks', Object.keys(oldIds))
                   .then((blocks) => {
                     blocks.forEach(block => {
-                      commit('set_storeList', new BookBlock(block));
-                      commit('clear_block_lock', {block: {blockid: block.blockid}, type: oldIds[block.blockid]});
+                      const type = oldIds[block.blockid];
+                      if (!["deleteBlocks"].includes(type)) {
+                        commit('set_storeList', new BookBlock(block));
+                      }
+                      commit('clear_block_lock', {block: {blockid: block.blockid}, type});
                     });
                     let checkAlignQueue = false;
                     Object.keys(oldIds).forEach(blockid => {
@@ -4417,7 +4420,7 @@ export const store = new Vuex.Store({
                         if (!checkAlignQueue) {
                           checkAlignQueue = ["joinBlocks"].includes(oldIds[blockid]);
                         }
-                        commit('clear_block_lock', {block: {blockid: blockid}, type: oldIds[blockid]});
+                        dispatch('clearBlockLock', {block: {blockid: blockid}, type: oldIds[blockid]});
                         state.storeListO.delExistsBlock(state.storeListO.getRIdById(blockid));
                       }
                     });
