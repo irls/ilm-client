@@ -290,6 +290,7 @@ export const store = new Vuex.Store({
       queue: [],
       running: null,
       log: [],
+      dir: null,
       block: {
         blockId: null,
         partIdx: null,
@@ -4772,12 +4773,16 @@ export const store = new Vuex.Store({
         block: {
           content: content,
           audiosrc: block.getPartAudiosrc(partIdx || 0, false, false),
-          modified: queue[0].modified
+          modified: queue[0].modified,
+          dir: state.audioTasksQueue.dir
         }
       })
         .then((res) => {
           state.audioTasksQueue.queue.splice(0, runSize);
           state.audioTasksQueue.running = null;
+          if (res.data && res.data[0] && res.data[0].dir) {
+            state.audioTasksQueue.dir = res.data[0].dir;
+          }
           let data = [];
           if (Array.isArray(res.data)) {
             data = res.data.filter(r => {
@@ -4839,6 +4844,7 @@ export const store = new Vuex.Store({
         mode: state.bookMode,
         recording_pauses: block.getPartRecordingPauses(alignBlock.partIdx || 0),
         audio_silences: block.getPartAudioSilences(alignBlock.partIdx || 0),
+        dir: state.audioTasksQueue.dir
       };
       if (Array.isArray(state.audioTasksQueue.log)) {
         state.audioTasksQueue.log.filter(l => {
@@ -4863,6 +4869,7 @@ export const store = new Vuex.Store({
       }
       return axios.post(api_url, data, {})
         .then(response => {
+          state.audioTasksQueue.dir = null;
           return new Promise((resolve, reject) => {
             if (realign) {
               return dispatch('getBookAlign')
