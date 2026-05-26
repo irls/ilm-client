@@ -54,7 +54,10 @@
                     <a class="btn btn-primary" style="margin-bottom: 5px;" v-if="(getDemoStatus == 'rebuild' || getDemoStatus == 'progress') && currentBook.demo_zip_narration_size >=23 && currentBook.demo_zip_narration" :disabled="getDemoStatus == 'progress'" :href="this.API_URL + 'export/' + this.currentBook._id + '/exportNarration'" target="_blank">Narration {{currentBook.demo_zip_narration_size | prettyBytes }}</a>
                   </template>
                   <hr>
-                  <div class="demo-book-link" v-if="currentBook.demo"><a :href="this.SERVER_URL + currentBook.demo" target="_blank">{{this.SERVER_URL + currentBook.demo}}</a> <br /><!-- <button class="btn btn-primary" v-if="getDemoStatus == 'rebuild' || getDemoStatus == 'progress'" :disabled="getDemoStatus == 'progress'" v-clipboard="() => this.SERVER_URL + currentBook.demo" >Copy Link</button>--> <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button></div>
+                  <div class="demo-book-link" v-if="currentBook.demo">
+                    <a :href="demoLink" target="_blank">Demo HTML link</a> <br />
+                    <button class="btn btn-primary" v-on:click="deactivateDemoLink()"> Deactivate</button>
+                  </div>
                   <div v-if="!currentBook.demo">Public Demo Book link has been deactivated</div>
                   <span v-if="getDemoStatus == 'failed'"> Demo Book generation has failed. Please try again.</span>
                 </div>
@@ -1082,6 +1085,13 @@ export default {
         let langs = _.cloneDeep(this.languages);
         delete langs[this.currentBookMeta.parent_language];
         return langs;
+      },
+      cache: false
+    },
+
+    demoLink: {
+      get() {
+        return this.SERVER_URL + this.currentBook.demo;
       },
       cache: false
     }
