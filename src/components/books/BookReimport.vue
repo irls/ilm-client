@@ -16,6 +16,12 @@
           <form id="book_select" enctype="multipart/form-data" @submit.prevent ref="book_select">
 
             <div class="row">
+              <div class="col-sm-12" v-show='hasAudio'>
+                <span class="help-block audio-warning">Re-importing will also delete all existing book audio.<br/>Are you sure you want to proceed?</span>
+              </div>
+            </div>
+
+            <div class="row">
               <!--<div class="col-sm-5">
                 <div class="form-group">
                   <label for="booktype">Book Type:</label>
@@ -138,6 +144,13 @@
       hasUploadError: function() {
         return this.bookUploadCheckError.length > 0 || this.bookUploadCommonError;
       },
+      hasAudio: function() {
+        for (const [key, block] of this.storeList) {
+          if (block?.audiosrc?.length) return true;
+        }
+        return false;
+        //return this.bookMetaById(this?.currentBookMeta?.bookid)?.audioBlocksCount > 0;
+      },
       selectedBookType: function () {
         return this.bookTypes[this.bookType];
       },
@@ -147,7 +160,7 @@
 
         return (this.uploadFile == false)
       },
-      ...mapGetters(['liveDB'])
+      ...mapGetters(['liveDB', 'currentBookMeta', 'bookMetaById', 'storeList'])
     },
     methods: {
       formReset() {
@@ -419,6 +432,10 @@
   .help-block {
     margin-top: 0px;
     margin-bottom: 18px;
+  }
+
+  .audio-warning {
+    color: red;
   }
 
   .alert-icon-float-left {
