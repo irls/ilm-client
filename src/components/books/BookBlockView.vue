@@ -19,7 +19,7 @@
 
         <div class="table-row check-row">
           <div class="table-cell">
-            <div class="set-range">
+            <div class="set-range"><!---hidden-->
               <i class="fa fa-square-o -hidden" aria-hidden="true"
               v-if="isChecked === false"
               v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
@@ -35,6 +35,8 @@
               class="fa fa-arrow-circle-up" aria-hidden="true"
               v-on:click="scrollToBlock(selectionStart)"></i>
               </template>
+
+              <i :class="['select-chapter-button', '-hidden', {'no-margin': (selectionStart && selectionStart !== selectionEnd && (block._id == selectionStart || block._id == selectionEnd))}]" aria-hidden="true"></i>
             </div>
           </div><!--<div class="table-cell">-->
         </div>
@@ -5147,7 +5149,7 @@ Save text changes and realign the Block?`,
 
         .-hidden-hover {
           display: block;
-          height: 32px;
+          height: 26px;
         }
 
         &:hover {
@@ -5276,6 +5278,26 @@ Save text changes and realign the Block?`,
             margin: auto;
             .fa {
               font-size: 20px;
+            }
+          }
+
+          .select-chapter-button {
+            display: block;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            margin: 20px -5px 0px 2px;
+            opacity: 0.5;
+            background-image: url('/static/blocks_list/select-chapter.png');
+            background-size: cover; /* Controls scaling */
+            background-repeat: no-repeat;
+
+            &:hover {
+              opacity: 1;
+            }
+
+            &.no-margin {
+              margin-top: 0px;
             }
           }
 
