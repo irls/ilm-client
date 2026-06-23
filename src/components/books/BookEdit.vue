@@ -1343,9 +1343,12 @@ export default {
       });
     },
 
-    async setRangeSelection(block, type, status, shift = false) {
-      //console.log('setRangeSelection', block, type, status, shift);
+    async setRangeSelection(params) {
+      const {block, type, status, shift = false, headerType = 'par'} = params;
+      //console.log(`${__filename.slice(-30)}::this.parlist: `, this.parlist);
+      console.log('setRangeSelection', block, type, status, shift, headerType);
       let newSelection = Object.assign({}, this.blockSelection);
+      const _store = this.$store;
       switch (type) {
         case 'start':
           if (status) {
@@ -1391,13 +1394,13 @@ export default {
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid,this.$store);
+                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid, _store);
                   break;
                 case 1:// block below current selection checked
                   // this.selectionModalActive = true;
-                  this.$store.dispatch('setSelectionModalProgressWidth',0);
+                  _store.dispatch('setSelectionModalProgressWidth',0);
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId,this.$store);
+                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
                   break;
                 default:
                   break;
@@ -1405,7 +1408,7 @@ export default {
             } else {
               newSelection = this.parlistO.setChecked(block.rid);
             }
-            //console.log('newSelection', newSelection.start._id, newSelection.end._id);
+            console.log('newSelection', newSelection.start._id, newSelection.end._id);
             await this.setBlockSelection(newSelection);
           }
           else { // uncheck
@@ -1416,13 +1419,70 @@ export default {
             else this.setBlockSelection({start: {}, end: {}});
           }
 
-          let this_ = this;
           setTimeout(() => {
-            this_.$store.dispatch('setSelectionModalProgressWidth',100);
-            this_.$store.dispatch('selectionModalDisable');
-            },1000)
+            _store.dispatch('setSelectionModalProgressWidth',100);
+            _store.dispatch('selectionModalDisable');
+          }, 1000);
 
           break;
+        case 'byChapter':
+
+          const selectNextBlockByType = async (searchBlockTypes)=>{
+            let skip = true;
+            for (const [blockId, _blk] of this.parlist) {
+              if (skip) {
+                if (_blk._rid === block.rid) {
+                  skip = false;
+                }
+                continue;
+              }
+              const isTitleHeader = _blk?.type === 'title' && _blk?.classes?.style === '';
+              const headerLevel = _blk?.classes?.level;
+              if (isTitleHeader || searchBlockTypes.indexOf(headerLevel) > -1) {
+                const endRId = this.parlistO.get(_blk.blockid)?.in;
+                if (endRId) {
+                  return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+                }
+                break;
+              }
+            }
+            const endRId = this.parlistO.getLastRid();
+            return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+          };
+
+          switch(headerType) {
+            case 'title' : { // select all
+              const startRId = this.parlistO.getFirstRid();
+              const endRId   = this.parlistO.getLastRid();
+              newSelection = await this.parlistO.setCheckedAsync(startRId, endRId, _store);
+            } break;
+            case 'h1' : { // select section
+              const searchBlockTypes = ['h1'];
+              newSelection = await selectNextBlockByType(searchBlockTypes);
+            } break;
+            case 'h2' : { // select chapter
+              const searchBlockTypes = ['h1', 'h2'];
+              newSelection = await selectNextBlockByType(searchBlockTypes);
+            } break;
+            case 'h3' : { // select subchapter
+              const searchBlockTypes = ['h1', 'h2', 'h3'];
+              newSelection = await selectNextBlockByType(searchBlockTypes);
+            } break;
+            case 'h4' : { // select sub subchapter
+              const searchBlockTypes = ['h1', 'h2', 'h4', 'h5'];
+              newSelection = await selectNextBlockByType(searchBlockTypes);
+            } break;
+            default : {
+            } break;
+          };
+
+          await this.setBlockSelection(newSelection);
+          setTimeout(() => {
+            _store.dispatch('setSelectionModalProgressWidth',100);
+            _store.dispatch('selectionModalDisable');
+          }, 1000);
+
+        break;
       }
       //this.recountApprovedInRange();
     },

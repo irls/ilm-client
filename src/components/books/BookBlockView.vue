@@ -36,7 +36,11 @@
               v-on:click="scrollToBlock(selectionStart)"></i>
               </template>
 
-              <i :class="['select-chapter-button', '-hidden', {'no-margin': (selectionStart && selectionStart !== selectionEnd && (block._id == selectionStart || block._id == selectionEnd))}]" aria-hidden="true"></i>
+              <i v-if="selectChapterButtonEnable"  aria-hidden="true"
+                :class="['select-chapter-button', '-hidden', {'no-margin': selectChapterButtonNoMargin}]"
+                v-ilm-tooltip.right="{value: selectChapterButtonTooltip, classList: {tooltip: 'white-tooltip'}}"
+                v-on:click="setRangeSelection('byChapter', $event)">
+              </i>
             </div>
           </div><!--<div class="table-cell">-->
         </div>
@@ -1085,6 +1089,48 @@ Save or discard your changes to continue editing`,
         cache: true,
         get() {
           return JSON.stringify(this.block.wordsRange);
+        }
+      },
+      selectChapterButtonNoMargin: {
+        cache: true,
+        get() {
+          return (this.selectionStart && this.selectionStart !== this.selectionEnd && (this.block._id == this.selectionStart || this.block._id == this.selectionEnd));
+        }
+      },
+      selectChapterButtonEnable: {
+        cache: true,
+        get() {
+          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+          return this.block.type === 'header' || isTitleHeader;
+        }
+      },
+      selectChapterButtonTooltip: {
+        cache: true,
+        get() {
+          const headerLevel = this.block?.classes?.level;
+          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+
+          if (isTitleHeader) {
+            return 'Select all'
+          }
+
+          switch(headerLevel) {
+            case 'h1' : {
+              return 'Select section'
+            } break;
+            case 'h2' : {
+              return 'Select chapter'
+            } break;
+            case 'h3' : {
+              return 'Select subchapter'
+            } break;
+            case 'h4' : {
+              return 'Select sub subchapter'
+            } break;
+            default : {
+              return 'Select'
+            } break;
+          };
         }
       },
       ...mapGetters({
@@ -4103,7 +4149,13 @@ Save text changes and realign the Block?`,
           this.setRangeSelectionLock = true;
           setTimeout( () => {
             this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+            this.$emit('setRangeSelection', {
+              block: this.blockO,
+              type: type,
+              status: checked,
+              shift: shiftKey,
+              headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
+            });
           }, 500);
         }
         //this.blockO.checked = checked;

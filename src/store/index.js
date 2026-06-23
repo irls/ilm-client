@@ -3258,7 +3258,7 @@ export const store = new Vuex.Store({
     async setBlockSelection({state, commit, dispatch}, selection) {
       if (!_.isEqual(state.blockSelection, selection)) {
         this.selectionRecount = true;
-        await dispatch('set_block_selection',selection)
+        await dispatch('set_block_selection', selection)
         await dispatch('getAlignCount', selection);
         await dispatch('recountApprovedInRangeAsync', selection);
         this.selectionRecount = false;
