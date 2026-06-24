@@ -19,7 +19,7 @@
 
         <div class="table-row check-row">
           <div class="table-cell">
-            <div class="set-range">
+            <div class="set-range"><!---hidden-->
               <i class="fa fa-square-o -hidden" aria-hidden="true"
               v-if="isChecked === false"
               v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
@@ -35,6 +35,12 @@
               class="fa fa-arrow-circle-up" aria-hidden="true"
               v-on:click="scrollToBlock(selectionStart)"></i>
               </template>
+
+              <i v-if="selectChapterButtonEnable"  aria-hidden="true"
+                :class="['select-chapter-button', '-hidden', {'no-margin': selectChapterButtonNoMargin}]"
+                v-ilm-tooltip.right="{value: selectChapterButtonTooltip, classList: {tooltip: 'white-tooltip'}}"
+                v-on:click="setRangeSelection('byChapter', $event)">
+              </i>
             </div>
           </div><!--<div class="table-cell">-->
         </div>
@@ -1083,6 +1089,48 @@ Save or discard your changes to continue editing`,
         cache: true,
         get() {
           return JSON.stringify(this.block.wordsRange);
+        }
+      },
+      selectChapterButtonNoMargin: {
+        cache: true,
+        get() {
+          return (this.selectionStart && this.selectionStart !== this.selectionEnd && (this.block._id == this.selectionStart || this.block._id == this.selectionEnd));
+        }
+      },
+      selectChapterButtonEnable: {
+        cache: true,
+        get() {
+          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+          return this.block.type === 'header' || isTitleHeader;
+        }
+      },
+      selectChapterButtonTooltip: {
+        cache: true,
+        get() {
+          const headerLevel = this.block?.classes?.level;
+          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+
+          if (isTitleHeader) {
+            return 'Select all'
+          }
+
+          switch(headerLevel) {
+            case 'h1' : {
+              return 'Select section'
+            } break;
+            case 'h2' : {
+              return 'Select chapter'
+            } break;
+            case 'h3' : {
+              return 'Select subchapter'
+            } break;
+            case 'h4' : {
+              return 'Select sub subchapter'
+            } break;
+            default : {
+              return 'Select'
+            } break;
+          };
         }
       },
       ...mapGetters({
@@ -4101,7 +4149,13 @@ Save text changes and realign the Block?`,
           this.setRangeSelectionLock = true;
           setTimeout( () => {
             this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+            this.$emit('setRangeSelection', {
+              block: this.blockO,
+              type: type,
+              status: checked,
+              shift: shiftKey,
+              headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
+            });
           }, 500);
         }
         //this.blockO.checked = checked;
@@ -5147,7 +5201,7 @@ Save text changes and realign the Block?`,
 
         .-hidden-hover {
           display: block;
-          height: 32px;
+          height: 26px;
         }
 
         &:hover {
@@ -5276,6 +5330,26 @@ Save text changes and realign the Block?`,
             margin: auto;
             .fa {
               font-size: 20px;
+            }
+          }
+
+          .select-chapter-button {
+            display: block;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            margin: 20px -5px 0px 2px;
+            opacity: 0.5;
+            background-image: url('/static/blocks_list/select-chapter.png');
+            background-size: cover; /* Controls scaling */
+            background-repeat: no-repeat;
+
+            &:hover {
+              opacity: 1;
+            }
+
+            &.no-margin {
+              margin-top: 0px;
             }
           }
 

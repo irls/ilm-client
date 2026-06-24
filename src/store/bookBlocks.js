@@ -416,7 +416,7 @@ class BookBlocks {
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
 
-  setCheckedAsyncIterator(i,endIdx,resolveCb,$store ) {
+  setCheckedAsyncIterator(i,endIdx, resolveCb, $store ) {
     let iterationCount = 0;
     let iterationMax = 50;
     let max = endIdx+1;
@@ -431,7 +431,6 @@ class BookBlocks {
     //     iterationMax = parseInt(c.substring(nameEQ.length,c.length));
     //   }
     // }
-
 
     if (i <= endIdx ) {
       while (i <= endIdx && iterationCount<iterationMax ) {
@@ -450,17 +449,17 @@ class BookBlocks {
       $store.dispatch('setSelectionModalProgressWidth',width)
       //console.log(`setCheckedAsyncIterator ${i}`)
       let this_ = this;
-      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx,resolveCb,$store) },50);
+      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx, resolveCb, $store) },50);
     }else{
       resolveCb();
     }
 
   }
 
-  async setCheckedAsync(startRId, endRId = false,$store) {
+  async setCheckedAsync(startRId, endRId = false, $store) {
 
     // $store.dispatch('setSelectionModalProgressWidth')
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       let promises = []
       let result = {start: {}, end: {}};
       if (endRId && startRId !== endRId) {
@@ -468,15 +467,15 @@ class BookBlocks {
         let startIdx = this.listRIds.indexOf(startRId);
         let endIdx = this.listRIds.indexOf(endRId);
         if (startIdx < endIdx) {
-          promises.push(new Promise((resolve, reject) => {
-            this.setCheckedAsyncIterator(startIdx,endIdx, resolve, $store);
+          promises.push(new Promise((_resolve) => {
+            this.setCheckedAsyncIterator(startIdx,endIdx, _resolve, $store);
             result.start = { _id: this.lookupList[startRId].blockid };
             result.end = { _id: this.lookupList[endRId].blockid };
           }))
         }
 
         if (startIdx > endIdx) {
-          promises.push(new Promise((resolve, reject) => {
+          promises.push(new Promise((_resolve) => {
             let max = startIdx+1;
             for (var i=endIdx; i<=startIdx; i++) {
               let iRId = this.listRIds[i];
@@ -495,7 +494,7 @@ class BookBlocks {
             result.start = { _id: this.lookupList[endRId].blockid };
             result.end = { _id: this.lookupList[startRId].blockid };
 
-            resolve();
+            _resolve();
           }));
         }
       }
@@ -505,8 +504,8 @@ class BookBlocks {
         result.end = { _id: this.lookupList[startRId].blockid };
       }
 
-      return Promise.all(promises).then(function() {
-        resolve(result)
+      Promise.all(promises).then(()=>{
+        resolve(result);
       });
     })
   }
@@ -552,7 +551,7 @@ class BookBlocks {
     };
   }
 
-  getPrevIds(blockId, count) {
+  getPrevIds(blockId, count = 1) {
     //console.log('getPrevIds', blockId, count);
     let resultArr = [];
     if (!blockId || blockId === true) return resultArr;
@@ -578,7 +577,7 @@ class BookBlocks {
     return resultArr;
   }
 
-  getNextIds(blockId, count) {
+  getNextIds(blockId, count = 1) {
     //console.log('getNextIds', blockId, count);
     let resultArr = [];
     if (!blockId || blockId === true) return resultArr;
