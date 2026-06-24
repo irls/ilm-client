@@ -1450,6 +1450,8 @@ export default {
             return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
           };
 
+          this.parlistO.setUnCheckedRange();
+
           switch(headerType) {
             case 'title' : { // select all
               const startRId = this.parlistO.getFirstRid();
