@@ -53,7 +53,10 @@
             <div class="table-row-flex controls-top">
               <div :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
                 <!--<i class="fa fa-hashtag"></i>-->
-                <label ref="parnumRef" v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
+                <label ref="parnumRef" v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]" name="parnumRef">{{parnumComp}}</label>
+                <i v-if="noVoiceworkButtonEnable" aria-hidden="true"
+                  :class="['no-audio-button', '-hidden-hover']">
+                </i>
               </div>
               <div :class="['par-ctrl -hidden', {'-additional-info': editingLocked}]">
                 <div class="block-menu" v-if="mode !== 'narrate'">
@@ -209,10 +212,32 @@
                 <template v-else >
 
                 </template>
+
+                <template v-if="voiceworkButtonEnable">
+                  <div class="par-ctrl-divider"></div>
+                  <i v-show="!voiceworkUpdating" aria-hidden="true"
+                    v-ilm-tooltip.top="{value: 'Pending audio', classList: {tooltip: 'white-tooltip'}}"
+                    :class="['voicework-button']"
+                    v-on:click="updateVoicework('no_audio', 'single')">
+                  </i>
+                  <i v-show="voiceworkUpdating"
+                    class="fa fa-spinner fa-spin">
+                  </i>
+                </template>
+
+                <template v-if="noVoiceworkButtonEnable">
+                  <div class="par-ctrl-divider"></div>
+                  <i aria-hidden="true"
+                    v-ilm-tooltip.top="{value: 'No audio', classList: {tooltip: 'white-tooltip'}}"
+                    :class="['no-audio-button']">
+                  </i>
+                </template>
+
                 <template v-if="editingLocked && mode !== 'narrate'">
                   <div class="par-ctrl-divider"></div>
                   <label class="blocked-editing -hidden">{{editingLockedReason}}</label>
                 </template>
+
               </div>
               <!--<div class="par-ctrl -hidden">-->
                <!-- <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'">
@@ -1131,6 +1156,20 @@ Save or discard your changes to continue editing`,
               return 'Select'
             } break;
           };
+        }
+      },
+      voiceworkButtonEnable: {
+        cache: true,
+        get() {
+          const voiceworkTypes = ['tts', 'audio_file', 'narration'];
+          return voiceworkTypes.indexOf(this.block.voicework) > -1 && this.block.audiosrc.length == 0 && !this.block.audiosrc_ver?.m4a;
+        }
+      },
+      noVoiceworkButtonEnable: {
+        cache: true,
+        get() {
+          const voicedBlockTypes = ['par', 'header', 'title'];
+          return voicedBlockTypes.indexOf(this.block.type) > -1 && this.block.voicework == 'no_audio';
         }
       },
       ...mapGetters({
@@ -5610,7 +5649,7 @@ Save text changes and realign the Block?`,
       position: relative;
 
       .par-ctrl {
-        width: 480px;
+        max-width: 580px;
         /*background: green;*/
 
         display: flex;
@@ -5641,6 +5680,10 @@ Save text changes and realign the Block?`,
             &.hide-from {
               opacity: 0;
             }
+          }
+
+          .no-audio-button {
+            margin: 4px 0px 0px 8px;
           }
         }
 
@@ -5728,6 +5771,30 @@ Save text changes and realign the Block?`,
         &.-additional-info {
           width: 780px;
         }
+      }
+
+      .voicework-button {
+        display: block;
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        margin: 0px 0px 0px 0px;
+        opacity: 0.5;
+        background-image: url('/static/blocks_list/voicework-audio.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+
+      .no-audio-button {
+        display: block;
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        margin: 0px 0px 0px 0px;
+        opacity: 0.5;
+        background-image: url('/static/blocks_list/voicework-no-audio.png');
+        background-size: cover;
+        background-repeat: no-repeat;
       }
     }
 }
