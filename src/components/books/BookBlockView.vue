@@ -215,10 +215,13 @@
 
                 <template v-if="voiceworkButtonEnable">
                   <div class="par-ctrl-divider"></div>
-                  <i aria-hidden="true"
-                  v-ilm-tooltip.top="{value: 'Pending audio', classList: {tooltip: 'white-tooltip'}}"
-                  :class="['voicework-button']"
-                  v-on:click="">
+                  <i v-show="!voiceworkUpdating" aria-hidden="true"
+                    v-ilm-tooltip.top="{value: 'Pending audio', classList: {tooltip: 'white-tooltip'}}"
+                    :class="['voicework-button']"
+                    v-on:click="updateVoicework('no_audio', 'single')">
+                  </i>
+                  <i v-show="voiceworkUpdating"
+                    class="fa fa-spinner fa-spin">
                   </i>
                 </template>
 
