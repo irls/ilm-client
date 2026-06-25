@@ -1162,7 +1162,15 @@ Save or discard your changes to continue editing`,
         cache: true,
         get() {
           const voiceworkTypes = ['tts', 'audio_file', 'narration'];
-          return voiceworkTypes.indexOf(this.block.voicework) > -1 && this.block.audiosrc.length == 0 && !this.block.audiosrc_ver?.m4a;
+          if (voiceworkTypes.indexOf(this.block.voicework) > -1) {
+            if (this.block.parts.length) {
+              return this.block.parts.every((part)=>{
+                return part.audiosrc.length == 0 || !part.audiosrc_ver?.m4a;
+              });
+            }
+            return this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a;
+          }
+          return false;
         }
       },
       noVoiceworkButtonEnable: {
