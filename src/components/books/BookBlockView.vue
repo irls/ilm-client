@@ -191,7 +191,7 @@
                       </select>
                     </label>
                   </template>
-                  <template v-if="block.voicework === 'tts'">
+                  <template v-if="block.voicework === 'tts' && block.audiosrc.length">
                     <div class="par-ctrl-divider"></div>
                     <i class="fa fa-volume-up" :title="ttsAudioQualityTitle"></i>
                   </template>
@@ -215,8 +215,9 @@
 
                 <template v-if="voiceworkButtonEnable">
                   <div class="par-ctrl-divider"></div>
+                  <!--v-ilm-tooltip.top="{value: 'Pending audio', classList: {tooltip: 'white-tooltip'}}"-->
                   <i v-show="!voiceworkUpdating" aria-hidden="true"
-                    v-ilm-tooltip.top="{value: 'Pending audio', classList: {tooltip: 'white-tooltip'}}"
+                    title="Pending audio"
                     :class="['voicework-button']"
                     v-on:click="updateVoicework('no_audio', 'single')">
                   </i>
@@ -1165,7 +1166,7 @@ Save or discard your changes to continue editing`,
           if (voiceworkTypes.indexOf(this.block.voicework) > -1) {
             if (this.block.parts.length) {
               return this.block.parts.every((part)=>{
-                return part.audiosrc.length == 0 || !part.audiosrc_ver?.m4a;
+                return part?.audiosrc?.length == 0 || !part?.audiosrc_ver?.m4a;
               });
             }
             return this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a;
