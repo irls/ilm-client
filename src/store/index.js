@@ -4955,11 +4955,10 @@ export const store = new Vuex.Store({
     discardAudioChanges({state}) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let queueBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit`;
-      if (queueBlock.partIdx !== null) {
-        api_url+= '/part/' + queueBlock.partIdx;
-      }
-      return axios.delete(api_url, {}, {})
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit_discard`;
+      return axios.post(api_url, {
+        dir: state.audioTasksQueue.dir
+      }, {})
         .then(response => {
           if (response.status == 200 && response.data) {
             let part = queueBlock.partIdx !== null ? response.data.parts[queueBlock.partIdx] : response.data;
