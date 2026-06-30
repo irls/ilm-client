@@ -22,7 +22,6 @@ class LookupBlock {
 class BookBlocks {
   constructor(init) {
     this.lookupList = {};
-    this.blocksList = {};
 
     this.listIds = [];
     this.listIdsCache = {rid: false, list: []};
@@ -216,7 +215,6 @@ class BookBlocks {
   cleanLookupsList(bookId) {
     if (bookId !== this.meta.bookid) {
       this.lookupList = {};
-      this.blocksList = {};
       this.listIds = [];
       this.listRIds = [];
       return true;
@@ -227,7 +225,6 @@ class BookBlocks {
   setLookupsList(bookId, bookList) {
     //console.log('setLookupsList', bookList);
     this.lookupList = {};
-    this.blocksList = {};
     this.listIds = [];
     this.listRIds = [];
     this.listObjs = [];
@@ -243,7 +240,6 @@ class BookBlocks {
             visible: false, blockView: {}
           });
           this.lookupList[block.rid] = new LookupBlock(block);
-          //this.blocksList[block.blockid] = new BookBlock(block);
         })
         this.setStartId(bookList.blocks[0].rid)
       }
@@ -261,7 +257,6 @@ class BookBlocks {
           visible: false, blockView: {}
         });
         this.lookupList[block.rid] = new LookupBlock(block);
-        //this.blocksList[block.blockid] = new BookBlock(block);
       }
     })
   }
@@ -285,7 +280,6 @@ class BookBlocks {
       });
       if (!this.lookupList[block.rid]) {
         this.lookupList[block.rid] = new LookupBlock(block);
-        //this.blocksList[block.blockid] = new BookBlock(block);
       }
     })
     this.listIds = listIds;
@@ -416,111 +410,18 @@ class BookBlocks {
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
 
-  setCheckedAsyncIterator(i,endIdx, resolveCb, $store ) {
-    let iterationCount = 0;
-    let iterationMax = 50;
-    let max = endIdx+1;
-
-    // let name = 'SelectionModalProgressIterations';
-    // let nameEQ = name + "=";
-    // let ca = document.cookie.split(';');
-    // for(let i=0;i < ca.length;i++) {
-    //   let c = ca[i];
-    //   while (c.charAt(0)==' ') c = c.substring(1,c.length);
-    //   if (c.indexOf(nameEQ) == 0) {
-    //     iterationMax = parseInt(c.substring(nameEQ.length,c.length));
-    //   }
-    // }
-
-    if (i <= endIdx ) {
-      while (i <= endIdx && iterationCount<iterationMax ) {
-        if(i==10){
-          $store.dispatch('selectionModalDisableShow')
-        }
-        let iRId = this.listRIds[i];
-        if (this.lookupList.hasOwnProperty(iRId)) {
-          this.lookupList[iRId].checked = true;
-        }
-        i++;
-        iterationCount++;
-      }
-      let width = Math.ceil(i/(max/100));
-      width = 0+25*(width/100);
-      $store.dispatch('setSelectionModalProgressWidth',width)
-      //console.log(`setCheckedAsyncIterator ${i}`)
-      let this_ = this;
-      setTimeout( function() { this_.setCheckedAsyncIterator(i, endIdx, resolveCb, $store) },50);
-    }else{
-      resolveCb();
-    }
-
-  }
-
-  async setCheckedAsync(startRId, endRId = false, $store) {
-
-    // $store.dispatch('setSelectionModalProgressWidth')
-    return new Promise((resolve) => {
-      let promises = []
-      let result = {start: {}, end: {}};
-      if (endRId && startRId !== endRId) {
-
-        let startIdx = this.listRIds.indexOf(startRId);
-        let endIdx = this.listRIds.indexOf(endRId);
-        if (startIdx < endIdx) {
-          promises.push(new Promise((_resolve) => {
-            this.setCheckedAsyncIterator(startIdx,endIdx, _resolve, $store);
-            result.start = { _id: this.lookupList[startRId].blockid };
-            result.end = { _id: this.lookupList[endRId].blockid };
-          }))
-        }
-
-        if (startIdx > endIdx) {
-          promises.push(new Promise((_resolve) => {
-            let max = startIdx+1;
-            for (var i=endIdx; i<=startIdx; i++) {
-              let iRId = this.listRIds[i];
-              if (this.lookupList.hasOwnProperty(iRId)) {
-                this.lookupList[iRId].checked = true;
-              }
-              if(i==10){
-                $store.dispatch('selectionModalDisableShow')
-              }
-
-              let width = Math.round(i/(max/100));
-
-              $store.dispatch('setSelectionModalProgressWidth',width)
-              console.log(`setCheckedAsync inner iteratoin ${i}`)
-            }
-            result.start = { _id: this.lookupList[endRId].blockid };
-            result.end = { _id: this.lookupList[startRId].blockid };
-
-            _resolve();
-          }));
-        }
-      }
-      else if (this.lookupList.hasOwnProperty(startRId)) {
-        this.lookupList[startRId].checked = true;
-        result.start = { _id: this.lookupList[startRId].blockid };
-        result.end = { _id: this.lookupList[startRId].blockid };
-      }
-
-      Promise.all(promises).then(()=>{
-        resolve(result);
-      });
-    })
-  }
-
-  setChecked(startRId, endRId = false) {
-    let result = {start: {}, end: {}};
+  setChecked(startRId, endRId = false, nextTick = null) {
+    let result = {start: {}, end: {}, blocksIds: [], count: 0};
     if (endRId && startRId !== endRId) {
       let startIdx = this.listRIds.indexOf(startRId);
       let endIdx = this.listRIds.indexOf(endRId);
       if (startIdx < endIdx) {
         for (var i=startIdx; i<=endIdx; i++) {
-          console.log();
           let iRId = this.listRIds[i];
           if (this.lookupList.hasOwnProperty(iRId)) {
             this.lookupList[iRId].checked = true;
+            result.blocksIds.push(this.lookupList[iRId].blockid);
+            result.count++;
           }
         }
         result.start = { _id: this.lookupList[startRId].blockid };
@@ -531,6 +432,8 @@ class BookBlocks {
           let iRId = this.listRIds[i];
           if (this.lookupList.hasOwnProperty(iRId)) {
             this.lookupList[iRId].checked = true;
+            result.blocksIds.push(this.lookupList[iRId].blockid);
+            result.count++;
           }
         }
         result.start = { _id: this.lookupList[endRId].blockid };
@@ -539,9 +442,12 @@ class BookBlocks {
     }
     else if (this.lookupList.hasOwnProperty(startRId)) {
       this.lookupList[startRId].checked = true;
+      result.count++;
+      result.blocksIds.push(this.lookupList[startRId].blockid);
       result.start = { _id: this.lookupList[startRId].blockid };
       result.end = { _id: this.lookupList[startRId].blockid };
     }
+    console.log(`${__filename.slice(-30)}:setChecked:result: `, result);
     return result;
   }
 

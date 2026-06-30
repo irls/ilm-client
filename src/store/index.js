@@ -1345,35 +1345,6 @@ export const store = new Vuex.Store({
       state.storeListO.startId = state.storeListO.listIds[0] || false;
     },
 
-    // async set_block_selection({ state, commit, dispatch },selection) {
-    //   console.log('set_block_selection:start')
-    //
-    //   state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
-    //   state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
-    //   const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
-    //
-    //   if (state.blockSelection.start._id) {
-    //     let _id_short = blockIdRgx.exec(state.blockSelection.start._id);
-    //     _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : state.blockSelection.start._id;
-    //     if (_id_short.length > 7) {
-    //       _id_short = _id_short.substr(0, 4) + '...' + _id_short.substr(_id_short.length - 4, 4);
-    //     }
-    //     state.blockSelection.start._id_short = _id_short;
-    //   }
-    //   if (state.blockSelection.end._id) {
-    //     let _id_short = blockIdRgx.exec(state.blockSelection.end._id);
-    //     _id_short = (_id_short && _id_short.length == 2) ? _id_short[1] : state.blockSelection.end._id;
-    //     if (_id_short.length > 7) {
-    //       _id_short = _id_short.substr(0, 4) + '...' + _id_short.substr(_id_short.length - 4, 4);
-    //     }
-    //     state.blockSelection.end._id_short = _id_short;
-    //   }
-    //   console.log('set_block_selection:end')
-    //
-    //   await dispatch('set_selected_blocks');
-    //   // resolve();
-    // },
-
     set_align_counter(state, counter) {
       state.alignCounter.count = typeof counter.count !== 'undefined' ? counter.count : 0;
       state.alignCounter.countTTS = typeof counter.countTTS !== 'undefined' ? counter.countTTS : 0;
@@ -1417,34 +1388,6 @@ export const store = new Vuex.Store({
     set_couplet_separator(state, val) {
       state.coupletSeparator = val;
     },
-    // async set_selected_blocks(context) {
-    //   debugger
-    //   if(context.storeList.size>5){
-    //     return await context.dispatch('set_selected_blocksAsync');
-    //
-    //      // state.set_selected_blocksAsync(state);
-    //   }
-    //   let blockList = [];
-    //   if (context.blockSelection.start && context.blockSelection.start._id && context.blockSelection.end && context.blockSelection.end._id) {
-    //     let crossId = context.blockSelection.start._id;
-    //     for (let idx = 0; idx < context.storeList.size; idx++) {
-    //       let block = context.storeList.get(crossId);
-    //       if (block) {
-    //         blockList.push(block);
-    //
-    //         if (block.blockid == context.blockSelection.end._id) {
-    //           break;
-    //         }
-    //         crossId = ccontext.storeListO.getOutId(block.blockid);
-    //         if (!crossId) {
-    //           break;
-    //         }
-    //       } else break;
-    //     }
-    //   }
-    //   context.selectedBlocks = blockList;
-    // },
-
     set_currentbook_executors(state) {
       if (state.currentBookMeta && state.currentBookMeta._id) {
         if (!state.currentBookMeta.executors) {
@@ -1552,7 +1495,7 @@ export const store = new Vuex.Store({
       state.SelectionModalProgress = value>=100?100:value;
     },
 
-    async set_block_selection({ state, commit, dispatch },selection) {
+    set_block_selection({ state, commit, dispatch }, selection) {
 
       state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
       state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
@@ -1575,91 +1518,38 @@ export const store = new Vuex.Store({
         state.blockSelection.end._id_short = _id_short;
       }
 
-      await dispatch('set_selected_blocks');
-      // resolve();
+      console.log(`${__filename.slice(-30)}::blockIdRgx: `);
+      /*return *///dispatch('set_selected_blocks', selection);
+      return;
     },
-    set_selected_blocksAsyncIteration({commit, state, dispatch},payload) {
-      let idx = payload.idx;
-      let size = payload.size;
-      let crossId = payload.crossId;
-      let resolve = payload.resolve;
-      let iterationCount = 0;
-      let iterationMax = 50;
-      let status = 'ok';
 
-      // let name = 'SelectionModalProgressIterations';
-      // let nameEQ = name + "=";
-      // let ca = document.cookie.split(';');
-      // for(let i=0;i < ca.length;i++) {
-      //   let c = ca[i];
-      //   while (c.charAt(0)==' ') c = c.substring(1,c.length);
-      //   if (c.indexOf(nameEQ) == 0) {
-      //     iterationMax = parseInt(c.substring(nameEQ.length,c.length));
-      //   }
-      // }
+    set_selected_blocks({ state, commit, dispatch }, selection = {}) {
 
-      while (iterationCount<iterationMax && idx<=size && status == 'ok'){
-
-
-        let block = state.storeList.get(crossId);
-        if (block) {
-          state.setSelectedBlocksAsyncResult.push(block);
-
-          if (block.blockid == state.blockSelection.end._id) {
-            status = 'break';
-          }
-          crossId = state.storeListO.getOutId(block.blockid);
-          if (!crossId) {
-            status = 'break';
-          }
+      if (selection?.blockIds?.length) {
+        state.selectedBlocks = selection.blockIds.map((blockId)=>{
+          return state.storeList.get(blockId);
+        })
+      }
+      else if (state.blockSelection?.start?._id && state.blockSelection?.end?._id) {
+        //crossId = state.storeListO.getOutId(block.blockid);
+        const startId = state.blockSelection.start._id;
+        let blockIds = [startId];
+        let endId = startId;
+        while (endId !== state.blockSelection.end._id) {
+          endId = state.storeListO.getOutId(endId);
+          blockIds.push(endId);
         }
-        else{
-          status = 'break';
-        }
-        iterationCount++;
-        idx++;
+        state.selectedBlocks = blockIds.map((blockId)=>{
+          return state.storeList.get(blockId);
+        });
       }
-
-      let width = Math.ceil(idx/(size/100));
-      width = (34*1)+34*(width/100);
-
-      dispatch('setSelectionModalProgressWidth',width)
-      //console.log(`set_selected_blocksAsyncIteration ${idx}`)
-
-      if(idx<=size && status == 'ok'){
-        setTimeout( function() {
-          dispatch('set_selected_blocksAsyncIteration',{idx, size,crossId,resolve}) },50);
-      }else{
-        resolve();
+      else {
+        state.selectedBlocks = [];
       }
+      console.log(`${__filename.slice(-30)}::state.selectedBlocks: `, state.selectedBlocks.length);
+      return;
     },
 
-
-    async set_selected_blocksAsync({commit, state, dispatch}) {
-
-      state.setSelectedBlocksAsyncResult = [];
-      // dispatch('setSelectionModalProgressWidth')
-
-      let promises = [];
-
-      if (state.blockSelection.start && state.blockSelection.start._id && state.blockSelection.end && state.blockSelection.end._id) {
-        let crossId = state.blockSelection.start._id;
-        promises.push(new Promise((resolve, reject) => {
-          let size = state.storeList.size;
-          let idx = 0;
-          dispatch('set_selected_blocksAsyncIteration',{idx,size, crossId,resolve})
-        }))
-      }
-      return Promise.all(promises).then(function() {
-        state.selectedBlocks = state.setSelectedBlocksAsyncResult;
-      });
-
-
-    },
-
-    async set_selected_blocks({ state, commit, dispatch }) {
-      return await dispatch('set_selected_blocksAsync');
-    },
     setAudioRenamingStatus({ state, commit, dispatch },status) {
       commit('SET_AUDIO_RENAMING',status);
     },
@@ -3256,12 +3146,13 @@ export const store = new Vuex.Store({
     },
 
     async setBlockSelection({state, commit, dispatch}, selection) {
+      console.log(`${__filename.slice(-30)}::setBlockSelection: `);
       if (!_.isEqual(state.blockSelection, selection)) {
-        this.selectionRecount = true;
-        await dispatch('set_block_selection', selection)
-        await dispatch('getAlignCount', selection);
-        await dispatch('recountApprovedInRangeAsync', selection);
-        this.selectionRecount = false;
+        //this.selectionRecount = true;
+        //dispatch('set_block_selection', selection);
+        //await dispatch('getAlignCount', selection);
+        //await dispatch('recountApprovedInRangeAsync', selection);
+        //this.selectionRecount = false;
       }
     },
 

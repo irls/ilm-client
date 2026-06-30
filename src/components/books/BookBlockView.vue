@@ -1444,7 +1444,7 @@ Save or discard your changes to continue editing`,
   },
   mounted: function() {
       //this.initEditor();
-      //console.log('mounted', this.block._id);
+      console.log('mounted', this.block._id);
       this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
 
       if (this.block.footnotes && this.block.footnotes.length) {
@@ -4186,7 +4186,7 @@ Save text changes and realign the Block?`,
 
           let checked;
           if (ev === true || ev === false) checked = ev;
-          else checked = ev.target && ev.target.checked;
+          else checked = (ev.target && ev.target.checked) || false;
 
           let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
           if (ev.shiftKey) {
@@ -4194,17 +4194,17 @@ Save text changes and realign the Block?`,
               document.getSelection().removeAllRanges();
             }
           }
-          this.setRangeSelectionLock = true;
-          setTimeout( () => {
-            this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', {
-              block: this.blockO,
-              type: type,
-              status: checked,
-              shift: shiftKey,
-              headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
-            });
-          }, 500);
+          //this.setRangeSelectionLock = true;
+          this.$emit('setRangeSelection', {
+            block: this.blockO,
+            type: type,
+            status: checked,
+            shift: shiftKey,
+            headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
+          });
+          // setTimeout( () => {
+          //   this.setRangeSelectionLock = false;
+          // }, 500);
         }
         //this.blockO.checked = checked;
       },

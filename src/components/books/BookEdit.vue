@@ -282,7 +282,7 @@ export default {
 //           }
         }
       },
-      parlistArray: { cache: false,
+      parlistArray: { /*cache: false,*/
         get: function () {
           let idsArray = this.$store.state.storeListUpdateCounter && this.$store.state.storeListO.idsArray();
           idsArray = Array.isArray(idsArray) ? idsArray : [];
@@ -884,7 +884,6 @@ export default {
         newBlock: newBlock
       })
         .then((response)=>{
-          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
 
@@ -926,7 +925,6 @@ export default {
         newBlock: newBlock
       })
         .then((response)=>{
-          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
 
@@ -985,7 +983,6 @@ export default {
       this.freeze('deleteBlock');
       this.removeBlock(block)
       .then((response)=>{
-        //this.setBlockSelection({start: {}, end: {}});
         this.getDisabledBlocks();
         if (response.data) {
 
@@ -1345,12 +1342,11 @@ export default {
 
     async setRangeSelection(params) {
       const {block, type, status, shift = false, headerType = 'par'} = params;
-      //console.log(`${__filename.slice(-30)}::this.parlist: `, this.parlist);
-      console.log('setRangeSelection', block, type, status, shift, headerType);
+      console.log('setRangeSelection', block.type, type, status, shift, headerType);
       let newSelection = Object.assign({}, this.blockSelection);
       const _store = this.$store;
       switch (type) {
-        case 'start':
+        case 'start': {
           if (status) {
             if (!this.selectionEnd || !this.selectionEnd._id || this.selectionEnd.index >= block.index) {
               this.selectionStart = block;
@@ -1367,7 +1363,8 @@ export default {
             this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
           }
           break;
-        case 'end':
+        }
+        case 'end': {
           if (status) {
             if (!this.selectionStart || !this.selectionStart._id || this.selectionStart.index <= block.index) {
                 this.selectionEnd = block;
@@ -1384,50 +1381,50 @@ export default {
               this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
             }
           break;
-        case 'byOne':
-          //console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
-
+        }
+        case 'byOne': {
+          console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
           let blockSel = {_id: block.blockid};
           this.parlistO.setUnCheckedRange();
+
           if (status) { // check
             if (shift && this.blockSelection.start._id) {
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid, _store);
+                  newSelection = this.parlistO.setChecked(startRId, block.rid, Vue.nextTick);
                   break;
                 case 1:// block below current selection checked
-                  // this.selectionModalActive = true;
-                  _store.dispatch('setSelectionModalProgressWidth',0);
+                  //_store.dispatch('setSelectionModalProgressWidth',0);
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+                  newSelection = this.parlistO.setChecked(block.rid, endRId, Vue.nextTick);
                   break;
                 default:
                   break;
               }
             } else {
-              newSelection = this.parlistO.setChecked(block.rid);
+              newSelection = this.parlistO.setChecked(block.rid, false, Vue.nextTick);
             }
-            console.log('newSelection', newSelection.start._id, newSelection.end._id);
+            //console.log('newSelection', newSelection.start._id, newSelection.end._id);
             await this.setBlockSelection(newSelection);
           }
           else { // uncheck
             if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
               newSelection = this.parlistO.setChecked(block.rid);
-              this.setBlockSelection(newSelection);
+              await this.setBlockSelection(newSelection);
             }
-            else this.setBlockSelection({start: {}, end: {}});
+            else await this.setBlockSelection({start: {}, end: {}});
           }
 
-          setTimeout(() => {
-            _store.dispatch('setSelectionModalProgressWidth',100);
-            _store.dispatch('selectionModalDisable');
-          }, 1000);
+          // setTimeout(() => {
+          //   _store.dispatch('setSelectionModalProgressWidth',100);
+          //   _store.dispatch('selectionModalDisable');
+          // }, 1000);
 
           break;
-        case 'byChapter':
-
-          const selectNextBlockByType = async (searchBlockTypes)=>{
+        }
+        case 'byChapter': {
+          const setCheckedUntilNextBlockByType = (searchBlockTypes)=>{
             let skip = true;
             for (const [blockId, _blk] of this.parlist) {
               if (skip) {
@@ -1441,13 +1438,13 @@ export default {
               if (isTitleHeader || searchBlockTypes.indexOf(headerLevel) > -1) {
                 const endRId = this.parlistO.get(_blk.blockid)?.in;
                 if (endRId) {
-                  return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+                  return this.parlistO.setChecked(block.rid, endRId);
                 }
                 break;
               }
             }
             const endRId = this.parlistO.getLastRid();
-            return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+            return this.parlistO.setChecked(block.rid, endRId);
           };
 
           this.parlistO.setUnCheckedRange();
@@ -1456,23 +1453,23 @@ export default {
             case 'title' : { // select all
               const startRId = this.parlistO.getFirstRid();
               const endRId   = this.parlistO.getLastRid();
-              newSelection = await this.parlistO.setCheckedAsync(startRId, endRId, _store);
+              newSelection = this.parlistO.setChecked(startRId, endRId);
             } break;
             case 'h1' : { // select section
               const searchBlockTypes = ['h1'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             case 'h2' : { // select chapter
               const searchBlockTypes = ['h1', 'h2'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             case 'h3' : { // select subchapter
               const searchBlockTypes = ['h1', 'h2', 'h3'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             case 'h4' : { // select sub subchapter
               const searchBlockTypes = ['h1', 'h2', 'h4', 'h5'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             default : {
             } break;
@@ -1480,11 +1477,12 @@ export default {
 
           await this.setBlockSelection(newSelection);
           setTimeout(() => {
-            _store.dispatch('setSelectionModalProgressWidth',100);
+            _store.dispatch('setSelectionModalProgressWidth', 100);
             _store.dispatch('selectionModalDisable');
-          }, 1000);
+          }, 500);
 
         break;
+        }
       }
       //this.recountApprovedInRange();
     },
@@ -1701,7 +1699,7 @@ export default {
       })
     },
 
-    bookReimported() {
+    async bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
       this.startId = false;

@@ -1,29 +1,6 @@
 <template>
 
 {#if blocks.length > 0}
-<!--  {#each blocks as block, bIdx (block._id)}
-    <BlockPreview
-      blockRid="{block._rid}"
-      block="{blockView(block)}"
-      lang="{lang}"
-      mode="{mode}"
-      isCompleted="{isCompleted(block)}"
-    />
-  {/each}-->
-<!--<VirtualList items={blocks} let:item
-  bind:start={startBlockIdx} bind:end={endBlockIdx}
-  bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-  bind:startReached={startReached} bind:endReached={endReached} >
-  <div class='card'>
-    <BlockPreview
-      blockRid="{item._rid}"
-      block="{blockView(item)}"
-      lang="{lang}"
-      mode="{mode}"
-      isCompleted="{isCompleted(item)}"
-    />
-  </div>
-</VirtualList>-->
 
     <VirtualScroll bind:this={virtualList} data={blocks}
       key="_id" let:data on:scroll="{onVScroll}" >
