@@ -80,8 +80,8 @@ export default {
     },
 
     massDelete({state, rootState, dispatch, commit}) {
-      let blockids = rootState.selectedBlocks.reduce((acc, block) => {
-        acc.push(block.blockid);
+      let blockids = rootState.selectedBlocks.reduce((acc, blockId) => {
+        acc.push(blockId);
         return acc;
       }, []);
       return axios.post(`${rootState.API_URL}books/${rootState.currentBookid}/mass_delete`, {
@@ -95,8 +95,8 @@ export default {
 
     massJoin({state, rootState, dispatch}, [selected_ids = [], line_breaks = false]) {
       if (!selected_ids || !selected_ids.length) {
-        selected_ids = rootState.selectedBlocks.reduce((acc, block) => {
-          acc.push(block.blockid);
+        selected_ids = rootState.selectedBlocks.reduce((acc, blockId) => {
+          acc.push(blockId);
           return acc;
         }, []);
       }

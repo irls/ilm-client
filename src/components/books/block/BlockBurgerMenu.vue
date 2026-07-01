@@ -77,7 +77,7 @@
       },
       selectedBlocksCount: {
         get() {
-          return this.selectedBlocksData.length;
+          return this.selectedBlocks.length;
         },
         cache: false
       },
@@ -93,7 +93,8 @@
             return false;
           }
           if (this.selectedBlocksCount > 2) {
-            let voiced = this.selectedBlocksData.find(block => {
+            let voiced = this.selectedBlocks.find(blockId => {
+              const block = this.storeList.get(blockId);
               return block.audiosrc && block.audiosrc.length > 0;
             });
             if (voiced) {
@@ -106,8 +107,8 @@
       },
       hasLockInSelection: {
         get() {
-          let locked = this.selectedBlocksData.find(blk => {
-            return this.isBlockLocked(blk.blockid);
+          let locked = this.selectedBlocks.find(blockId => {
+            return this.isBlockLocked(blockId);
           });
           return locked ? true : false;
         },
@@ -115,13 +116,14 @@
       },
       isShowArchivedFlags: {
         get() {
-          return this.selectedBlocksData.find(block => {
+          return this.selectedBlocks.find(blockId => {
+            const block = this.storeList.get(blockId);
             return block.isHideArchFlags;
           }) ? true : false;
         },
         cache: false
       },
-      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta']),
+      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocks', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta']),
       ...mapGetters('blocksModule', ['massSetLanguageProcess'])
     },
     mounted() {
@@ -243,16 +245,19 @@
       },
       toggleArchFlags() {
         if (!this.isShowArchivedFlags) {
-          this.selectedBlocksData.filter(block => {
+          this.selectedBlocks.filter(blockId => {
+            const block = this.storeList.get(blockId);
             return !block.isHideArchFlags;
-          }).forEach(block => {
-            console.log(block.isHideArchFlags);
+          }).forEach(blockId => {
+            const block = this.storeList.get(blockId);
             block.set_isHideArchFlags(true);
           });
         } else {
-          this.selectedBlocksData.filter(block => {
+          this.selectedBlocks.filter(blockId => {
+            const block = this.storeList.get(blockId);
             return block.isHideArchFlags;
-          }).forEach(block => {
+          }).forEach(blockId => {
+            const block = this.storeList.get(blockId);
             block.set_isHideArchFlags(false);
           });
         }
@@ -277,8 +282,8 @@
       checkAudioEditing() {
         let editingBlock = this.audioTasksQueueBlock();
         if (editingBlock && editingBlock.blockid) {
-          let block = this.selectedBlocksData.find(blk => {
-            return blk.blockid === editingBlock.blockid;
+          let block = this.selectedBlocks.find(blockId => {
+            return blockId === editingBlock.blockid;
           });
           if (block) {
             this.$root.$emit('for-audioeditor:force-close');

@@ -660,16 +660,15 @@ export const store = new Vuex.Store({
         case 'edit':
         case 'proofread':
           return state.selectedBlocks;
-          break;
         case 'narrate':
           let filteredSelectedBlocks = [];
-          state.selectedBlocks.forEach(block => {
+          state.selectedBlocks.forEach(blockId => {
+            const block = state.storeList.get(blockId);
             if (block.allowNarrate(state.bookMode)) {
-              filteredSelectedBlocks.push(block);
+              filteredSelectedBlocks.push(blockId);
             }
           });
           return filteredSelectedBlocks;
-          break;
       }
       return [];
     },
@@ -731,23 +730,6 @@ export const store = new Vuex.Store({
       }) : null;
       return categories && categories.categories.includes(checkItem.category);
     },
-    selectedBlocksData: state => {
-      let data = [];
-      if (state.blockSelection.start._id && state.blockSelection.end._id) {
-        let crossId = state.blockSelection.start._id;
-        for (let idx = 0; idx < state.storeList.size; idx++) {
-          let block = state.storeList.get(crossId);
-          if (block) {
-            data.push(block);
-            if (block._id === state.blockSelection.end._id) {
-              break;
-            }
-            crossId = state.storeListO.getOutId(block.blockid);
-          } else break;
-        }
-      }
-      return data;
-    },
     modifiedBlockids: state => {
       return state.modifiedBlockids;
     },
@@ -777,8 +759,8 @@ export const store = new Vuex.Store({
       return state.blockSelection.start._id && state.blockSelection.end._id && state.blockSelection.start._id !== state.blockSelection.end._id;
     },
     isBlockSelected: (state, getters) => (blockid) => {
-      return getters.selectedBlocksData.find(block => {
-        return block.blockid === blockid;
+      return getters.selectedBlocks.find(blockId => {
+        return blockId.blockid === blockid;
       }) ? true : false;
     }
   },
@@ -1155,6 +1137,7 @@ export const store = new Vuex.Store({
     },
 
     SET_CURRENTBOOK_COUNTER(state, counter) {
+      //console.log(`${__filename.slice(-30)}:counter.name:counter.value: `, counter.name, counter.value);
       state.currentBookCounters[counter.name] = counter.value;
     },
 
@@ -1518,35 +1501,26 @@ export const store = new Vuex.Store({
         state.blockSelection.end._id_short = _id_short;
       }
 
-      console.log(`${__filename.slice(-30)}::blockIdRgx: `);
-      /*return *///dispatch('set_selected_blocks', selection);
+      dispatch('set_selected_blocks', selection);
       return;
     },
 
     set_selected_blocks({ state, commit, dispatch }, selection = {}) {
 
-      if (selection?.blockIds?.length) {
-        state.selectedBlocks = selection.blockIds.map((blockId)=>{
-          return state.storeList.get(blockId);
-        })
+      state.selectedBlocks = [];
+      if (selection?.blocksIds?.length) {
+        state.selectedBlocks = selection.blocksIds;
       }
       else if (state.blockSelection?.start?._id && state.blockSelection?.end?._id) {
-        //crossId = state.storeListO.getOutId(block.blockid);
         const startId = state.blockSelection.start._id;
-        let blockIds = [startId];
+        let blocksIds = [startId];
         let endId = startId;
         while (endId !== state.blockSelection.end._id) {
           endId = state.storeListO.getOutId(endId);
-          blockIds.push(endId);
+          blocksIds.push(endId);
         }
-        state.selectedBlocks = blockIds.map((blockId)=>{
-          return state.storeList.get(blockId);
-        });
+        state.selectedBlocks = blocksIds;
       }
-      else {
-        state.selectedBlocks = [];
-      }
-      console.log(`${__filename.slice(-30)}::state.selectedBlocks: `, state.selectedBlocks.length);
       return;
     },
 
@@ -3146,13 +3120,12 @@ export const store = new Vuex.Store({
     },
 
     async setBlockSelection({state, commit, dispatch}, selection) {
-      console.log(`${__filename.slice(-30)}::setBlockSelection: `);
       if (!_.isEqual(state.blockSelection, selection)) {
-        //this.selectionRecount = true;
-        //dispatch('set_block_selection', selection);
-        //await dispatch('getAlignCount', selection);
-        //await dispatch('recountApprovedInRangeAsync', selection);
-        //this.selectionRecount = false;
+        state.selectionRecount = true;
+        dispatch('set_block_selection', selection);
+        await dispatch('getAlignCount', selection);
+        dispatch('recountApprovedInRange', selection);
+        state.selectionRecount = false;
       }
     },
 
@@ -3218,160 +3191,6 @@ export const store = new Vuex.Store({
       }
     },
 
-    async recountApprovedInRangeAsyncIteration({state, commit,dispatch}, {crossId,idx,size,d,selection,resolve,bar} ) {
-
-      let iterationCount = 0;
-      let iterationMax = 50;
-      let status = 'ok';
-
-
-      // let name = 'SelectionModalProgressIterations';
-      // let nameEQ = name + "=";
-      // let ca = document.cookie.split(';');
-      // for(let i=0;i < ca.length;i++) {
-      //   let c = ca[i];
-      //   while (c.charAt(0)==' ') c = c.substring(1,c.length);
-      //   if (c.indexOf(nameEQ) == 0) {
-      //     iterationMax = parseInt(c.substring(nameEQ.length,c.length));
-      //   }
-      // }
-
-      if(!bar)
-        bar = $('.progress .progress-bar');
-
-      while (idx<=size && status == 'ok' && iterationCount<iterationMax){
-
-        let block = state.storeList.get(crossId);
-        if (block) {
-
-          if (block.audiosrc) {
-            ++d.voiced_in_range;
-          }
-
-          let hasAssignment = state.currentJobInfo.mastering  || state.currentJobInfo.text_cleanup;
-          let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
-            return t.blockid == block._id;
-          })
-          if (!hasTask && state.adminOrLibrarian) {
-            hasTask = state.currentJobInfo.can_resolve_tasks.find((t) => {
-              return t.blockid == block._id;
-            });
-          }
-          if ((block.status && block.status.marked) || (!hasAssignment && !hasTask)) {
-            switch (block.voicework) {
-              case 'audio_file' :
-                ++d.approved;
-                break;
-              case 'tts':
-                ++d.approved_tts;
-                break;
-              case 'narration':
-                ++d.approved_narration;
-                break;
-            }
-            if (block.voicework !== 'tts' && block.footnotes && Array.isArray(block.footnotes) && block.footnotes.length > 0) {
-              let ftn = block.footnotes.find(f => {
-                return f.voicework === 'tts';
-              });
-              if (ftn) {
-                ++d.approved_tts;
-              }
-            }
-          }
-          if (block.isChanged) {
-            if (block.voicework === 'audio_file') {
-              ++d.changed_in_range;
-            }
-            if (block.voicework === 'tts') {
-              ++d.changed_in_range_tts;
-            }
-            if (block.voicework === 'narration') {
-              ++d.changed_in_range_narration;
-            }
-          }
-          if (block._id == selection.end._id) {
-            status = 'break';
-          }
-          crossId = state.storeListO.getOutId(block.blockid);
-          if (!crossId) {
-            status = 'break';
-          }
-        } else {
-          status = 'break';
-        }
-        idx++;
-        iterationCount++;
-      }
-
-
-      if(idx<=size && status == 'ok'){
-        let width = Math.ceil(idx/(size/100));
-        width = (34*2)+34*(width/100);
-        dispatch('setSelectionModalProgressWidth',width)
-        console.log(`recountApprovedInRangeAsyncIteration ${idx}`)
-
-        setTimeout( function() {
-          dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve,bar}) },50);
-      }else{
-
-        resolve(d);
-      }
-    },
-
-    async recountApprovedInRangeAsync({state, commit,dispatch}, selection = null) {
-
-      let d = {};
-      d.approved = 0;
-      d.approved_tts = 0;
-      d.approved_narration = 0;
-      d.changed_in_range = 0;
-      d.changed_in_range_tts = 0;
-      d.changed_in_range_narration = 0;
-      d.voiced_in_range = 0;
-
-      if (!selection) {
-        selection = state.blockSelection;
-      }
-
-      let promises = [];
-      if (selection.start && selection.start._id && selection.end && selection.end._id) {
-        let crossId = selection.start._id;
-        promises.push(new Promise((resolve, reject) => {
-          let size = state.storeList.size;
-          let idx = 0;
-          dispatch('recountApprovedInRangeAsyncIteration',{crossId,idx,size,d,selection,resolve})
-        }))
-
-      }else{
-        promises.push(new Promise((resolve, reject) => {
-          if (state.storeList.size > 0) {
-            d.voiced_in_range = Array.from(state.storeList).filter(block => {
-              return block[1].audiosrc != '';
-            }).length;
-            resolve(d)
-          }else
-            resolve(d)
-
-        }))
-      }
-
-      return Promise.all(promises).then(function(result) {
-        result = result.pop();
-        let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
-        if (audio_mastering) {
-          result.approved+= result.approved_narration;
-          result.changed_in_range+=result.changed_in_range_narration;
-        }
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_audio_in_range', value: result.approved});
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: result.approved_tts});
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: result.changed_in_range});
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: result.changed_in_range_tts});
-
-        commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: result.voiced_in_range});
-
-      });
-    },
-
     recountApprovedInRange({state, commit}, selection = null) {
       let approved = 0;
       let approved_tts = 0;
@@ -3379,13 +3198,15 @@ export const store = new Vuex.Store({
       let changed_in_range = 0;
       let changed_in_range_tts = 0;
       let changed_in_range_narration = 0;
+      let voiced_in_range = 0;
+
       if (!selection) {
         selection = state.blockSelection;
       }
       if (selection.start && selection.start._id && selection.end && selection.end._id) {
-        let crossId = selection.start._id;
-        for (var idx=0; idx < state.storeList.size; idx++) {
-          let block = state.storeList.get(crossId);
+        const selectedBlocks = selection?.blocksIds || state.selectedBlocks;
+        for (let blockId of selectedBlocks) {
+          let block = state.storeList.get(blockId);
           if (block) {
             let hasAssignment = state.currentJobInfo.mastering  || state.currentJobInfo.text_cleanup;
             let hasTask = state.tc_currentBookTasks.tasks.find((t) => {
@@ -3394,6 +3215,11 @@ export const store = new Vuex.Store({
             //if (!hasAssignment && state.adminOrLibrarian) {
               //hasAssignment = state.currentJobInfo.completed;
             //}
+
+            if (block.audiosrc) {
+              ++voiced_in_range;
+            }
+
             if (!hasTask && state.adminOrLibrarian) {
               hasTask = state.currentJobInfo.can_resolve_tasks.find((t) => {
                 return t.blockid == block._id;
@@ -3431,14 +3257,14 @@ export const store = new Vuex.Store({
                 ++changed_in_range_narration;
               }
             }
-            if (block._id == selection.end._id) {
-              break;
-            }
-            crossId = state.storeListO.getOutId(block.blockid);
-            if (!crossId) {
-              break;
-            }
           } else break;
+        }
+      } else {
+        if (state.storeList.size > 0 && state.storeListO.listIds.length > 0) {
+          voiced_in_range = state.storeListO.listIds.filter(blockId => {
+            const block = state.storeList.get(blockId);
+            return block.audiosrc != '';
+          }).length;
         }
       }
       let audio_mastering = state.tc_currentBookTasks.assignments && state.tc_currentBookTasks.assignments.indexOf('audio_mastering') !== -1;
@@ -3450,7 +3276,9 @@ export const store = new Vuex.Store({
       commit('SET_CURRENTBOOK_COUNTER', {name: 'approved_tts_in_range', value: approved_tts});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_audio', value: changed_in_range});
       commit('SET_CURRENTBOOK_COUNTER', {name: 'changed_in_range_tts', value: changed_in_range_tts});
+      commit('SET_CURRENTBOOK_COUNTER', {name: 'voiced_in_range', value: voiced_in_range});
     },
+
     clearLocks({state, commit}, data) {
       if (data.type) {
         if (state.lockedBlocks.length > 0) {
@@ -4070,9 +3898,9 @@ export const store = new Vuex.Store({
               }
               if (state.selectedBlocks && state.selectedBlocks.length > 0) {
                 let listIds = state.storeListO.idsArray();
-                let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+                let firstIndex = listIds.indexOf(state.selectedBlocks[0]);
                 let insertedIndex = listIds.indexOf(new_block.blockid);
-                let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+                let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1]);
                 if (insertedIndex > firstIndex && insertedIndex < lastIndex) {
                   state.storeListO.get(new_block.blockid).checked = true;
                   dispatch('set_selected_blocks');
@@ -5027,9 +4855,9 @@ export const store = new Vuex.Store({
                     }
                     if (state.selectedBlocks && state.selectedBlocks.length > 0) {
                       let listIds = state.storeListO.idsArray();
-                      let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+                      let firstIndex = listIds.indexOf(state.selectedBlocks[0]);
                       let insertedIndex = listIds.indexOf(blk.blockid);
-                      let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+                      let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1]);
                       if (insertedIndex > firstIndex && insertedIndex < lastIndex) {
                         state.storeListO.get(blk.blockid).checked = true;
                         dispatch('set_selected_blocks');
@@ -5487,9 +5315,9 @@ export const store = new Vuex.Store({
             state.storeListO.updBlockByRid(data.block.id, data.block);
             if (state.selectedBlocks && state.selectedBlocks.length > 0) {
               let listIds = state.storeListO.idsArray();
-              let firstIndex = listIds.indexOf(state.selectedBlocks[0].blockid);
+              let firstIndex = listIds.indexOf(state.selectedBlocks[0]);
               let currentIndex = listIds.indexOf(data.block.blockid);
-              let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1].blockid);
+              let lastIndex = listIds.indexOf(state.selectedBlocks[state.selectedBlocks.length - 1]);
               if (currentIndex >= firstIndex && currentIndex <= lastIndex) {
                 state.blockSelection.refresh = Date.now();
               }

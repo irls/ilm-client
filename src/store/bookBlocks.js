@@ -447,7 +447,6 @@ class BookBlocks {
       result.start = { _id: this.lookupList[startRId].blockid };
       result.end = { _id: this.lookupList[startRId].blockid };
     }
-    console.log(`${__filename.slice(-30)}:setChecked:result: `, result);
     return result;
   }
 

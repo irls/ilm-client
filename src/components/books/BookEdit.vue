@@ -1342,7 +1342,7 @@ export default {
 
     async setRangeSelection(params) {
       const {block, type, status, shift = false, headerType = 'par'} = params;
-      console.log('setRangeSelection', block.type, type, status, shift, headerType);
+      //console.log('setRangeSelection', block.type, type, status, shift, headerType);
       let newSelection = Object.assign({}, this.blockSelection);
       const _store = this.$store;
       switch (type) {
@@ -1383,7 +1383,7 @@ export default {
           break;
         }
         case 'byOne': {
-          console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
+          //console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
           let blockSel = {_id: block.blockid};
           this.parlistO.setUnCheckedRange();
 
@@ -1476,10 +1476,10 @@ export default {
           };
 
           await this.setBlockSelection(newSelection);
-          setTimeout(() => {
-            _store.dispatch('setSelectionModalProgressWidth', 100);
-            _store.dispatch('selectionModalDisable');
-          }, 500);
+          // setTimeout(() => {
+          //   _store.dispatch('setSelectionModalProgressWidth', 100);
+          //   _store.dispatch('selectionModalDisable');
+          // }, 500);
 
         break;
         }

@@ -163,9 +163,10 @@ export default {
     },
     checkBlockTTSForPattern({state, dispatch, rootState, commit}) {
       commit('resetAlignTTSVoicesData');
-      let blocksSelection = rootState.selectedBlocks;
+      const blocksSelection = rootState.selectedBlocks;
       if (blocksSelection.length === 1) {
-        return axios.get(`${rootState.API_URL}books/block/${encodeURIComponent(blocksSelection[0]._rid)}/check_voice_pattern`)
+        const block = rootState.storeList.get(blocksSelection[0]);
+        return axios.get(`${rootState.API_URL}books/block/${encodeURIComponent(block._rid)}/check_voice_pattern`)
           .then(response => {
             //console.log(response);
             commit('setAlignTTSVoicesData', response.data);

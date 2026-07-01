@@ -80,16 +80,18 @@
       blocksCountForExport: {
         get() {
           if (this.selectedBlocks.length > 0) {
-            return this.selectedBlocks.filter(blk => {
-              return blk.audiosrc && blk.audiosrc.length > 0;
+            return this.selectedBlocks.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return block.audiosrc && block.audiosrc.length > 0;
             }).length;
           } else {
             /*if (this.currentBookCounters.enabled_blocks !== null) {
               return this.currentBookCounters.enabled_blocks;
             }*/
-            let blocks = Array.from(this.storeList.values());
-            return blocks.filter(blk => {
-              return blk.audiosrc && blk.audiosrc.length > 0;
+            let blocks = Array.from(this.storeList.keys());
+            return blocks.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return block.audiosrc && block.audiosrc.length > 0;
             }).length;
           }
         },

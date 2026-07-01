@@ -41,11 +41,12 @@ export default {
               if (blkStore) {
                 blkStore.disabled = blk.disabled;
               }
-              let blkSelected = rootState.selectedBlocks.find(sb => {
-                return sb.blockid === blk.blockid;
+              let blkSelected = rootState.selectedBlocks.find(blockId => {
+                return blockId === blk.blockid;
               });
               if (blkSelected) {
-                blkSelected.disabled = blk.disabled;
+                const block = rootState.storeList.get(blkSelected);
+                block.disabled = blk.disabled;
               }
             });
           }
