@@ -219,7 +219,7 @@
                   <i v-show="!voiceworkUpdating" aria-hidden="true"
                     title="Pending audio"
                     :class="['voicework-button']"
-                    v-on:click="updateVoicework('no_audio', 'single')">
+                    v-on:click="pendingAudioUpdateVoicework">
                   </i>
                   <i v-show="voiceworkUpdating"
                     class="fa fa-spinner fa-spin">
@@ -229,7 +229,7 @@
                 <template v-if="noVoiceworkButtonEnable">
                   <div class="par-ctrl-divider"></div>
                   <i aria-hidden="true"
-                    v-ilm-tooltip.top="{value: 'No audio', classList: {tooltip: 'white-tooltip'}}"
+                    title="No audio"
                     :class="['no-audio-button']">
                   </i>
                 </template>
@@ -1126,8 +1126,9 @@ Save or discard your changes to continue editing`,
       selectChapterButtonEnable: {
         cache: true,
         get() {
-          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
-          return this.block.type === 'header' || isTitleHeader;
+          //const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+          //return this.block.type === 'header' || isTitleHeader;
+          return false;
         }
       },
       selectChapterButtonTooltip: {
@@ -1163,6 +1164,9 @@ Save or discard your changes to continue editing`,
         cache: true,
         get() {
           const voiceworkTypes = ['tts', 'audio_file', 'narration'];
+          if (this.mode === 'narrate') {
+            return false;
+          }
           if (voiceworkTypes.indexOf(this.block.voicework) > -1) {
             if (this.block.parts.length) {
               return this.block.parts.every((part)=>{
@@ -4221,7 +4225,6 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             this.voiceworkUpdating = false;
@@ -4268,6 +4271,12 @@ Save text changes and realign the Block?`,
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
           });
+      },
+      pendingAudioUpdateVoicework() {
+        if (this.mode === 'proofread') {
+          return false;
+        }
+        this.updateVoicework('no_audio', 'single');
       },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
