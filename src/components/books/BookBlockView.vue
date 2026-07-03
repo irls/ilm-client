@@ -191,7 +191,7 @@
                       </select>
                     </label>
                   </template>
-                  <template v-if="block.voicework === 'tts' && block.audiosrc.length">
+                  <template v-if="block.voicework === 'tts' && block.audiosrc && block.audiosrc.length">
                     <div class="par-ctrl-divider"></div>
                     <i class="fa fa-volume-up" :title="ttsAudioQualityTitle"></i>
                   </template>
