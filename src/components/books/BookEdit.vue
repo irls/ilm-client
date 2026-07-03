@@ -2699,8 +2699,11 @@ export default {
                 );
                 if (nextBlockId && hasLockedBlocks) {
                   Vue.nextTick(()=>{
-                    this.scrollToBlock(nextBlockId);
+                    console.log(`${__filename.slice(-30)}:scrollToBlock:nextBlockId: `, nextBlockId);
                     this.$store.state.storeListO.setStartId(nextBlockId);
+                    Vue.nextTick(()=>{
+                      this.scrollToBlock(nextBlockId);
+                    });
                   });
                 }
               } break;
