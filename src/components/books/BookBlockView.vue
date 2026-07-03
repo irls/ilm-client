@@ -1182,6 +1182,9 @@ Save or discard your changes to continue editing`,
         cache: true,
         get() {
           const voicedBlockTypes = ['par', 'header', 'title'];
+          if (this.mode === 'narrate') {
+            return false;
+          }
           return voicedBlockTypes.indexOf(this.block.type) > -1 && this.block.voicework == 'no_audio';
         }
       },
