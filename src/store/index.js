@@ -760,7 +760,7 @@ export const store = new Vuex.Store({
     },
     isBlockSelected: (state, getters) => (blockid) => {
       return getters.selectedBlocks.find(blockId => {
-        return blockId.blockid === blockid;
+        return blockId === blockid;
       }) ? true : false;
     }
   },
