@@ -10,11 +10,15 @@ export default {
       return state.filter_tags;
     },
     notAssignedFilterTags: (state, getters, rootState) => {
+      const ADAPTED = 'Adapted';
       if (rootState.currentBookMeta) {
         if (!rootState.currentBookMeta.filter_tags) {
           return state.filter_tags;
         }
         return state.filter_tags.filter(tag => {
+          if (tag.name === ADAPTED && !!(rootState.currentBookMeta?.parent_book)) {
+            return false;
+          }
           return !rootState.currentBookMeta.filter_tags.includes(tag.name);
         });
       }
