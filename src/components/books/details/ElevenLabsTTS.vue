@@ -169,7 +169,7 @@
           wpm: 140
         },
         alignStartedTimeout: null,
-        is_voice_wpm_calculating: false,
+        voice_wpm_calculating_ids: {},
         playing_generated_example: false,
         elevenLabFiltersModalShow: false
       }
@@ -206,7 +206,16 @@
           //return this.all_voices.find((voice)=>voice.voice_id === this.currentBookMeta.voices['paragraph']);
           return this.getSelectedInitCharacter?.voice;
         }, cache: false
-      }
+      },
+      is_voice_wpm_calculating: {
+        get() {
+          const voice_id = this.selected_voice_params?.voice_id;
+          if (voice_id && this.voice_wpm_calculating_ids[voice_id]) {
+            return true;
+          }
+          return false;
+        }, cache: false
+      },
     },
     mounted() {
       // this.loadBookVoices();
@@ -277,21 +286,28 @@
 
       onCalculateVoiceWpm() {
         if (this.selected_voice_params && !this.selected_voice_params.wpm) {
-          this.is_voice_wpm_calculating = true;
-          this.calculateVoiceWpm([this.selected_voice_params.voice_id])
-          .then((voice)=>{
-            // this.all_voices = this.all_voices.map((_v)=>{
-            //   if (_v.voice_id === voice.voice_id) {
-            //     _v.wpm = voice.wpm;
-            //   }
-            //   return _v;
-            // });
-            this.$store.commit('elevenLabsVoicesModule/set_voiceWPM', {
-              character: this.getSelectedInitCharacter,
-              voice: voice
+          const voice_id = this.selected_voice_params.voice_id;
+          const selectedInitCharacter = this.getSelectedInitCharacter;
+          if (!this.voice_wpm_calculating_ids[voice_id]) {
+            this.voice_wpm_calculating_ids = {
+              ...this.voice_wpm_calculating_ids,
+              ...{ [voice_id]: true }
+            };
+            this.calculateVoiceWpm([voice_id])
+            .then((voice)=>{
+              // this.all_voices = this.all_voices.map((_v)=>{
+              //   if (_v.voice_id === voice.voice_id) {
+              //     _v.wpm = voice.wpm;
+              //   }
+              //   return _v;
+              // });
+              this.$store.commit('elevenLabsVoicesModule/set_voiceWPM', {
+                character: selectedInitCharacter,
+                voice: voice
+              });
+              delete this.voice_wpm_calculating_ids[voice_id];
             });
-            this.is_voice_wpm_calculating = false;
-          });
+          }
         }
       },
       startAlign() {
@@ -532,13 +548,13 @@
           }
         }
       },
-      'alignProcess': {
-        handler(val, oldVal) {
-          if (val) {
-            this.is_voice_wpm_calculating = true;
-          }
-        }
-      },
+      // 'alignProcess': {
+      //   handler(val, oldVal) {
+      //     if (val) {
+      //       this.is_voice_wpm_calculating = true;
+      //     }
+      //   }
+      // },
       'aligningBlocks': {
         handler(val, oldVal) {
           if (val.length < oldVal.length) {
