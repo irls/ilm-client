@@ -796,13 +796,13 @@ export default {
           if (startElement && endElement) {
             let checkElement = startElement;
             let hasDataMap = !!(endElement.dataset && endElement.dataset.map);
-            while (!hasDataMap && checkElement !== endElement) {
+            while (!hasDataMap && checkElement && checkElement !== endElement) {
               if (checkElement.nextSibling) {
                 checkElement = checkElement.nextSibling;
               } else {
                 checkElement = checkElement.parentElement;
               }
-              hasDataMap = checkElement.dataset && checkElement.dataset.map;
+              hasDataMap = checkElement && checkElement.dataset && checkElement.dataset.map;
             }
             return !!hasDataMap;
           }

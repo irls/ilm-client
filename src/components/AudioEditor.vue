@@ -2623,7 +2623,9 @@
           let doc = parser.parseFromString(text, "text/html");
           doc.querySelectorAll('sg').forEach(sg => {
             if (sg.dataset && (!sg.dataset.suggestion || sg.dataset.suggestion.length === 0)) {
-              text = text.replace(sg.toString(), '');
+              if (sg.outerHTML) {
+                text = text.replace(sg.outerHTML, '');
+              }
             }
           });
           //text = $('<textarea/>').html(text).text();// remove html entities

@@ -4125,8 +4125,11 @@ export const store = new Vuex.Store({
                 clearLocks = dispatch('getBlocks', Object.keys(oldIds))
                   .then((blocks) => {
                     blocks.forEach(block => {
-                      commit('set_storeList', new BookBlock(block));
-                      commit('clear_block_lock', {block: {blockid: block.blockid}, type: oldIds[block.blockid]});
+                      const type = oldIds[block.blockid];
+                      if (!["deleteBlocks"].includes(type)) {
+                        commit('set_storeList', new BookBlock(block));
+                      }
+                      commit('clear_block_lock', {block: {blockid: block.blockid}, type});
                     });
                     let checkAlignQueue = false;
                     Object.keys(oldIds).forEach(blockid => {
@@ -4137,7 +4140,7 @@ export const store = new Vuex.Store({
                         if (!checkAlignQueue) {
                           checkAlignQueue = ["joinBlocks"].includes(oldIds[blockid]);
                         }
-                        commit('clear_block_lock', {block: {blockid: blockid}, type: oldIds[blockid]});
+                        dispatch('clearBlockLock', {block: {blockid: blockid}, type: oldIds[blockid]});
                         state.storeListO.delExistsBlock(state.storeListO.getRIdById(blockid));
                       }
                     });
@@ -4674,11 +4677,10 @@ export const store = new Vuex.Store({
     discardAudioChanges({state}) {
       let block = state.storeList.get(state.audioTasksQueue.block.blockId);
       let queueBlock = state.audioTasksQueue.block;
-      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit`;
-      if (queueBlock.partIdx !== null) {
-        api_url+= '/part/' + queueBlock.partIdx;
-      }
-      return axios.delete(api_url, {}, {})
+      let api_url = `${state.API_URL}book/block/${encodeURIComponent(block._rid)}/audio_edit_discard`;
+      return axios.post(api_url, {
+        dir: state.audioTasksQueue.dir
+      }, {})
         .then(response => {
           if (response.status == 200 && response.data) {
             let part = queueBlock.partIdx !== null ? response.data.parts[queueBlock.partIdx] : response.data;
