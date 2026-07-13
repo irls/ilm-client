@@ -1317,7 +1317,8 @@
       },
       setHighlightedAudiofiles() {
         let highlightedAudiofiles = [];
-        this.selectedBlocksData.forEach(block => {
+        this.selectedBlocks.forEach(blockId => {
+          const block = this.parlist.get(blockId);
           if (block.audiocatalog_map instanceof Object && Object.keys(block.audiocatalog_map).length > 0) {
             Object.keys(block.audiocatalog_map).forEach(file_id => {
               if (!highlightedAudiofiles.includes(file_id)) {
@@ -1407,7 +1408,7 @@
         adminOrLibrarian: 'adminOrLibrarian',
         allowAlignBlocksLimit: 'allowAlignBlocksLimit',
         alignBlocksLimitMessage: 'alignBlocksLimitMessage',
-        selectedBlocksData: 'selectedBlocksData',
+        parlist: 'storeList',
         selectedBlocks: 'selectedBlocks'
       }),
       ...mapGetters('alignActions', ['aligningAudiofiles', 'alignTTSVoicesData', 'currentAlignCounter']),

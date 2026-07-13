@@ -2811,9 +2811,10 @@
           if (this.blockSelection && ((this.blockSelection.start && this.blockSelection.start._id) || (this.blockSelection.end && this.blockSelection.end._id)) && this.plEventEmitter) {
             let start = false;
             let end = false;
-            this.selectedBlocksData.forEach(block => {
+            this.selectedBlocks.forEach(blockId => {
               let _start = null;
               let _end = null;
+              const block = this.storeList.get(blockId);
               if (block.audiocatalog_map) {
                 if (block.audiocatalog_map[this.audiofileId]) {
                   _start = block.audiocatalog_map[this.audiofileId].start / 1000;
@@ -3733,8 +3734,8 @@ Revert to original block audio?`,
           if (editingBlock && editingBlock.voicework === alignVoicework) {
             let alignBlk;
             if (alignVoicework !== "tts" || !realignVoiceType) {
-              alignBlk = this.selectedBlocks.find(blk => {
-                return blk.blockid === editingBlock.blockid;
+              alignBlk = this.selectedBlocks.find(blockId => {
+                return blockId === editingBlock.blockid;
               });
             } else if (alignVoicework === "tts" && realignVoiceType) {
               alignBlk = this.alignTTSVoiceBlockids(realignVoiceType).find(blockid => {
@@ -3995,7 +3996,7 @@ Revert to original block audio?`,
           allowAlignBlocksLimit: 'allowAlignBlocksLimit',
           user: 'user',
           audioFadeConfig: 'audioFadeConfig',
-          selectedBlocksData: 'selectedBlocksData',
+          storeList: 'storeList',
           selectedBlocks: 'selectedBlocks'
         }),
         ...mapGetters('alignActions', ['alignTTSVoicesData', 'alignTTSVoiceBlockids'])

@@ -1173,7 +1173,7 @@ Save or discard your changes to continue editing`,
                 return part?.audiosrc?.length == 0 || !part?.audiosrc_ver?.m4a;
               });
             }
-            return this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a;
+            return this.block.audiosrc && (!this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a);
           }
           return false;
         }
@@ -1213,8 +1213,7 @@ Save or discard your changes to continue editing`,
           updatingNumeration: 'updatingNumeration',
           suspiciousWordsHighlight: 'suspiciousWordsHighlight',
           isMultiBlocksSelected: 'isMultiBlocksSelected',
-          isBlockSelected: 'isBlockSelected',
-          selectedBlocksData: 'selectedBlocksData'
+          isBlockSelected: 'isBlockSelected'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1291,7 +1290,7 @@ Save or discard your changes to continue editing`,
         cache: false
       },
       isSingleBlockRemoveAudio() {
-        return this.block.audiosrc && this.block.audiosrc.length;
+        return this.block?.audiosrc && this.block.audiosrc?.length;
           //&& !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration'
       },
       isNarratedBlockCompleteAudio() {
@@ -1664,7 +1663,7 @@ Save or discard your changes to continue editing`,
                 canFlag = false;
               } else {
                 if (this.block.status && this.block.status.stage === 'audio_mastering') canFlag = false;
-                else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+                else if (!(this.block?.audiosrc && this.block?.audiosrc?.length)) canFlag = false;
               }
               if (this.mode === 'narrate') {
                 canFlag = false;
@@ -4193,7 +4192,7 @@ Save text changes and realign the Block?`,
 
           let checked;
           if (ev === true || ev === false) checked = ev;
-          else checked = ev.target && ev.target.checked;
+          else checked = (ev.target && ev.target.checked) || false;
 
           let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
           if (ev.shiftKey) {
@@ -4201,17 +4200,17 @@ Save text changes and realign the Block?`,
               document.getSelection().removeAllRanges();
             }
           }
-          this.setRangeSelectionLock = true;
-          setTimeout( () => {
-            this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', {
-              block: this.blockO,
-              type: type,
-              status: checked,
-              shift: shiftKey,
-              headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
-            });
-          }, 500);
+          //this.setRangeSelectionLock = true;
+          this.$emit('setRangeSelection', {
+            block: this.blockO,
+            type: type,
+            status: checked,
+            shift: shiftKey,
+            headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
+          });
+          // setTimeout( () => {
+          //   this.setRangeSelectionLock = false;
+          // }, 500);
         }
         //this.blockO.checked = checked;
       },

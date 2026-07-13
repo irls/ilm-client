@@ -415,8 +415,9 @@
       blockTypesInRange: {
         get() {
           if (Array.isArray(this.selectedBlocks)) {
-            let blocks = this.selectedBlocks.filter(b => {
-              return b.type === this.blockType;
+            let blocks = this.selectedBlocks.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return block.type === this.blockType;
             });
             return blocks;
           }
@@ -445,10 +446,11 @@
         get() {
           let audiosrc;
           if (this.selectedBlock) {
-            if (this.selectedBlock.getIsSplittedBlock()) {
-              audiosrc = this.selectedBlock.getPartAudiosrc(0, 'm4a');
+            const block = this.storeList.get(this.selectedBlock);
+            if (block.getIsSplittedBlock()) {
+              audiosrc = block.getPartAudiosrc(0, 'm4a');
             } else {
-              audiosrc = this.selectedBlock.getAudiosrc('m4a');
+              audiosrc = block.getAudiosrc('m4a');
             }
           }
           return this.blockTypesInRange.length > 1 || this.nowPlaying || !this.selectedBlock || !audiosrc;
@@ -458,13 +460,15 @@
       listenBlockDisplay: {
         get() {
           let blocks = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange : [];
-          if (blocks.length === 1 && this.selectedBlock.voicework === 'no_audio') {
+          const selectedBlock = this.storeList.get(this.selectedBlock);
+          if (blocks.length === 1 && selectedBlock.voicework === 'no_audio') {
             return false;
           }
-          let audioBlocks = blocks.find(b => {
-            return b.voicework !== 'no_audio';
+          let audioBlocks = blocks.find(blockId => {
+            const block = this.storeList.get(blockId);
+            return block.voicework !== 'no_audio';
           });
-          return audioBlocks && !['hr', 'illustration'].includes(this.blockType);
+          return audioBlocks.length && !['hr', 'illustration'].includes(this.blockType);
         },
         cache: false
       },

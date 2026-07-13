@@ -48,7 +48,8 @@
       }
     },
     mounted() {
-      let blockType = this.selectedBlocks[0].type;
+      const block = this.storeList.get(this.selectedBlocks[0]);
+      let blockType = block.type;
       if (blockType === 'par') {
         blockType = "paragraph";
       }
@@ -93,7 +94,8 @@
         let checkBlocks = [];
         switch (this.alignType) {
           case 'single':
-            checkBlocks = [this.selectedBlocks[0]];
+            const block = this.storeList.get(this.selectedBlocks[0]);
+            checkBlocks = [block];
             break;
           case 'unvoiced':
             checkBlocks = this.alignTTSVoicesData.not_voiced;

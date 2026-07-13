@@ -77,7 +77,7 @@
       },
       selectedBlocksCount: {
         get() {
-          return this.selectedBlocksData.length;
+          return this.selectedBlocks.length;
         },
         cache: false
       },
@@ -93,7 +93,8 @@
             return false;
           }
           if (this.selectedBlocksCount > 2) {
-            let voiced = this.selectedBlocksData.find(block => {
+            let voiced = this.selectedBlocks.find(blockId => {
+              const block = this.storeList.get(blockId);
               return block.audiosrc && block.audiosrc.length > 0;
             });
             if (voiced) {
@@ -106,8 +107,8 @@
       },
       hasLockInSelection: {
         get() {
-          let locked = this.selectedBlocksData.find(blk => {
-            return this.isBlockLocked(blk.blockid);
+          let locked = this.selectedBlocks.find(blockId => {
+            return this.isBlockLocked(blockId);
           });
           return locked ? true : false;
         },
@@ -115,13 +116,14 @@
       },
       isShowArchivedFlags: {
         get() {
-          return this.selectedBlocksData.find(block => {
+          return this.selectedBlocks.find(blockId => {
+            const block = this.storeList.get(blockId);
             return block.isHideArchFlags;
           }) ? true : false;
         },
         cache: false
       },
-      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocksData', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta']),
+      ...mapGetters(['blockSelection', 'isMultiBlocksSelected', 'isBlockSelected', 'selectedBlocks', 'isBlockLocked', 'storeList', 'storeListO', 'audioTasksQueueBlock', 'currentBookMeta']),
       ...mapGetters('blocksModule', ['massSetLanguageProcess'])
     },
     mounted() {
@@ -135,9 +137,9 @@
       collecSelectedLanguage() {
         this.selectedLanguage = '';
         if (this.showMenu) {
-          let checkBlocks = this.getSelectedBlocks();
           let langsList = [];
-          checkBlocks.forEach(block => {
+          this.selectedBlocks.forEach(blockId => {
+            const block = this.storeList.get(blockId);
             if (!langsList.includes(block.language)) {
               langsList.push(block.language);
             }
@@ -153,35 +155,41 @@
         if (!this.allowMultiAction) {
           return false;
         }
-        let checkBlocks = this.getSelectedBlocks();// force re read actual blocks
-        let typeDiffers = checkBlocks.find(blk => {
-          return checkBlocks.find(block => {
-            return blk.type !== block.type;
+        let typeDiffers = this.selectedBlocks.find(blockId => {
+          const firstBlock = this.storeList.get(blockId);
+          return this.selectedBlocks.find(_blockId => {
+            const secondBlock = this.storeList.get(_blockId);
+            return firstBlock.type !== secondBlock.type;
           });
         });
         if (typeDiffers) {
           this.$root.$emit('join_type_differs');
           return false;
         }
-        let voiceworkDiffers = checkBlocks.find(blk => {
-          return checkBlocks.find(block => {
-            return blk.voicework !== block.voicework;
+        let voiceworkDiffers = this.selectedBlocks.find(blockId => {
+          const firstBlock = this.storeList.get(blockId);
+          return this.selectedBlocks.find(_blockId => {
+            const secondBlock = this.storeList.get(_blockId);
+            return firstBlock.voicework !== secondBlock.voicework;
           });
         });
         if (voiceworkDiffers) {
           this.$root.$emit('join_voicework_differs');
           return false;
         }
-        let hasChanges = checkBlocks.find(blk => {
-          return blk.getIsChanged() || blk.hasChangedPart() || blk.isAudioChanged;
+        let hasChanges = this.selectedBlocks.find(blockId => {
+          const block = this.storeList.get(blockId);
+          return block.getIsChanged() || block.hasChangedPart() || block.isAudioChanged;
         });
         if (hasChanges) {
           this.$root.$emit('join_has_changes');
           return false;
         }
-        let adaptDiffers = checkBlocks.find(blk => {
-          return checkBlocks.find(block => {
-            return (blk.adapted || block.adapted) && blk.adapted !== block.adapted;
+        let adaptDiffers = this.selectedBlocks.find(blockId => {
+          const firstBlock = this.storeList.get(blockId);
+          return selectedBlocks.find(_blockId => {
+            const secondBlock = this.storeList.get(_blockId);
+            return (firstBlock.adapted || secondBlock.adapted) && firstBlock.adapted !== secondBlock.adapted;
           });
         });
         if (adaptDiffers) {
@@ -204,7 +212,7 @@
               this.checkAudioEditing();
               return this.massJoin([[], joinInfo.line_breaks])
                 .then(() => {
-                  this.$root.$emit('for-bookedit:scroll-to-block', checkBlocks[0].blockid);
+                  this.$root.$emit('for-bookedit:scroll-to-block', this.selectedBlocks[0]);
                   return Promise.resolve(true);
                 });
             } else {
@@ -243,42 +251,28 @@
       },
       toggleArchFlags() {
         if (!this.isShowArchivedFlags) {
-          this.selectedBlocksData.filter(block => {
+          this.selectedBlocks.filter(blockId => {
+            const block = this.storeList.get(blockId);
             return !block.isHideArchFlags;
-          }).forEach(block => {
-            console.log(block.isHideArchFlags);
+          }).forEach(blockId => {
+            const block = this.storeList.get(blockId);
             block.set_isHideArchFlags(true);
           });
         } else {
-          this.selectedBlocksData.filter(block => {
+          this.selectedBlocks.filter(blockId => {
+            const block = this.storeList.get(blockId);
             return block.isHideArchFlags;
-          }).forEach(block => {
+          }).forEach(blockId => {
+            const block = this.storeList.get(blockId);
             block.set_isHideArchFlags(false);
           });
         }
       },
-      getSelectedBlocks() {
-        let data = [];
-        if (this.blockSelection.start._id && this.blockSelection.end._id) {
-          let crossId = this.blockSelection.start._id;
-          for (let idx = 0; idx < this.storeList.size; idx++) {
-            let block = this.storeList.get(crossId);
-            if (block) {
-              data.push(block);
-              if (block._id === this.blockSelection.end._id) {
-                break;
-              }
-              crossId = this.storeListO.getOutId(block.blockid);
-            } else break;
-          }
-        }
-        return data;
-      },
       checkAudioEditing() {
         let editingBlock = this.audioTasksQueueBlock();
         if (editingBlock && editingBlock.blockid) {
-          let block = this.selectedBlocksData.find(blk => {
-            return blk.blockid === editingBlock.blockid;
+          let block = this.selectedBlocks.find(blockId => {
+            return blockId === editingBlock.blockid;
           });
           if (block) {
             this.$root.$emit('for-audioeditor:force-close');

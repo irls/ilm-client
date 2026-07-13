@@ -36,14 +36,19 @@
       }
     },
     computed: {
-      ...mapGetters({blockSelection: 'blockSelection', selectedBlocks: 'selectedBlocks'}),
+      ...mapGetters({
+        blockSelection: 'blockSelection',
+        selectedBlocks: 'selectedBlocks',
+        storeList: 'storeList'
+      }),
       ...mapGetters('setBlocksDisabled', ['disabledBlocksApply']),
       selectedEnabledBlocks: {
         get() {
           let selected = [];
           if (this.selectedBlocks.length > 0) {
-            selected = this.selectedBlocks.filter(blk => {
-              return !blk.disabled;
+            selected = this.selectedBlocks.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return !block.disabled;
             });
           }
           return selected.length;
@@ -54,8 +59,9 @@
         get() {
           let selected = [];
           if (this.selectedBlocks.length > 0) {
-            selected = this.selectedBlocks.filter(blk => {
-              return blk.disabled;
+            selected = this.selectedBlocks.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return block.disabled;
             });
           }
           return selected.length;
