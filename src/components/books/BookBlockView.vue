@@ -19,7 +19,7 @@
 
         <div class="table-row check-row">
           <div class="table-cell">
-            <div class="set-range">
+            <div class="set-range"><!---hidden-->
               <i class="fa fa-square-o -hidden" aria-hidden="true"
               v-if="isChecked === false"
               v-on:click="$event.target.checked = true; setRangeSelection('byOne', $event)"></i>
@@ -35,6 +35,12 @@
               class="fa fa-arrow-circle-up" aria-hidden="true"
               v-on:click="scrollToBlock(selectionStart)"></i>
               </template>
+
+              <i v-if="selectChapterButtonEnable"  aria-hidden="true"
+                :class="['select-chapter-button', '-hidden', {'no-margin': selectChapterButtonNoMargin}]"
+                v-ilm-tooltip.right="{value: selectChapterButtonTooltip, classList: {tooltip: 'white-tooltip'}}"
+                v-on:click="setRangeSelection('byChapter', $event)">
+              </i>
             </div>
           </div><!--<div class="table-cell">-->
         </div>
@@ -47,7 +53,10 @@
             <div class="table-row-flex controls-top">
               <div :class="['par-ctrl', '-par-num', {'-hidden-hover': mode !== 'narrate'}]">
                 <!--<i class="fa fa-hashtag"></i>-->
-                <label ref="parnumRef" v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]">{{parnumComp}}</label>
+                <label ref="parnumRef" v-if="isNumbered && (mode !== 'narrate' || isSplittedBlock)" :class="['par-num', {'has-num': parnumComp.length}, {'hide-from': block.parHide || block.secHide}]" name="parnumRef">{{parnumComp}}</label>
+                <i v-if="noVoiceworkButtonEnable" aria-hidden="true"
+                  :class="['no-audio-button', '-hidden-hover']">
+                </i>
               </div>
               <div :class="['par-ctrl -hidden', {'-additional-info': editingLocked}]">
                 <div class="block-menu" v-if="mode !== 'narrate'">
@@ -182,7 +191,7 @@
                       </select>
                     </label>
                   </template>
-                  <template v-if="block.voicework === 'tts'">
+                  <template v-if="block.voicework === 'tts' && block.audiosrc && block.audiosrc.length">
                     <div class="par-ctrl-divider"></div>
                     <i class="fa fa-volume-up" :title="ttsAudioQualityTitle"></i>
                   </template>
@@ -203,10 +212,33 @@
                 <template v-else >
 
                 </template>
+
+                <template v-if="voiceworkButtonEnable">
+                  <div class="par-ctrl-divider"></div>
+                  <!--v-ilm-tooltip.top="{value: 'Pending audio', classList: {tooltip: 'white-tooltip'}}"-->
+                  <i v-show="!voiceworkUpdating" aria-hidden="true"
+                    title="Pending audio"
+                    :class="['voicework-button']"
+                    v-on:click="pendingAudioUpdateVoicework">
+                  </i>
+                  <i v-show="voiceworkUpdating"
+                    class="fa fa-spinner fa-spin">
+                  </i>
+                </template>
+
+                <template v-if="noVoiceworkButtonEnable">
+                  <div class="par-ctrl-divider"></div>
+                  <i aria-hidden="true"
+                    title="No audio"
+                    :class="['no-audio-button']">
+                  </i>
+                </template>
+
                 <template v-if="editingLocked && mode !== 'narrate'">
                   <div class="par-ctrl-divider"></div>
                   <label class="blocked-editing -hidden">{{editingLockedReason}}</label>
                 </template>
+
               </div>
               <!--<div class="par-ctrl -hidden">-->
                <!-- <div class="par-ctrl -audio -hidden" v-if="mode !== 'narrate'">
@@ -1083,6 +1115,77 @@ Save or discard your changes to continue editing`,
         cache: true,
         get() {
           return JSON.stringify(this.block.wordsRange);
+        }
+      },
+      selectChapterButtonNoMargin: {
+        cache: true,
+        get() {
+          return (this.selectionStart && this.selectionStart !== this.selectionEnd && (this.block._id == this.selectionStart || this.block._id == this.selectionEnd));
+        }
+      },
+      selectChapterButtonEnable: {
+        cache: true,
+        get() {
+          //const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+          //return this.block.type === 'header' || isTitleHeader;
+          return false;
+        }
+      },
+      selectChapterButtonTooltip: {
+        cache: true,
+        get() {
+          const headerLevel = this.block?.classes?.level;
+          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+
+          if (isTitleHeader) {
+            return 'Select all'
+          }
+
+          switch(headerLevel) {
+            case 'h1' : {
+              return 'Select section'
+            } break;
+            case 'h2' : {
+              return 'Select chapter'
+            } break;
+            case 'h3' : {
+              return 'Select subchapter'
+            } break;
+            case 'h4' : {
+              return 'Select sub subchapter'
+            } break;
+            default : {
+              return 'Select'
+            } break;
+          };
+        }
+      },
+      voiceworkButtonEnable: {
+        cache: true,
+        get() {
+          const voiceworkTypes = ['tts', 'audio_file', 'narration'];
+          if (this.mode === 'narrate') {
+            return false;
+          }
+          if (voiceworkTypes.indexOf(this.block.voicework) > -1) {
+            if (this.block.parts.length) {
+              return this.block.parts.every((part)=>{
+                return part?.audiosrc?.length == 0 || !part?.audiosrc_ver?.m4a;
+              });
+            }
+            return this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a;
+          }
+          return false;
+        }
+      },
+      noVoiceworkButtonEnable: {
+        cache: true,
+        get() {
+          const voicedBlockTypes = ['par', 'header', 'title'];
+          if (this.mode === 'narrate') {
+            return false;
+          }
+          return voicedBlockTypes.indexOf(this.block.type) > -1 && this.block.voicework == 'no_audio';
         }
       },
       ...mapGetters({
@@ -4101,7 +4204,13 @@ Save text changes and realign the Block?`,
           this.setRangeSelectionLock = true;
           setTimeout( () => {
             this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', this.blockO, type, checked, shiftKey);
+            this.$emit('setRangeSelection', {
+              block: this.blockO,
+              type: type,
+              status: checked,
+              shift: shiftKey,
+              headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
+            });
           }, 500);
         }
         //this.blockO.checked = checked;
@@ -4118,7 +4227,6 @@ Save text changes and realign the Block?`,
         }
 
         this.voiceworkUpdating = true;
-
 
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
@@ -4166,6 +4274,12 @@ Save text changes and realign the Block?`,
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
           });
+      },
+      pendingAudioUpdateVoicework() {
+        if (this.mode === 'proofread') {
+          return false;
+        }
+        this.updateVoicework('no_audio', 'single');
       },
       scrollToBlock(id) {
         this.$root.$emit('for-bookedit:scroll-to-block', id);
@@ -5147,7 +5261,7 @@ Save text changes and realign the Block?`,
 
         .-hidden-hover {
           display: block;
-          height: 32px;
+          height: 26px;
         }
 
         &:hover {
@@ -5276,6 +5390,26 @@ Save text changes and realign the Block?`,
             margin: auto;
             .fa {
               font-size: 20px;
+            }
+          }
+
+          .select-chapter-button {
+            display: block;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            margin: 20px -5px 0px 2px;
+            opacity: 0.5;
+            background-image: url('/static/blocks_list/select-chapter.png');
+            background-size: cover; /* Controls scaling */
+            background-repeat: no-repeat;
+
+            &:hover {
+              opacity: 1;
+            }
+
+            &.no-margin {
+              margin-top: 0px;
             }
           }
 
@@ -5536,7 +5670,7 @@ Save text changes and realign the Block?`,
       position: relative;
 
       .par-ctrl {
-        width: 480px;
+        max-width: 580px;
         /*background: green;*/
 
         display: flex;
@@ -5567,6 +5701,10 @@ Save text changes and realign the Block?`,
             &.hide-from {
               opacity: 0;
             }
+          }
+
+          .no-audio-button {
+            margin: 4px 0px 0px 8px;
           }
         }
 
@@ -5654,6 +5792,30 @@ Save text changes and realign the Block?`,
         &.-additional-info {
           width: 780px;
         }
+      }
+
+      .voicework-button {
+        display: block;
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        margin: 0px 0px 0px 0px;
+        opacity: 0.5;
+        background-image: url('/static/blocks_list/voicework-audio.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+
+      .no-audio-button {
+        display: block;
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        margin: 0px 0px 0px 0px;
+        opacity: 0.5;
+        background-image: url('/static/blocks_list/voicework-no-audio.png');
+        background-size: cover;
+        background-repeat: no-repeat;
       }
     }
 }

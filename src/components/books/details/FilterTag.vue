@@ -81,7 +81,9 @@
         }
       },
       canRemove(filterTag) {
-        return !["Adapted", "Translated"].includes(filterTag) && this.adminOrLibrarian;
+        const isAdapted = !!(this.currentBookMeta?.parent_book);
+        return this.adminOrLibrarian
+          && (!["Adapted", "Translated"].includes(filterTag) || !isAdapted);
       }
     }
   }

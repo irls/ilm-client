@@ -128,6 +128,10 @@ function align(el) {
   if (modifiers.bottom) {
     alignBottom(el);
   }
+
+  if (modifiers.right) {
+    alignRight(el);
+  }
   
   let tooltipElement = getTooltipElement(el);
   let inBounds = isOutOfBounds(tooltipElement);
@@ -161,6 +165,16 @@ function alignBottom(el) {
   let hostOffset = getHostOffset(el);
   let left = hostOffset.left + (getOuterWidth(el) - getOuterWidth(tooltipElement)) / 2;
   let top = hostOffset.top + getOuterHeight(tooltipElement);
+  tooltipElement.style.left = left + 'px';
+  tooltipElement.style.top = top + 'px';
+}
+
+function alignRight(el) {
+  preAlign(el, 'right');
+  let tooltipElement = getTooltipElement(el);
+  let hostOffset = getHostOffset(el);
+  let left = hostOffset.left + getOuterWidth(el);
+  let top = hostOffset.top - getOuterHeight(el) / 2;
   tooltipElement.style.left = left + 'px';
   tooltipElement.style.top = top + 'px';
 }
