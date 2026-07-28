@@ -1172,7 +1172,7 @@ Save or discard your changes to continue editing`,
                 return part?.audiosrc?.length == 0 || !part?.audiosrc_ver?.m4a;
               });
             }
-            return this.block.audiosrc && (!this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a);
+            return this.block.audiosrc.length == 0 || !this.block.audiosrc_ver?.m4a;
           }
           return false;
         }
