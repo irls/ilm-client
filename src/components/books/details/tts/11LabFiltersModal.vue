@@ -15,13 +15,12 @@
       <div class="eleven-lab-filters-modal-wrapper">
         <div class="modal-header">
           <div class="header-title">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')">
-            <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-            </button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')"><span aria-hidden="true">×</span></button>
             <h4>Select voices</h4>
           </div>
         </div>
         <div class="modal-body">
+          <div v-if="isVoicesListLoading" class="disable-modal"></div>
           <div class="tabs-controls">
             <TabView ref="charactersTabs" :scrollable="true"
               :activeIndex="charactersTabsActiveIndex"
@@ -69,6 +68,9 @@
               </TabPanel>-->
 
             </TabView>
+            <div class="generate-all">
+              <button class="btn btn-primary" :disabled="isVoicesListLoading" v-on:click="generateAllCharactersApprove">Generate all</button>
+            </div>
           </div>
           <!--<div class="tabs-controls">-->
 
@@ -100,7 +102,7 @@
           <button
             class="btn btn-primary"
             @click="applyCharactersChanges"
-            :disabled="getSelectedVoicesByCharacters === 0">
+            :disabled="getSelectedVoicesByCharacters === 0 || isVoicesListLoading">
             <!--<i class="fa fa-plus"></i>&nbsp;-->
             Apply Voices ({{getSelectedVoicesByCharacters}})
           </button>
@@ -119,12 +121,21 @@
         <button class="btn btn-default" v-on:click="removeCharacterCancel">Cancel</button>
       </div>
     </modal>
+    <modal name="generate-all-message"
+      class="eleven-labs-characters-modal"
+      height="auto" :width="400" :resizeable="false">
+      <div class="modal-header">Generate characters and voice tags</div>
+      <div class="modal-body">
+        <p>Generated characters and voice tags are suggestions and may require review and adjustment. Existing character tabs will be replaced.<br>Generate main characters, voice tags, and filter voices?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" v-on:click="generateAllCharacters">Generate all & Filter</button>
+        <button class="btn btn-default" v-on:click="generateAllCharactersCancel">Cancel</button>
+      </div>
+    </modal>
   </div>
 </template>
 <script>
-  //import Grid from '../../../generic/Grid';
-
-  import api_config from '../../../../mixins/api_config.js' // ?????
 
   import TabPanel from 'primevue/tabpanel';
   import TabView  from '../../../generic/components/TabViewILM.vue';
@@ -169,7 +180,6 @@
         elevenLabFiltersBar,
         elevenLabSearchResults
       },
-      mixins: [api_config],
       computed: {
         ...mapGetters({
           currentBookid:                 'currentBookid',
@@ -178,6 +188,8 @@
           getSelectedVoice:              'elevenLabsVoicesModule/getSelectedVoice',
           getSelectedVoicesByCharacters: 'elevenLabsVoicesModule/getSelectedVoicesByCharacters',
           defaultTitles:                 'elevenLabsVoicesModule/getDefaultTitles',
+          currentBookMeta:               'currentBookMeta',
+          isVoicesListLoading:           'elevenLabsVoicesModule/isVoicesListLoading'
         })
       },
       async mounted() {
@@ -193,7 +205,7 @@
         this.$store.commit('elevenLabsVoicesModule/set_voicesListEmpty');
       },
       methods: {
-        //...mapActions(),
+        ...mapActions('elevenLabsVoicesModule', ['generateCharacters']),
 
         showModal(name) {
           this.$emit('stop', {});
@@ -372,6 +384,40 @@
           //const { event, voice, character } = params;
           this.$emit('stop', params);
         },
+
+        generateAllCharacters() {
+          this.hideModal('generate-all-message');
+          return this.generateCharacters({ bookid:  this.currentBookid})
+            .then(() => {
+              this.charactersTabsActiveIndex = 0;
+              this.$refs.charactersTabs.onResize(0);
+              this.charactersTabChange({ index: 0 });
+            })
+        },
+
+        generateAllCharactersApprove() {
+          if (!this.currentBookMeta.title) {
+            return this.$modal.show('dialog', {
+              title: 'Book Title required',
+              text: 'Please specify Book Title to generate voice tags',
+              buttons: [
+                {
+                  title: 'Ok',
+                  handler: () => {
+                    this.$modal.hide('dialog');
+                  },
+                  class: 'btn btn-primary'
+                },
+                
+              ]
+            });
+          }
+          this.showModal('generate-all-message');
+        },
+
+        generateAllCharactersCancel() {
+          this.hideModal('generate-all-message');
+        }
       }
   }
 </script>
@@ -402,6 +448,20 @@
 
     .tabs-controls {
       padding-bottom: 10px;
+      display: flex;
+      /*flex-direction: row;*/
+      .p-tabview-scrollable {
+        max-width: 90%;
+      }
+      .meta-edit-tabs {
+        flex: 1;
+      }
+      .generate-all {
+        display: flex;
+        flex: 1;
+        max-width: 100px;
+        padding: 0px 20px;
+      }
     }
 
     span.p-tabview-title-character {
@@ -439,6 +499,13 @@
 
   .modal-footer {
     border-top: none;
+  }
+
+  .disable-modal {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
   }
 
 }

@@ -29,7 +29,7 @@ export default {
       id: ''
     },
     emptyCharactersList: [{
-      filters: {},
+      filters: {'hq': ['hq']},
       name: DEFAULT_NARRATOR,
       id: false,
       bookid: false,
@@ -51,7 +51,7 @@ export default {
     isVoicesListLoaded: state => {
       return state.voicesList.loaded;
     },
-    mapVoicesList: state => {
+    mapVoicesList: (state, getters, rootState, rootGetters) => {
       if (state.voicesList.loaded) {
         return state.voicesList.list;
       }
@@ -87,6 +87,12 @@ export default {
         return _v.voice && _v.voice_id;
       }).length;
     },
+    emptyCharactersList: (state, getters, rootState, rootGetters) => {
+      if (rootState.currentBookMeta && rootState.currentBookMeta.language && state.emptyCharactersList[0]) {
+        state.emptyCharactersList[0].filters.language = [rootState.currentBookMeta.language];
+      }
+      return state.emptyCharactersList;
+    }
   },
   mutations: {
     set_FilterButtonPressed(state, isPressed) {
@@ -293,7 +299,7 @@ export default {
   },
   actions: {
 
-    loadBookCharacters({rootState, state, commit}, bookid) {
+    loadBookCharacters({rootState, state, commit, getters}, bookid) {
       return axios.get(`${rootState.API_URL}tts/eleven_labs/${bookid}/characters`)
       .then(response => {
         let { characters, id, bookid } = response.data;
@@ -306,7 +312,7 @@ export default {
             characters[loop].isSelected = voiceId && voiceId === characters[loop]?.voice_id;
           }
         } else {
-          characters = state.emptyCharactersList;
+          characters = getters.emptyCharactersList;
           characters[0].bookid = bookid;
         }
         commit('set_voicesListEmpty');
@@ -418,7 +424,8 @@ export default {
         hq,
         accent,
         nativeLanguage,
-        notice
+        notice,
+        tag
       } = rootGetters['elevenLabsVoicesFilters/voiceFilters'];
       const preparedFilters = {};
 
@@ -450,6 +457,9 @@ export default {
       }
       if (notice.length) {
         preparedFilters.notice_period = notice;
+      }
+      if (Object.keys(tag).length > 0) {
+        preparedFilters.tag = tag;
       }
 
       commit('set_voicesListLoading', true);
@@ -507,6 +517,54 @@ export default {
         commit('set_charactersList', { characters, id, bookid });
       }).catch(err=>{
         console.error('deleteVoice', err);
+        return Promise.reject(err);
+      })
+    },
+
+    generateCharacters({rootState, state, commit, dispatch}, params) {
+      const { bookid } = params;
+      commit('set_voicesListLoading', true);
+      return axios.post(`${rootState.API_URL}tts/eleven_labs/${bookid}/generate_characters`)
+      .then(response => {
+        const { bookid, characters, id } = response.data;
+        let loadLists = [];
+        if (characters.length > 0) {
+          loadLists.push(dispatch('applyFilterVoices', 0));
+        }
+        return Promise.all(loadLists)
+          .then(() => {
+            commit('set_initCharactersList', response.data);
+            commit('set_charactersList', response.data);
+            commit('set_voicesListLoading', false);
+          });
+      }).catch(err=>{
+        return Promise.reject(err);
+      })
+    },
+
+    generateCharacter({rootState, state, commit, dispatch}, params) {
+      const { bookid, characterIdx } = params;
+      commit('set_voicesListLoading', true);
+      return dispatch('saveBookCharacters', params)
+        .then(() => {
+          return axios.post(`${rootState.API_URL}tts/eleven_labs/${bookid}/generate_character/${characterIdx}`)
+          .then(response => {
+            const { bookid, characters, id } = response.data;
+            let loadLists = [];
+            if (characters && characters[characterIdx]) {
+              commit('elevenLabsVoicesFilters/set_voiceFilters', characters[characterIdx].filters, { root: true });
+            }
+            if (characters.length > 0) {
+              loadLists.push(dispatch('applyFilterVoices', characterIdx));
+            }
+            return Promise.all(loadLists)
+              .then(() => {
+                commit('set_initCharactersList', response.data);
+                commit('set_charactersList', response.data);
+                commit('set_voicesListLoading', false);
+              });
+        })
+      }).catch(err=>{
         return Promise.reject(err);
       })
     }

@@ -29,6 +29,7 @@
       :options="mapVoiceFilterAccents" optionLabel="caption"
       data-captions="Accents" placeholder="Accent"
       display="chip" :showToggleAll="false"
+      :disabled="accentFilterDisabled"
       @change="filterVoiceChange" />
 
     <div class="or-divider"><span>or</span></div>
@@ -40,6 +41,7 @@
       :options="mapVoiceFilterLanguages" optionLabel="caption"
       data-captions="Native languages" placeholder="Native language"
       display="chip" :showToggleAll="false"
+      :disabled="nativeLanguageFilterDisabled"
       @change="filterVoiceChange" />
 
     <!-- Gender Dropdown -->
@@ -78,11 +80,21 @@
       display="chip" :showToggleAll="false"
       :selectionLimit="1"
       @change="filterVoiceChange" />
+      <template v-for="tagFilter in availableTagsFilters">
+        <MultiSelect v-if="mapVoiceFilterLibraries.tag[tagFilter.name] && mapVoiceFilterLibraries.tag[tagFilter.name].length > 0" 
+          v-model="multiSelectVoiceModel.tag[tagFilter.name]"
+          class="multi-select-notice"
+          :options="mapVoiceFilterLibraries.tag[tagFilter.name]" optionLabel="caption"
+          data-captions="Notices" :placeholder="tagFilter.label"
+          display="chip" :showToggleAll="false"
+          @change="filterVoiceChange" />
+      </template>
   </div>
   <!--<div class="voice-filters-first-row"-->
   <div class="voice-filters-second-row" ref="voiceFiltersSecondRow">
+    <button class="btn btn-primary" :disabled="isVoicesListLoading" @click="generateCharacterApprove">Generate</button>
     <button class="btn btn-default" @click="cleanFilterVal('voiceFilters.filter'); resetFilters();">Reset filters</button>
-    <button :disabled="!isReqFltrsSelected"
+    <button :disabled="!isReqFltrsSelected || isVoicesListLoading"
       class="btn btn-primary"
       @click="applyFilters">Filter</button>
   </div>
@@ -132,7 +144,14 @@ export default {
     methods: {
       filterVoiceChange (key, $event) {
         const newFilters = Object.entries(this.multiSelectVoiceModel).reduce((acc, [key, val])=>{
-          acc[key] = val.map((el)=>el.value);
+          if (Array.isArray(val)) {
+            acc[key] = val.map((el)=>el.value);
+          } else {
+            acc[key] = Object.entries(val).reduce((_acc, [ _key, _val ]) => {
+              _acc[_key] = _val.map((_el) => _el.value);
+              return _acc;
+            }, {});
+          }
           return acc;
         }, {});
         if (key && key === 'filter') {
@@ -215,6 +234,49 @@ export default {
           }
         })
       },
+      generateCharacterApprove() {
+        if (!this.currentBookMeta.title) {
+          return this.$modal.show('dialog', {
+            title: 'Book Title required',
+            text: 'Please specify Book Title to generate voice tags',
+            buttons: [
+              {
+                title: 'Ok',
+                handler: () => {
+                  this.$modal.hide('dialog');
+                },
+                class: 'btn btn-primary'
+              },
+              
+            ]
+          });
+        }
+        this.$modal.show('dialog', {
+          title: 'Generate voice tags',
+          text: 'Generated voice tags are suggestions and may require review and adjustment.<br>Generate tags and filter voices?',
+          buttons: [
+            {
+              title: 'Generate & Filter',
+              handler: () => {
+                this.$modal.hide('dialog');
+                this.generateCharacter({bookid: this.currentBookid, characterIdx: this.activeIndex})
+                  .then(() => {
+                    this.$emit('onApplyFilters', { index: this.activeIndex });
+                  });
+              },
+              class: 'btn btn-primary'
+            },
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$modal.hide('dialog');
+              },
+              class: 'btn btn-default'
+            }
+          ]
+        });
+      },
+      ...mapActions('elevenLabsVoicesModule', ['generateCharacter'])
     },
     computed: {
       ...mapGetters({
@@ -227,7 +289,21 @@ export default {
         mapVoiceFilterHQ:         'elevenLabsVoicesFilters/mapVoiceFilterHQ',
         isReqFltrsSelected:       'elevenLabsVoicesFilters/isReqFltrsSelected',
         defaultVoiceFilters:      'elevenLabsVoicesFilters/defaultVoiceFilters',
+        availableTagsFilters:     'elevenLabsVoicesFilters/availableTagsFilters',
+        currentBookid:            'currentBookid',
+        currentBookMeta:          'currentBookMeta',
+        isVoicesListLoading:      'elevenLabsVoicesModule/isVoicesListLoading'
       }),
+      accentFilterDisabled: {
+        get() {
+          return this.multiSelectVoiceModel.nativeLanguage.length > 0;
+        }
+      },
+      nativeLanguageFilterDisabled: {
+        get() {
+          return this.multiSelectVoiceModel.accent.length > 0;
+        }
+      }
     },
     components: {
       MultiSelect
@@ -314,6 +390,9 @@ export default {
 
     button.btn {
       margin-left: 15px;
+      &:first-child {
+        margin-right: auto;
+      }
     }
   }
 }
@@ -343,8 +422,7 @@ export default {
       /*padding: 0.25rem 0.5rem;*/
     }
     &.multi-select-language,
-    &.multi-select-gender,
-    &.multi-select-age {
+    &.multi-select-gender {
       .p-multiselect-label.p-placeholder {
         &:before {
           content: "*";
