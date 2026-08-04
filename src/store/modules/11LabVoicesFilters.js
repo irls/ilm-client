@@ -8,6 +8,15 @@
 
 import axios from "axios";
 
+const tagsFilters = [
+  { name: 'age', label: 'Refine age' },
+  { name: 'social_class', label: 'Social class' },
+  { name: 'tone', label: 'Tone' },
+  { name: 'energy_level', label: 'Energy' },
+  { name: 'speech_rate', label: 'Rate' },
+  { name: 'voice_texture', label: 'Texture' }
+];
+
 export default {
   namespaced: true,
   state: {
@@ -19,10 +28,11 @@ export default {
       language: [],
       accent: [],
       nativeLanguage: [],
-      hq: [],
+      hq: ['hq'],
       age: [],
       gender: [],
-      notice: []
+      notice: [],
+      tag: {}
     },
 
     voiceFilters: {
@@ -34,7 +44,8 @@ export default {
       hq: [],
       age: [],
       gender: [],
-      notice: []
+      notice: [],
+      tag: {}
     },
 
     defaultMultiSelectVoiceModel: {
@@ -44,7 +55,8 @@ export default {
       hq: [],
       age: [],
       gender: [],
-      notice: []
+      notice: [],
+      tag: {}
     },
 
     multiSelectVoiceModel: {
@@ -54,7 +66,8 @@ export default {
       hq: [],
       age: [],
       gender: [],
-      notice: []
+      notice: [],
+      tag: {}
     },
 
     // mapFilterJobStatus: [
@@ -76,7 +89,8 @@ export default {
       loaded: false,
       age: [],
       gender: [],
-      notice: []
+      notice: [],
+      tag: {}
     },
     hqFilterList: {
       loaded: true,
@@ -117,13 +131,15 @@ export default {
         return {
           age: state.librariesFilterObj.age,
           gender: state.librariesFilterObj.gender,
-          notice: state.librariesFilterObj.notice
+          notice: state.librariesFilterObj.notice,
+          tag: state.librariesFilterObj.tag
         }
       }
       return {
         age: [],
         gender: [],
-        notice: []
+        notice: [],
+        tag: {}
       };
     },
 
@@ -135,9 +151,26 @@ export default {
     },
 
     isReqFltrsSelected: (state, getters, rootState, rootGetters) => {
-      const reqFltrs = ['language', 'gender', 'age'];
+      const reqFltrs = ['language', 'gender'];
       return reqFltrs.every((field)=>state.voiceFilters[field].length);
     },
+    availableTagsFilters: state => {
+      return tagsFilters;
+    },
+    defaultMultiSelectVoiceModel: (state, getters, rootState, rootGetters) => {
+      let defaults = {
+        hq: [state.hqFilterList.list[0]]
+      };
+      if (rootState.currentBookMeta && rootState.currentBookMeta.language) {
+        const lang = state.languageFilterList.list.find(_lang => {
+          return _lang.value === rootState.currentBookMeta.language;
+        });
+        if (lang) {
+          defaults.language = [lang];
+        }
+      }
+      return Object.assign(state.defaultMultiSelectVoiceModel, defaults);
+    }
   },
   mutations: {
     set_multiSelectVoiceModel(state, payload) {
@@ -156,7 +189,7 @@ export default {
 
     set_resetVoiceFilters (state) {
       state.voiceFilters = Object.assign({}, state.defaultVoiceFilters);
-      state.multiSelectVoiceModel = Object.assign({}, state.defaultMultiSelectVoiceModel);
+      state.multiSelectVoiceModel = Object.assign({}, this.getters['elevenLabsVoicesFilters/defaultMultiSelectVoiceModel']);
       state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
 
@@ -198,6 +231,17 @@ export default {
         caption: _val.label ? _val.label : _val.name,
         value: _val.name
       }));
+      if (Array.isArray(obj.tags) && obj.tags.length > 0) {
+        state.librariesFilterObj.tag = obj.tags.reduce((acc, curr) => {
+          acc[curr.tag.name] = curr.values.map((_val) => {
+            return {
+              caption: _val.name,
+              value: _val.name
+            }
+          });
+          return acc;
+        }, {});
+      }
       state.librariesFilterObj.loaded = true;
     },
 
@@ -214,6 +258,12 @@ export default {
             } else {
               initFilters[key] = fObj[key];
             }
+          } else {
+            if (Array.isArray(state.defaultVoiceFilters[key])) {
+              initFilters[key] = [];
+            } else {
+              initFilters[key] = state.defaultVoiceFilters[key];
+            }
           }
         }
         state.voiceFilters = {...state.defaultVoiceFilters, ...initFilters};
@@ -223,8 +273,16 @@ export default {
           if (searchArr.length) {
             // age gender notice
             if (state.librariesFilterObj[key]) {
-              const values = state.librariesFilterObj[key].filter((_v)=>searchArr.indexOf(_v.value) > -1);
-              if (values.length) {
+              const values = Array.isArray(state.librariesFilterObj[key]) ? 
+                state.librariesFilterObj[key].filter((_v)=>searchArr.indexOf(_v.value) > -1) : 
+                Object.entries(state.librariesFilterObj[key]).reduce((acc, [ _key, _val ]) => {
+                  const _values = searchArr[0][_key] ? _val.filter((_v) => searchArr[0][_key].indexOf(_v.value) !== -1) : [];
+                  if (_values.length > 0) {
+                    acc[_key] = _values;
+                  }
+                  return acc;
+                }, {});
+              if ((Array.isArray(values) && values.length) || Object.keys(values).length > 0) {
                 state.multiSelectVoiceModel[key] = values;
               }
             }

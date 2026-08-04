@@ -1,11 +1,11 @@
 <template>
 <div class="search-results-main-wrapper">
   <div v-if="!isReqFltrsSelected" class="search-results-filter-non-selected">
-    Voice filtering requires Language, Gender and Age to be selected.
+    {{emptyFiltersMessage}}
   </div>
   <div v-if="isReqFltrsSelected && isVoicesListLoaded && !isVoicesListLoading && mapVoicesList.length == 0"
     class="search-results-filter-empty">
-      No voices match the selected criteria. Please refine your filters and try again.
+      {{emptyListMessage}}
   </div>
 
   <div v-if="!isVoicesListLoading" class="search-results-list-wrapper">
@@ -25,7 +25,6 @@
             </div>
           </div>
           <div class="result-list-tags-row">
-            <div class="result-tags-item">Language - {{labelLanguage(voice.language)}}</div>
             <div class="result-tags-item"
               v-if="labelAccent(voice.accent)">Accent - {{labelAccent(voice.accent)}}</div>
             <div class="result-tags-item"
@@ -36,6 +35,11 @@
               v-if="labelHQ(voice.category)">{{labelHQ(voice.category)}}</div>
             <div class="result-tags-item"
               v-if="labelNotice(voice.notice_period)">{{labelNotice(voice.notice_period)}}</div>
+            <template v-if="Array.isArray(voice.tags)">
+              <div v-for="tag in voice.tags" class="result-tags-item" :title="labelTagTitle(tag)">
+                {{ tag.key }}
+              </div>
+            </template>
           </div>
         </div>
 
@@ -44,6 +48,7 @@
       </li>
     </ul>
   </div>
+  <div v-else class="voices-list-preloader"></div>
 
 </div>
 <!--<div class="search-results-main-wrapper">-->
@@ -164,6 +169,9 @@ export default {
         }
         return false;
       },
+      labelTagTitle(tag) {
+        return `${tag.value}: ${tag.description}`;
+      }
     },
     computed: {
       ...mapGetters({
@@ -179,6 +187,16 @@ export default {
         voiceFilterLibraries: 'elevenLabsVoicesFilters/mapVoiceFilterLibraries',
         voiceFilterHQ:        'elevenLabsVoicesFilters/mapVoiceFilterHQ'
       }),
+      emptyListMessage: {
+        get() {
+          return this.character?.auto_generated ? 'No voices found for the character. Please try a different name or adjust filters' : 'No voices match the selected criteria. Please refine your filters and try again.';
+        }
+      },
+      emptyFiltersMessage: {
+        get() {
+          return this.character?.auto_generated ? 'No voices found for the character. Please try a different name or adjust filters' : 'Voice filtering requires Language and Gender to be selected.';
+        }
+      }
     },
     components: {
     },
@@ -269,6 +287,7 @@ export default {
       .result-list-tags-row {
         display: flex;
         flex-direction: row;
+        flex-wrap: wrap;
 
         .result-tags-item {
           border-radius: 4px;
@@ -276,10 +295,31 @@ export default {
           margin-right: 0.5rem;
           background: #edebe9;
           color: #323130;
+          white-space: nowrap;
+          margin: 0.25rem;
         }
       }
     }
 
+  }
+  .voices-list-preloader {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    color: #c5c2c2;
+    box-shadow: 
+      calc(1*22px)      calc(0*22px)     0 0,
+      calc(0.707*22px)  calc(0.707*22px) 0 1px,
+      calc(0*22px)      calc(1*22px)     0 2px,
+      calc(-0.707*22px) calc(0.707*22px) 0 3px,
+      calc(-1*22px)     calc(0*22px)     0 4px,
+      calc(-0.707*22px) calc(-0.707*22px)0 5px,
+      calc(0*22px)      calc(-1*22px)    0 6px;
+    animation: l27 1s infinite steps(8);
+    margin: 60px auto;
+  }
+  @keyframes l27 {
+    100% {transform: rotate(1turn)}
   }
 }
 

@@ -124,7 +124,6 @@
           <button :class="['align-blocks', {'align-blocks-gray':alignProcess}]" :disabled="isAlignButtonDisabled" v-on:click="startAlign" title="Align Text with TTS Audio"></button>
           <!--<button class="cancel-align" v-if="alignProcess" v-on:click="cancelAlign()" title="Cancel Alignment">
             <i class="fa fa-ban"></i>-->
-          </button>
         </div>
       </div>
     </fieldset>
