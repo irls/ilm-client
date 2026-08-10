@@ -52,6 +52,14 @@
       data-captions="Genders" placeholder="Gender"
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
+    
+    <MultiSelect v-if="mapVoiceFilterLibraries.refine_gender.length > 0"
+      v-model="multiSelectVoiceModel.tag['gender']"
+      class="multi-select-refine-gender"
+      :options="mapVoiceFilterLibraries.refine_gender" optionLabel="caption"
+      data-captions="Refine gender" placeholder="Refine gender"
+      display="chip" :showToggleAll="false"
+      @change="filterVoiceChange" />
 
     <!-- Age Dropdown -->
     <MultiSelect v-if="mapVoiceFilterLibraries.age.length > 0"
@@ -59,6 +67,14 @@
       :selectionLimit="1" class="multi-select-age"
       :options="mapVoiceFilterLibraries.age" optionLabel="caption"
       data-captions="Ages" placeholder="Age"
+      display="chip" :showToggleAll="false"
+      @change="filterVoiceChange" />
+    
+    <MultiSelect v-if="mapVoiceFilterLibraries.refine_age.length > 0"
+      v-model="multiSelectVoiceModel.tag['age']"
+      class="multi-select-refine-age"
+      :options="mapVoiceFilterLibraries.refine_age" optionLabel="caption"
+      data-captions="Refine age" placeholder="Refine age"
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
 
