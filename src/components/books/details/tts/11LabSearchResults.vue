@@ -30,16 +30,16 @@
             <div class="result-tags-item"
               v-if="labelVerifiedLang(voice)">Native - {{labelVerifiedLang(voice)}}</div>
             <div class="result-tags-item">{{labelGender(voice.gender)}}</div>
+            <div class="result-tags-item" v-if="tag = refineGenderTag(voice)" :title="labelTagTitle(tag)">{{ tag.key }}</div>
             <div class="result-tags-item">{{labelAge(voice.age)}}</div>
+            <div class="result-tags-item" v-if="tag = refineAgeTag(voice)" :title="labelTagTitle(tag)">{{ tag.key }}</div>
             <div class="result-tags-item"
               v-if="labelHQ(voice.category)">{{labelHQ(voice.category)}}</div>
             <div class="result-tags-item"
               v-if="labelNotice(voice.notice_period)">{{labelNotice(voice.notice_period)}}</div>
-            <template v-if="Array.isArray(voice.tags)">
-              <div v-for="tag in voice.tags" class="result-tags-item" :title="labelTagTitle(tag)">
-                {{ tag.key }}
-              </div>
-            </template>
+            <div v-for="tag in displayResultTags(voice)" class="result-tags-item" :title="labelTagTitle(tag)">
+              {{ tag.key }}
+            </div>
           </div>
         </div>
 
@@ -171,6 +171,32 @@ export default {
       },
       labelTagTitle(tag) {
         return `${tag.value}: ${tag.description}`;
+      },
+      refineGenderTag(voice) {
+        if (voice && Array.isArray(voice.tags)) {
+          let genderTag = voice.tags.find(tag => {
+            return tag.tag === "gender";
+          });
+          return genderTag;
+        }
+        return '';
+      },
+      refineAgeTag(voice) {
+        if (voice && Array.isArray(voice.tags)) {
+          let ageTag = voice.tags.find(tag => {
+            return tag.tag === "age";
+          });
+          return ageTag;
+        }
+        return '';
+      },
+      displayResultTags(voice) {
+        if (Array.isArray(voice.tags)) {
+          return voice.tags.filter(tag => {
+            return ['social_class', 'tone', 'energy_level', 'speech_rate', 'voice_texture'].includes(tag.tag);
+          });
+        }
+        return [];
       }
     },
     computed: {
