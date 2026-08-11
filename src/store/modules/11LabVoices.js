@@ -533,8 +533,14 @@ export default {
         }
         return Promise.all(loadLists)
           .then(() => {
-            commit('set_initCharactersList', response.data);
-            commit('set_charactersList', response.data);
+            let bookCharacters = response.data;
+            bookCharacters.characters = bookCharacters.characters.map(character => {
+              return Object.assign(character, {
+                uuid: uuidv4()
+              });
+            });
+            commit('set_initCharactersList', bookCharacters);
+            commit('set_charactersList', bookCharacters);
             commit('set_voicesListLoading', false);
           });
       }).catch(err=>{
@@ -559,8 +565,14 @@ export default {
             }
             return Promise.all(loadLists)
               .then(() => {
-                commit('set_initCharactersList', response.data);
-                commit('set_charactersList', response.data);
+                let bookCharacters = response.data;
+                bookCharacters.characters = bookCharacters.characters.map(character => {
+                  return Object.assign(character, {
+                    uuid: uuidv4()
+                  });
+                });
+                commit('set_initCharactersList', bookCharacters);
+                commit('set_charactersList', bookCharacters);
                 commit('set_voicesListLoading', false);
               });
         })
