@@ -408,6 +408,7 @@ export default {
       margin-left: 15px;
       &:first-child {
         margin-right: auto;
+        margin-left: 0px;
       }
     }
   }

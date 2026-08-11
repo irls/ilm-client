@@ -460,7 +460,8 @@
         display: flex;
         flex: 1;
         max-width: 100px;
-        padding: 0px 20px;
+        margin-right: 0px;
+        margin-left: auto;
       }
     }
 
