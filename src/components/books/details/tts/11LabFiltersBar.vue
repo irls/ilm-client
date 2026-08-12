@@ -53,10 +53,10 @@
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
     
-    <MultiSelect v-if="mapVoiceFilterLibraries.refine_gender.length > 0"
+    <MultiSelect v-if="mapVoiceFilterLibraries.tag.gender.length > 0"
       v-model="multiSelectVoiceModel.tag['gender']"
       class="multi-select-refine-gender"
-      :options="mapVoiceFilterLibraries.refine_gender" optionLabel="caption"
+      :options="mapVoiceFilterLibraries.tag.gender" optionLabel="caption"
       data-captions="Refine gender" placeholder="Refine gender"
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
@@ -70,10 +70,10 @@
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
     
-    <MultiSelect v-if="mapVoiceFilterLibraries.refine_age.length > 0"
+    <MultiSelect v-if="mapVoiceFilterLibraries.tag.age.length > 0"
       v-model="multiSelectVoiceModel.tag['age']"
       class="multi-select-refine-age"
-      :options="mapVoiceFilterLibraries.refine_age" optionLabel="caption"
+      :options="mapVoiceFilterLibraries.tag.age" optionLabel="caption"
       data-captions="Refine age" placeholder="Refine age"
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
