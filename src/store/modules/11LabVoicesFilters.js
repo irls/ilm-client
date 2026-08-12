@@ -9,7 +9,7 @@
 import axios from "axios";
 
 const tagsFilters = [
-  { name: 'age', label: 'Refine age' },
+  /*{ name: 'age', label: 'Refine age' },*/
   { name: 'social_class', label: 'Social class' },
   { name: 'tone', label: 'Tone' },
   { name: 'energy_level', label: 'Energy' },
@@ -32,9 +32,7 @@ export default {
       age: [],
       gender: [],
       notice: [],
-      tag: {},
-      refine_gender: [],
-      refine_age: []
+      tag: {}
     },
 
     voiceFilters: {
@@ -47,9 +45,7 @@ export default {
       age: [],
       gender: [],
       notice: [],
-      tag: {},
-      refine_gender: [],
-      refine_age: []
+      tag: {}
     },
 
     defaultMultiSelectVoiceModel: {
@@ -60,9 +56,7 @@ export default {
       age: [],
       gender: [],
       notice: [],
-      tag: {},
-      refine_gender: [],
-      refine_age: []
+      tag: {}
     },
 
     multiSelectVoiceModel: {
@@ -73,9 +67,7 @@ export default {
       age: [],
       gender: [],
       notice: [],
-      tag: {},
-      refine_gender: [],
-      refine_age: []
+      tag: {}
     },
 
     // mapFilterJobStatus: [
@@ -98,9 +90,7 @@ export default {
       age: [],
       gender: [],
       notice: [],
-      tag: {},
-      refine_gender: [],
-      refine_age: []
+      tag: {}
     },
     hqFilterList: {
       loaded: true,
@@ -142,18 +132,14 @@ export default {
           age: state.librariesFilterObj.age,
           gender: state.librariesFilterObj.gender,
           notice: state.librariesFilterObj.notice,
-          tag: state.librariesFilterObj.tag,
-          refine_gender: state.librariesFilterObj.refine_gender,
-          refine_age: state.librariesFilterObj.refine_age
+          tag: state.librariesFilterObj.tag
         }
       }
       return {
         age: [],
         gender: [],
         notice: [],
-        tag: {},
-        refine_gender: [],
-        refine_age: []
+        tag: {}
       };
     },
 
@@ -247,30 +233,6 @@ export default {
       }));
       if (Array.isArray(obj.tags) && obj.tags.length > 0) {
         let tags = [...obj.tags];
-        const genderIndex = tags.findIndex(tag => {
-          return tag.tag.name === "gender";
-        });
-        if (genderIndex !== -1) {
-          state.librariesFilterObj.refine_gender = tags[genderIndex].values.map(_val => {
-            return {
-              caption: _val.name,
-              value: _val.name
-            };
-          });
-          tags.splice(genderIndex, 1);
-        }
-        const ageIndex = tags.findIndex(tag => {
-          return tag.tag.name === "age";
-        });
-        if (ageIndex !== -1) {
-          state.librariesFilterObj.refine_age = tags[ageIndex].values.map(_val => {
-            return {
-              caption: _val.name,
-              value: _val.name
-            };
-          });
-          tags.splice(ageIndex, 1);
-        }
         state.librariesFilterObj.tag = tags.reduce((acc, curr) => {
           acc[curr.tag.name] = curr.values.map((_val) => {
             return {
