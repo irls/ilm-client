@@ -64,7 +64,7 @@
     <!-- Age Dropdown -->
     <MultiSelect v-if="mapVoiceFilterLibraries.age.length > 0"
       v-model="multiSelectVoiceModel.age"
-      :selectionLimit="1" class="multi-select-age"
+      class="multi-select-age"
       :options="mapVoiceFilterLibraries.age" optionLabel="caption"
       data-captions="Ages" placeholder="Age"
       display="chip" :showToggleAll="false"
