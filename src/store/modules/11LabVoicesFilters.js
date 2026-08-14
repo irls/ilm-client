@@ -16,6 +16,7 @@ const tagsFilters = [
   { name: 'speech_rate', label: 'Rate' },
   { name: 'voice_texture', label: 'Texture' }
 ];
+const reqFltrs = ['language', 'gender'];
 
 export default {
   namespaced: true,
@@ -151,7 +152,6 @@ export default {
     },
 
     isReqFltrsSelected: (state, getters, rootState, rootGetters) => {
-      const reqFltrs = ['language', 'gender'];
       return reqFltrs.every((field)=>state.voiceFilters[field].length);
     },
     availableTagsFilters: state => {
@@ -310,6 +310,10 @@ export default {
               if (values.length) {
                 state.multiSelectVoiceModel[key] = values;
               }
+            }
+          } else {
+            if (!reqFltrs.includes(key)) {
+              state.multiSelectVoiceModel[key] = state.voiceFilters[key];
             }
           }
         }
