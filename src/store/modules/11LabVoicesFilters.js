@@ -7,6 +7,7 @@
 //import { Languages }       from "@src/mixins/lang_config.js"
 
 import axios from "axios";
+import lodash from "lodash";
 
 const tagsFilters = [
   /*{ name: 'age', label: 'Refine age' },*/
@@ -159,7 +160,8 @@ export default {
     },
     defaultMultiSelectVoiceModel: (state, getters, rootState, rootGetters) => {
       let defaults = {
-        hq: [state.hqFilterList.list[0]]
+        hq: [state.hqFilterList.list[0]],
+        tag: {}
       };
       if (rootState.currentBookMeta && rootState.currentBookMeta.language) {
         const lang = state.languageFilterList.list.find(_lang => {
@@ -169,7 +171,7 @@ export default {
           defaults.language = [lang];
         }
       }
-      return Object.assign(state.defaultMultiSelectVoiceModel, defaults);
+      return Object.assign(lodash.cloneDeep(state.defaultMultiSelectVoiceModel), {...defaults});
     }
   },
   mutations: {
@@ -189,7 +191,7 @@ export default {
 
     set_resetVoiceFilters (state) {
       state.voiceFilters = Object.assign({}, state.defaultVoiceFilters);
-      state.multiSelectVoiceModel = Object.assign({}, this.getters['elevenLabsVoicesFilters/defaultMultiSelectVoiceModel']);
+      state.multiSelectVoiceModel = lodash.cloneDeep(this.getters['elevenLabsVoicesFilters/defaultMultiSelectVoiceModel']);
       state.fltrChangeTrigger = !state.fltrChangeTrigger;
     },
 
@@ -248,7 +250,7 @@ export default {
 
     set_initFilters (state, fObj) {
       state.voiceFilters = Object.assign({}, state.defaultVoiceFilters);
-      state.multiSelectVoiceModel = Object.assign({}, state.defaultMultiSelectVoiceModel);
+      state.multiSelectVoiceModel = Object.assign({}, lodash.cloneDeep(state.defaultMultiSelectVoiceModel));
       if (fObj) {
         // state.voiceFilters
         let initFilters = {};
