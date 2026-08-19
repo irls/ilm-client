@@ -199,7 +199,7 @@ export default {
     set_charactersListAddItem(state, bookid) {
       const num = state.charactersList.list.length;
       state.charactersList.list.push({
-        filters: {},
+        filters: this.getters['elevenLabsVoicesFilters/defaultMultiSelectVoiceModel'],
         name: num > 0 ? DEFAULT_CHARACTER/*+' '+num*/ : DEFAULT_NARRATOR,
         id: null,
         bookid,

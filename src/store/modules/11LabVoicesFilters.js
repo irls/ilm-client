@@ -290,12 +290,16 @@ export default {
               }
             }
             // language nativeLanguage
-            let values = state.languageFilterList.list.filter((_v)=>searchArr.indexOf(_v.value) > -1);
+            let values = state.languageFilterList.list.filter((_v)=> {
+              return searchArr.indexOf(_v.value) > -1 || searchArr.find(_s => _s.value === _v.value);
+            });
             if (values.length) {
               state.multiSelectVoiceModel[key] = values;
             }
             // hq
-            values = state.hqFilterList.list.filter((_v)=>searchArr.indexOf(_v.value) > -1);
+            values = state.hqFilterList.list.filter((_v)=> {
+              return searchArr.indexOf(_v.value) > -1 || searchArr.find(_s => _s.value === _v.value)
+            });
             if (values.length) {
               state.multiSelectVoiceModel[key] = values;
             }
