@@ -349,8 +349,9 @@
                 const idx = this.$refs.charactersTabs.d_activeIndex;
                 this.charactersTabsActiveIndex = idx;
                 await this.$store.dispatch('elevenLabsVoicesModule/applySavedVoicesFilters', idx);
-                await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', idx);
                 this.removeCharacterCancel();
+                await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', idx);
+                this.$emit('onSaveBookCharacters', this.charactersTabsActiveIndex);
               })
             })
           }
