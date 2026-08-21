@@ -195,7 +195,7 @@ export default {
       }, 300),
 
       async applyFilters() {
-        await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', this.activeIndex);
+        //await this.$store.dispatch('elevenLabsVoicesModule/applyFilterVoices', this.activeIndex);
         this.$emit('onApplyFilters', { index: this.activeIndex });
       },
 
