@@ -250,7 +250,7 @@ export default {
 
     set_initFilters (state, fObj) {
       state.voiceFilters = Object.assign({}, state.defaultVoiceFilters);
-      state.multiSelectVoiceModel = Object.assign({}, lodash.cloneDeep(state.defaultMultiSelectVoiceModel));
+      state.multiSelectVoiceModel = Object.assign({}, lodash.cloneDeep(this.getters['elevenLabsVoicesFilters/defaultMultiSelectVoiceModel']));
       if (fObj) {
         // state.voiceFilters
         let initFilters = {};
