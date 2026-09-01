@@ -5310,7 +5310,7 @@ export const store = new Vuex.Store({
               changes.push(k);
             }
           });
-          data.block.sync_changes = changes;
+          if (changes.length) data.block.sync_changes = changes;
           if (new Date(blockStore.updated) <= new Date(data.block.updated)) {
             state.storeListO.updBlockByRid(data.block.id, data.block);
             if (state.selectedBlocks && state.selectedBlocks.length > 0) {

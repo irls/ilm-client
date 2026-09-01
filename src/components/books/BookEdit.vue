@@ -336,12 +336,6 @@ export default {
     test(ev) {
         console.log('test', ev);
     },
-    refreshTmpl() {
-      // a hack to update template
-      //console.log(`refreshTmpl: `, 1);
-      //this.$forceUpdate();
-      //this.updateVisibleBlocks();
-    },
 
     loadBookMounted() {
       if (this.$route.params.hasOwnProperty('bookid')) {
@@ -512,7 +506,6 @@ export default {
     },
 
     refreshBlock (change) {
-      //console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -532,14 +525,10 @@ export default {
         } else {
           this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
-            //oldBlock._rev = change.doc._rev;
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
-            this.refreshTmpl();
           } else if (updField) {
             oldBlock[updField] = change.doc[updField];
-            oldBlock._rev = change.doc._rev;
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
-            this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
             let el = this.$children.find(c => {
@@ -558,7 +547,6 @@ export default {
               }
             } else {
               this.$store.commit('set_storeList', newBlock);
-              this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
             if (el) {
@@ -574,7 +562,6 @@ export default {
         $ref.addContentListeners();
       })
       //this.initRecorder();
-      this.recountApprovedInRange();
     },
 
     hasClass: function(block, cssclass) {
@@ -702,7 +689,6 @@ export default {
         }
         this.$store.commit('set_storeList', block);
         this.$root.$emit('from-block-edit:set-style');
-        this.refreshTmpl();
         return Promise.resolve(block);
       })
       .catch((err)=>{
@@ -888,9 +874,6 @@ export default {
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-//           if (b_old) {
-//             this.refreshBlock({doc: b_old, deleted: false});
-//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
@@ -907,7 +890,6 @@ export default {
           if (block.index === 0) {
             this.loadBookTocSections([]);
           }
-          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockBefore');
@@ -930,10 +912,6 @@ export default {
 
           let blockO = response.data.new_block;
 
-//           if (b_old) {
-//             this.refreshBlock({doc: b_old, deleted: false});
-//           }
-
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
           if (!this.parlistO.getOutId(blockO.blockid)) {
@@ -941,14 +919,13 @@ export default {
             this.startId = this.parlistO.getOutId(firstId);
             this.parlistO.setStartId(this.startId);
             //this.startId = blockO.blockid;
-          } //else this.refreshTmpl();
+          }
           this.unfreeze('insertBlockAfter');
           this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
-          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockAfter');
@@ -991,7 +968,7 @@ export default {
             // in case when first or last block in book was deleted
             this.startId = newStartId;
             this.parlistO.setStartId(newStartId);
-          } //else this.refreshTmpl();
+          }
           this.parlist.delete(block._id);
           this.$store.dispatch('set_selected_blocks');
         }
@@ -1011,7 +988,6 @@ export default {
         }
         this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
-        //this.refreshTmpl();
       })
       .catch(err => {
         this.unfreeze('deleteBlock');
@@ -1174,6 +1150,7 @@ export default {
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+              this.recountApprovedInRange();
             }
           }
 
@@ -1183,7 +1160,6 @@ export default {
                 this.loadBookToc({bookId: block.bookid, isWait: true})
               }
             });
-          this.refreshTmpl();
           this.unfreeze('joinBlocks');
           this.getCurrentJobInfo();
           this.$store.dispatch('set_selected_blocks');
@@ -1193,7 +1169,6 @@ export default {
           return Promise.resolve();
         })
         .catch((err)=>{
-          this.refreshTmpl();
           this.clearBlockLock({block: blockBefore, force: true});
           this.unfreeze('joinBlocks');
           return Promise.reject(err);
@@ -1227,6 +1202,7 @@ export default {
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+              this.recountApprovedInRange();
             }
           }
 
@@ -1236,14 +1212,12 @@ export default {
                 this.loadBookToc({bookId: block.bookid, isWait: true});
               }
             });
-          //this.refreshTmpl();
           this.unfreeze('joinBlocks');
           this.getCurrentJobInfo();
           this.$store.dispatch('set_selected_blocks');
           return Promise.resolve();
         })
         .catch((err)=>{
-          this.refreshTmpl();
           this.clearBlockLock({block: block, force: true});
           this.unfreeze('joinBlocks');
           return Promise.reject(err);
@@ -1547,7 +1521,6 @@ export default {
           this.loadBookToc({bookId: this.meta._id, isWait: true});
         });
       } else this.updateVisibleBlocks();
-      //this.refreshTmpl();
     },
 
     initEditorPosition() {
@@ -1721,7 +1694,8 @@ export default {
       let updField = data.updField || false;
       if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
         this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
-      })
+      });
+      this.recountApprovedInRange();
     },
     checkMode() {
       //console.log(`checkMode--: `, this.mode, this.currentJobInfo.id);

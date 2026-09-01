@@ -1964,7 +1964,8 @@ export default {
       let lang = 'en'; // for transfer to block styles panel;
       let pausesAfter = new Map();
 
-      //console.log('collectCheckedStyles', startId, endId);
+      console.log('collectCheckedStyles', startId, endId);
+      console.time('collectCheckedStyles');
 
       if (this.storeListO.getBlock(startId)) {
         let idsArrayRange = this.storeListO.ridsArrayRange(startId, endId);
@@ -2089,6 +2090,7 @@ export default {
 
       //console.log('result', result);
       //console.log('nums', nums);
+      console.timeEnd('collectCheckedStyles');
 
       Vue.nextTick(()=>{
 
