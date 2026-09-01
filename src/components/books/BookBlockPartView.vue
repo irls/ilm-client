@@ -1826,7 +1826,6 @@ export default {
                     if (reloadParent) {
                       //let oldLength = this.$parent.$refs.blocks.length;
                       this.$parent.isSaving = false;
-                      this.$parent.$parent.refreshTmpl();
                       this.$parent.$forceUpdate();
                       /*if (isSplitting && splitPoints && oldLength < response.parts.length) {
                         //commit('set_storeList', new BookBlock(response.data));
@@ -3974,7 +3973,6 @@ Please save or discard your changes before joining.`,
             }
             this.$parent.highlightSuspiciousWords();
             this.$parent.isSaving = false;
-            this.$parent.$parent.refreshTmpl();
             return Promise.resolve();
           });
       },
@@ -4127,7 +4125,6 @@ Please save or discard your changes before joining.`,
               this.storeListO.refresh();// hard reload if component was destroyed. If skip it than block is not updated in storeList
             }
             this.$parent.isSaving = false;
-            this.$parent.$parent.refreshTmpl();
             return Promise.resolve();
           });
       },
