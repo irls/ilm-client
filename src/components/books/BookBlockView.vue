@@ -2361,12 +2361,8 @@ Save or discard your changes to continue editing`,
                 } else {
                   updateTask = this.assembleBlockPart(partUpdate, realign);
                 }
-                let reloadParent = this.hasChange('split_point');
                 return updateTask
                   .then(() => {
-                    if (reloadParent) {
-                      this.$parent.refreshTmpl();
-                    }
                     return Promise.resolve();
                   });
               }
@@ -2495,7 +2491,6 @@ Save or discard your changes to continue editing`,
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
                   if (isSplitting) {
-                    //this.$parent.refreshTmpl();
                     this.$root.$emit('for-audioeditor:force-close');
                   }
                 });
@@ -2665,7 +2660,6 @@ Save or discard your changes to continue editing`,
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
                   if (reloadParent) {
-                    //this.$parent.refreshTmpl();
                     this.$root.$emit('for-audioeditor:force-close');
                   }
                 });
@@ -2681,7 +2675,6 @@ Save or discard your changes to continue editing`,
               this.tc_loadBookTask(this.block.bookid);
             }
             if (reloadParent) {
-              this.$parent.refreshTmpl();
               this.$root.$emit('for-audioeditor:force-close');
             }
             return Promise.resolve();
@@ -4868,7 +4861,6 @@ Save text changes and realign the Block?`,
             this.blockAudio.src = this.block.getAudiosrc('m4a');
           }
           if (val === false) {
-            this.$parent.refreshTmpl();
             if (this.isCompleted) {
               //this.tc_loadBookTask();
               this.getCurrentJobInfo();
