@@ -1461,7 +1461,6 @@ Save or discard your changes to continue editing`,
         });
       }
 
-
       this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
         this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
@@ -4260,11 +4259,13 @@ Save text changes and realign the Block?`,
               }
             }
             //this.voiceworkChange = false;
+            return true;
           })
           .catch(err => {
             console.error(`err: `, err);
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
+            return Promise.reject(err);
           });
       },
       pendingAudioUpdateVoicework() {
@@ -4941,7 +4942,7 @@ Save text changes and realign the Block?`,
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel');
         this.block.setClassStyle(this.classSel, newVal);
-        this.$root.$emit('from-block-edit:set-style');
+        //this.$root.$emit('from-block-edit:set-style');
         //this.addContentListeners();
         //this.destroyEditor()
         //this.initEditor();

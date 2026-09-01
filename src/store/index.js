@@ -3192,6 +3192,7 @@ export const store = new Vuex.Store({
     },
 
     recountApprovedInRange({state, commit}, selection = null) {
+      console.log(`${__filename.slice(-30)}::recountApprovedInRange: `);
       let approved = 0;
       let approved_tts = 0;
       let approved_narration = 0;

@@ -464,7 +464,7 @@
           if (blocks.length === 1 && selectedBlock.voicework === 'no_audio') {
             return false;
           }
-          let audioBlocks = blocks.find(blockId => {
+          let audioBlocks = blocks.filter(blockId => {
             const block = this.storeList.get(blockId);
             return block.voicework !== 'no_audio';
           });

@@ -70,12 +70,15 @@
         this.$emit('close');
       },
       startUpdateVoicework() {
+        console.time('startUpdateVoicework');
         this.voiceworkUpdating = true;
         this.updateVoicework(false, this.voiceworkUpdateType)
           .then(() => {
             this.$emit('close');
+            console.timeEnd('startUpdateVoicework');
           })
           .catch(err => {
+            console.timeEnd('startUpdateVoicework');
             this.$emit('close');
           });
       },
