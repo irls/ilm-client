@@ -4257,6 +4257,7 @@ Save text changes and realign the Block?`,
                   //if (this.currentJobInfo && this.currentJobInfo.published) {
                     //this.updateBookVersion({major: true});
                   //}
+                  response.data.updField = 'voicework';
                   this.$root.$emit('bookBlocksUpdates', response.data);
                   if (this.isChecked) {
                     this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
@@ -5168,7 +5169,6 @@ Save text changes and realign the Block?`,
       },
       'block.sync_changes': {// changes from syncronization
         handler(val) {
-          //console.log(val);
           if (Array.isArray(val) && val.length > 0 && this.isChecked) {
             let recollect = val.some((el) => {
               return ['pause_after', 'classes'].indexOf(el) !== -1;
