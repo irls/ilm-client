@@ -99,7 +99,7 @@
       <template v-for="tagFilter in availableTagsFilters">
         <MultiSelect v-if="mapVoiceFilterLibraries.tag[tagFilter.name] && mapVoiceFilterLibraries.tag[tagFilter.name].length > 0" 
           v-model="multiSelectVoiceModel.tag[tagFilter.name]"
-          class="multi-select-notice"
+          :class="['multi-select-' + tagFilter.name]"
           :options="mapVoiceFilterLibraries.tag[tagFilter.name]" optionLabel="caption"
           data-captions="Notices" :placeholder="tagFilter.label"
           display="chip" :showToggleAll="false"
