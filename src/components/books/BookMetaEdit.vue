@@ -1190,14 +1190,7 @@ export default {
         }
       }
     },
-    'blockSelection.refresh': {
-      handler(val, oldVal) {
-        if (val) {
-          //console.log('WATCH blockSelection.refresh', val, oldVal);
-          this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
-        }
-      }
-    },
+    'blockSelection.refresh': 'collectCheckedStylesDebounced',
     '$route': {
       handler(val) {
         //console.log('ROUTE CHANGE')
@@ -2747,6 +2740,12 @@ export default {
         this.debounceUpdate(`alt_meta.${type}.category`, null, event);
       }
     },
+
+    collectCheckedStylesDebounced: _.debounce( function(val, oldVal) {
+      if (val) {
+        this.collectCheckedStyles(this.blockSelection.start._id, this.blockSelection.end._id);
+      }
+    }, 200),
 
     ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList', 'loadCollection'])
   }
