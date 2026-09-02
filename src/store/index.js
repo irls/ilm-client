@@ -1797,7 +1797,7 @@ export const store = new Vuex.Store({
       }
       if (bookid) {
         state.liveDB.startWatch(bookid + '-blockV', 'blockV', {bookid: bookid}, (data) => {
-          //console.log('DATA', bookid + '-blockV', data, Array.isArray(data));
+          //console.log('DATA', bookid + '-blockV', data.length, Array.isArray(data));
           if (data) {
             let needRefresh = [];
             if (Array.isArray(data)) {
