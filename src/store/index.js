@@ -2720,6 +2720,43 @@ export const store = new Vuex.Store({
         });
     },
 
+    putNumBlockBatch ({commit, state, dispatch}, blocks) {
+      let cleanBlocks = [];
+      for (const block of blocks) {
+        if (typeof block.clean === 'function') {
+          cleanBlocks.push(block.clean());
+        } else {
+          cleanBlocks.push(Object.assign({}, block));
+        }
+      }
+      if (!cleanBlocks.length) {
+        return Promise.resolve([]);
+      }
+      commit('set_blocker', 'putNumBlock');
+      axios.put(state.API_URL + 'book/batch/blocks',
+      {
+        'blocks': cleanBlocks,
+      })
+      .then(response => {
+        commit('clear_blocker', 'putNumBlock');
+        if (blocks[0]?.bookid) {
+          dispatch('tc_loadBookTask', blocks[0].bookid);
+        }
+        dispatch('getCurrentJobInfo')
+        .then(() => {
+          if (state.currentJobInfo && state.currentJobInfo.published) {
+            dispatch('updateBookVersion', {major: true});
+          }
+        });
+        return Promise.resolve(response.data);
+      })
+      .catch(err => {
+        commit('clear_blocker', 'putNumBlock');
+        dispatch('checkError', err);
+        return Promise.reject(err);
+      });
+    },
+
     putNumBlock ({commit, state, dispatch}, block) {
       let cleanBlock;
       if (typeof block.clean === 'function') {
@@ -2751,6 +2788,64 @@ export const store = new Vuex.Store({
           });
     },
 
+    putBlockPartBatch ({commit, state, dispatch}, blocks) {
+
+      let cleanBlocks = [];
+      let _keep_blocks = [];
+
+      for (const [update, realign = false, keep_block = false] of blocks) {
+        let cleanBlock = Object.assign({}, update);
+        delete cleanBlock.parnum;
+        delete cleanBlock.secnum;
+        delete cleanBlock.isNumber;
+        if (cleanBlock.blockid) {
+          if (realign) {
+            cleanBlock.do_realign = true;
+          }
+          if (keep_block) {
+            _keep_blocks.push(cleanBlock.blockid);
+          }
+          cleanBlocks.push(cleanBlock);
+        }
+      }
+      if (!cleanBlocks.length) {
+        return Promise.resolve([]);
+      }
+      commit('set_blocker', 'putBlock');
+      let url = state.API_URL + 'book/batch/blocks';
+      return axios.put(url,
+      {
+        'blocks': cleanBlocks,
+      })
+      .then(response => {
+        for (const _block of response.data) {
+          const currentBlockO = state.storeListO.get(_block.blockid);
+          const currentBlock = state.storeList.get(_block.blockid);
+          dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(_block.out) ? _block.out[0] : _block.out]);
+          if (currentBlock.audiosrc_config) {// stored only locally
+            _block.audiosrc_config = currentBlock.audiosrc_config;
+          }
+          if (_keep_blocks.indexOf(_block.blockid) < 0) {
+            commit('set_storeList', new BookBlock(_block));
+          }
+        }
+
+        commit('clear_blocker', 'putBlock');
+        dispatch('getCurrentJobInfo');
+        if (response?.data[0]?.bookid) {
+          dispatch('tc_loadBookTask', response.data.bookid);
+        }
+
+        return Promise.resolve(response.data);
+      })
+      .catch(err => {
+        commit('clear_blocker', 'putBlock');
+        dispatch('checkError', err);
+        return Promise.reject(err);
+      });
+
+    },
+
     putBlockPart ({commit, state, dispatch}, [update, realign, keep_block = false]) {
       let cleanBlock = Object.assign({}, update);
       delete cleanBlock.parnum;
@@ -2771,7 +2866,7 @@ export const store = new Vuex.Store({
           'block': cleanBlock,
         })
           .then(response => {
-            //console.log('putBlockPart', response);
+            console.log('putBlockPart', response);
             if (response.data) {
               dispatch('checkInsertedBlocks', [currentBlockO.out, Array.isArray(response.data.out) ? response.data.out[0] : response.data.out]);
             }
