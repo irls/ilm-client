@@ -2123,7 +2123,7 @@ export default {
       //console.log('selectStyle-', 'blockType:', blockType, 'styleKey:', styleKey, 'styleVal:', styleVal);
       let updateToc = (styleKey == 'table of contents' || (blockType == 'title' && styleKey == 'style') );
       let updateNum = !(styleKey == 'paragraph type' && ['sitalcent', 'editor-note', 'reference', 'signature'].indexOf(styleVal) >-1);
-      let updatePromises = [], updateNums = [];
+      let updateNums = [], putNumBlockPrepare = [], putBlockPartPrepare = [], isCouplets = [];
       if (this.blockSelection.start._id && this.blockSelection.end._id) {
         if (this.storeList.has(this.blockSelection.start._id)) {
           let idsArrayRange = this.storeListO.ridsArrayRange(this.blockSelection.start._id, this.blockSelection.end._id);
@@ -2217,7 +2217,7 @@ export default {
                   updateNums.push(oBlock.rid);
                   pBlock.isNumber = updateNum;
                   oBlock.isNumber = updateNum;
-                  updatePromises.push(this.putNumBlock(pBlock));
+                  putNumBlockPrepare.push(pBlock);
                 } else {
                   //pBlock.status = pBlock.status || {};
                   //pBlock.status.marked = false;
@@ -2232,24 +2232,31 @@ export default {
                   let isCouplet = styleKey === "whitespace" && styleVal === "couplet";
                   if (isCouplet) {// send content for update, to parse content for couplet
                     updateBody['content'] = pBlock.content;
+                    isCouplets.push(pBlock.blockid);
                   }
-                  updatePromises.push(this.putBlockPart([updateBody, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged() || (this.playingBlock.blockid === pBlock.blockid && this.playingBlock.partIdx !== null)])
-                    .then(() => {
-                      if (isCouplet) {
-                        this.$root.$emit(`block-state-refresh-${pBlock.blockid}`);
-                      }
-                      return Promise.resolve();
-                    }));
+                  putBlockPartPrepare.push([
+                    updateBody,
+                    false,
+                    pBlock.getIsChanged() || pBlock.getIsAudioChanged() || (this.playingBlock.blockid === pBlock.blockid && this.playingBlock.partIdx !== null)
+                  ]);
                 }
               }
             }
-          })
+          });
           if (updateBookVersion) {
             this.updateBookVersion({major: true});
           }
         }
-        Promise.all(updatePromises)
-          .then(()=>{
+        Promise.all([
+          this.putNumBlockBatch(putNumBlockPrepare),
+          this.putBlockPartBatch(putBlockPartPrepare)
+        ])
+          .then(([putNumBlocks, putBlockParts])=>{
+            for (const _block of putBlockParts) {
+              if (isCouplets.indexOf(_block.blockid) >= 0) {
+                this.$root.$emit(`block-state-refresh-${_block.blockid}`);
+              }
+            }
             if (updateNums.length > 0) {
               this.putNumBlockOBatch({bookId: this.currentBookid})
               .then(()=>{
@@ -2747,7 +2754,7 @@ export default {
       }
     }, 200),
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'reloadBook', 'setPauseAfter', 'updateBooksList', 'loadCollection'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockBatch', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'putBlockPart', 'putBlockPartBatch', 'reloadBook', 'setPauseAfter', 'updateBooksList', 'loadCollection'])
   }
 }
 
