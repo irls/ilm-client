@@ -113,13 +113,21 @@ export default {
     },
 
     mapVoiceFilterAccents: (state, getters, rootState, rootGetters) => {
-      if (state.voiceFilters.language.length && state.accentFilterList.loaded) {
-        return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
-          if (state.voiceFilters.language.indexOf(key) > -1) {
-            acc = [...acc, ..._val];
-          }
-          return acc;
-        }, []).sort((a, b) => a.order - b.order);
+      if (state.accentFilterList.loaded) {
+        let checkLang = [];
+        if (state.voiceFilters.language.length) {
+          checkLang = state.voiceFilters.language;
+        } else if (state.multiSelectVoiceModel.language.length) {
+          checkLang = multiSelectVoiceModel.language;
+        }
+        if (checkLang.length) {
+          return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
+            if (checkLang.indexOf(key) > -1) {
+              acc = [...acc, ..._val];
+            }
+            return acc;
+          }, []).sort((a, b) => a.order - b.order);
+        }
       }
       return [];
     },
