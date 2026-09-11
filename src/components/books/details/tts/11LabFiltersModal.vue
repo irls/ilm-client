@@ -15,7 +15,7 @@
       <div class="eleven-lab-filters-modal-wrapper">
         <div class="modal-header">
           <div class="header-title">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="$emit('close_modal')"><span aria-hidden="true">×</span></button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="closeModal"><span aria-hidden="true">×</span></button>
             <h4>Select voices</h4>
           </div>
         </div>
@@ -222,7 +222,7 @@
         }, 300),
         modalOpening() { /*will execute even before mounted*/ },
         modalClosing() {
-          this.$emit('close_modal');
+          this.closeModal();
           /*Not works*/
         },
 
@@ -361,13 +361,13 @@
           //this.showModal('characters-message');
           this.$emit('stop', {});
           this.$emit('onSaveBookCharacters', this.charactersTabsActiveIndex);
-          this.$emit('close_modal');
+          this.closeModal();
         },
 
         cancelCharactersChanges() {
           this.$emit('stop', {});
           //this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
-          this.$emit('close_modal');
+          this.closeModal();
         },
 
         searchRowClick(params) {
@@ -418,6 +418,12 @@
 
         generateAllCharactersCancel() {
           this.hideModal('generate-all-message');
+        },
+
+        closeModal() {
+          this.$store.commit('elevenLabsVoicesFilters/set_resetVoiceFilters');
+          this.$store.commit('elevenLabsVoicesModule/set_charactersListFromInit');
+          this.$emit('close_modal');
         }
       }
   }
