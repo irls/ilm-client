@@ -118,7 +118,7 @@ export default {
         if (state.voiceFilters.language.length) {
           checkLang = state.voiceFilters.language;
         } else if (state.multiSelectVoiceModel.language.length) {
-          checkLang = multiSelectVoiceModel.language;
+          checkLang = state.multiSelectVoiceModel.language;
         }
         if (checkLang.length) {
           return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
