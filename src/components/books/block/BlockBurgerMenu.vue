@@ -187,7 +187,7 @@
         }
         let adaptDiffers = this.selectedBlocks.find(blockId => {
           const firstBlock = this.storeList.get(blockId);
-          return selectedBlocks.find(_blockId => {
+          return this.selectedBlocks.find(_blockId => {
             const secondBlock = this.storeList.get(_blockId);
             return (firstBlock.adapted || secondBlock.adapted) && firstBlock.adapted !== secondBlock.adapted;
           });
