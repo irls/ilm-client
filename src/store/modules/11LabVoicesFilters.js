@@ -118,11 +118,17 @@ export default {
         if (state.voiceFilters.language.length) {
           checkLang = state.voiceFilters.language;
         } else if (state.multiSelectVoiceModel.language.length) {
-          checkLang = state.multiSelectVoiceModel.language.map(lang => {
-            return lang.value;
-          });
+          checkLang = state.multiSelectVoiceModel.language;
         }
         if (checkLang.length) {
+          checkLang = checkLang.reduce((acc, curr) => {
+            if (curr instanceof Object && curr.value) {
+              acc.push(curr.value);
+            } else {
+              acc.push(curr);
+            }
+            return acc;
+          }, []);
           return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
             if (checkLang.indexOf(key) > -1) {
               acc = [...acc, ..._val];
