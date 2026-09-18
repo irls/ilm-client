@@ -268,7 +268,7 @@ class BookBlock {
 
     // CouchDB properties
     this._id = init.blockid || '';
-    this._rev = init._rev || '';
+    this._rev = init._rev || init.blockVer || '';
     this.bookid = init.bookid || '';
     this.chainid = init.chainid || '';
     this.index = typeof init.index !== 'undefined' ? init.index : '';
