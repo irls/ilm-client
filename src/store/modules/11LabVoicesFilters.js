@@ -10,12 +10,13 @@ import axios from "axios";
 import lodash from "lodash";
 
 const tagsFilters = [
-  /*{ name: 'age', label: 'Refine age' },*/
-  { name: 'social_class', label: 'Social class' },
-  { name: 'tone', label: 'Tone' },
-  { name: 'energy_level', label: 'Energy' },
-  { name: 'speech_rate', label: 'Rate' },
-  { name: 'voice_texture', label: 'Texture' }
+  { name: 'gender', key: 'refine_gender', label: 'Refine gender' },
+  { name: 'age', key: 'refine_age', label: 'Refine age' },
+  { name: 'social_class', key: 'social_class', label: 'Social class' },
+  { name: 'tone', key: 'tone', label: 'Tone' },
+  { name: 'energy_level', key: 'energy_level', label: 'Energy' },
+  { name: 'speech_rate', key: 'speech_rate', label: 'Rate' },
+  { name: 'voice_texture', key: 'voice_texture', label: 'Texture' }
 ];
 const reqFltrs = ['language', 'gender'];
 

@@ -1,6 +1,9 @@
 <template>
 <div class="voice-filters-main-wrapper">
   <div class="voice-filters-first-row" ref="voiceFiltersFirstRow">
+    <div class="group-filter-icon">
+      <i class="fa fa-filter" aria-hidden="true" title="Filter by criteria"></i>
+    </div>
     <!-- Voice Filter -->
     <div class="voice-filters-text-filter">
       <input placeholder="Filter by voice name or description"
@@ -29,10 +32,7 @@
       :options="mapVoiceFilterAccents" optionLabel="caption"
       data-captions="Accents" placeholder="Accent"
       display="chip" :showToggleAll="false"
-      :disabled="accentFilterDisabled"
       @change="filterVoiceChange" />
-
-    <div class="or-divider"><span>or</span></div>
 
     <!-- Native language Dropdown -->
     <MultiSelect v-if="mapVoiceFilterLanguages.length > 0"
@@ -41,7 +41,6 @@
       :options="mapVoiceFilterLanguages" optionLabel="caption"
       data-captions="Native languages" placeholder="Native language"
       display="chip" :showToggleAll="false"
-      :disabled="nativeLanguageFilterDisabled"
       @change="filterVoiceChange" />
 
     <!-- Gender Dropdown -->
@@ -52,14 +51,6 @@
       data-captions="Genders" placeholder="Gender"
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
-    
-    <MultiSelect v-if="mapVoiceFilterLibraries.tag.gender.length > 0"
-      v-model="multiSelectVoiceModel.tag['gender']"
-      class="multi-select-refine-gender"
-      :options="mapVoiceFilterLibraries.tag.gender" optionLabel="caption"
-      data-captions="Refine gender" placeholder="Refine gender"
-      display="chip" :showToggleAll="false"
-      @change="filterVoiceChange" />
 
     <!-- Age Dropdown -->
     <MultiSelect v-if="mapVoiceFilterLibraries.age.length > 0"
@@ -67,14 +58,6 @@
       class="multi-select-age"
       :options="mapVoiceFilterLibraries.age" optionLabel="caption"
       data-captions="Ages" placeholder="Age"
-      display="chip" :showToggleAll="false"
-      @change="filterVoiceChange" />
-    
-    <MultiSelect v-if="mapVoiceFilterLibraries.tag.age.length > 0"
-      v-model="multiSelectVoiceModel.tag['age']"
-      class="multi-select-refine-age"
-      :options="mapVoiceFilterLibraries.tag.age" optionLabel="caption"
-      data-captions="Refine age" placeholder="Refine age"
       display="chip" :showToggleAll="false"
       @change="filterVoiceChange" />
 
@@ -96,15 +79,20 @@
       display="chip" :showToggleAll="false"
       :selectionLimit="1"
       @change="filterVoiceChange" />
-      <template v-for="tagFilter in availableTagsFilters">
+    <template v-for="(tagFilter, idx) in availableTagsFilters">
+      <div :class="[{'-group-filter': idx === 0}]">
+        <div v-if="idx === 0" class="group-filter-icon">
+          <i class="fa fa-sort-amount-desc" aria-hidden="true" title="Sort by criteria"></i>
+        </div>
         <MultiSelect v-if="mapVoiceFilterLibraries.tag[tagFilter.name] && mapVoiceFilterLibraries.tag[tagFilter.name].length > 0" 
           v-model="multiSelectVoiceModel.tag[tagFilter.name]"
-          :class="['multi-select-' + tagFilter.name]"
+          :class="['multi-select-' + tagFilter.key]"
           :options="mapVoiceFilterLibraries.tag[tagFilter.name]" optionLabel="caption"
           data-captions="Notices" :placeholder="tagFilter.label"
           display="chip" :showToggleAll="false"
           @change="filterVoiceChange" />
-      </template>
+      </div>
+    </template>
   </div>
   <!--<div class="voice-filters-first-row"-->
   <div class="voice-filters-second-row" ref="voiceFiltersSecondRow">
@@ -309,17 +297,7 @@ export default {
         currentBookid:            'currentBookid',
         currentBookMeta:          'currentBookMeta',
         isVoicesListLoading:      'elevenLabsVoicesModule/isVoicesListLoading'
-      }),
-      accentFilterDisabled: {
-        get() {
-          return this.multiSelectVoiceModel.nativeLanguage.length > 0;
-        }
-      },
-      nativeLanguageFilterDisabled: {
-        get() {
-          return this.multiSelectVoiceModel.accent.length > 0;
-        }
-      }
+      })
     },
     components: {
       MultiSelect
@@ -449,6 +427,18 @@ export default {
         }
       }
     }
+  }
+  .group-filter-icon {
+    min-width: 25px;
+    i.fa {
+      color: black;
+      vertical-align: -webkit-baseline-middle;
+    }
+  }
+  .-group-filter {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
   }
 }
 </style>
