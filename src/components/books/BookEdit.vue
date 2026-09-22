@@ -525,11 +525,10 @@ export default {
         } else {
           this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
-            this.$store.commit('set_storeList', oldBlock);
+            this.$store.commit('set_storeList', new BookBlock(oldBlock));
           } else if (updField) {
             oldBlock[updField] = change.doc[updField];
-            oldBlock._rev = change.doc.blockVer;
-            this.$store.commit('set_storeList', oldBlock);
+            this.$store.commit('set_storeList', new BookBlock(oldBlock));
           } else {
             let newBlock = new BookBlock(change.doc);
             let el = this.$children.find(c => {
