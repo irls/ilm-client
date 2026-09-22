@@ -1401,7 +1401,8 @@ export default {
         case 'byChapter': {
           const setCheckedUntilNextBlockByType = (searchBlockTypes)=>{
             let skip = true;
-            for (const [blockId, _blk] of this.parlist) {
+            for (const _blk of this.parlistArray) {
+              const blockId = _blk.blockid;
               if (skip) {
                 if (_blk._rid === block.rid) {
                   skip = false;
