@@ -26,9 +26,9 @@
           </div>
           <div class="result-list-tags-row">
             <div class="result-tags-item"
-              v-if="labelAccent(voice.accent)">Accent - {{labelAccent(voice.accent)}}</div>
+              v-if="labelVerifiedLang(voice)">{{labelVerifiedLang(voice)}}</div>
             <div class="result-tags-item"
-              v-if="labelVerifiedLang(voice)">Native - {{labelVerifiedLang(voice)}}</div>
+              v-if="labelLanguage(voice)">Native - {{labelLanguage(voice)}}</div>
             <div class="result-tags-item">{{labelGender(voice.gender)}}</div>
             <div class="result-tags-item" v-if="tag = refineGenderTag(voice)" :title="labelTagTitle(tag)">{{ tag.key }}</div>
             <div class="result-tags-item">{{labelAge(voice.age)}}</div>
@@ -114,22 +114,52 @@ export default {
             && this.audio_playing.trim().length
             && this.audio_playing.trim() === voice_id;
       },
-      labelLanguage(langCode) {
-        const filter = this.voiceFilterLanguages.find((_v)=>{
-          return _v.value === langCode;
+      labelLanguage(voice) {
+        if (!this.voiceFilters.nativeLanguage || this.voiceFilters.nativeLanguage.length === 0) {
+          return false;
+        }
+        if (voice.language !== this.voiceFilters.nativeLanguage[0]) {
+          return false;
+        }
+
+        const filterLang = this.voiceFilterLanguages.find((_v)=>{
+          return _v.value === voice.language;
         });
-        if (filter && filter.caption) return filter.caption;
-        return langCode;
+        const filterAccent = this.voiceFilterAccents.find((_v)=>{
+          return _v.value === voice.accent;
+        });
+        if (filterLang && filterLang.caption && filterAccent && filterAccent.caption) {
+          return `${filterLang.caption}, ${filterAccent.caption}`;
+        }
+        if (filterLang && filterLang.caption) {
+          return `${filterLang.caption}`;
+        }
+        return voice.language;
       },
       labelVerifiedLang(voice) {
-        const langCode = voice?.verified_languages[0]?.language;
-        if (!langCode) return false;
-
-        const filter = this.voiceFilterLanguages.find((_v)=>{
-          return _v.value === langCode;
+        if (!this.voiceFilters.language || this.voiceFilters.language.length === 0) {
+          return false;
+        }
+        const langVerified = voice?.verified_languages.find(v_lang => {
+          return v_lang.language === this.voiceFilters.language[0] && (
+            this.voiceFilters.accent && this.voiceFilters.accent.length > 0 ? this.voiceFilters.accent.includes(v_lang.accent) : true
+          );
         });
-        if (filter && filter.caption) return filter.caption;
-        return langCode;
+        if (!langVerified) return false;
+
+        const filterLang = this.voiceFilterLanguages.find((_v)=>{
+          return _v.value === langVerified.language;
+        });
+        const filterAccent = this.voiceFilterAccents.find((_v)=>{
+          return _v.value === langVerified.accent;
+        });
+        if (filterLang && filterLang.caption && filterAccent && filterAccent.caption) {
+          return `${filterLang.caption}, ${filterAccent.caption}`;
+        }
+        if (filterLang && filterLang.caption) {
+          return `${filterLang.caption}`;
+        }
+        return langVerified.language;
       },
       labelAccent(accentCode) {
         const filter = this.voiceFilterAccents.find((_v)=>{

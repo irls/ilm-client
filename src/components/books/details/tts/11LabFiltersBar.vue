@@ -32,6 +32,7 @@
       :options="mapVoiceFilterAccents" optionLabel="caption"
       data-captions="Accents" placeholder="Accent"
       display="chip" :showToggleAll="false"
+      filter
       @change="filterVoiceChange" />
 
     <!-- Native language Dropdown -->
