@@ -528,6 +528,9 @@ export default {
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
           } else if (updField) {
             oldBlock[updField] = change.doc[updField];
+            if (updField === "voicework" && (change.doc.voicework === "narration" || oldBlock.voicework === "narration")) {
+              oldBlock.parts = change.doc.parts;
+            }
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
           } else {
             let newBlock = new BookBlock(change.doc);
