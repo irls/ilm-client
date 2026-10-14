@@ -115,13 +115,6 @@ export default {
             && this.audio_playing.trim() === voice_id;
       },
       labelLanguage(voice) {
-        if (!this.voiceFilters.nativeLanguage || this.voiceFilters.nativeLanguage.length === 0) {
-          return false;
-        }
-        if (voice.language !== this.voiceFilters.nativeLanguage[0]) {
-          return false;
-        }
-
         const filterLang = this.voiceFilterLanguages.find((_v)=>{
           return _v.value === voice.language;
         });
