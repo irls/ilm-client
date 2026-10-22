@@ -1900,10 +1900,14 @@ export const store = new Vuex.Store({
               resolve(answer.data.meta);
             });
         });
-        state.loadBookWait = bookMeta
+        //state.loadBookWait = bookMeta
         return bookMeta
         .then((answer) => {
-          state.loadBookWait = null;
+          //state.loadBookWait = null;
+          const checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
+          if (answer.bookid !== checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
+            return Promise.resolve(answer);
+          }
           if (answer.job_status_error) {
             return Promise.reject(answer);
           }
