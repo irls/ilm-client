@@ -10,12 +10,13 @@ import axios from "axios";
 import lodash from "lodash";
 
 const tagsFilters = [
-  /*{ name: 'age', label: 'Refine age' },*/
-  { name: 'social_class', label: 'Social class' },
-  { name: 'tone', label: 'Tone' },
-  { name: 'energy_level', label: 'Energy' },
-  { name: 'speech_rate', label: 'Rate' },
-  { name: 'voice_texture', label: 'Texture' }
+  { name: 'gender', key: 'refine_gender', label: 'Refine gender' },
+  { name: 'age', key: 'refine_age', label: 'Refine age' },
+  { name: 'social_class', key: 'social_class', label: 'Social class' },
+  { name: 'tone', key: 'tone', label: 'Tone' },
+  { name: 'energy_level', key: 'energy_level', label: 'Energy' },
+  { name: 'speech_rate', key: 'speech_rate', label: 'Rate' },
+  { name: 'voice_texture', key: 'voice_texture', label: 'Texture' }
 ];
 const reqFltrs = ['language', 'gender'];
 
@@ -113,13 +114,29 @@ export default {
     },
 
     mapVoiceFilterAccents: (state, getters, rootState, rootGetters) => {
-      if (state.voiceFilters.language.length && state.accentFilterList.loaded) {
-        return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
-          if (state.voiceFilters.language.indexOf(key) > -1) {
-            acc = [...acc, ..._val];
-          }
-          return acc;
-        }, []).sort((a, b) => a.order - b.order);
+      if (state.accentFilterList.loaded) {
+        let checkLang = [];
+        if (state.voiceFilters.language.length) {
+          checkLang = state.voiceFilters.language;
+        } else if (state.multiSelectVoiceModel.language.length) {
+          checkLang = state.multiSelectVoiceModel.language;
+        }
+        if (checkLang.length) {
+          checkLang = checkLang.reduce((acc, curr) => {
+            if (curr instanceof Object && curr.value) {
+              acc.push(curr.value);
+            } else {
+              acc.push(curr);
+            }
+            return acc;
+          }, []);
+          return Object.entries(state.accentFilterList.obj).reduce((acc, [key, _val])=>{
+            if (checkLang.indexOf(key) > -1) {
+              acc = [...acc, ..._val];
+            }
+            return acc;
+          }, []).sort((a, b) => a.order - b.order);
+        }
       }
       return [];
     },
