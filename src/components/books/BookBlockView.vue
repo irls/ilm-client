@@ -1213,8 +1213,7 @@ Save or discard your changes to continue editing`,
           updatingNumeration: 'updatingNumeration',
           suspiciousWordsHighlight: 'suspiciousWordsHighlight',
           isMultiBlocksSelected: 'isMultiBlocksSelected',
-          isBlockSelected: 'isBlockSelected',
-          selectedBlocksData: 'selectedBlocksData'
+          isBlockSelected: 'isBlockSelected'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1291,7 +1290,7 @@ Save or discard your changes to continue editing`,
         cache: false
       },
       isSingleBlockRemoveAudio() {
-        return this.block.audiosrc && this.block.audiosrc.length;
+        return this.block?.audiosrc && this.block.audiosrc?.length;
           //&& !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration'
       },
       isNarratedBlockCompleteAudio() {
@@ -1462,7 +1461,6 @@ Save or discard your changes to continue editing`,
           }
         });
       }
-
 
       this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
@@ -1664,7 +1662,7 @@ Save or discard your changes to continue editing`,
                 canFlag = false;
               } else {
                 if (this.block.status && this.block.status.stage === 'audio_mastering') canFlag = false;
-                else if (!(this.block.audiosrc && this.block.audiosrc.length)) canFlag = false;
+                else if (!(this.block?.audiosrc && this.block?.audiosrc?.length)) canFlag = false;
               }
               if (this.mode === 'narrate') {
                 canFlag = false;
@@ -2363,12 +2361,8 @@ Save or discard your changes to continue editing`,
                 } else {
                   updateTask = this.assembleBlockPart(partUpdate, realign);
                 }
-                let reloadParent = this.hasChange('split_point');
                 return updateTask
                   .then(() => {
-                    if (reloadParent) {
-                      this.$parent.refreshTmpl();
-                    }
                     return Promise.resolve();
                   });
               }
@@ -2497,7 +2491,6 @@ Save or discard your changes to continue editing`,
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
                   if (isSplitting) {
-                    //this.$parent.refreshTmpl();
                     this.$root.$emit('for-audioeditor:force-close');
                   }
                 });
@@ -2667,7 +2660,6 @@ Save or discard your changes to continue editing`,
                     this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
                   }
                   if (reloadParent) {
-                    //this.$parent.refreshTmpl();
                     this.$root.$emit('for-audioeditor:force-close');
                   }
                 });
@@ -2683,7 +2675,6 @@ Save or discard your changes to continue editing`,
               this.tc_loadBookTask(this.block.bookid);
             }
             if (reloadParent) {
-              this.$parent.refreshTmpl();
               this.$root.$emit('for-audioeditor:force-close');
             }
             return Promise.resolve();
@@ -4193,7 +4184,7 @@ Save text changes and realign the Block?`,
 
           let checked;
           if (ev === true || ev === false) checked = ev;
-          else checked = ev.target && ev.target.checked;
+          else checked = (ev.target && ev.target.checked) || false;
 
           let shiftKey = (ev.shiftKey||ev.ctrlKey)&&!this.proofreadModeReadOnly;
           if (ev.shiftKey) {
@@ -4201,17 +4192,17 @@ Save text changes and realign the Block?`,
               document.getSelection().removeAllRanges();
             }
           }
-          this.setRangeSelectionLock = true;
-          setTimeout( () => {
-            this.setRangeSelectionLock = false;
-            this.$emit('setRangeSelection', {
-              block: this.blockO,
-              type: type,
-              status: checked,
-              shift: shiftKey,
-              headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
-            });
-          }, 500);
+          //this.setRangeSelectionLock = true;
+          this.$emit('setRangeSelection', {
+            block: this.blockO,
+            type: type,
+            status: checked,
+            shift: shiftKey,
+            headerType: this.block.type === 'title' ? 'title' : (this.block?.classes?.level || 'par')
+          });
+          // setTimeout( () => {
+          //   this.setRangeSelectionLock = false;
+          // }, 500);
         }
         //this.blockO.checked = checked;
       },
@@ -4259,6 +4250,7 @@ Save text changes and realign the Block?`,
                   //if (this.currentJobInfo && this.currentJobInfo.published) {
                     //this.updateBookVersion({major: true});
                   //}
+                  response.data.updField = 'voicework';
                   this.$root.$emit('bookBlocksUpdates', response.data);
                   if (this.isChecked) {
                     this.$root.$emit('from-block-edit:set-style');// voicework update may cause style settings
@@ -4268,11 +4260,13 @@ Save text changes and realign the Block?`,
               }
             }
             //this.voiceworkChange = false;
+            return true;
           })
           .catch(err => {
             console.error(`err: `, err);
             this.voiceworkUpdating = false;
             this.voiceworkChange = false;
+            return Promise.reject(err);
           });
       },
       pendingAudioUpdateVoicework() {
@@ -4869,7 +4863,6 @@ Save text changes and realign the Block?`,
             this.blockAudio.src = this.block.getAudiosrc('m4a');
           }
           if (val === false) {
-            this.$parent.refreshTmpl();
             if (this.isCompleted) {
               //this.tc_loadBookTask();
               this.getCurrentJobInfo();
@@ -4950,7 +4943,7 @@ Save text changes and realign the Block?`,
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel');
         this.block.setClassStyle(this.classSel, newVal);
-        this.$root.$emit('from-block-edit:set-style');
+        //this.$root.$emit('from-block-edit:set-style');
         //this.addContentListeners();
         //this.destroyEditor()
         //this.initEditor();
@@ -5170,7 +5163,6 @@ Save text changes and realign the Block?`,
       },
       'block.sync_changes': {// changes from syncronization
         handler(val) {
-          //console.log(val);
           if (Array.isArray(val) && val.length > 0 && this.isChecked) {
             let recollect = val.some((el) => {
               return ['pause_after', 'classes'].indexOf(el) !== -1;

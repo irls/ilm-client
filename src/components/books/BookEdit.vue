@@ -282,7 +282,7 @@ export default {
 //           }
         }
       },
-      parlistArray: { cache: false,
+      parlistArray: { /*cache: false,*/
         get: function () {
           let idsArray = this.$store.state.storeListUpdateCounter && this.$store.state.storeListO.idsArray();
           idsArray = Array.isArray(idsArray) ? idsArray : [];
@@ -335,12 +335,6 @@ export default {
 
     test(ev) {
         console.log('test', ev);
-    },
-    refreshTmpl() {
-      // a hack to update template
-      //console.log(`refreshTmpl: `, 1);
-      //this.$forceUpdate();
-      //this.updateVisibleBlocks();
     },
 
     loadBookMounted() {
@@ -512,7 +506,6 @@ export default {
     },
 
     refreshBlock (change) {
-      //console.log('refreshBlock', change);
       //console.log('this.$refs.blocks', this.$refs.blocks);
       //console.log('blockers', this.blockers);
         /*if (change.doc.audiosrc) {
@@ -532,14 +525,13 @@ export default {
         } else {
           this.clearBlockLock({block: change.doc});
           if (oldBlock.partUpdate) {
-            //oldBlock._rev = change.doc._rev;
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
-            this.refreshTmpl();
           } else if (updField) {
             oldBlock[updField] = change.doc[updField];
-            oldBlock._rev = change.doc._rev;
+            if (updField === "voicework" && (change.doc.voicework === "narration" || oldBlock.voicework === "narration")) {
+              oldBlock.parts = change.doc.parts;
+            }
             this.$store.commit('set_storeList', new BookBlock(oldBlock));
-            this.refreshTmpl();
           } else {
             let newBlock = new BookBlock(change.doc);
             let el = this.$children.find(c => {
@@ -558,7 +550,6 @@ export default {
               }
             } else {
               this.$store.commit('set_storeList', newBlock);
-              this.refreshTmpl();
               if (newBlock.type == 'illustration') this.scrollToBlock(newBlock.blockid);
             }
             if (el) {
@@ -574,7 +565,6 @@ export default {
         $ref.addContentListeners();
       })
       //this.initRecorder();
-      this.recountApprovedInRange();
     },
 
     hasClass: function(block, cssclass) {
@@ -702,7 +692,6 @@ export default {
         }
         this.$store.commit('set_storeList', block);
         this.$root.$emit('from-block-edit:set-style');
-        this.refreshTmpl();
         return Promise.resolve(block);
       })
       .catch((err)=>{
@@ -884,14 +873,10 @@ export default {
         newBlock: newBlock
       })
         .then((response)=>{
-          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-//           if (b_old) {
-//             this.refreshBlock({doc: b_old, deleted: false});
-//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
@@ -908,7 +893,6 @@ export default {
           if (block.index === 0) {
             this.loadBookTocSections([]);
           }
-          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockBefore');
@@ -926,15 +910,10 @@ export default {
         newBlock: newBlock
       })
         .then((response)=>{
-          //this.setBlockSelection({start: {}, end: {}});
           let b_new = response.data.new_block;
           let b_old = response.data.block;
 
           let blockO = response.data.new_block;
-
-//           if (b_old) {
-//             this.refreshBlock({doc: b_old, deleted: false});
-//           }
 
           this.putNumBlockOBatchProxy({bookId: block.bookid});
 
@@ -943,14 +922,13 @@ export default {
             this.startId = this.parlistO.getOutId(firstId);
             this.parlistO.setStartId(this.startId);
             //this.startId = blockO.blockid;
-          } //else this.refreshTmpl();
+          }
           this.unfreeze('insertBlockAfter');
           this.tc_loadBookTask(block.bookid);
           this.getCurrentJobInfo();
           if (this.tc_hasTask('audio_mastering')) {
             this.setCurrentBookCounters(['not_proofed_audio_blocks']);
           }
-          //this.refreshTmpl();
         })
         .catch(err => {
           this.unfreeze('insertBlockAfter');
@@ -985,7 +963,6 @@ export default {
       this.freeze('deleteBlock');
       this.removeBlock(block)
       .then((response)=>{
-        //this.setBlockSelection({start: {}, end: {}});
         this.getDisabledBlocks();
         if (response.data) {
 
@@ -994,7 +971,7 @@ export default {
             // in case when first or last block in book was deleted
             this.startId = newStartId;
             this.parlistO.setStartId(newStartId);
-          } //else this.refreshTmpl();
+          }
           this.parlist.delete(block._id);
           this.$store.dispatch('set_selected_blocks');
         }
@@ -1014,7 +991,6 @@ export default {
         }
         this.tc_loadBookTask(block.bookid);
         this.getCurrentJobInfo();
-        //this.refreshTmpl();
       })
       .catch(err => {
         this.unfreeze('deleteBlock');
@@ -1177,6 +1153,7 @@ export default {
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+              this.recountApprovedInRange();
             }
           }
 
@@ -1186,7 +1163,6 @@ export default {
                 this.loadBookToc({bookId: block.bookid, isWait: true})
               }
             });
-          this.refreshTmpl();
           this.unfreeze('joinBlocks');
           this.getCurrentJobInfo();
           this.$store.dispatch('set_selected_blocks');
@@ -1196,7 +1172,6 @@ export default {
           return Promise.resolve();
         })
         .catch((err)=>{
-          this.refreshTmpl();
           this.clearBlockLock({block: blockBefore, force: true});
           this.unfreeze('joinBlocks');
           return Promise.reject(err);
@@ -1230,6 +1205,7 @@ export default {
           if (response.data.ok && response.data.blocks) {
             if (response.data.blocks.updatedBlock) {
               this.refreshBlock({doc: response.data.blocks.updatedBlock, deleted: false});
+              this.recountApprovedInRange();
             }
           }
 
@@ -1239,14 +1215,12 @@ export default {
                 this.loadBookToc({bookId: block.bookid, isWait: true});
               }
             });
-          //this.refreshTmpl();
           this.unfreeze('joinBlocks');
           this.getCurrentJobInfo();
           this.$store.dispatch('set_selected_blocks');
           return Promise.resolve();
         })
         .catch((err)=>{
-          this.refreshTmpl();
           this.clearBlockLock({block: block, force: true});
           this.unfreeze('joinBlocks');
           return Promise.reject(err);
@@ -1345,12 +1319,11 @@ export default {
 
     async setRangeSelection(params) {
       const {block, type, status, shift = false, headerType = 'par'} = params;
-      //console.log(`${__filename.slice(-30)}::this.parlist: `, this.parlist);
-      console.log('setRangeSelection', block, type, status, shift, headerType);
+      //console.log('setRangeSelection', block.type, type, status, shift, headerType);
       let newSelection = Object.assign({}, this.blockSelection);
       const _store = this.$store;
       switch (type) {
-        case 'start':
+        case 'start': {
           if (status) {
             if (!this.selectionEnd || !this.selectionEnd._id || this.selectionEnd.index >= block.index) {
               this.selectionStart = block;
@@ -1367,7 +1340,8 @@ export default {
             this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
           }
           break;
-        case 'end':
+        }
+        case 'end': {
           if (status) {
             if (!this.selectionStart || !this.selectionStart._id || this.selectionStart.index <= block.index) {
                 this.selectionEnd = block;
@@ -1384,52 +1358,53 @@ export default {
               this.$root.$emit('from-bookedit:set-selection', this.selectionStart, this.selectionEnd);
             }
           break;
-        case 'byOne':
+        }
+        case 'byOne': {
           //console.log('byOne', status, block.rid, 'start:', this.blockSelection.start._id, 'end:', this.blockSelection.end._id);
-
           let blockSel = {_id: block.blockid};
           this.parlistO.setUnCheckedRange();
+
           if (status) { // check
             if (shift && this.blockSelection.start._id) {
               let startRId = this.parlistO.getRIdById(this.blockSelection.start._id);
               switch (this.parlistO.compareIndex(startRId, block.rid)) {
                 case -1:// block above current selection checked
-                  newSelection = await this.parlistO.setCheckedAsync(startRId, block.rid, _store);
+                  newSelection = this.parlistO.setChecked(startRId, block.rid, Vue.nextTick);
                   break;
                 case 1:// block below current selection checked
-                  // this.selectionModalActive = true;
-                  _store.dispatch('setSelectionModalProgressWidth',0);
+                  //_store.dispatch('setSelectionModalProgressWidth',0);
                   let endRId = this.parlistO.getRIdById(this.blockSelection.end._id);
-                  newSelection = await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+                  newSelection = this.parlistO.setChecked(block.rid, endRId, Vue.nextTick);
                   break;
                 default:
                   break;
               }
             } else {
-              newSelection = this.parlistO.setChecked(block.rid);
+              newSelection = this.parlistO.setChecked(block.rid, false, Vue.nextTick);
             }
-            console.log('newSelection', newSelection.start._id, newSelection.end._id);
+            //console.log('newSelection', newSelection.start._id, newSelection.end._id);
             await this.setBlockSelection(newSelection);
           }
           else { // uncheck
             if (this.blockSelection.start._id && this.blockSelection.end._id && this.blockSelection.start._id !== this.blockSelection.end._id) {
               newSelection = this.parlistO.setChecked(block.rid);
-              this.setBlockSelection(newSelection);
+              await this.setBlockSelection(newSelection);
             }
-            else this.setBlockSelection({start: {}, end: {}});
+            else await this.setBlockSelection({start: {}, end: {}});
           }
 
-          setTimeout(() => {
-            _store.dispatch('setSelectionModalProgressWidth',100);
-            _store.dispatch('selectionModalDisable');
-          }, 1000);
+          // setTimeout(() => {
+          //   _store.dispatch('setSelectionModalProgressWidth',100);
+          //   _store.dispatch('selectionModalDisable');
+          // }, 1000);
 
           break;
-        case 'byChapter':
-
-          const selectNextBlockByType = async (searchBlockTypes)=>{
+        }
+        case 'byChapter': {
+          const setCheckedUntilNextBlockByType = (searchBlockTypes)=>{
             let skip = true;
-            for (const [blockId, _blk] of this.parlist) {
+            for (const _blk of this.parlistArray) {
+              const blockId = _blk.blockid;
               if (skip) {
                 if (_blk._rid === block.rid) {
                   skip = false;
@@ -1441,13 +1416,13 @@ export default {
               if (isTitleHeader || searchBlockTypes.indexOf(headerLevel) > -1) {
                 const endRId = this.parlistO.get(_blk.blockid)?.in;
                 if (endRId) {
-                  return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+                  return this.parlistO.setChecked(block.rid, endRId);
                 }
                 break;
               }
             }
             const endRId = this.parlistO.getLastRid();
-            return await this.parlistO.setCheckedAsync(block.rid, endRId, _store);
+            return this.parlistO.setChecked(block.rid, endRId);
           };
 
           this.parlistO.setUnCheckedRange();
@@ -1456,35 +1431,36 @@ export default {
             case 'title' : { // select all
               const startRId = this.parlistO.getFirstRid();
               const endRId   = this.parlistO.getLastRid();
-              newSelection = await this.parlistO.setCheckedAsync(startRId, endRId, _store);
+              newSelection = this.parlistO.setChecked(startRId, endRId);
             } break;
             case 'h1' : { // select section
               const searchBlockTypes = ['h1'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             case 'h2' : { // select chapter
               const searchBlockTypes = ['h1', 'h2'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             case 'h3' : { // select subchapter
               const searchBlockTypes = ['h1', 'h2', 'h3'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             case 'h4' : { // select sub subchapter
               const searchBlockTypes = ['h1', 'h2', 'h4', 'h5'];
-              newSelection = await selectNextBlockByType(searchBlockTypes);
+              newSelection = setCheckedUntilNextBlockByType(searchBlockTypes);
             } break;
             default : {
             } break;
           };
 
           await this.setBlockSelection(newSelection);
-          setTimeout(() => {
-            _store.dispatch('setSelectionModalProgressWidth',100);
-            _store.dispatch('selectionModalDisable');
-          }, 1000);
+          // setTimeout(() => {
+          //   _store.dispatch('setSelectionModalProgressWidth', 100);
+          //   _store.dispatch('selectionModalDisable');
+          // }, 500);
 
         break;
+        }
       }
       //this.recountApprovedInRange();
     },
@@ -1549,7 +1525,6 @@ export default {
           this.loadBookToc({bookId: this.meta._id, isWait: true});
         });
       } else this.updateVisibleBlocks();
-      //this.refreshTmpl();
     },
 
     initEditorPosition() {
@@ -1701,7 +1676,7 @@ export default {
       })
     },
 
-    bookReimported() {
+    async bookReimported() {
       this.setBlockSelection({start: {}, end: {}});
       this.scrollToBlock(this.parlistO.idsArray()[0]);
       this.startId = false;
@@ -1723,7 +1698,8 @@ export default {
       let updField = data.updField || false;
       if (Array.isArray(data.blocks)) data.blocks.forEach((res)=>{
         this.refreshBlock({doc: res, deleted: res.deleted || false, updField: updField});
-      })
+      });
+      this.recountApprovedInRange();
     },
     checkMode() {
       //console.log(`checkMode--: `, this.mode, this.currentJobInfo.id);

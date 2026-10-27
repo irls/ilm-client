@@ -314,7 +314,7 @@ export default {
   },
 
   destroyed: function () {
-    this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
+    //this.$root.$off('from-bookedit:set-selection', this.listenRangeSelection);
     this.$root.$off('book-reimport-modal', this.evOnReimportModal);
     this.$root.$off('set-error-alert', this.setErrorAlert);
     this.$root.$off('set-alert', this.setAlert);

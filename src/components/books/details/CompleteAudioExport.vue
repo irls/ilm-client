@@ -63,16 +63,18 @@
       blocksCountForExport: {
         get() {
           if (this.selectedBlocks.length > 0) {
-            return this.selectedBlocks.filter(blk => {
-              return !blk.disabled && (!this.currentBookMeta.parent_book || blk.adapted === true);
+            return this.selectedBlocks.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return !block.disabled && (!this.currentBookMeta.parent_book || block.adapted === true);
             }).length;
           } else {
             if (this.currentBookCounters.enabled_blocks !== null) {
               return this.currentBookCounters.enabled_blocks;
             }
-            let blocks = Array.from(this.storeList.values());
-            return blocks.filter(blk => {
-              return !blk.disabled && (!this.currentBookMeta.parent_book || blk.adapted === true);
+            let blocksIds = Array.from(this.storeList.keys());
+            return blocksIds.filter(blockId => {
+              const block = this.storeList.get(blockId);
+              return !block.disabled && (!this.currentBookMeta.parent_book || block.adapted === true);
             }).length;
           }
         }
