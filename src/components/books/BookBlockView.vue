@@ -1126,8 +1126,9 @@ Save or discard your changes to continue editing`,
       selectChapterButtonEnable: {
         cache: true,
         get() {
-          const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
-          return this.block.type === 'header' || isTitleHeader;
+          //const isTitleHeader = this.block?.type === 'title' && this.block?.classes?.style === '';
+          //return this.block.type === 'header' || isTitleHeader;
+          return false;
         }
       },
       selectChapterButtonTooltip: {
