@@ -185,12 +185,12 @@
       listenBlock() {
         let length = 3;
         if (this.blockTypesInRange.length === 1) {
-          let nextBlock = this.storeList.get(this.storeListO.getOutId(this.selectedBlock.blockid));
+          let nextBlock = this.storeList.get(this.storeListO.getOutId(this.selectedBlockObj.blockid));
           let selectedBlockAudiosrc;
-          if (!this.selectedBlock.getIsSplittedBlock()) {
-            selectedBlockAudiosrc = this.selectedBlock.getAudiosrc('m4a');
+          if (!this.selectedBlockObj.getIsSplittedBlock()) {
+            selectedBlockAudiosrc = this.selectedBlockObj.getAudiosrc('m4a');
           } else {
-            selectedBlockAudiosrc = this.selectedBlock.getPartAudiosrc(this.selectedBlock.parts.length - 1, 'm4a');
+            selectedBlockAudiosrc = this.selectedBlockObj.getPartAudiosrc(this.selectedBlockObj.parts.length - 1, 'm4a');
           }
           if (selectedBlockAudiosrc) {
             if (!this.player) {
@@ -215,7 +215,7 @@
                     this.player.play();
                   }
                 };
-                this.nowPlaying = this.selectedBlock.blockid;
+                this.nowPlaying = this.selectedBlockObj.blockid;
                 this.player.src = selectedBlockAudiosrc;
               });
               playCurrent
@@ -383,6 +383,13 @@
       selectedBlock: {
         get() {
           return Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange[0] : null;
+        },
+        cache: false
+      },
+      selectedBlockObj: {
+        get() {
+          const selectedBlockid = this.selectedBlock;
+          return selectedBlockid ? this.storeList.get(selectedBlockid) : null;
         },
         cache: false
       },
