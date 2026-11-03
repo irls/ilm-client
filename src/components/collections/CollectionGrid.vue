@@ -138,7 +138,13 @@
           }
         },
         goToGridPage (page) {
-          this.loadCurrentCollectionBooks(Object.assign(this.collectionsFilters, { page: page }))
+          let filters = lodash.cloneDeep(this.collectionsFilters);
+          ['jobStatus', 'importStatus'].forEach(bookFilter => {
+            if (this.booksFilters[bookFilter]) {
+              filters[bookFilter] = this.booksFilters[bookFilter];
+            }
+          });
+          this.loadCurrentCollectionBooks(Object.assign(filters, { page: page }))
         },
         ...mapActions(['loadCollection']),
         ...mapActions('booksModule', ['loadCurrentCollectionBooks'])
