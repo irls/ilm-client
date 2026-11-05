@@ -1475,6 +1475,12 @@ export default {
         this.currentBook.hashTags.push(tag);
       else
         this.currentBook.hashTags = [tag];
+      this.currentBook.hashTags = this.currentBook.hashTags.filter((t, tidx) => {
+        let skip = this.currentBook.hashTags.find((_t, _tidx) => {
+          return t === _t && _tidx < tidx;
+        });
+        return !skip;
+      });
       this.debounceUpdate('hashTags', this.currentBook.hashTags)
     },
 
